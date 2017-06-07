@@ -113,7 +113,9 @@ namespace Framework
 				public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 				{
 					SerializedProperty editorHeightProp = property.FindPropertyRelative("_editorHeight");
-					return editorHeightProp.floatValue;
+					if (editorHeightProp != null)
+						return editorHeightProp.floatValue;
+					return 0.0f;
 				}
 			}
 		}
