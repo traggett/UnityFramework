@@ -7,7 +7,7 @@ namespace Framework
 	
 	namespace NodeGraphSystem
 	{
-		[NodeCategory("GameObject")]
+		[NodeCategory("Transform")]
 		[Serializable]
 		public class TransformAngleOscillatorNode : Node
 		{

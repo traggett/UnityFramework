@@ -62,6 +62,8 @@ namespace Framework
 
 				#region Private Data
 				public static readonly float kMaxBorderSize = 2.0f;
+				public static readonly float kStateSeperationSize = 4.0f;
+				public static readonly float kLabelPadding = 16.0f;
 				public static readonly float kShadowSize = 4.0f;
 				public static readonly Color kShadowColor = new Color(0.0f, 0.0f, 0.0f, 0.35f);
 				
@@ -182,7 +184,7 @@ namespace Framework
 					return GetEditableObject().GetDescription();
 				}
 
-				public void Render(Rect renderedRect, Color borderColor, Color stateColor, GUIStyle style, float borderSize)
+				public void Render(Rect renderedRect, Color borderColor, Color stateColor, GUIStyle stateLabelStyle, GUIStyle labelStyle, float borderSize)
 				{
 					Color origBackgroundColor = GUI.backgroundColor;
 					GUI.backgroundColor = Color.clear;
@@ -206,8 +208,35 @@ namespace Framework
 						{
 							float h, s, v;
 							Color.RGBToHSV(stateColor, out h, out s, out v);
-							style.normal.textColor = v > 0.66f ? Color.black : Color.white;
-							DrawLabel(style);
+							Color textColor = v > 0.66f ? Color.black : Color.white;
+							stateLabelStyle.normal.textColor = textColor;
+							labelStyle.normal.textColor = textColor;
+							labelStyle.active.textColor = textColor; 
+							labelStyle.focused.textColor = textColor;
+							labelStyle.hover.textColor = textColor;
+
+							GUIContent stateLabel = new GUIContent("State" + GetStateId().ToString("00"));
+							GUI.Label(new Rect(0, 0, _rect.width, _rect.height), stateLabel, stateLabelStyle);
+
+							float seperatorY = stateLabelStyle.CalcSize(stateLabel).y;
+							Color origGUIColor = GUI.color;
+							GUI.color = borderColor;
+							GUI.DrawTexture(new Rect(0, seperatorY, labelRect.width, 1), EditorUtils.OnePixelTexture);
+							GUI.color = origGUIColor;
+
+							Rect labelTextRect = new Rect(kLabelPadding * 0.5f, seperatorY + kStateSeperationSize, _rect.width - kLabelPadding, _rect.height);
+
+							if (GetEditableObject()._editorAutoDescription)
+							{
+								GUI.Label(labelTextRect, GetStateDescription(), labelStyle);
+							}
+							else
+							{
+								GUI.backgroundColor = Color.clear;
+								GetEditableObject()._editorDescription = GUI.TextField(labelTextRect, GetEditableObject()._editorDescription, labelStyle);
+								GUI.backgroundColor = stateColor;
+							}
+							
 						}
 						GUI.EndGroup();
 					}
@@ -216,20 +245,21 @@ namespace Framework
 					GUI.backgroundColor = origBackgroundColor;			
 				}
 
-				public void CalcBounds(GUIStyle style)
+				public void CalcBounds(GUIStyle stateLabelStyle, GUIStyle lableStyle)
 				{
-					Vector2 labelDimensions = GetLabelSize(style);
+					Vector2 stateIdDimensions = stateLabelStyle.CalcSize(new GUIContent("State"+ GetStateId().ToString("00")));
+					Vector2 labelDimensions = GetLabelSize(lableStyle);
 
-					float areaWidth = labelDimensions.x + kShadowSize + (kMaxBorderSize * 2.0f);
-					float areaHeight = labelDimensions.y + kShadowSize + (kMaxBorderSize * 2.0f);
+					float areaWidth = Mathf.Max(stateIdDimensions.x, labelDimensions.x) + kLabelPadding + kShadowSize + (kMaxBorderSize * 2.0f);
+					float areaHeight = stateIdDimensions.y + labelDimensions.y + kStateSeperationSize + kShadowSize + (kMaxBorderSize * 2.0f);
 
 					_rect.position = GetPosition();
 
 					_rect.width = areaWidth;
 					_rect.height = areaHeight;
 
-					_rect.x -= labelDimensions.x * 0.5f;
-					_rect.y -= labelDimensions.y * 0.5f;
+					_rect.x -= areaWidth * 0.5f;
+					_rect.y -= areaHeight * 0.5f;
 
 					_rect.x = Mathf.Round(_rect.position.x);
 					_rect.y = Mathf.Round(_rect.position.y);
@@ -237,12 +267,6 @@ namespace Framework
 				#endregion
 
 				#region Private Functions
-				private void DrawLabel(GUIStyle style)
-				{
-					string labelText = GetStateDescription();
-					GUI.Label(new Rect(0, 0, _rect.width, _rect.height), labelText, style);
-				}
-				
 				private Vector2 GetLabelSize(GUIStyle style)
 				{
 					string labelText = GetStateDescription();

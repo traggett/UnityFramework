@@ -16,7 +16,7 @@ namespace Framework
 
 			//Editor properties
 			public Vector2 _editorPosition = Vector2.zero;
-			public bool _editorAutoDescription = true;
+			public bool _editorAutoDescription = false;
 			public string _editorDescription = string.Empty;
 			public bool _editorAutoColor = true;
 			public Color _editorColor = Color.gray;

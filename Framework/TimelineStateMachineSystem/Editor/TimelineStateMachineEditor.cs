@@ -305,7 +305,7 @@ namespace Framework
 #endif
 						GUIStyle style = state.IsNote ? _style._noteTextStyle : _style._stateTextStyle;
 
-						state.CalcBounds(style);
+						state.CalcBounds(_style._noteTextStyle, style);
 						Rect renderedRect = GetScreenRect(state.GetBounds());
 
 						Color stateColor;
@@ -314,7 +314,7 @@ namespace Framework
 						else
 							stateColor = state.GetEditableObject()._editorColor;						
 
-						state.Render(renderedRect, borderColor, stateColor, style, borderSize);
+						state.Render(renderedRect, borderColor, stateColor, _style._noteTextStyle, style, borderSize);
 
 						if (!state.IsNote)
 							RenderLinksForState(state);
@@ -329,7 +329,7 @@ namespace Framework
 				{
 					TimelineStateEditorGUI editorGUI = TimelineStateEditorGUI.CreateInstance<TimelineStateEditorGUI>();
 					editorGUI.Init(this, state);
-					editorGUI.CalcBounds(_style._stateTextStyle);
+					editorGUI.CalcBounds(_style._noteTextStyle, _style._stateTextStyle);
 					return editorGUI;
 				}
 
@@ -690,11 +690,11 @@ namespace Framework
 
 					if (!externalState.ExternalHasRendered)
 					{
-						externalState.CalcBounds(_style._externalStateTextStyle);
+						externalState.CalcBounds(_style._noteTextStyle, _style._externalStateTextStyle);
 						bool selected = _selectedObjects.Contains(externalState);
 						Color borderColor = selected ? _style._stateBackgroundSelected : _style._stateBackground;
 						Rect renderedRect = GetScreenRect(externalState.GetBounds());
-						externalState.Render(renderedRect, borderColor, _style._externalStateColor, _style._externalStateTextStyle, selected ? 2.0f : 1.0f);
+						externalState.Render(renderedRect, borderColor, _style._externalStateColor, _style._noteTextStyle, _style._externalStateTextStyle, selected ? 2.0f : 1.0f);
 						externalState.ExternalHasRendered = true;
 					}
 

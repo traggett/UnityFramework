@@ -33,7 +33,7 @@ namespace Framework
 					}
 				}
 
-				[MenuItem("Assets/Load Value Node Graph")]
+				[MenuItem("Assets/Load NodeGraph")]
 				private static void MenuLoadTimeline()
 				{
 					TextAsset asset = Selection.activeObject as TextAsset;
@@ -44,7 +44,7 @@ namespace Framework
 					}
 				}
 
-				[MenuItem("Assets/Load Value Node Graph", true)]
+				[MenuItem("Assets/Load NodeGraph", true)]
 				private static bool ValidateMenuLoadTimeline()
 				{
 					TextAsset asset = Selection.activeObject as TextAsset;
@@ -121,6 +121,7 @@ namespace Framework
 				public void OnSelectObject(ScriptableObject obj)
 				{
 					Selection.activeObject = obj;
+					GUIUtility.keyboardControl = 0;
 				}
 
 				public void OnDeselectObject(ScriptableObject obj)

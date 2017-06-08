@@ -268,6 +268,7 @@ namespace Framework
 					}
 					else
 					{
+						//Check for two captials in a row?
 						if (char.IsUpper(charString[i]))
 						{
 							chars.Add(' ');

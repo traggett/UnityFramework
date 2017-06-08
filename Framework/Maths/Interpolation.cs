@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using System.Collections;
 
 namespace Framework
 {
@@ -90,6 +91,36 @@ namespace Framework
 					case eInterpolation.Linear:
 						return InterpolateLinear(start, end, t);
 				}
+			}
+			
+			public static IEnumerator Interpolate(float value, Action<float> valueSetter, eInterpolation type, float to, float time)
+			{
+				if (time > 0.0f)
+				{
+					float t = 0.0f;
+					float start = value;
+					float invTime = 1.0f / time;
+
+					while (t < 1.0f)
+					{
+						t += Time.deltaTime * invTime;
+
+						if (t > 1.0f)
+							value = to;
+						else
+							value = Interpolate(type, start, to, t);
+
+						valueSetter(value);
+
+						yield return null;
+					}
+				}
+				else
+				{
+					valueSetter(to);
+				}
+
+				yield break;
 			}
 			#endregion
 

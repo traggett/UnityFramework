@@ -9,6 +9,7 @@ namespace Framework
 	{
 		public abstract class InputNode<T> : Node, IValueSource<T>
 		{
+			[HideInInspector]
 			public IValueSource<T> _inputSource;
 
 			#region Node

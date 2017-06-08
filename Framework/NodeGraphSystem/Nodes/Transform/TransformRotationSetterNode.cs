@@ -5,7 +5,7 @@ namespace Framework
 {
 	namespace NodeGraphSystem
 	{
-		[NodeCategory("GameObject")]
+		[NodeCategory("Transform")]
 		[Serializable]
 		public class TransformRotationSetterNode : Node
 		{

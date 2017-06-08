@@ -11,8 +11,11 @@ namespace Framework
 		public abstract class Node
 		{
 			#region Public Data
+			[HideInInspector]
 			public int _nodeId = -1;
+			[HideInInspector]
 			public Vector2 _editorPosition = Vector2.zero;
+			[HideInInspector]
 			public string _editorDescription = string.Empty;
 			#endregion
 

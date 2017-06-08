@@ -90,35 +90,49 @@ namespace Framework
 					bool dataChanged = EditorGUI.EndChangeCheck();
 
 					//Render Inputs
-					EditorGUILayout.Separator();
-					EditorGUILayout.LabelField("Inputs", EditorStyles.boldLabel);
-					EditorGUILayout.Separator();
-					foreach (NodeEditorField input in _inputNodes)
+					bool renderedFirstInput = false;
 					{
-						string fieldName = StringUtils.FromCamelCase(input._name);
-						TooltipAttribute fieldToolTipAtt = SystemUtils.GetAttribute<TooltipAttribute>(input._fieldInfo);
-						GUIContent labelContent = fieldToolTipAtt != null ? new GUIContent(fieldName, fieldToolTipAtt.tooltip) : new GUIContent(fieldName);
-
-						bool fieldChanged;
-						object nodeFieldObject = input._fieldInfo.GetValue(GetEditableObject());
-						nodeFieldObject = SerializedObjectEditorGUILayout.ObjectField(nodeFieldObject, labelContent, out fieldChanged);
-						if (fieldChanged)
+						foreach(NodeEditorField input in _inputNodes)
 						{
-							dataChanged = true;
-							input._fieldInfo.SetValue(GetEditableObject(), nodeFieldObject);
+							if (!renderedFirstInput)
+							{
+								EditorGUILayout.Separator();
+								EditorGUILayout.LabelField("Inputs", EditorStyles.boldLabel);
+								EditorGUILayout.Separator();
+								renderedFirstInput = true;
+							}
+
+							string fieldName = StringUtils.FromCamelCase(input._name);
+							TooltipAttribute fieldToolTipAtt = SystemUtils.GetAttribute<TooltipAttribute>(input._fieldInfo);
+							GUIContent labelContent = fieldToolTipAtt != null ? new GUIContent(fieldName, fieldToolTipAtt.tooltip) : new GUIContent(fieldName);
+
+							bool fieldChanged;
+							object nodeFieldObject = input._fieldInfo.GetValue(GetEditableObject());
+							nodeFieldObject = SerializedObjectEditorGUILayout.ObjectField(nodeFieldObject, labelContent, out fieldChanged);
+							if (fieldChanged)
+							{
+								dataChanged = true;
+								input._fieldInfo.SetValue(GetEditableObject(), nodeFieldObject);
+							}
 						}
 					}
 
 					//Render other properties
-					EditorGUILayout.Separator();
-					EditorGUILayout.LabelField("Properties", EditorStyles.boldLabel);
-					EditorGUILayout.Separator();
+					bool renderedFirstProperty = false;
 					{
 						SerializedFieldInfo[] serializedFields = SerializedFieldInfo.GetSerializedFields(GetEditableObject().GetType());
 						foreach (SerializedFieldInfo serializedField in serializedFields)
 						{
 							if (!serializedField.HideInEditor() && !SystemUtils.IsSubclassOfRawGeneric(typeof(NodeInputFieldBase<>), serializedField.GetFieldType()))
 							{
+								if (!renderedFirstProperty)
+								{
+									EditorGUILayout.Separator();
+									EditorGUILayout.LabelField("Properties", EditorStyles.boldLabel);
+									EditorGUILayout.Separator();
+									renderedFirstProperty = true;
+								}
+
 								string fieldName = StringUtils.FromCamelCase(serializedField.GetID());
 								TooltipAttribute fieldToolTipAtt = SystemUtils.GetAttribute<TooltipAttribute>(serializedField);
 								GUIContent labelContent = fieldToolTipAtt != null ? new GUIContent(fieldName, fieldToolTipAtt.tooltip) : new GUIContent(fieldName);
@@ -175,8 +189,9 @@ namespace Framework
 							titleStyle.normal.textColor = v > 0.66f ? Color.black : Color.white;
 
 							GUI.backgroundColor = Color.clear;
-							string nodeDescriptionText = "<b>" + GetEditableObject()._editorDescription + "</b>";
-							GUI.Label(new Rect(kTextPadding * scale, -2.0f * scale, labelRect.width - kTextPadding * 2.0f * scale, kLableHeight * scale), nodeDescriptionText, titleStyle);
+							titleStyle.fontStyle = FontStyle.Bold;
+							GetEditableObject()._editorDescription = GUI.TextField(new Rect(kTextPadding * scale, -2.0f * scale, labelRect.width - kTextPadding * 2.0f * scale, kLableHeight * scale), GetEditableObject()._editorDescription, titleStyle);
+
 							string nodeTypeText = "<b>(" + StringUtils.FromPropertyCamelCase(GetEditableObject().GetType().Name) + ")</b>";
 							textStyle.alignment = TextAnchor.MiddleLeft;
 							GUI.Label(new Rect(kTextPadding * scale, (kLineHeight - 4.0f) * scale, labelRect.width - kTextPadding * 2.0f * scale, kLableHeight * scale), nodeTypeText, textStyle);
