@@ -63,7 +63,7 @@ namespace Framework
 				#region Private Data
 				public static readonly float kMaxBorderSize = 2.0f;
 				public static readonly float kStateSeperationSize = 4.0f;
-				public static readonly float kLabelPadding = 16.0f;
+				public static readonly float kLabelPadding = 8.0f;
 				public static readonly float kShadowSize = 4.0f;
 				public static readonly Color kShadowColor = new Color(0.0f, 0.0f, 0.0f, 0.35f);
 				

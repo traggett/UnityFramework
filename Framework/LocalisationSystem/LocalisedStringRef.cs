@@ -17,20 +17,20 @@ namespace Framework
 		public class LocalisedStringRef : ISerializationCallbackReceiver, ICustomEditorInspector
 		{
 			#region Private Data
-			
+			[SerializeField]
 			private string _localisationKey;
-
+			[SerializeField]
 			private string _text;
+			[SerializeField]
 			private SystemLanguage _language;
-
 			#endregion
 
-			#region Public Data
+			#region Editor Data
 #if UNITY_EDITOR
-			public string _editorText;
-			public bool _editorFoldout;
-			public float _editorHeight;
-			public TimelineStateMachine _editorStateMachine;
+			private string _editorText;
+			private bool _editorFoldout;
+			private float _editorHeight;
+			private TimelineStateMachine _editorStateMachine;
 #endif
 			#endregion
 
