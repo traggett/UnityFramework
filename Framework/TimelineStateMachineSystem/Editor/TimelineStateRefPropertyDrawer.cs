@@ -14,11 +14,11 @@ namespace Framework
 			{
 				private bool _foldout = true;
 				private float _height = EditorGUIUtility.singleLineHeight * 4;
-				
+
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 				{
 					EditorGUI.BeginProperty(position, label, property);
-
+					
 					Rect foldoutPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
 					_foldout = EditorGUI.Foldout(foldoutPosition, _foldout, property.displayName);
@@ -26,6 +26,7 @@ namespace Framework
 
 					if (_foldout)
 					{
+						
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 
@@ -41,11 +42,12 @@ namespace Framework
 							SerializedProperty TimelineProp = property.FindPropertyRelative("_timelineId");
 
 							//Load all time lines from a file
-							TimelineStateMachine stateMachines = SerializeConverter.FromFile<TimelineStateMachine>(AssetDatabase.GetAssetPath(fileProp.objectReferenceValue));
+							//Get gameobject from  property
+							TimelineStateMachine stateMachine = TimelineStateMachine.FromTextAsset((TextAsset)fileProp.objectReferenceValue, FindParentGameObject(property));
 
-							if (stateMachines != null)
+							if (stateMachine != null)
 							{
-								TimelineState[] states = stateMachines._states;
+								TimelineState[] states = stateMachine._states;
 
 								if (states != null && states.Length > 0)
 								{
@@ -78,8 +80,9 @@ namespace Framework
 
 								_height += EditorGUIUtility.singleLineHeight;
 							}
-						}					
-						 
+							
+						}
+					
 						EditorGUI.indentLevel = origIndent;
 					}
 
@@ -89,6 +92,17 @@ namespace Framework
 				public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 				{
 					return _height;
+				}
+
+				private static GameObject FindParentGameObject(SerializedProperty property)
+				{
+					if (property.serializedObject.targetObject is Component)
+					{
+						Component component = property.serializedObject.targetObject as Component;
+						return component.gameObject;
+					}
+
+					return null;
 				}
 			}
 		}

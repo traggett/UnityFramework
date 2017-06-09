@@ -22,6 +22,7 @@ namespace Framework
 			#region Private Data
 			private T _asset;
 #if UNITY_EDITOR
+			[NonSerialized]
 			public T _editorAsset;
 			private bool _editorFoldout = true;
 #endif
