@@ -262,9 +262,8 @@ namespace Framework
 
 				if (_nodegraph != null)
 				{
-					FixupInputs();
 					GameObjectRef.FixupGameObjectRefs(this.gameObject, _nodegraph);
-
+					FixupInputs();
 #if UNITY_EDITOR
 					if (!_runInEditor && !Application.isPlaying)
 						return;
