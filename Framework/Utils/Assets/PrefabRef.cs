@@ -53,7 +53,7 @@ namespace Framework
 					prefabInstance = PrefabUtility.InstantiatePrefab(prefabObject) as GameObject;
 #else
 
-					prefabInstance = GameObjectUtils.SafeInstantiate(prefabSourceObject);
+					prefabInstance = GameObjectUtils.SafeInstantiate(prefabObject);
 #endif
 					prefabInstance.name = prefabObject.name;
 				}
