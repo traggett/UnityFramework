@@ -56,6 +56,18 @@ namespace Framework
 				return null;
 			}
 
+			public override string ToString()
+			{
+				Component component = GetBaseComponent();
+
+				if (component != null)
+				{
+					return component.gameObject.name;
+				}
+
+				return typeof(T).Name;
+			}
+
 			public T GetComponent()
 			{
 				return GetBaseComponent() as T;

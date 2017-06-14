@@ -62,6 +62,18 @@ namespace Framework
 				return null;
 			}
 
+			public override string ToString()
+			{
+				GameObject gameObject = GetGameObject();
+
+				if (gameObject != null)
+				{
+					return gameObject.gameObject.name;
+				}
+
+				return typeof(GameObject).Name;
+			}
+
 			public GameObject GetGameObject()
 			{
 				switch (_sourceType)

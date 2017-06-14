@@ -144,13 +144,18 @@ namespace Framework
 
 			protected SerializedObjectEditorGUI<T> AddNewObject(T obj)
 			{
-				SerializedObjectEditorGUI<T> editorGUI = CreateObjectEditorGUI(obj);
-				editorGUI.SetEditableObject(obj);
+				SerializedObjectEditorGUI<T> editorGUI = null;
 
-				_editableObjects.Add(editorGUI);
-				SortObjects();
+				if (obj != null)
+				{
+					editorGUI = CreateObjectEditorGUI(obj);
+					editorGUI.SetEditableObject(obj);
 
-				UpdateCachedObjectList();
+					_editableObjects.Add(editorGUI);
+					SortObjects();
+
+					UpdateCachedObjectList();
+				}
 
 				return editorGUI;
 			}
