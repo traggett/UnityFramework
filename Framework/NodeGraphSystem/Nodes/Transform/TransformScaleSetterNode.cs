@@ -33,7 +33,7 @@ namespace Framework
 				}
 			}
 
-			public override void Update(float deltaTime)
+			public override void Update(float time, float deltaTime)
 			{
 				Transform target = _transform;
 

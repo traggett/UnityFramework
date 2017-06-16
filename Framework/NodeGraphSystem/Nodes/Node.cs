@@ -21,7 +21,7 @@ namespace Framework
 
 			public virtual void Init() { }
 
-			public virtual void Update(float deltaTime) { }
+			public virtual void Update(float time, float deltaTime) { }
 
 #if UNITY_EDITOR
 			public virtual Color GetEditorColor()

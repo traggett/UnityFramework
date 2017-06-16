@@ -17,6 +17,7 @@ namespace Framework
 			public Node[] _nodes = new Node[0];
 
 			private List<Node> _nodeUpdateList;
+			private float _time;
 
 			public static void FixupNodeRefs(NodeGraph nodeGraph, object node)
 			{
@@ -100,6 +101,8 @@ namespace Framework
 
 					_nodeUpdateList.AddRange(orderedNodes);
 				}
+
+				_time = 0.0f;
 			}
 
 			private Node[] GetOrderedNodesFromNode(Node node)
@@ -147,9 +150,11 @@ namespace Framework
 
 			public void Update(float deltaTime)
 			{
-				foreach(Node node in _nodeUpdateList)
+				_time += deltaTime;
+
+				foreach (Node node in _nodeUpdateList)
 				{
-					node.Update(deltaTime);
+					node.Update(_time, deltaTime);
 				}
 			}
 

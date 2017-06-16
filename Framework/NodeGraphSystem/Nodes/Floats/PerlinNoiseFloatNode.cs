@@ -36,7 +36,7 @@ namespace Framework
 				_xySpeedVariance = Random.Range(-kSpeedVariation, kSpeedVariation);
 			}
 
-			public override void Update(float deltaTime)
+			public override void Update(float time, float deltaTime)
 			{
 				float speed = _speed.GetValue();
 				_xSpeed = speed * (1.0f + _xySpeedVariance);

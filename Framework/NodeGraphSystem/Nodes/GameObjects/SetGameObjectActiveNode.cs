@@ -19,7 +19,7 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Update(float deltaTime)
+			public override void Update(float time, float deltaTime)
 			{
 				GameObject gameObject = _gameObject;
 				gameObject.SetActive(_active);

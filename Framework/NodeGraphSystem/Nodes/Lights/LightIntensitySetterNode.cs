@@ -29,7 +29,7 @@ namespace Framework
 					_origIntensity = light.intensity;
 			}
 
-			public override void Update(float deltaTime)
+			public override void Update(float time, float deltaTime)
 			{
 				Light light = _light;
 

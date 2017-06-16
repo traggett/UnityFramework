@@ -13,24 +13,23 @@ namespace Framework
 		{
 			#region Public Data
 			public NodeInputField<float> _frequency = 0.5f;
+			public NodeInputField<float> _offset = 0.0f;
 			#endregion
 
 			#region Private Data 
-			private float _time;
 			private float _value;
 			#endregion
 
 			#region Node
 			public override void Init()
 			{
-				_time = 0.0f;
 				_value = 0.0f;
 			}
 
-			public override void Update(float deltaTime)
+			public override void Update(float time, float deltaTime)
 			{
-				_time += deltaTime * _frequency * 2.0f;
-				_value = (Mathf.Sin(_time) + 1.0f) * 0.5f;
+				float wave = (time + _offset) * _frequency * 2.0f;
+				_value = (Mathf.Sin(wave) + 1.0f) * 0.5f;
 			}
 
 #if UNITY_EDITOR

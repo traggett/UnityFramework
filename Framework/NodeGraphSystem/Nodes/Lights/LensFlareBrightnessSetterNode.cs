@@ -28,7 +28,7 @@ namespace Framework
 					_origBrightness = lensFlare.brightness;
 			}
 
-			public override void Update(float deltaTime)
+			public override void Update(float time, float deltaTime)
 			{
 				LensFlare lensFlare = _lensFlare;
 

@@ -29,7 +29,7 @@ namespace Framework
 					_originalValue = material.GetFloat(_cachedShaderID);
 			}
 
-			public override void Update(float deltaTime)
+			public override void Update(float time, float deltaTime)
 			{
 				float value = _value;
 
