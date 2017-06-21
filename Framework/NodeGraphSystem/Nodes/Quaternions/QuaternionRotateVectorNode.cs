@@ -9,7 +9,7 @@ namespace Framework
 	{
 		[NodeCategory("Quaternions")]
 		[Serializable]
-		public class QuaternionRotateVector : Node, IValueSource<Vector3>
+		public class QuaternionRotateVectorNode : Node, IValueSource<Vector3>
 		{
 			#region Public Data	
 			public NodeInputField<Quaternion> _rotation = Quaternion.identity;

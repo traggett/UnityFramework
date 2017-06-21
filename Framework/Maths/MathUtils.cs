@@ -244,6 +244,31 @@ namespace Framework
 					return false;
 				}
 			}
+
+			public static bool IntercetionOfTwoNormalisedLines(Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
+			{
+				float line1DirDotLine2Dir = Vector3.Dot(lineVec1, lineVec2);
+
+				float d = 1.0f - line1DirDotLine2Dir * line1DirDotLine2Dir;
+
+				//lines are not parallel
+				if (d != 0.0f)
+				{
+					Vector3 r = linePoint1 - linePoint2;
+					float c = Vector3.Dot(lineVec1, r);
+					float f = Vector3.Dot(lineVec2, r);
+					float s = (line1DirDotLine2Dir * f - c) / d;
+
+					Vector3 interect = linePoint1 + lineVec1 * s;
+
+					return true;
+				}
+
+				else
+				{
+					return false;
+				}
+			}
 		}
 	}
 }

@@ -7,11 +7,11 @@ namespace Framework
 	{
 		[NodeCategory("Transform")]
 		[Serializable]
-		public class TransformRotationSetterNode : Node
+		public class TransformEulerRotationSetterNode : Node
 		{
 			#region Public Data
 			public TransformNodeInputField _transform = new TransformNodeInputField();
-			public NodeInputField<Quaternion> _rotation = Quaternion.identity;
+			public NodeInputField<Vector3> _eulerAngles = Vector3.zero;
 			public Space _space = Space.Self;
 			[Tooltip("If set instead of setting an absolute value the value will be applied as an offset from the original value.")]
 			public NodeInputField<bool> _offsetFromOriginal = false;
@@ -46,9 +46,9 @@ namespace Framework
 					Quaternion rotation;
 
 					if (_offsetFromOriginal)
-						rotation = _origRotation * _rotation;
+						rotation = _origRotation * Quaternion.Euler(_eulerAngles);
 					else
-						rotation = _rotation;
+						rotation = Quaternion.Euler(_eulerAngles);
 
 					switch (_space)
 					{
