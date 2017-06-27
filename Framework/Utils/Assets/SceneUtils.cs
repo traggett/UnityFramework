@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -62,6 +63,18 @@ namespace Framework
 				}
 
 				return component;
+			}
+
+			public static T[] FindAllInScene<T>(Scene scene) where T : Component
+			{
+				List<T> components = new List<T>();
+
+				foreach (GameObject rootObject in scene.GetRootGameObjects())
+				{
+					components.AddRange(rootObject.GetComponentsInChildren<T>());
+				}
+
+				return components.ToArray();
 			}
 		}
 	}
