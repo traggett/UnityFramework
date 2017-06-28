@@ -69,10 +69,13 @@ namespace Framework
 			{
 				List<T> components = new List<T>();
 
-				foreach (GameObject rootObject in scene.GetRootGameObjects())
+				if (scene.IsValid())
 				{
-					components.AddRange(rootObject.GetComponentsInChildren<T>());
-				}
+					foreach (GameObject rootObject in scene.GetRootGameObjects())
+					{
+						components.AddRange(rootObject.GetComponentsInChildren<T>());
+					}
+				}			
 
 				return components.ToArray();
 			}
