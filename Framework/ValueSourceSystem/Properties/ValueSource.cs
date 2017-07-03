@@ -1,5 +1,8 @@
 using System;
 using UnityEngine;
+using System.Reflection;
+using Framework.Utils;
+using System.Collections.Generic;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -10,12 +13,16 @@ namespace Framework
 	namespace ValueSourceSystem
 	{
 		//Class that allows a value to either be defined as a member or be calculated from other source.
-		public abstract class ValueSource<T> : IValueSource<T>
+		public abstract class ValueSource<T> : IValueSource<T>, ISerializationCallbackReceiver
 		{
 			[SerializeField]
 			protected T _value;
 			[SerializeField]
 			protected UnityEngine.Object _sourceObject;
+			[SerializeField]
+			protected string _sourceObjectMember;
+			//Cached value source
+			private IValueSource<T> _source;
 
 #if UNITY_EDITOR
 			public enum eEdtiorType
@@ -31,13 +38,10 @@ namespace Framework
 			public float _editorHeight;
 #endif
 
-			public ValueSource(T value = default(T), IValueSource<T> sourceObject = null)
+			public ValueSource()
 			{
-				_value = value;
-				_sourceObject = sourceObject as UnityEngine.Object;
-
 #if UNITY_EDITOR
-				_editorType = sourceObject != null ? eEdtiorType.Source : eEdtiorType.Static;
+				_editorType = eEdtiorType.Static;
 				_editorFoldout = false;
 				_editorHeight = EditorGUIUtility.singleLineHeight * 3;
 #endif
@@ -51,18 +55,9 @@ namespace Framework
 			#region IValueSource<T>
 			public T GetValue()
 			{
-				if (_sourceObject != null)
+				if (_source != null)
 				{
-					IValueSource<T> sourceObject = _sourceObject as IValueSource<T>;
-
-					if (sourceObject != null)
-					{
-						return sourceObject.GetValue();
-					}
-					else
-					{
-						throw new Exception("Object not type of IValueSource<" + typeof(T).Name + ">");
-					}
+					return _source.GetValue();
 				}
 				else
 				{
@@ -70,6 +65,62 @@ namespace Framework
 				}
 			}
 			#endregion
+
+			#region ISerializationCallbackReceiver
+			public void OnBeforeSerialize()
+			{
+
+			}
+
+			public void OnAfterDeserialize()
+			{
+				_source = FindSourceObject();
+			}
+			#endregion
+
+			public static FieldInfo[] GetValueSourceFields(object obj)
+			{
+				List<FieldInfo> fieldInfo = new List<FieldInfo>();
+				FieldInfo[] fields = obj.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+
+				foreach (FieldInfo field in fields)
+				{
+					if (SystemUtils.IsTypeOf(typeof(IValueSource<T>), field.FieldType))
+					{
+						fieldInfo.Add(field);
+					}
+				}
+
+				return fieldInfo.ToArray();
+			}
+
+			private IValueSource<T> FindSourceObject()
+			{
+				//Have to cast to system.object to stop unity's multi-threaded errors
+				if ((System.Object)_sourceObject != null)
+				{
+					//If the member name is null/empty then the object itself must be an IValueSource<T>
+					if (string.IsNullOrEmpty(_sourceObjectMember))
+					{
+						return _sourceObject as IValueSource<T>;
+					}
+					//Otherwise find the field name by id.
+					else
+					{
+						FieldInfo[] fields = GetValueSourceFields(_sourceObject);
+
+						foreach (FieldInfo field in fields)
+						{
+							if (field.Name == _sourceObjectMember)
+							{
+								return field.GetValue(_sourceObject) as IValueSource<T>;
+							}
+						}
+					}
+				}
+
+				return null;
+			}
 		}
 	}
 }

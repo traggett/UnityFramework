@@ -10,6 +10,18 @@ namespace Framework
 
 	namespace NodeGraphSystem
 	{
+		// Ideally want an easy way can access / get / set input variables to a nodegraph on a component.
+		// Either could have the component point at objects that give it its value
+		// OR? have a pointer that points at a component AND a dropdown for the correct input?
+		// OR? Access it by name (editor description)
+		// OR? Access it by index.
+
+		//So... ok....
+		//If another component has a valuesource object as a memeber (eg FloatValueSource)
+		//Then instead of the whole component being a a ivaluesource can hook it up to a memeber on one.
+		//The way that is done is a component object and a drop down for float source.
+
+
 		//[ExecuteInEditMode]
 		public class NodeGraphComponent : MonoBehaviour
 		{
@@ -234,6 +246,8 @@ namespace Framework
 			#region MonoBehaviour
 			void OnEnable()
 			{
+				_nodegraph = null;
+
 				if (Application.isPlaying || _runInEditor)
 					LoadNodeGraph();
 			}
@@ -270,6 +284,11 @@ namespace Framework
 #endif
 
 					_nodegraph.Init();
+
+					if (_nodegraph._nodes.Length == 0)
+					{
+						Debug.Log("Weird");
+					}
 				}
 			}
 

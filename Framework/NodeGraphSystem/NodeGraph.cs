@@ -19,6 +19,12 @@ namespace Framework
 			private List<Node> _nodeUpdateList;
 			private float _time;
 
+			public NodeGraph()
+			{
+
+			}
+
+
 			public static void FixupNodeRefs(NodeGraph nodeGraph, object node)
 			{
 				if (node != null)

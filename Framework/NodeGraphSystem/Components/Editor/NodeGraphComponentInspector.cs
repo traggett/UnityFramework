@@ -86,10 +86,12 @@ namespace Framework
 					_materialInputs = serializedObject.FindProperty("_materialInputs");
 					_textureInputs = serializedObject.FindProperty("_textureInputs");
 
-					if (nodeGraphComponent.GetNodeGraph() == null)
+
+					//if (nodeGraphComponent.GetNodeGraph() == null)
 					{
 						nodeGraphComponent.LoadNodeGraph();
 					}
+
 
 					_nodeGraph = nodeGraphComponent.GetNodeGraph();
 				}

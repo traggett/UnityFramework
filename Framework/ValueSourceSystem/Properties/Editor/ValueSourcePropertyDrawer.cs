@@ -4,6 +4,9 @@ using System;
 
 namespace Framework
 {
+	using Utils;
+	using System.Collections.Generic;
+	using System.Reflection;
 	using Utils.Editor;
 
 	namespace ValueSourceSystem
@@ -18,6 +21,7 @@ namespace Framework
 
 					SerializedProperty valueProperty = property.FindPropertyRelative("_value");
 					SerializedProperty sourceObjectProp = property.FindPropertyRelative("_sourceObject");
+					SerializedProperty sourceObjectMemberProp = property.FindPropertyRelative("_sourceObjectMember");
 
 					SerializedProperty editorTypeProperty = property.FindPropertyRelative("_editorType");
 					SerializedProperty editorFoldoutProp = property.FindPropertyRelative("_editorFoldout");
@@ -33,9 +37,6 @@ namespace Framework
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 
-						Rect typePosition = new Rect(position.x, position.y + editorHeightProp.floatValue, position.width, EditorGUIUtility.singleLineHeight);
-						
-
 						ValueSource<T>.eEdtiorType sourceType = (ValueSource<T>.eEdtiorType)editorTypeProperty.intValue;
 						bool tempOverrideType = sourceType == ValueSource<T>.eEdtiorType.Static && EditorUtils.GetDraggingComponent<IValueSource<T>>() != null;
 						if (tempOverrideType)
@@ -45,6 +46,7 @@ namespace Framework
 
 						EditorGUI.BeginChangeCheck();
 
+						Rect typePosition = new Rect(position.x, position.y + editorHeightProp.floatValue, position.width, EditorGUIUtility.singleLineHeight);
 						ValueSource<T>.eEdtiorType edtiorType = (ValueSource<T>.eEdtiorType)EditorGUI.EnumPopup(typePosition, "Source Type", sourceType);
 						editorHeightProp.floatValue += EditorGUIUtility.singleLineHeight;
 
@@ -60,16 +62,7 @@ namespace Framework
 						{
 							case ValueSource<T>.eEdtiorType.Source:
 								{
-									Component currentComponent = sourceObjectProp.objectReferenceValue as Component;
-									float height;
-									Component selectedComponent = EditorUtils.ComponentField<IValueSource<T>>(new GUIContent("Value Source"), valuePosition, currentComponent, out height);
-									editorHeightProp.floatValue += height;
-
-									if (currentComponent != selectedComponent)
-									{
-										sourceObjectProp.objectReferenceValue = selectedComponent;
-										editorTypeProperty.intValue = Convert.ToInt32(ValueSource<T>.eEdtiorType.Source);
-									}
+									editorHeightProp.floatValue += DrawSourceObjectField(sourceObjectProp, sourceObjectMemberProp, valuePosition, editorTypeProperty);
 								}
 								break;
 							case ValueSource<T>.eEdtiorType.Static:
@@ -94,6 +87,80 @@ namespace Framework
 				public virtual float DrawValueField(Rect position, SerializedProperty valueProperty)
 				{
 					EditorGUI.PropertyField(position, valueProperty, new GUIContent("Value"));
+					return EditorGUIUtility.singleLineHeight;
+				}
+
+
+				private float DrawSourceObjectField(SerializedProperty sourceObjectProp, SerializedProperty sourceObjectMemberProp, Rect valuePosition, SerializedProperty editorTypeProperty)
+				{
+					Component currentComponent = sourceObjectProp.objectReferenceValue as Component;
+
+					float height;
+					Component selectedComponent = EditorUtils.ComponentField<MonoBehaviour>(new GUIContent("Source Object"), valuePosition, currentComponent, out height);
+
+					if (currentComponent != selectedComponent)
+					{
+						sourceObjectProp.objectReferenceValue = selectedComponent;
+						editorTypeProperty.intValue = Convert.ToInt32(ValueSource<T>.eEdtiorType.Source);
+					}
+
+					valuePosition.y += height;
+
+					if (currentComponent != null)
+					{
+						height += DrawObjectDropDown(currentComponent, valuePosition, sourceObjectMemberProp);
+					}
+
+					return height;
+				}
+
+				private float DrawObjectDropDown(object obj, Rect valuePosition, SerializedProperty sourceObjectMemberProp)
+				{
+					List<GUIContent> fieldNames = new List<GUIContent>();
+					List<FieldInfo> fieldInfos = new List<FieldInfo>();
+
+					int index = 0;
+
+					//If the object itself is an IValueSource<T> then it can be selected
+					if (SystemUtils.IsTypeOf(typeof(IValueSource<T>), obj.GetType()))
+					{
+						fieldNames.Add(new GUIContent(".this"));
+						fieldInfos.Add(null);
+
+						if (string.IsNullOrEmpty(sourceObjectMemberProp.stringValue))
+							index = fieldInfos.Count - 1;
+					}
+
+					//Otherwise can select any of its fields if they are IValueSource<T> 
+					FieldInfo[] fields = ValueSource<T>.GetValueSourceFields(obj);
+
+					foreach (FieldInfo field in fields)
+					{
+						fieldNames.Add(new GUIContent("." + field.Name));
+						fieldInfos.Add(field);
+
+						if (sourceObjectMemberProp.stringValue == field.Name)
+							index = fieldInfos.Count - 1;
+					}
+					
+					//Warn if there are no valid options for the object
+					if (fieldInfos.Count == 0)
+					{
+						fieldNames.Add(new GUIContent("No valid IValueSource<" + typeof(T).Name + ">" + " member!"));
+						fieldInfos.Add(null);
+					}
+
+					index = EditorGUI.Popup(valuePosition, new GUIContent("Component Member"), index, fieldNames.ToArray());
+
+					if (fieldInfos[index] == null)
+					{
+						sourceObjectMemberProp.stringValue = null;
+					}
+					else
+					{
+						sourceObjectMemberProp.stringValue = fieldInfos[index].Name;
+					}
+
 					return EditorGUIUtility.singleLineHeight;
 				}
 			}
