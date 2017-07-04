@@ -183,7 +183,7 @@ namespace Framework
 				{
 					node._nodeId = GenerateNewNodeId();
 					if (string.IsNullOrEmpty(node._editorDescription))
-						node._editorDescription = SystemUtils.IsSubclassOfRawGeneric(typeof(OutputNode<,>), node.GetType()) ? "Output" : "Node" + node._nodeId.ToString("000");
+						node._editorDescription = "Node" + node._nodeId.ToString("000");
 				}
 
 				protected override Node CreateCopyFrom(SerializedObjectEditorGUI<Node> editorGUI)
@@ -523,13 +523,6 @@ namespace Framework
 				{
 					ClearObjects();
 					
-					//Output node
-					if (nodeGraph._outputNode != null)
-					{
-						AddNewObject(nodeGraph._outputNode);
-					}
-					
-					//Main nodes
 					if (nodeGraph._nodes.Length > 0)
 					{
 						for (int i = 0; i < nodeGraph._nodes.Length; i++)
@@ -716,14 +709,7 @@ namespace Framework
 
 					foreach (NodeEditorGUI nodeView in _editableObjects)
 					{
-						if (SystemUtils.IsSubclassOfRawGeneric(typeof(OutputNode<,>), nodeView.GetEditableObject().GetType()))
-						{
-							nodeGraph._outputNode = nodeView.GetEditableObject();
-						}
-						else
-						{
-							nodes.Add(nodeView.GetEditableObject());
-						}
+						nodes.Add(nodeView.GetEditableObject());
 					}
 
 					nodeGraph._nodes = nodes.ToArray();
@@ -811,33 +797,6 @@ namespace Framework
 				private void AddNewNodeMenuCallback(object obj)
 				{
 					Type nodeType = (Type)obj;
-
-					if (SystemUtils.IsSubclassOfRawGeneric(typeof(OutputNode<,>), nodeType))
-					{
-						NodeGraph nodeGraph = ConvertToNodeGraph();
-
-						if (nodeGraph._outputNode != null)
-						{
-							//Raise warning if now have more than one output node
-							bool replace = EditorUtility.DisplayDialog("Node Machine already has an Output Node", "Do you want to replace the current output node with a new one?:\n\n", "Replace", "Cancel");
-
-							if (replace)
-							{
-								foreach (NodeEditorGUI nodeView in _editableObjects)
-								{
-									if (nodeView.GetEditableObject() == nodeGraph._outputNode)
-									{
-										RemoveObject(nodeView);
-										break;
-									}
-								}
-							}
-							else
-							{
-								return;
-							}
-						}
-					}
 
 					CreateAndAddNewObject(nodeType);
 				}

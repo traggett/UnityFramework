@@ -10,24 +10,10 @@ namespace Framework
 
 	namespace NodeGraphSystem
 	{
-		// Ideally want an easy way can access / get / set input variables to a nodegraph on a component.
-		// Either could have the component point at objects that give it its value
-		// OR? have a pointer that points at a component AND a dropdown for the correct input?
-		// OR? Access it by name (editor description)
-		// OR? Access it by index.
-
-		//So... ok....
-		//If another component has a valuesource object as a memeber (eg FloatValueSource)
-		//Then instead of the whole component being a a ivaluesource can hook it up to a memeber on one.
-		//The way that is done is a component object and a drop down for float source.
-
-
-		//[ExecuteInEditMode]
-		public class NodeGraphComponent : MonoBehaviour
+		public class NodeGraphComponent : MonoBehaviour, IDynamicValueSourceContainer
 		{
 			#region Public Data
 			public bool _unscaledTime = false;
-			public bool _runInEditor = false;
 			public NodeGraphRefProperty _nodeGraphRef;
 			#endregion
 
@@ -36,6 +22,8 @@ namespace Framework
 			#endregion
 
 			#region Private Data 
+			private Node[] _outputNodes;
+
 			private interface IInput
 			{
 				int GetNodeId();
@@ -224,7 +212,7 @@ namespace Framework
 				public int _nodeId;
 				public MaterialValueSource _valueSource;
 				public int GetNodeId() { return _nodeId; }
-				public Material GetValue() { return _valueSource; }
+				public Material GetValue() { return _valueSource.GetValue().GetMaterial(); }
 			}
 			[SerializeField]
 			private MaterialInput[] _materialInputs;
@@ -248,8 +236,13 @@ namespace Framework
 			{
 				_nodegraph = null;
 
-				if (Application.isPlaying || _runInEditor)
+				if (Application.isPlaying)
+				{
 					LoadNodeGraph();
+					if (_nodegraph != null)
+						_nodegraph.Init();
+				}
+					
 			}
 
 			void Update()
@@ -259,11 +252,6 @@ namespace Framework
 
 			void LateUpdate()
 			{
-#if UNITY_EDITOR
-				if (!_runInEditor && !Application.isPlaying)
-					return;
-#endif
-
 				if (_nodegraph != null)
 					_nodegraph.Update(_unscaledTime ? Time.unscaledDeltaTime : Time.deltaTime);
 			}
@@ -278,17 +266,8 @@ namespace Framework
 				{
 					GameObjectRef.FixupGameObjectRefs(this.gameObject, _nodegraph);
 					FixupInputs();
-#if UNITY_EDITOR
-					if (!_runInEditor && !Application.isPlaying)
-						return;
-#endif
 
-					_nodegraph.Init();
-
-					if (_nodegraph._nodes.Length == 0)
-					{
-						Debug.Log("Weird");
-					}
+					_outputNodes = _nodegraph.GetOutputNodes();
 				}
 			}
 
@@ -333,6 +312,43 @@ namespace Framework
 			}
 			#endregion
 
+			#region IDynamicValueSourceContainer 
+			public object GetValueSource(int index)
+			{
+				if (_nodegraph != null)
+				{
+					Node[] outputNodes = _nodegraph.GetOutputNodes();
+
+					if (outputNodes != null && outputNodes.Length > index)
+						return outputNodes[index];
+				}
+
+				return null;
+			}
+
+#if UNITY_EDITOR
+			public int GetNumberOfValueSources()
+			{
+				EnsureNodeGraphIsLoaded();
+
+				if (_outputNodes != null)
+					return _outputNodes.Length;
+
+				return 0;
+			}
+
+			public string GetValueSourceName(int index)
+			{
+				EnsureNodeGraphIsLoaded();
+
+				if (_outputNodes != null && _outputNodes.Length > index)
+					return "(OutputNode) " + _outputNodes[index]._editorDescription;
+
+				return null;
+			}
+#endif
+			#endregion
+
 			#region Private Functions 
 			private void FixupInputs()
 			{
@@ -375,6 +391,17 @@ namespace Framework
 					}
 				}
 			}
+
+#if UNITY_EDITOR
+			private void EnsureNodeGraphIsLoaded()
+			{
+				if (!Application.isPlaying)
+				{
+					if (_nodegraph == null || _nodegraph._nodes.Length == 0)
+						LoadNodeGraph();
+				}	
+			}
+#endif
 			#endregion
 		}
 	}

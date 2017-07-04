@@ -15,15 +15,36 @@ namespace Framework
 		{
 			public abstract class ValueSourcePropertyDrawer<T> : PropertyDrawer
 			{
+				public enum eEdtiorType
+				{
+					Static,
+					Source,
+				}
+
+				private struct MemeberData
+				{
+					public ValueSource<T>.eSourceType _sourceType;
+					public FieldInfo _fieldInfo;
+					public int _index;
+
+					public MemeberData(ValueSource<T>.eSourceType sourceType, FieldInfo fieldInfo, int index)
+					{
+						_sourceType = sourceType;
+						_fieldInfo = fieldInfo;
+						_index = index;
+					}
+				}
+
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 				{
 					EditorGUI.BeginProperty(position, label, property);
 
-					SerializedProperty valueProperty = property.FindPropertyRelative("_value");
+					SerializedProperty sourceTypeProperty = property.FindPropertyRelative("_sourceType");
 					SerializedProperty sourceObjectProp = property.FindPropertyRelative("_sourceObject");
-					SerializedProperty sourceObjectMemberProp = property.FindPropertyRelative("_sourceObjectMember");
+					SerializedProperty sourceObjectMemberNameProp = property.FindPropertyRelative("_sourceObjectMemberName");
+					SerializedProperty sourceObjectMemberIndexProp = property.FindPropertyRelative("_sourceObjectMemberIndex");
+					SerializedProperty valueProperty = property.FindPropertyRelative("_value");
 
-					SerializedProperty editorTypeProperty = property.FindPropertyRelative("_editorType");
 					SerializedProperty editorFoldoutProp = property.FindPropertyRelative("_editorFoldout");
 					SerializedProperty editorHeightProp = property.FindPropertyRelative("_editorHeight");
 
@@ -36,36 +57,36 @@ namespace Framework
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
-
-						ValueSource<T>.eEdtiorType sourceType = (ValueSource<T>.eEdtiorType)editorTypeProperty.intValue;
-						bool tempOverrideType = sourceType == ValueSource<T>.eEdtiorType.Static && EditorUtils.GetDraggingComponent<IValueSource<T>>() != null;
+						
+						eEdtiorType sourceType = (ValueSource<T>.eSourceType)sourceTypeProperty.intValue == ValueSource<T>.eSourceType.Static ? eEdtiorType.Static : eEdtiorType.Source;
+						bool tempOverrideType = sourceType == eEdtiorType.Static && EditorUtils.GetDraggingComponent<MonoBehaviour>() != null;
 						if (tempOverrideType)
 						{
-							sourceType = ValueSource<T>.eEdtiorType.Source;
+							sourceType = eEdtiorType.Source;
 						}
 
 						EditorGUI.BeginChangeCheck();
 
 						Rect typePosition = new Rect(position.x, position.y + editorHeightProp.floatValue, position.width, EditorGUIUtility.singleLineHeight);
-						ValueSource<T>.eEdtiorType edtiorType = (ValueSource<T>.eEdtiorType)EditorGUI.EnumPopup(typePosition, "Source Type", sourceType);
+						eEdtiorType edtiorType = (eEdtiorType)EditorGUI.EnumPopup(typePosition, "Source Type", sourceType);
 						editorHeightProp.floatValue += EditorGUIUtility.singleLineHeight;
 
 						if (EditorGUI.EndChangeCheck())
 						{
 							sourceObjectProp.objectReferenceValue = null;
-							editorTypeProperty.intValue = Convert.ToInt32(edtiorType);
+							sourceTypeProperty.intValue = Convert.ToInt32(edtiorType);
 						}
 
 						Rect valuePosition = new Rect(position.x, position.y + editorHeightProp.floatValue, position.width, EditorGUIUtility.singleLineHeight);
 
 						switch (sourceType)
 						{
-							case ValueSource<T>.eEdtiorType.Source:
+							case eEdtiorType.Source:
 								{
-									editorHeightProp.floatValue += DrawSourceObjectField(sourceObjectProp, sourceObjectMemberProp, valuePosition, editorTypeProperty);
+									editorHeightProp.floatValue += DrawSourceObjectField(sourceObjectProp, sourceTypeProperty, sourceObjectMemberNameProp, sourceObjectMemberIndexProp, valuePosition);
 								}
 								break;
-							case ValueSource<T>.eEdtiorType.Static:
+							case eEdtiorType.Static:
 								{
 									editorHeightProp.floatValue += DrawValueField(valuePosition, valueProperty);
 								}
@@ -91,7 +112,7 @@ namespace Framework
 				}
 
 
-				private float DrawSourceObjectField(SerializedProperty sourceObjectProp, SerializedProperty sourceObjectMemberProp, Rect valuePosition, SerializedProperty editorTypeProperty)
+				private float DrawSourceObjectField(SerializedProperty sourceObjectProp, SerializedProperty sourceTypeProperty, SerializedProperty sourceObjectMemberNameProp, SerializedProperty sourceObjectMemberIndexProp, Rect valuePosition)
 				{
 					Component currentComponent = sourceObjectProp.objectReferenceValue as Component;
 
@@ -101,65 +122,81 @@ namespace Framework
 					if (currentComponent != selectedComponent)
 					{
 						sourceObjectProp.objectReferenceValue = selectedComponent;
-						editorTypeProperty.intValue = Convert.ToInt32(ValueSource<T>.eEdtiorType.Source);
+						sourceTypeProperty.intValue = Convert.ToInt32(ValueSource<T>.eSourceType.SourceObject);
 					}
 
 					valuePosition.y += height;
 
 					if (currentComponent != null)
 					{
-						height += DrawObjectDropDown(currentComponent, valuePosition, sourceObjectMemberProp);
+						height += DrawObjectDropDown(currentComponent, valuePosition, sourceTypeProperty, sourceObjectMemberNameProp, sourceObjectMemberIndexProp);
 					}
 
 					return height;
 				}
 
-				private float DrawObjectDropDown(object obj, Rect valuePosition, SerializedProperty sourceObjectMemberProp)
+				private float DrawObjectDropDown(object obj, Rect valuePosition, SerializedProperty sourceTypeProperty, SerializedProperty sourceObjectMemberNameProp, SerializedProperty sourceObjectMemberIndexProp)
 				{
-					List<GUIContent> fieldNames = new List<GUIContent>();
-					List<FieldInfo> fieldInfos = new List<FieldInfo>();
+					List<GUIContent> memberLabels = new List<GUIContent>();
+					List<MemeberData> memeberInfo = new List<MemeberData>();
 
 					int index = 0;
 
 					//If the object itself is an IValueSource<T> then it can be selected
 					if (SystemUtils.IsTypeOf(typeof(IValueSource<T>), obj.GetType()))
 					{
-						fieldNames.Add(new GUIContent(".this"));
-						fieldInfos.Add(null);
+						memberLabels.Add(new GUIContent(".this"));
+						memeberInfo.Add(new MemeberData(ValueSource<T>.eSourceType.SourceObject, null, -1));
 
-						if (string.IsNullOrEmpty(sourceObjectMemberProp.stringValue))
-							index = fieldInfos.Count - 1;
+						if (sourceObjectMemberIndexProp.intValue == -1 && string.IsNullOrEmpty(sourceObjectMemberNameProp.stringValue))
+							index = 0;
 					}
 
-					//Otherwise can select any of its fields if they are IValueSource<T> 
+					//If the object is a dynamic value source container then add its value sources to the list
+					if (SystemUtils.IsTypeOf(typeof(IDynamicValueSourceContainer), obj.GetType()))
+					{
+						IDynamicValueSourceContainer dynamicContainer = (IDynamicValueSourceContainer)obj;
+
+						for (int i = 0; i < dynamicContainer.GetNumberOfValueSources(); i++)
+						{
+							if (SystemUtils.IsTypeOf(typeof(IValueSource<T>), dynamicContainer.GetValueSource(i).GetType()))
+							{
+								//Ideally be able to get value source name as well? just for editor?
+								memberLabels.Add(new GUIContent(dynamicContainer.GetValueSourceName(i).ToString()));
+								memeberInfo.Add(new MemeberData(ValueSource<T>.eSourceType.SourceDynamicMember, null, i));
+
+								if (sourceObjectMemberIndexProp.intValue == i)
+									index = memeberInfo.Count - 1;
+							}
+						}
+					
+					}
+
+					//Finally add all public fields that are of type IValueSource<T>
 					FieldInfo[] fields = ValueSource<T>.GetValueSourceFields(obj);
 
 					foreach (FieldInfo field in fields)
 					{
-						fieldNames.Add(new GUIContent("." + field.Name));
-						fieldInfos.Add(field);
+						memberLabels.Add(new GUIContent("." + field.Name));
+						memeberInfo.Add(new MemeberData(ValueSource<T>.eSourceType.SourceMember, field, -1));
 
-						if (sourceObjectMemberProp.stringValue == field.Name)
-							index = fieldInfos.Count - 1;
+						if (sourceObjectMemberNameProp.stringValue == field.Name)
+							index = memeberInfo.Count - 1;
 					}
 					
 					//Warn if there are no valid options for the object
-					if (fieldInfos.Count == 0)
+					if (memeberInfo.Count == 0)
 					{
-						fieldNames.Add(new GUIContent("No valid IValueSource<" + typeof(T).Name + ">" + " member!"));
-						fieldInfos.Add(null);
-					}
-
-					index = EditorGUI.Popup(valuePosition, new GUIContent("Component Member"), index, fieldNames.ToArray());
-
-					if (fieldInfos[index] == null)
-					{
-						sourceObjectMemberProp.stringValue = null;
+						EditorGUI.LabelField(valuePosition, new GUIContent("Component Property"), new GUIContent("Component has no valid IValueSource<" + typeof(T).Name + ">" + " member!"));
 					}
 					else
 					{
-						sourceObjectMemberProp.stringValue = fieldInfos[index].Name;
+						index = EditorGUI.Popup(valuePosition, new GUIContent("Component Property"), index, memberLabels.ToArray());
+						sourceTypeProperty.intValue = Convert.ToInt32(memeberInfo[index]._sourceType);
+						sourceObjectMemberNameProp.stringValue = memeberInfo[index]._fieldInfo != null ? memeberInfo[index]._fieldInfo.Name : null;
+						sourceObjectMemberIndexProp.intValue = memeberInfo[index]._index;
 					}
+					
 
 					return EditorGUIUtility.singleLineHeight;
 				}

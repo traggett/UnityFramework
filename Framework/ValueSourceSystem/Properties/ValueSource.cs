@@ -1,8 +1,8 @@
-using System;
 using UnityEngine;
 using System.Reflection;
 using Framework.Utils;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -15,23 +15,40 @@ namespace Framework
 		//Class that allows a value to either be defined as a member or be calculated from other source.
 		public abstract class ValueSource<T> : IValueSource<T>, ISerializationCallbackReceiver
 		{
+			public enum eSourceType
+			{
+				Static,
+				SourceObject,
+				SourceMember,
+				SourceDynamicMember,
+			}
+
 			[SerializeField]
 			protected T _value;
 			[SerializeField]
-			protected UnityEngine.Object _sourceObject;
+			private UnityEngine.Object _sourceObject;
 			[SerializeField]
-			protected string _sourceObjectMember;
-			//Cached value source
-			private IValueSource<T> _source;
+			private string _sourceObjectMemberName;
+			[SerializeField]
+			private int _sourceObjectMemberIndex = -1;
+			[SerializeField]
+			public eSourceType _sourceType = eSourceType.Static;
+
+			//Runtime non serialized cached data (in union struct)
+			[StructLayout(LayoutKind.Explicit)]
+			private struct SourceObject
+			{
+				[FieldOffset(0)]
+				public FieldInfo _fieldInfo;
+				[FieldOffset(0)]
+				public IValueSource<T> _valueSource;
+				[FieldOffset(0)]
+				public IDynamicValueSourceContainer _dynamicValueSource;
+			}
+			private SourceObject _sourceObjectData;
+
 
 #if UNITY_EDITOR
-			public enum eEdtiorType
-			{
-				Static,
-				Source,
-			}
-			[SerializeField]
-			public eEdtiorType _editorType;
 			[SerializeField]
 			public bool _editorFoldout;
 			[SerializeField]
@@ -41,7 +58,6 @@ namespace Framework
 			public ValueSource()
 			{
 #if UNITY_EDITOR
-				_editorType = eEdtiorType.Static;
 				_editorFoldout = false;
 				_editorHeight = EditorGUIUtility.singleLineHeight * 3;
 #endif
@@ -51,32 +67,6 @@ namespace Framework
 			{
 				return property.GetValue();
 			}
-
-			#region IValueSource<T>
-			public T GetValue()
-			{
-				if (_source != null)
-				{
-					return _source.GetValue();
-				}
-				else
-				{
-					return _value;
-				}
-			}
-			#endregion
-
-			#region ISerializationCallbackReceiver
-			public void OnBeforeSerialize()
-			{
-
-			}
-
-			public void OnAfterDeserialize()
-			{
-				_source = FindSourceObject();
-			}
-			#endregion
 
 			public static FieldInfo[] GetValueSourceFields(object obj)
 			{
@@ -94,33 +84,63 @@ namespace Framework
 				return fieldInfo.ToArray();
 			}
 
-			private IValueSource<T> FindSourceObject()
+			#region IValueSource<T>
+			public T GetValue()
 			{
-				//Have to cast to system.object to stop unity's multi-threaded errors
-				if ((System.Object)_sourceObject != null)
+				switch (_sourceType)
 				{
-					//If the member name is null/empty then the object itself must be an IValueSource<T>
-					if (string.IsNullOrEmpty(_sourceObjectMember))
-					{
-						return _sourceObject as IValueSource<T>;
-					}
-					//Otherwise find the field name by id.
-					else
-					{
-						FieldInfo[] fields = GetValueSourceFields(_sourceObject);
+					case eSourceType.SourceObject: return _sourceObjectData._valueSource.GetValue();
+					case eSourceType.SourceMember: return (_sourceObjectData._fieldInfo.GetValue(_sourceObject) as IValueSource<T>).GetValue();
+					case eSourceType.SourceDynamicMember: return (_sourceObjectData._dynamicValueSource.GetValueSource(_sourceObjectMemberIndex) as IValueSource<T>).GetValue();
+					default: return _value;
+				}
+			}
+			#endregion
 
-						foreach (FieldInfo field in fields)
+			#region ISerializationCallbackReceiver
+			public void OnBeforeSerialize()
+			{
+
+			}
+
+			public void OnAfterDeserialize()
+			{
+				//Cache casted objects or field info
+				switch (_sourceType)
+				{
+					case eSourceType.Static: break;
+					case eSourceType.SourceObject:
 						{
-							if (field.Name == _sourceObjectMember)
+							if ((object)_sourceObject != null)
+								_sourceObjectData._valueSource = _sourceObject as IValueSource<T>; 
+						}
+						break;
+					case eSourceType.SourceMember:
+						{
+							if ((object)_sourceObject != null)
 							{
-								return field.GetValue(_sourceObject) as IValueSource<T>;
+								FieldInfo[] fields = GetValueSourceFields(_sourceObject);
+
+								foreach (FieldInfo field in fields)
+								{
+									if (field.Name == _sourceObjectMemberName)
+									{
+										_sourceObjectData._fieldInfo = field;
+										break;
+									}
+								}
 							}
 						}
+						break;
+					case eSourceType.SourceDynamicMember:
+						{
+							if ((object)_sourceObject != null)
+								_sourceObjectData._dynamicValueSource = _sourceObject as IDynamicValueSourceContainer;
+						}
+						break;
 					}
-				}
-
-				return null;
 			}
+			#endregion
 		}
 	}
 }

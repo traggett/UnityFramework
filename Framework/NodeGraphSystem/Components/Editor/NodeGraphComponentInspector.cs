@@ -11,7 +11,6 @@ namespace Framework
 			public sealed class NodeGraphComponentInspector : UnityEditor.Editor
 			{
 				private SerializedProperty _unscaledTime;
-				private SerializedProperty _runInEditor;
 
 				private SerializedProperty _nodeGraphRef;
 				private bool _nodeGraphRefOut = true;
@@ -63,7 +62,6 @@ namespace Framework
 					NodeGraphComponent nodeGraphComponent = (NodeGraphComponent)target;
 
 					_unscaledTime = serializedObject.FindProperty("_unscaledTime");
-					_runInEditor = serializedObject.FindProperty("_runInEditor");
 					_nodeGraphRef = serializedObject.FindProperty("_nodeGraphRef");
 					_nodeGraphRefAsset = _nodeGraphRef.FindPropertyRelative("_file");
 
@@ -85,14 +83,8 @@ namespace Framework
 					_componentInputs = serializedObject.FindProperty("_componentInputs");
 					_materialInputs = serializedObject.FindProperty("_materialInputs");
 					_textureInputs = serializedObject.FindProperty("_textureInputs");
-
-
-					//if (nodeGraphComponent.GetNodeGraph() == null)
-					{
-						nodeGraphComponent.LoadNodeGraph();
-					}
-
-
+				
+					nodeGraphComponent.LoadNodeGraph();
 					_nodeGraph = nodeGraphComponent.GetNodeGraph();
 				}
 
@@ -101,16 +93,6 @@ namespace Framework
 					NodeGraphComponent nodeGraphComponent = (NodeGraphComponent)target;
 
 					EditorGUILayout.PropertyField(_unscaledTime);
-
-					{
-						EditorGUI.BeginChangeCheck();
-						EditorGUILayout.PropertyField(_runInEditor);
-						if (EditorGUI.EndChangeCheck() && _runInEditor.boolValue)
-						{
-							nodeGraphComponent.LoadNodeGraph();
-							_nodeGraph = nodeGraphComponent.GetNodeGraph();
-						}
-					}
 
 					{
 						_nodeGraphRefOut = EditorGUILayout.Foldout(_nodeGraphRefOut, "Node Graph");

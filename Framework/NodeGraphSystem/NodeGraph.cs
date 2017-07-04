@@ -5,7 +5,6 @@ using UnityEngine;
 namespace Framework
 {
 	using Utils;
-	using ValueSourceSystem;
 	using Serialization;
 
 	namespace NodeGraphSystem
@@ -13,18 +12,16 @@ namespace Framework
 		[Serializable]
 		public class NodeGraph : ISerializationCallbackReceiver
 		{
-			public Node _outputNode;
+			#region Public Data
 			public Node[] _nodes = new Node[0];
+			#endregion
 
+			#region Private Data
 			private List<Node> _nodeUpdateList;
 			private float _time;
+			#endregion
 
-			public NodeGraph()
-			{
-
-			}
-
-
+			#region Public Interface
 			public static void FixupNodeRefs(NodeGraph nodeGraph, object node)
 			{
 				if (node != null)
@@ -58,18 +55,6 @@ namespace Framework
 				return null;
 			}
 
-			public T GetValue<T>() where T : struct
-			{
-				//Make sure output node matches requested type
-				if (_outputNode != null && typeof(IValueSource<T>).IsAssignableFrom(_outputNode.GetType()))
-				{
-					IValueSource<T> outputNode = _outputNode as IValueSource<T>;
-					return outputNode.GetValue();
-				}
-
-				return default(T);
-			}
-
 			public Node[] GetInputNodes()
 			{
 				List<Node> inputNodes = new List<Node>();
@@ -83,6 +68,21 @@ namespace Framework
 				}
 
 				return inputNodes.ToArray();
+			}
+
+			public Node[] GetOutputNodes()
+			{
+				List<Node> outputNodes = new List<Node>();
+
+				foreach (Node node in _nodes)
+				{
+					if (SystemUtils.IsSubclassOfRawGeneric(typeof(OutputNode<,>), node.GetType()))
+					{
+						outputNodes.Add(node);
+					}
+				}
+
+				return outputNodes.ToArray();
 			}
 
 			public void Init()
@@ -111,6 +111,30 @@ namespace Framework
 				_time = 0.0f;
 			}
 
+			public void Update(float deltaTime)
+			{
+				_time += deltaTime;
+
+				foreach (Node node in _nodeUpdateList)
+				{
+					node.Update(_time, deltaTime);
+				}
+			}
+			#endregion
+
+			#region ISerializationCallbackReceiver
+			public void OnBeforeSerialize()
+			{
+
+			}
+
+			public void OnAfterDeserialize()
+			{
+				FixupNodeRefs(this, this);
+			}
+			#endregion
+
+			#region Private Functions
 			private Node[] GetOrderedNodesFromNode(Node node)
 			{
 				Dictionary<Node, int> nodePathRatings = new Dictionary<Node, int>();
@@ -151,30 +175,6 @@ namespace Framework
 						AddNodeDependancies(linkedNode, nodePathRatings, currentIndex + 1);
 				}
 			}
-
-
-
-			public void Update(float deltaTime)
-			{
-				_time += deltaTime;
-
-				foreach (Node node in _nodeUpdateList)
-				{
-					node.Update(_time, deltaTime);
-				}
-			}
-
-			#region ISerializationCallbackReceiver
-			public void OnBeforeSerialize()
-			{
-
-			}
-
-			public void OnAfterDeserialize()
-			{
-				FixupNodeRefs(this, this);
-			}
-			#endregion
 
 			private Node[] GetNodesLinkingToNode(Node node)
 			{
@@ -224,6 +224,7 @@ namespace Framework
 
 				return referenedNodes.ToArray();
 			}
+			#endregion
 		}
 	}
 }
