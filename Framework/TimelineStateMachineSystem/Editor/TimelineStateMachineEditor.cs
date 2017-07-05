@@ -279,8 +279,7 @@ namespace Framework
 				}
 
 				protected override void RenderObjectsOnGrid()
-				{
-					
+				{				
 					_style._stateTextStyle.fontSize = Mathf.RoundToInt(_style._stateTextStyleFontSize * _currentZoom);
 					_style._externalStateTextStyle.fontSize = Mathf.RoundToInt(_style._externalStateTextStyleFontSize * _currentZoom);
 					_style._linkTextStyle.fontSize = Mathf.RoundToInt(_style._linkTextStyleFontSize * _currentZoom);

@@ -63,7 +63,7 @@ namespace Framework
 					_noteColor = new Color(0.93f, 0.92f, 0.78f);
 					_debugCurrentStateColor = new Color(1.0f, 0.7f, 0.18f);
 
-					_stateTextStyleFontSize = _stateTitleStyle.fontSize;
+					_stateTextStyleFontSize = _stateTextStyle.fontSize;
 					_externalStateTextStyleFontSize = _externalStateTextStyle.fontSize;
 					_linkTextStyleFontSize = _linkTextStyle.fontSize;
 					_noteTextStyleFontSize = _noteTextStyle.fontSize;

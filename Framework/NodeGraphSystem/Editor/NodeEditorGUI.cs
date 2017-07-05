@@ -86,8 +86,7 @@ namespace Framework
 				public override bool RenderObjectProperties(GUIContent label)
 				{
 					EditorGUI.BeginChangeCheck();
-					//GetEditableObject()._editorDescription = EditorGUILayout.DelayedTextField("Editor Description", GetEditableObject()._editorDescription);
-					EditorGUILayout.LabelField("Editor Description", GetEditableObject()._editorDescription);
+					GetEditableObject()._editorDescription = EditorGUILayout.DelayedTextField("Editor Description", GetEditableObject()._editorDescription);
 
 					bool dataChanged = EditorGUI.EndChangeCheck();
 
@@ -192,7 +191,8 @@ namespace Framework
 
 							GUI.backgroundColor = Color.clear;
 							titleStyle.fontStyle = FontStyle.Bold;
-							GetEditableObject()._editorDescription = GUI.TextField(new Rect(kTextPadding * scale, -2.0f * scale, labelRect.width - kTextPadding * 2.0f * scale, kLableHeight * scale), GetEditableObject()._editorDescription, titleStyle);
+							//GetEditableObject()._editorDescription = GUI.TextField(new Rect(kTextPadding * scale, -2.0f * scale, labelRect.width - kTextPadding * 2.0f * scale, kLableHeight * scale), GetEditableObject()._editorDescription, titleStyle);
+							EditorGUI.LabelField(new Rect(kTextPadding * scale, -2.0f * scale, labelRect.width - kTextPadding * 2.0f * scale, kLableHeight * scale), GetEditableObject()._editorDescription, titleStyle);
 
 							string nodeTypeText = "<b>(" + StringUtils.FromPropertyCamelCase(GetEditableObject().GetType().Name) + ")</b>";
 							textStyle.alignment = TextAnchor.MiddleLeft;
