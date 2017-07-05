@@ -17,42 +17,23 @@ namespace Framework
 				private SerializedProperty _nodeGraphRefAsset;
 
 				private SerializedProperty _floatInputs;
-				private bool _floatsInputsFoldOut = true;
 				private SerializedProperty _intInputs;
-				private bool _intInputsFoldOut = true;
 				private SerializedProperty _floatRangeInputs;
-				private bool _floatRangeInputsFoldOut = true;
 				private SerializedProperty _intRangeInputs;
-				private bool _intRangeInputsFoldOut = true;
 				private SerializedProperty _vector2Inputs;
-				private bool _vector2InputsFoldOut = true;
 				private SerializedProperty _vector3Inputs;
-				private bool _vector3InputsFoldOut = true;
 				private SerializedProperty _vector4Inputs;
-				private bool _vector4InputsFoldOut = true;
 				private SerializedProperty _quaternionInputs;
-				private bool _quaternionInputsFoldOut = true;
 				private SerializedProperty _colorInputs;
-				private bool _colorInputsFoldOut = true;
 				private SerializedProperty _stringInputs;
-				private bool _stringInputsFoldOut = true;
 				private SerializedProperty _boolInputs;
-				private bool _boolInputsFoldOut = true;
 				private SerializedProperty _gradientInputs;
-				private bool _gradientInputsFoldOut = true;
 				private SerializedProperty _animationCurveInputs;
-				private bool _animationCurveInputsFoldOut = true;
 				private SerializedProperty _transformInputs;
-				private bool _transformInputsFoldOut = true;
 				private SerializedProperty _gameObjectInputs;
-				private bool _gameObjectInputsFoldOut = true;
 				private SerializedProperty _componentInputs;
-				private bool _componentInputsFoldOut = true;
 				private SerializedProperty _materialInputs;
-				private bool _materialInputsFoldOut = true;
 				private SerializedProperty _textureInputs;
-				private bool _textureInputsFoldOut = true;
-
 
 				private NodeGraph _nodeGraph;
 				private bool _inputsFoldOut = true;
@@ -148,24 +129,24 @@ namespace Framework
 							//First sync nodes with objects in _inputObjects
 							SyncInputNodes(inputNodes);
 							
-							RenderInputArray(nodeGraphComponent, _floatInputs, ref _floatsInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _intInputs, ref _intInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _floatRangeInputs, ref _floatRangeInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _intRangeInputs, ref _intRangeInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _vector2Inputs, ref _vector2InputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _vector3Inputs, ref _vector3InputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _vector4Inputs, ref _vector4InputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _quaternionInputs, ref _quaternionInputsFoldOut); 
-							RenderInputArray(nodeGraphComponent, _colorInputs, ref _colorInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _stringInputs, ref _stringInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _boolInputs, ref _boolInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _gradientInputs, ref _gradientInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _animationCurveInputs, ref _animationCurveInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _transformInputs, ref _transformInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _gameObjectInputs, ref _gameObjectInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _componentInputs, ref _componentInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _materialInputs, ref _materialInputsFoldOut);
-							RenderInputArray(nodeGraphComponent, _textureInputs, ref _textureInputsFoldOut); 
+							RenderInputArray(nodeGraphComponent, _floatInputs);
+							RenderInputArray(nodeGraphComponent, _intInputs);
+							RenderInputArray(nodeGraphComponent, _floatRangeInputs);
+							RenderInputArray(nodeGraphComponent, _intRangeInputs);
+							RenderInputArray(nodeGraphComponent, _vector2Inputs);
+							RenderInputArray(nodeGraphComponent, _vector3Inputs);
+							RenderInputArray(nodeGraphComponent, _vector4Inputs);
+							RenderInputArray(nodeGraphComponent, _quaternionInputs);
+							RenderInputArray(nodeGraphComponent, _colorInputs);
+							RenderInputArray(nodeGraphComponent, _stringInputs);
+							RenderInputArray(nodeGraphComponent, _boolInputs);
+							RenderInputArray(nodeGraphComponent, _gradientInputs);
+							RenderInputArray(nodeGraphComponent, _animationCurveInputs);
+							RenderInputArray(nodeGraphComponent, _transformInputs);
+							RenderInputArray(nodeGraphComponent, _gameObjectInputs);
+							RenderInputArray(nodeGraphComponent, _componentInputs);
+							RenderInputArray(nodeGraphComponent, _materialInputs);
+							RenderInputArray(nodeGraphComponent, _textureInputs); 
 
 							EditorGUI.indentLevel = origIndent;
 						}
@@ -301,13 +282,13 @@ namespace Framework
 					}
 				}
 
-				private void RenderInputArray(NodeGraphComponent nodeGraphComponent, SerializedProperty inputArrayProperty, ref bool foldout)
+				private void RenderInputArray(NodeGraphComponent nodeGraphComponent, SerializedProperty inputArrayProperty)
 				{
 					if (inputArrayProperty != null && inputArrayProperty.arraySize > 0)
 					{
-						foldout = EditorGUILayout.Foldout(foldout, inputArrayProperty.displayName);
+						inputArrayProperty.isExpanded = EditorGUILayout.Foldout(inputArrayProperty.isExpanded, inputArrayProperty.displayName);
 
-						if (foldout)
+						if (inputArrayProperty.isExpanded)
 						{
 							EditorGUI.indentLevel++;
 

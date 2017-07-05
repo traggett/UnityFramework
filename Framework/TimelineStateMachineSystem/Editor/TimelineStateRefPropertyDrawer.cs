@@ -3,8 +3,6 @@ using UnityEditor;
 
 namespace Framework
 {
-	using Serialization;
-	
 	namespace TimelineStateMachineSystem
 	{
 		namespace Editor
@@ -12,7 +10,6 @@ namespace Framework
 			[CustomPropertyDrawer(typeof(TimelineStateRefProperty))]
 			public sealed class TimelineStateRefPropertyDrawer : PropertyDrawer
 			{
-				private bool _foldout = true;
 				private float _height = EditorGUIUtility.singleLineHeight * 4;
 
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -21,10 +18,10 @@ namespace Framework
 					
 					Rect foldoutPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
-					_foldout = EditorGUI.Foldout(foldoutPosition, _foldout, property.displayName);
+					property.isExpanded = EditorGUI.Foldout(foldoutPosition, property.isExpanded, property.displayName);
 					_height = EditorGUIUtility.singleLineHeight;
 
-					if (_foldout)
+					if (property.isExpanded)
 					{
 						
 						int origIndent = EditorGUI.indentLevel;

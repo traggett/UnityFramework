@@ -86,7 +86,9 @@ namespace Framework
 				public override bool RenderObjectProperties(GUIContent label)
 				{
 					EditorGUI.BeginChangeCheck();
-					GetEditableObject()._editorDescription = EditorGUILayout.TextField("Editor Description", GetEditableObject()._editorDescription);
+					//GetEditableObject()._editorDescription = EditorGUILayout.DelayedTextField("Editor Description", GetEditableObject()._editorDescription);
+					EditorGUILayout.LabelField("Editor Description", GetEditableObject()._editorDescription);
+
 					bool dataChanged = EditorGUI.EndChangeCheck();
 
 					//Render Inputs

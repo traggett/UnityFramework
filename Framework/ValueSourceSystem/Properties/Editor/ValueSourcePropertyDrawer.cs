@@ -44,16 +44,12 @@ namespace Framework
 					SerializedProperty sourceObjectMemberNameProp = property.FindPropertyRelative("_sourceObjectMemberName");
 					SerializedProperty sourceObjectMemberIndexProp = property.FindPropertyRelative("_sourceObjectMemberIndex");
 					SerializedProperty valueProperty = property.FindPropertyRelative("_value");
-
-					SerializedProperty editorFoldoutProp = property.FindPropertyRelative("_editorFoldout");
-					SerializedProperty editorHeightProp = property.FindPropertyRelative("_editorHeight");
-
+					
 					Rect foldoutPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
-					editorFoldoutProp.boolValue = EditorGUI.Foldout(foldoutPosition, editorFoldoutProp.boolValue, label != null ? label.text : property.displayName);
-					editorHeightProp.floatValue = EditorGUIUtility.singleLineHeight;
-
-					if (editorFoldoutProp.boolValue)
+					sourceTypeProperty.isExpanded = EditorGUI.Foldout(foldoutPosition, sourceTypeProperty.isExpanded, label != null ? label.text : property.displayName);
+					
+					if (sourceTypeProperty.isExpanded)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -67,9 +63,8 @@ namespace Framework
 
 						EditorGUI.BeginChangeCheck();
 
-						Rect typePosition = new Rect(position.x, position.y + editorHeightProp.floatValue, position.width, EditorGUIUtility.singleLineHeight);
+						Rect typePosition = new Rect(position.x, position.y + EditorGUIUtility.singleLineHeight, position.width, EditorGUIUtility.singleLineHeight);
 						eEdtiorType edtiorType = (eEdtiorType)EditorGUI.EnumPopup(typePosition, "Source Type", sourceType);
-						editorHeightProp.floatValue += EditorGUIUtility.singleLineHeight;
 
 						if (EditorGUI.EndChangeCheck())
 						{
@@ -77,18 +72,18 @@ namespace Framework
 							sourceTypeProperty.intValue = Convert.ToInt32(edtiorType);
 						}
 
-						Rect valuePosition = new Rect(position.x, position.y + editorHeightProp.floatValue, position.width, EditorGUIUtility.singleLineHeight);
+						Rect valuePosition = new Rect(position.x, typePosition.y + EditorGUIUtility.singleLineHeight, position.width, EditorGUIUtility.singleLineHeight);
 
 						switch (sourceType)
 						{
 							case eEdtiorType.Source:
 								{
-									editorHeightProp.floatValue += DrawSourceObjectField(sourceObjectProp, sourceTypeProperty, sourceObjectMemberNameProp, sourceObjectMemberIndexProp, valuePosition);
+									DrawSourceObjectField(sourceObjectProp, sourceTypeProperty, sourceObjectMemberNameProp, sourceObjectMemberIndexProp, valuePosition);
 								}
 								break;
 							case eEdtiorType.Static:
 								{
-									editorHeightProp.floatValue += DrawValueField(valuePosition, valueProperty);
+									DrawValueField(valuePosition, valueProperty);
 								}
 								break;
 						}
@@ -101,18 +96,38 @@ namespace Framework
 
 				public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 				{
-					SerializedProperty editorHeightProp = property.FindPropertyRelative("_editorHeight");
-					return editorHeightProp.floatValue;
+					SerializedProperty sourceTypeProperty = property.FindPropertyRelative("_sourceType");
+					SerializedProperty valueProperty = property.FindPropertyRelative("_value");
+
+					float height = EditorGUIUtility.singleLineHeight;
+
+					if (sourceTypeProperty.isExpanded)
+					{
+						height += EditorGUIUtility.singleLineHeight;
+
+						eEdtiorType sourceType = (ValueSource<T>.eSourceType)sourceTypeProperty.intValue == ValueSource<T>.eSourceType.Static ? eEdtiorType.Static : eEdtiorType.Source;
+
+						switch (sourceType)
+						{
+							case eEdtiorType.Source: height += EditorGUIUtility.singleLineHeight * 3; break;
+							case eEdtiorType.Static: height += GetValueFieldHeight(valueProperty); break;
+						}
+					}
+
+					return height;
 				}
 
-				public virtual float DrawValueField(Rect position, SerializedProperty valueProperty)
+				public virtual void DrawValueField(Rect position, SerializedProperty valueProperty)
 				{
 					EditorGUI.PropertyField(position, valueProperty, new GUIContent("Value"));
+				}
+
+				public virtual float GetValueFieldHeight(SerializedProperty valueProperty)
+				{
 					return EditorGUIUtility.singleLineHeight;
 				}
 
-
-				private float DrawSourceObjectField(SerializedProperty sourceObjectProp, SerializedProperty sourceTypeProperty, SerializedProperty sourceObjectMemberNameProp, SerializedProperty sourceObjectMemberIndexProp, Rect valuePosition)
+				private void DrawSourceObjectField(SerializedProperty sourceObjectProp, SerializedProperty sourceTypeProperty, SerializedProperty sourceObjectMemberNameProp, SerializedProperty sourceObjectMemberIndexProp, Rect valuePosition)
 				{
 					Component currentComponent = sourceObjectProp.objectReferenceValue as Component;
 
@@ -131,8 +146,6 @@ namespace Framework
 					{
 						height += DrawObjectDropDown(currentComponent, valuePosition, sourceTypeProperty, sourceObjectMemberNameProp, sourceObjectMemberIndexProp);
 					}
-
-					return height;
 				}
 
 				private float DrawObjectDropDown(object obj, Rect valuePosition, SerializedProperty sourceTypeProperty, SerializedProperty sourceObjectMemberNameProp, SerializedProperty sourceObjectMemberIndexProp)
@@ -191,12 +204,16 @@ namespace Framework
 					}
 					else
 					{
+						EditorGUI.BeginChangeCheck();
 						index = EditorGUI.Popup(valuePosition, new GUIContent("Component Property"), index, memberLabels.ToArray());
-						sourceTypeProperty.intValue = Convert.ToInt32(memeberInfo[index]._sourceType);
-						sourceObjectMemberNameProp.stringValue = memeberInfo[index]._fieldInfo != null ? memeberInfo[index]._fieldInfo.Name : null;
-						sourceObjectMemberIndexProp.intValue = memeberInfo[index]._index;
+
+						if (EditorGUI.EndChangeCheck())
+						{
+							sourceTypeProperty.intValue = Convert.ToInt32(memeberInfo[index]._sourceType);
+							sourceObjectMemberNameProp.stringValue = memeberInfo[index]._fieldInfo != null ? memeberInfo[index]._fieldInfo.Name : null;
+							sourceObjectMemberIndexProp.intValue = memeberInfo[index]._index;
+						}
 					}
-					
 
 					return EditorGUIUtility.singleLineHeight;
 				}

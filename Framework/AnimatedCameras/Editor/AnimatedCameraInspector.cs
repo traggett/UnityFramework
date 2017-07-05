@@ -166,9 +166,9 @@ namespace Framework
 
 					AnimatedCamera camera = (AnimatedCamera)target;
 					camera.transform.Translate(movement * kMovementSpeed, Space.Self);
-				}
 
-				UpdateSnapshotFromCamera();
+					UpdateSnapshotFromCamera();
+				}		
 			}
 
 			private void UpdateSnapshotFromCamera()

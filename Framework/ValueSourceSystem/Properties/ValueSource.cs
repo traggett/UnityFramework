@@ -4,10 +4,6 @@ using Framework.Utils;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 namespace Framework
 {
 	namespace ValueSourceSystem
@@ -26,13 +22,13 @@ namespace Framework
 			[SerializeField]
 			protected T _value;
 			[SerializeField]
-			private UnityEngine.Object _sourceObject;
+			private UnityEngine.Object _sourceObject = null;
 			[SerializeField]
-			private string _sourceObjectMemberName;
+			private string _sourceObjectMemberName = null;
 			[SerializeField]
 			private int _sourceObjectMemberIndex = -1;
 			[SerializeField]
-			public eSourceType _sourceType = eSourceType.Static;
+			private eSourceType _sourceType = eSourceType.Static;
 
 			//Runtime non serialized cached data (in union struct)
 			[StructLayout(LayoutKind.Explicit)]
@@ -46,22 +42,6 @@ namespace Framework
 				public IDynamicValueSourceContainer _dynamicValueSource;
 			}
 			private SourceObject _sourceObjectData;
-
-
-#if UNITY_EDITOR
-			[SerializeField]
-			public bool _editorFoldout;
-			[SerializeField]
-			public float _editorHeight;
-#endif
-
-			public ValueSource()
-			{
-#if UNITY_EDITOR
-				_editorFoldout = false;
-				_editorHeight = EditorGUIUtility.singleLineHeight * 3;
-#endif
-			}
 
 			public static implicit operator T(ValueSource<T> property)
 			{

@@ -233,7 +233,9 @@ namespace Framework
 							else
 							{
 								GUI.backgroundColor = Color.clear;
-								GetEditableObject()._editorDescription = GUI.TextField(labelTextRect, GetEditableObject()._editorDescription, labelStyle);
+								//GetEditableObject()._editorDescription = EditorGUI.DelayedTextField(labelTextRect, GetEditableObject()._editorDescription, labelStyle);
+								GUI.Label(labelTextRect, GetEditableObject()._editorDescription, labelStyle);
+
 								GUI.backgroundColor = stateColor;
 							}
 							

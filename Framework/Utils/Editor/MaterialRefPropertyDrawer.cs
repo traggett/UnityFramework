@@ -11,6 +11,12 @@ namespace Framework
 			[CustomPropertyDrawer(typeof(MaterialRefProperty))]
 			public class MaterialRefPropertyDrawer : PropertyDrawer
 			{
+				private enum eEdtiorType
+				{
+					Instance,
+					Shared,
+				}
+
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 				{
 					EditorGUI.BeginProperty(position, label, property);
@@ -19,34 +25,32 @@ namespace Framework
 					SerializedProperty materialIndexProp = property.FindPropertyRelative("_materialIndex");
 					SerializedProperty rendererProp = property.FindPropertyRelative("_renderer");
 
-					SerializedProperty editorTypeProperty = property.FindPropertyRelative("_editorType");
-					SerializedProperty editorFoldoutProp = property.FindPropertyRelative("_editorFoldout");
-					SerializedProperty editorHeightProp = property.FindPropertyRelative("_editorHeight");
-
-
+					float yPos = position.y;
 					Rect foldoutPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
-					editorFoldoutProp.boolValue = EditorGUI.Foldout(foldoutPosition, editorFoldoutProp.boolValue, property.displayName);
-					editorHeightProp.floatValue = EditorGUIUtility.singleLineHeight;
+					property.isExpanded = EditorGUI.Foldout(foldoutPosition, property.isExpanded, property.displayName);
+					yPos += EditorGUIUtility.singleLineHeight;
 
-					if (editorFoldoutProp.boolValue)
+					if (property.isExpanded)
 					{
+						eEdtiorType editorType = materialIndexProp.intValue != -1 ? eEdtiorType.Instance : eEdtiorType.Shared;
+
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 
 						//Draw type dropdown
 						{
-							Rect typePosition = new Rect(position.x, position.y + editorHeightProp.floatValue, position.width, EditorGUIUtility.singleLineHeight);
+							Rect typePosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
 
 							EditorGUI.BeginChangeCheck();
-							editorTypeProperty.enumValueIndex = Convert.ToInt32(EditorGUI.EnumPopup(typePosition, "Material Type", (MaterialRefProperty.eEdtiorType)editorTypeProperty.enumValueIndex));
-							editorHeightProp.floatValue += EditorGUIUtility.singleLineHeight;
+							editorType = (eEdtiorType)EditorGUI.EnumPopup(typePosition, "Material Type", editorType);
+							yPos += EditorGUIUtility.singleLineHeight;
 
 							if (EditorGUI.EndChangeCheck())
 							{
-								switch ((MaterialRefProperty.eEdtiorType)editorTypeProperty.enumValueIndex)
+								switch (editorType)
 								{
-									case MaterialRefProperty.eEdtiorType.Instance:
+									case eEdtiorType.Instance:
 										{
 											materialProperty.objectReferenceValue = null;
 											materialIndexProp.intValue = 0;
@@ -54,7 +58,7 @@ namespace Framework
 											rendererProp.objectReferenceValue = component != null ? component.GetComponent<Renderer>() : null;
 										}
 										break;
-									case MaterialRefProperty.eEdtiorType.Shared:
+									case eEdtiorType.Shared:
 										{
 											materialProperty.objectReferenceValue = null;
 											materialIndexProp.intValue = -1;
@@ -67,13 +71,13 @@ namespace Framework
 
 
 						//Draw renderer field
-						if ((MaterialRefProperty.eEdtiorType)editorTypeProperty.enumValueIndex == MaterialRefProperty.eEdtiorType.Instance)
+						if (editorType == eEdtiorType.Instance)
 						{
-							Rect rendererPosition = new Rect(position.x, position.y + editorHeightProp.floatValue, position.width, EditorGUIUtility.singleLineHeight);
+							Rect rendererPosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
 
 							EditorGUI.BeginChangeCheck();
 							EditorGUI.PropertyField(rendererPosition, rendererProp, new GUIContent("Renderer"));
-							editorHeightProp.floatValue += EditorGUIUtility.singleLineHeight;
+							yPos += EditorGUIUtility.singleLineHeight;
 							if (EditorGUI.EndChangeCheck())
 							{
 								materialProperty.objectReferenceValue = null;
@@ -85,7 +89,7 @@ namespace Framework
 
 							if (renderer != null)
 							{
-								Rect valuePosition = new Rect(position.x, position.y + editorHeightProp.floatValue, position.width, EditorGUIUtility.singleLineHeight);
+								Rect valuePosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
 								string[] materialNames = new string[renderer.sharedMaterials.Length];
 
 								for (int i=0; i<materialNames.Length; i++)
@@ -94,14 +98,14 @@ namespace Framework
 								}
 								
 								materialIndexProp.intValue = EditorGUI.Popup(valuePosition, "Material", materialIndexProp.intValue, materialNames);
-								editorHeightProp.floatValue += EditorGUIUtility.singleLineHeight;
+								yPos += EditorGUIUtility.singleLineHeight;
 							}
 						}
 						else
 						{
-							Rect valuePosition = new Rect(position.x, position.y + editorHeightProp.floatValue, position.width, EditorGUIUtility.singleLineHeight);
+							Rect valuePosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
 							EditorGUI.PropertyField(valuePosition, materialProperty, new GUIContent("Material"));
-							editorHeightProp.floatValue += EditorGUIUtility.singleLineHeight;
+							yPos += EditorGUIUtility.singleLineHeight;
 						}			
 
 						EditorGUI.indentLevel = origIndent;
@@ -112,10 +116,27 @@ namespace Framework
 
 				public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 				{
-					SerializedProperty editorHeightProp = property.FindPropertyRelative("_editorHeight");
-					if (editorHeightProp != null)
-						return editorHeightProp.floatValue;
-					return 0.0f;
+					if (property.isExpanded)
+					{
+						SerializedProperty materialIndexProp = property.FindPropertyRelative("_materialIndex");
+						eEdtiorType editorType = materialIndexProp.intValue != -1 ? eEdtiorType.Instance : eEdtiorType.Shared;
+
+						if (editorType == eEdtiorType.Instance)
+						{
+							SerializedProperty rendererProp = property.FindPropertyRelative("_renderer");
+
+							if (rendererProp.objectReferenceValue as Renderer != null)
+								return EditorGUIUtility.singleLineHeight * 4;
+							else
+								return EditorGUIUtility.singleLineHeight * 3;
+						}
+						else
+						{
+							return EditorGUIUtility.singleLineHeight * 3;
+						}
+					}
+
+					return EditorGUIUtility.singleLineHeight;
 				}
 			}
 		}

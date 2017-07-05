@@ -23,7 +23,7 @@ namespace Framework
 
 			#region Private Data		
 #if UNITY_EDITOR
-			bool _editorFoldout = true;
+			private bool _editorFoldout = true;
 			private static Type[] _conditionals;
 			private static string[] _conditionalNames;
 #endif
