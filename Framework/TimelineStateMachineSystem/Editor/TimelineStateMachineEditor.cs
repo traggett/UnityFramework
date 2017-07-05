@@ -280,6 +280,13 @@ namespace Framework
 
 				protected override void RenderObjectsOnGrid()
 				{
+					
+					_style._stateTextStyle.fontSize = Mathf.RoundToInt(_style._stateTextStyleFontSize * _currentZoom);
+					_style._externalStateTextStyle.fontSize = Mathf.RoundToInt(_style._externalStateTextStyleFontSize * _currentZoom);
+					_style._linkTextStyle.fontSize = Mathf.RoundToInt(_style._linkTextStyleFontSize * _currentZoom);
+					_style._noteTextStyle.fontSize = Mathf.RoundToInt(_style._noteTextStyleFontSize * _currentZoom);
+
+
 					SetupExternalState();
 
 					List<TimelineStateEditorGUI> toRender = new List<TimelineStateEditorGUI>();
@@ -312,9 +319,11 @@ namespace Framework
 						if (state.GetEditableObject()._editorAutoColor)
 							stateColor = state.IsNote ? _style._noteColor : _style._defaultStateColor;
 						else
-							stateColor = state.GetEditableObject()._editorColor;						
+							stateColor = state.GetEditableObject()._editorColor;
 
-						state.Render(renderedRect, borderColor, stateColor, _style._noteTextStyle, style, borderSize);
+						GUIContent stateLabel = state.IsNote ? new GUIContent("Note") :  new GUIContent("State" + state.GetStateId().ToString("00"));
+
+						state.Render(renderedRect, stateLabel, borderColor, stateColor, _style._noteTextStyle, style, borderSize);
 
 						if (!state.IsNote)
 							RenderLinksForState(state);
@@ -394,8 +403,8 @@ namespace Framework
 
 				protected override void AddContextMenu(GenericMenu menu)
 				{
-					menu.AddItem(new GUIContent("New State"), false, AddNewStateMenuCallback);
-					menu.AddItem(new GUIContent("New Note"), false, AddNewNoteMenuCallback);
+					menu.AddItem(new GUIContent("Create New State"), false, AddNewStateMenuCallback);
+					menu.AddItem(new GUIContent("Add Note"), false, AddNewNoteMenuCallback);
 				}
 				#endregion
 
@@ -694,7 +703,7 @@ namespace Framework
 						bool selected = _selectedObjects.Contains(externalState);
 						Color borderColor = selected ? _style._stateBackgroundSelected : _style._stateBackground;
 						Rect renderedRect = GetScreenRect(externalState.GetBounds());
-						externalState.Render(renderedRect, borderColor, _style._externalStateColor, _style._noteTextStyle, _style._externalStateTextStyle, selected ? 2.0f : 1.0f);
+						externalState.Render(renderedRect, new GUIContent("External State"), borderColor, _style._externalStateColor, _style._noteTextStyle, _style._externalStateTextStyle, selected ? 2.0f : 1.0f);
 						externalState.ExternalHasRendered = true;
 					}
 

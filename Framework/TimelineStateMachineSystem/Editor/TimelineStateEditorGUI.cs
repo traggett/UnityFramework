@@ -184,7 +184,7 @@ namespace Framework
 					return GetEditableObject().GetDescription();
 				}
 
-				public void Render(Rect renderedRect, Color borderColor, Color stateColor, GUIStyle stateLabelStyle, GUIStyle labelStyle, float borderSize)
+				public void Render(Rect renderedRect, GUIContent stateLabel, Color borderColor, Color stateColor, GUIStyle stateLabelStyle, GUIStyle labelStyle, float borderSize)
 				{
 					Color origBackgroundColor = GUI.backgroundColor;
 					GUI.backgroundColor = Color.clear;
@@ -214,8 +214,7 @@ namespace Framework
 							labelStyle.active.textColor = textColor; 
 							labelStyle.focused.textColor = textColor;
 							labelStyle.hover.textColor = textColor;
-
-							GUIContent stateLabel = new GUIContent("State" + GetStateId().ToString("00"));
+							
 							GUI.Label(new Rect(0, 0, _rect.width, _rect.height), stateLabel, stateLabelStyle);
 
 							float seperatorY = stateLabelStyle.CalcSize(stateLabel).y;

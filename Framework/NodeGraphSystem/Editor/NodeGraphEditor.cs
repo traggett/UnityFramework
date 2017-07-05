@@ -153,6 +153,9 @@ namespace Framework
 
 				protected override void RenderObjectsOnGrid()
 				{
+					_nodeTitleTextStyle.fontSize = Mathf.RoundToInt(11 * _currentZoom);
+					_nodeTextStyle.fontSize = Mathf.RoundToInt(9 * _currentZoom);
+
 					NodeEditorField highlightedField = GetHighlightedNode(Event.current.mousePosition);
 
 					List<NodeEditorGUI> toRender = new List<NodeEditorGUI>();

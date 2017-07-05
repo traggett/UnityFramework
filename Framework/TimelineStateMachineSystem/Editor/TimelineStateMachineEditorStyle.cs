@@ -27,6 +27,11 @@ namespace Framework
 				public Color _noteColor;
 				public Color _debugCurrentStateColor;
 
+				public int _stateTextStyleFontSize;
+				public int _externalStateTextStyleFontSize;
+				public int _linkTextStyleFontSize;
+				public int _noteTextStyleFontSize;
+
 				public TimelineStateMachineEditorStyle()
 				{
 					_titleStyle = new GUIStyle(EditorStyles.label);
@@ -42,6 +47,7 @@ namespace Framework
 					_externalStateTextStyle.fontStyle = FontStyle.Bold;
 
 					_linkTextStyle = new GUIStyle(EditorUtils.TextStyleSmall);
+					_linkTextStyle.fontSize = 11;
 					_linkTextStyle.padding = new RectOffset(4, 4, 1, 1);
 
 					_noteTextStyle = new GUIStyle(EditorUtils.TextStyle);
@@ -56,6 +62,11 @@ namespace Framework
 					_externalStateColor = new Color(1.0f, 0.73f, 0.0f, 1.0f);
 					_noteColor = new Color(0.93f, 0.92f, 0.78f);
 					_debugCurrentStateColor = new Color(1.0f, 0.7f, 0.18f);
+
+					_stateTextStyleFontSize = _stateTitleStyle.fontSize;
+					_externalStateTextStyleFontSize = _externalStateTextStyle.fontSize;
+					_linkTextStyleFontSize = _linkTextStyle.fontSize;
+					_noteTextStyleFontSize = _noteTextStyle.fontSize;
 				}
 			}
 		}
