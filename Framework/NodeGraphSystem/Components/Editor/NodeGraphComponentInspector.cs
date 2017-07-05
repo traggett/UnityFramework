@@ -1,8 +1,13 @@
 using UnityEngine;
 using UnityEditor;
 
+using System;
+
 namespace Framework
 {
+	using Maths;
+	using Utils;
+
 	namespace NodeGraphSystem
 	{
 		namespace Editor
@@ -37,11 +42,10 @@ namespace Framework
 
 				private NodeGraph _nodeGraph;
 				private bool _inputsFoldOut = true;
+				private bool _outputsFoldOut = true;
 
 				void OnEnable()
 				{
-					NodeGraphComponent nodeGraphComponent = (NodeGraphComponent)target;
-
 					_unscaledTime = serializedObject.FindProperty("_unscaledTime");
 					_nodeGraphRef = serializedObject.FindProperty("_nodeGraphRef");
 					_nodeGraphRefAsset = _nodeGraphRef.FindPropertyRelative("_file");
@@ -64,17 +68,13 @@ namespace Framework
 					_componentInputs = serializedObject.FindProperty("_componentInputs");
 					_materialInputs = serializedObject.FindProperty("_materialInputs");
 					_textureInputs = serializedObject.FindProperty("_textureInputs");
-				
-					nodeGraphComponent.LoadNodeGraph();
-					_nodeGraph = nodeGraphComponent.GetNodeGraph();
+
+					ReloadNodeGraph();
 				}
 
 				public override void OnInspectorGUI()
 				{
-					NodeGraphComponent nodeGraphComponent = (NodeGraphComponent)target;
-
 					EditorGUILayout.PropertyField(_unscaledTime);
-
 					{
 						_nodeGraphRefOut = EditorGUILayout.Foldout(_nodeGraphRefOut, "Node Graph");
 
@@ -91,8 +91,7 @@ namespace Framework
 							{
 								SyncInputNodes(new Node[0]);
 								serializedObject.ApplyModifiedProperties();
-								nodeGraphComponent.LoadNodeGraph();
-								_nodeGraph = nodeGraphComponent.GetNodeGraph();
+								ReloadNodeGraph();
 							}
 
 							EditorGUILayout.BeginHorizontal();
@@ -105,8 +104,7 @@ namespace Framework
 								}
 								else if (GUILayout.Button("Refresh"))
 								{
-									nodeGraphComponent.LoadNodeGraph();
-									_nodeGraph = nodeGraphComponent.GetNodeGraph();
+									ReloadNodeGraph();
 								}
 							}
 							EditorGUILayout.EndHorizontal();
@@ -114,7 +112,14 @@ namespace Framework
 							EditorGUI.indentLevel = origIndent;
 						}
 					}
-					
+
+					//In the component need array each type of possible value source for node inputs.
+
+					//In editor want to keep the arrays of value sources matching the input nodes in the graph.
+
+					//Then render all input node value sources
+					//
+
 					if (_nodeGraph != null)
 					{
 						_inputsFoldOut = EditorGUILayout.Foldout(_inputsFoldOut, "Inputs");
@@ -125,28 +130,40 @@ namespace Framework
 							EditorGUI.indentLevel++;
 
 							Node[] inputNodes = _nodeGraph.GetInputNodes();
-
-							//First sync nodes with objects in _inputObjects
 							SyncInputNodes(inputNodes);
-							
-							RenderInputArray(nodeGraphComponent, _floatInputs);
-							RenderInputArray(nodeGraphComponent, _intInputs);
-							RenderInputArray(nodeGraphComponent, _floatRangeInputs);
-							RenderInputArray(nodeGraphComponent, _intRangeInputs);
-							RenderInputArray(nodeGraphComponent, _vector2Inputs);
-							RenderInputArray(nodeGraphComponent, _vector3Inputs);
-							RenderInputArray(nodeGraphComponent, _vector4Inputs);
-							RenderInputArray(nodeGraphComponent, _quaternionInputs);
-							RenderInputArray(nodeGraphComponent, _colorInputs);
-							RenderInputArray(nodeGraphComponent, _stringInputs);
-							RenderInputArray(nodeGraphComponent, _boolInputs);
-							RenderInputArray(nodeGraphComponent, _gradientInputs);
-							RenderInputArray(nodeGraphComponent, _animationCurveInputs);
-							RenderInputArray(nodeGraphComponent, _transformInputs);
-							RenderInputArray(nodeGraphComponent, _gameObjectInputs);
-							RenderInputArray(nodeGraphComponent, _componentInputs);
-							RenderInputArray(nodeGraphComponent, _materialInputs);
-							RenderInputArray(nodeGraphComponent, _textureInputs); 
+
+							foreach (Node inputNode in inputNodes)
+							{
+								RenderInputNode(inputNode);
+							}
+
+							EditorGUI.indentLevel = origIndent;
+						}
+
+						_outputsFoldOut = EditorGUILayout.Foldout(_outputsFoldOut, "Outputs");
+
+						if (_outputsFoldOut)
+						{
+							int origIndent = EditorGUI.indentLevel;
+							EditorGUI.indentLevel++;
+
+							Node[] outputNodes;
+							NodeGraphComponent nodeGraphComponent = (NodeGraphComponent)target;
+
+							//Is the application is running then get the output node directly from the component so can see the live value
+							if (Application.isPlaying && nodeGraphComponent.GetOutputNodes() != null)
+							{
+								outputNodes = nodeGraphComponent.GetOutputNodes();
+							}
+							else
+							{
+								outputNodes = _nodeGraph.GetOutputNodes();
+							}
+
+							foreach (Node outputNode in outputNodes)
+							{
+								RenderOutputNode(outputNode);
+							}
 
 							EditorGUI.indentLevel = origIndent;
 						}
@@ -155,154 +172,110 @@ namespace Framework
 					serializedObject.ApplyModifiedProperties();
 				}
 
+				private void ReloadNodeGraph()
+				{
+					NodeGraphComponent nodeGraphComponent = (NodeGraphComponent)target;
+					_nodeGraph = nodeGraphComponent._nodeGraphRef.LoadNodeGraph();
+				}
 
 				private void SyncInputNodes(Node[] inputNodes)
 				{
 					//Remove all nodes in component that are no longer in inputNodes array
 					{
-						RemoveOldNodes(inputNodes, _floatInputs);
-						RemoveOldNodes(inputNodes, _intInputs);
-						RemoveOldNodes(inputNodes, _floatRangeInputs);
-						RemoveOldNodes(inputNodes, _intRangeInputs);
-						RemoveOldNodes(inputNodes, _vector2Inputs);
-						RemoveOldNodes(inputNodes, _vector3Inputs);
-						RemoveOldNodes(inputNodes, _vector4Inputs);
-						RemoveOldNodes(inputNodes, _quaternionInputs); 
-						RemoveOldNodes(inputNodes, _colorInputs);
-						RemoveOldNodes(inputNodes, _stringInputs);
-						RemoveOldNodes(inputNodes, _boolInputs);
-						RemoveOldNodes(inputNodes, _animationCurveInputs);
-						RemoveOldNodes(inputNodes, _gradientInputs);
-						RemoveOldNodes(inputNodes, _transformInputs);
-						RemoveOldNodes(inputNodes, _gameObjectInputs);
-						RemoveOldNodes(inputNodes, _componentInputs);
-						RemoveOldNodes(inputNodes, _materialInputs);
-						RemoveOldNodes(inputNodes, _textureInputs);
+						RemoveOldInputNodes(inputNodes, _floatInputs);
+						RemoveOldInputNodes(inputNodes, _intInputs);
+						RemoveOldInputNodes(inputNodes, _floatRangeInputs);
+						RemoveOldInputNodes(inputNodes, _intRangeInputs);
+						RemoveOldInputNodes(inputNodes, _vector2Inputs);
+						RemoveOldInputNodes(inputNodes, _vector3Inputs);
+						RemoveOldInputNodes(inputNodes, _vector4Inputs);
+						RemoveOldInputNodes(inputNodes, _quaternionInputs);
+						RemoveOldInputNodes(inputNodes, _colorInputs);
+						RemoveOldInputNodes(inputNodes, _stringInputs);
+						RemoveOldInputNodes(inputNodes, _boolInputs);
+						RemoveOldInputNodes(inputNodes, _animationCurveInputs);
+						RemoveOldInputNodes(inputNodes, _gradientInputs);
+						RemoveOldInputNodes(inputNodes, _transformInputs);
+						RemoveOldInputNodes(inputNodes, _gameObjectInputs);
+						RemoveOldInputNodes(inputNodes, _componentInputs);
+						RemoveOldInputNodes(inputNodes, _materialInputs);
+						RemoveOldInputNodes(inputNodes, _textureInputs);
 					}
 
 					//Add any nodes that are in inputNodes array but not in component
-					foreach (Node node in inputNodes)
+					foreach (Node inputNode in inputNodes)
 					{
-						if (!IsNodeInInputArray(_floatInputs, node._nodeId) &&
-							!IsNodeInInputArray(_intInputs, node._nodeId) &&
-							!IsNodeInInputArray(_floatRangeInputs, node._nodeId) &&
-							!IsNodeInInputArray(_intRangeInputs, node._nodeId) &&
-							!IsNodeInInputArray(_vector2Inputs, node._nodeId) &&
-							!IsNodeInInputArray(_vector3Inputs, node._nodeId) &&
-							!IsNodeInInputArray(_vector4Inputs, node._nodeId) &&
-							!IsNodeInInputArray(_quaternionInputs, node._nodeId) &&
-							!IsNodeInInputArray(_colorInputs, node._nodeId) &&
-							!IsNodeInInputArray(_stringInputs, node._nodeId) &&
-							!IsNodeInInputArray(_boolInputs, node._nodeId) &&
-							!IsNodeInInputArray(_animationCurveInputs, node._nodeId) &&
-							!IsNodeInInputArray(_transformInputs, node._nodeId) &&
-							!IsNodeInInputArray(_gradientInputs, node._nodeId) &&
-							!IsNodeInInputArray(_gameObjectInputs, node._nodeId) &&
-							!IsNodeInInputArray(_componentInputs, node._nodeId) &&
-							!IsNodeInInputArray(_materialInputs, node._nodeId) &&
-							!IsNodeInInputArray(_textureInputs, node._nodeId))
+						SerializedProperty inputArrayProperty = GetInputArrayForNode(inputNode);
+						if (inputArrayProperty != null && !IsNodeInInputArray(inputArrayProperty, inputNode._nodeId))
 						{
-							AddNewInputNode(node);
+							AddNewInputNode(inputNode, inputArrayProperty);
 						}
 					}
 				}
-				private void AddNewInputNode(Node node)
+
+				private SerializedProperty GetInputArrayForNode(Node node)
 				{
-					if (node is FloatInputNode)
-					{
-						AddNewInputNode(node, _floatInputs);
-					}
-					if (node is IntInputNode)
-					{
-						AddNewInputNode(node, _intInputs);
-					}
-					else if (node is FloatRangeInputNode)
-					{
-						AddNewInputNode(node, _floatRangeInputs);
-					}
-					else if (node is IntRangeInputNode)
-					{
-						AddNewInputNode(node, _intRangeInputs);
-					}
-					else if (node is Vector2InputNode)
-					{
-						AddNewInputNode(node, _vector2Inputs);
-					}
-					else if (node is Vector3InputNode)
-					{
-						AddNewInputNode(node, _vector3Inputs);
-					}
-					else if (node is Vector4InputNode)
-					{
-						AddNewInputNode(node, _vector4Inputs);
-					}
-					else if (node is QuaternionInputNode)
-					{
-						AddNewInputNode(node, _quaternionInputs);
-					}
-					else if (node is ColorInputNode)
-					{
-						AddNewInputNode(node, _colorInputs);
-					}
-					else if (node is StringInputNode)
-					{
-						AddNewInputNode(node, _stringInputs);
-					}
-					else if (node is BoolInputNode)
-					{
-						AddNewInputNode(node, _boolInputs);
-					}
-					else if (node is AnimationCurveInputNode)
-					{
-						AddNewInputNode(node, _animationCurveInputs);
-					}
-					else if (node is GradientInputNode)
-					{
-						AddNewInputNode(node, _gradientInputs);
-					}
-					else if (node is TransformInputNode)
-					{
-						AddNewInputNode(node, _transformInputs);
-					}
-					else if (node is GameObjectInputNode)
-					{
-						AddNewInputNode(node, _gameObjectInputs);
-					}
-					else if (node is ComponentInputNode)
-					{
-						AddNewInputNode(node, _componentInputs);
-					}
-					else if (node is MaterialInputNode)
-					{
-						AddNewInputNode(node, _materialInputs);
-					}
-					else if (node is TextureInputNode)
-					{
-						AddNewInputNode(node, _textureInputs);
-					}
+					Type inputNodeType = SystemUtils.GetGenericImplementationType(typeof(InputNode<>), node.GetType());
+
+					if (inputNodeType == typeof(float))
+						return _floatInputs;
+					else if (inputNodeType == typeof(int))
+						return _intInputs;
+					else if (inputNodeType == typeof(FloatRange))
+						return _floatRangeInputs;
+					else if (inputNodeType == typeof(IntRange))
+						return _intRangeInputs;
+					else if (inputNodeType == typeof(Vector2))
+						return _vector2Inputs;
+					else if (inputNodeType == typeof(Vector3))
+						return _vector3Inputs;
+					else if (inputNodeType == typeof(Vector4))
+						return _vector4Inputs;
+					else if (inputNodeType == typeof(Quaternion))
+						return _quaternionInputs;
+					else if (inputNodeType == typeof(Color))
+						return _colorInputs;
+					else if (inputNodeType == typeof(string))
+						return _stringInputs;
+					else if (inputNodeType == typeof(bool))
+						return _boolInputs;
+					else if (inputNodeType == typeof(AnimationCurve))
+						return _animationCurveInputs;
+					else if (inputNodeType == typeof(Gradient))
+						return _gradientInputs;
+					else if (inputNodeType == typeof(Transform))
+						return _transformInputs;
+					else if (inputNodeType == typeof(GameObject))
+						return _gameObjectInputs;
+					else if (inputNodeType == typeof(Component))
+						return _componentInputs;
+					else if (inputNodeType == typeof(Material))
+						return _materialInputs;
+					else if (inputNodeType == typeof(Texture))
+						return _textureInputs;
+					else
+						return null;
 				}
 
-				private void RenderInputArray(NodeGraphComponent nodeGraphComponent, SerializedProperty inputArrayProperty)
+				private void RenderInputNode(Node node)
 				{
-					if (inputArrayProperty != null && inputArrayProperty.arraySize > 0)
+					SerializedProperty inputArrayProperty = GetInputArrayForNode(node);
+
+					Type inputNodeType = SystemUtils.GetGenericImplementationType(typeof(InputNode<>), node.GetType());
+
+					if (inputNodeType != null)
 					{
-						inputArrayProperty.isExpanded = EditorGUILayout.Foldout(inputArrayProperty.isExpanded, inputArrayProperty.displayName);
-
-						if (inputArrayProperty.isExpanded)
+						for (int i = 0; i < inputArrayProperty.arraySize; i++)
 						{
-							EditorGUI.indentLevel++;
+							SerializedProperty arrayItem = inputArrayProperty.GetArrayElementAtIndex(i);
+							SerializedProperty nodeIdProp = arrayItem.FindPropertyRelative("_nodeId");
 
-							for (int i = 0; i < inputArrayProperty.arraySize; i++)
+							if (nodeIdProp != null && nodeIdProp.intValue == node._nodeId)
 							{
-								SerializedProperty serializedInput = inputArrayProperty.GetArrayElementAtIndex(i);
-								SerializedProperty nodeIdProp = serializedInput.FindPropertyRelative("_nodeId");
-								Node node = _nodeGraph.GetNode(nodeIdProp.intValue);
-								SerializedProperty arrayItem = inputArrayProperty.GetArrayElementAtIndex(i);
 								SerializedProperty prop = arrayItem.FindPropertyRelative("_valueSource");
-								EditorGUILayout.PropertyField(prop, new GUIContent(node._editorDescription));
+								if (prop != null)
+									EditorGUILayout.PropertyField(prop, new GUIContent(node._editorDescription + " (" + SystemUtils.GetTypeName(inputNodeType) + ")"));
 							}
-
-							EditorGUI.indentLevel--;
 						}
 					}
 				}
@@ -331,10 +304,10 @@ namespace Framework
 					inputArrayProperty.InsertArrayElementAtIndex(inputArrayProperty.arraySize);
 					SerializedProperty serializedInput = inputArrayProperty.GetArrayElementAtIndex(inputArrayProperty.arraySize - 1);
 					SerializedProperty nodeIdProp = serializedInput.FindPropertyRelative("_nodeId");
-					nodeIdProp.intValue = node._nodeId;				
+					nodeIdProp.intValue = node._nodeId;
 				}
 
-				private void RemoveOldNodes(Node[] inputNodes, SerializedProperty inputArrayProperty)
+				private void RemoveOldInputNodes(Node[] inputNodes, SerializedProperty inputArrayProperty)
 				{
 					if (inputArrayProperty != null)
 					{
@@ -363,6 +336,17 @@ namespace Framework
 								inputArrayProperty.DeleteArrayElementAtIndex(i);
 							}
 						}
+					}
+				}
+
+				private void RenderOutputNode(Node node)
+				{
+					Type outputNodeType = SystemUtils.GetGenericImplementationType(typeof(OutputNode<,>), node.GetType(), 1);
+
+					if (outputNodeType != null)
+					{
+						object value = node.GetType().GetMethod("GetValue").Invoke(node, new object[] { });
+						EditorGUILayout.LabelField(new GUIContent(node._editorDescription + " (" + SystemUtils.GetTypeName(outputNodeType) + ")"), new GUIContent(value != null ? value.ToString() : null));
 					}
 				}
 			}

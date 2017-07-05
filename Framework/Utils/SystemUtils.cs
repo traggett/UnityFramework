@@ -181,6 +181,22 @@ namespace Framework
 
 				return function;
 			}
+
+			public static string GetTypeName(Type type)
+			{
+				if (type == null)
+					return null;
+				else if (type == typeof(float))
+					return "float";
+				else if (type == typeof(string))
+					return "string";
+				else if (type == typeof(int))
+					return "int";
+				else if (type == typeof(bool))
+					return "bool";
+
+				return type.Name;
+			}
 		}
 	}
 }

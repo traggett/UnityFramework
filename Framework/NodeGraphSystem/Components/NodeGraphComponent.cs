@@ -276,52 +276,17 @@ namespace Framework
 				return _nodegraph;
 			}
 
-			public void SetFloatValue(int index, FloatValueSource value)
+			public Node[] GetOutputNodes()
 			{
-				_floatInputs[index]._valueSource = value;
-			}
-
-			public void SetColorValue(int index, ColorValueSource value)
-			{
-				_colorInputs[index]._valueSource = value;
-			}
-
-			public void SetIntValue(int index, IntValueSource value)
-			{
-				_intInputs[index]._valueSource = value;
-			}
-
-			public void SetVector2Value(int index, Vector2ValueSource value)
-			{
-				_vector2Inputs[index]._valueSource = value;
-			}
-
-			public void SetVector3Value(int index, Vector3ValueSource value)
-			{
-				_vector3Inputs[index]._valueSource = value;
-			}
-
-			public void SetVector4Value(int index, Vector4ValueSource value)
-			{
-				_vector4Inputs[index]._valueSource = value;
-			}
-
-			public void SetQuaternionValue(int index, QuaternionValueSource value)
-			{
-				_quaternionInputs[index]._valueSource = value;
+				return _outputNodes;
 			}
 			#endregion
 
 			#region IDynamicValueSourceContainer 
 			public object GetValueSource(int index)
 			{
-				if (_nodegraph != null)
-				{
-					Node[] outputNodes = _nodegraph.GetOutputNodes();
-
-					if (outputNodes != null && outputNodes.Length > index)
-						return outputNodes[index];
-				}
+				if (_outputNodes != null && _outputNodes.Length > index)
+					return _outputNodes[index];
 
 				return null;
 			}

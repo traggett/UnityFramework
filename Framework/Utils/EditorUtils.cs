@@ -422,6 +422,28 @@ namespace Framework
 						}
 					}
 				}
+
+				public static float GetComponentFieldHeight<T>(Component currentComponent) where T : class
+				{
+					float height = EditorGUIUtility.singleLineHeight;
+
+					if (currentComponent != null)
+					{
+						int numTypedComponents = 0;
+						Component[] components = currentComponent.gameObject.GetComponents<Component>();
+
+						for (int i = 0; i < components.Length; i++)
+						{
+							if (components[i] as T != null)
+								numTypedComponents++;
+						}
+
+						if (numTypedComponents > 1)
+							height += EditorGUIUtility.singleLineHeight;
+					}
+
+					return height;
+				}
 			}
 		}
 	}

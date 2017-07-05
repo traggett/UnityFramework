@@ -23,7 +23,8 @@ namespace Framework
 
 				public override float GetValueFieldHeight(SerializedProperty valueProperty)
 				{
-					return base.GetValueFieldHeight(valueProperty);
+					Component currentComponent = valueProperty.objectReferenceValue as Component;
+					return EditorUtils.GetComponentFieldHeight<Component>(currentComponent);
 				}
 			}
 		}
