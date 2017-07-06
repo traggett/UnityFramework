@@ -47,8 +47,8 @@ namespace Framework
 					_externalStateTextStyle.fontStyle = FontStyle.Bold;
 
 					_linkTextStyle = new GUIStyle(EditorUtils.TextStyleSmall);
-					_linkTextStyle.fontSize = 11;
-					_linkTextStyle.padding = new RectOffset(4, 4, 1, 1);
+					_linkTextStyle.fontSize = 10;
+					_linkTextStyle.padding = new RectOffset(4, 4, 3, 3);
 
 					_noteTextStyle = new GUIStyle(EditorUtils.TextStyle);
 					_noteTextStyle.fontStyle = FontStyle.Italic;

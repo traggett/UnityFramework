@@ -728,14 +728,15 @@ namespace Framework
 					float lineFraction = edgeFraction;
 					Rect labelPos = new Rect(startPos.x + ((endPos.x - startPos.x) * lineFraction) - (textSize.x * 0.5f), startPos.y + ((endPos.y - startPos.y) * lineFraction) - (textSize.y * 0.5f), textSize.x, textSize.y);
 
+					//Draw shadow
+					EditorUtils.DrawColoredRoundedBox(new Rect(labelPos.x + TimelineStateEditorGUI.kShadowSize, labelPos.y + TimelineStateEditorGUI.kShadowSize, labelPos.width, labelPos.height), new Color(0.0f, 0.0f, 0.0f, 0.35f));
+
+					//Draw white background
+					EditorUtils.DrawColoredRoundedBox(labelPos, _style._linkDescriptionColor);
+
 					Color origColor = GUI.backgroundColor;
-
-					GUI.backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.35f);
-					GUI.Label(new Rect(labelPos.x + TimelineStateEditorGUI.kShadowSize, labelPos.y + TimelineStateEditorGUI.kShadowSize, labelPos.width, labelPos.height), GUIContent.none, _style._linkTextStyle);
-
-					GUI.backgroundColor = _style._linkDescriptionColor;
+					GUI.backgroundColor = Color.clear;
 					GUI.Label(labelPos, description, _style._linkTextStyle);
-
 					GUI.backgroundColor = origColor;
 				}
 

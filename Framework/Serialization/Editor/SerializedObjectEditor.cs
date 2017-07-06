@@ -55,6 +55,7 @@ namespace Framework
 				public eRightClickOperation _operation;
 				public SerializedObjectEditorGUI<T> _editableObject;
 			}
+			[SerializeField]
 			private IEditorWindow _editorWindow;
 			private int _controlID;
 			private bool _needsRepaint;
@@ -385,6 +386,11 @@ namespace Framework
 			#region Private Functions
 			protected void HandleInput()
 			{
+				if (_editorWindow == null)
+				{
+					throw new Exception("Editor window not set!");
+				}
+
 				Event inputEvent = Event.current;
 
 				if (inputEvent == null)
@@ -469,6 +475,10 @@ namespace Framework
 							{
 								CopySelected();
 								Paste();
+							}
+							else if (inputEvent.commandName == "UndoRedoPerformed")
+							{
+								_needsRepaint = true;
 							}
 						}
 						break;
@@ -683,8 +693,6 @@ namespace Framework
 
 			private void UndoRedoCallback()
 			{
-				GetEditorWindow().DoRepaint();
-
 				//Need way of knowing when a objects been restored from undo history
 				foreach (SerializedObjectEditorGUI<T> editorGUI in _editableObjects)
 				{

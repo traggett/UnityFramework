@@ -1,10 +1,11 @@
 using UnityEngine;
 using UnityEditor;
 
+using System.Collections.Generic;
+
 namespace Framework
 {
 	using Utils.Editor;
-	using System.Collections.Generic;
 	using Utils;
 
 	namespace AnimationSystem
@@ -12,11 +13,7 @@ namespace Framework
 		[CustomEditor(typeof(AnimatedCamera), true)]
 		public class AnimatedCameraInspector : UnityEditor.Editor
 		{
-			//Things still needed to do
-			// - make controls virutal so game animated camera can do cool shit with depth of field (if ness?)
-			// - make depth of field controller cool again.
-			// it needs a priotiy system - aniamted camera can control it, some code can?
-			//things like phone override it
+			public static float kAspectRatio = 16f / 9f;
 
 			#region Private Data
 			private static readonly int kPreviewScreenResolutionWidth = 1280;
@@ -31,8 +28,7 @@ namespace Framework
 			private Vector3 _cameraOrigPosition;
 			private Quaternion _camerOrigRotation;
 			private Vector3 _cameraOrigScale;
-
-			protected AnimatedCameraSnapshot _currentSnapshot;
+			protected static AnimatedCameraSnapshot _currentSnapshot;
 			#endregion
 
 			private void OnEnable()
@@ -197,9 +193,35 @@ namespace Framework
 				{
 					AnimatedCamera camera = (AnimatedCamera)target;
 
-					if (_targetTexture == null)
+					Rect sceneViewRect = Camera.current.pixelRect;
+					int viewWidth = (int)sceneViewRect.width;
+					int viewHeight = (int)sceneViewRect.height;
+
+					//If at this height the width is to big, need to make height less
+					if (viewHeight * kAspectRatio > viewWidth)
 					{
-						_targetTexture = new RenderTexture(kPreviewScreenResolutionWidth, kPreviewScreenResolutionHeight, 16, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+						viewHeight = (int)(sceneViewRect.width * (1f / kAspectRatio));
+					}
+					//If at this height the height is to big, need to make width less
+					if (viewWidth * (1f / kAspectRatio) > viewHeight)
+					{
+						viewWidth = (int)(sceneViewRect.height * kAspectRatio);
+					}
+
+					if (_targetTexture == null || viewWidth != _targetTexture.width || viewHeight != _targetTexture.height)
+					{
+						if (_targetTexture == null)
+						{
+							_targetTexture = new RenderTexture(viewWidth, viewHeight, 16, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+						}
+						else
+						{
+							_targetTexture.Release();
+						}
+
+						_targetTexture.width = viewWidth;
+						_targetTexture.height = viewHeight;
+						_targetTexture.antiAliasing = 1;
 						_targetTexture.Create();
 					}
 
@@ -214,17 +236,21 @@ namespace Framework
 						RenderCameras();
 
 						//Render on screen
-						Rect sceneViewRect = Camera.current.pixelRect;
 						GUI.BeginGroup(sceneViewRect);
 
 						//Clear screen to black
-						Graphics.DrawTexture(sceneViewRect, EditorUtils.OnePixelTexture, new Rect(0f, 0f, 1f, 1f), 0, 0, 0, 0, Color.black);
+						Color guiColor = GUI.color;
+						GUI.color = Color.black;
+						GUI.DrawTexture(sceneViewRect, EditorUtils.OnePixelTexture);
+						GUI.color = guiColor;
+
 						//Render game texture to screen
 						Rect viewRect = new Rect();
-						viewRect.width = sceneViewRect.width;
-						viewRect.height = sceneViewRect.width * (kPreviewScreenResolutionHeight / (float)kPreviewScreenResolutionWidth);
+						viewRect.width = viewWidth;
+						viewRect.height = viewHeight;
+						viewRect.x = (sceneViewRect.width - viewRect.width) * 0.5f;
 						viewRect.y = (sceneViewRect.height - viewRect.height) * 0.5f;
-						Graphics.DrawTexture(GetFlippedRect(viewRect), _targetTexture);
+						GUI.DrawTexture(GetFlippedRect(viewRect), _targetTexture, ScaleMode.StretchToFill, false);
 
 						GUI.EndGroup();
 					}

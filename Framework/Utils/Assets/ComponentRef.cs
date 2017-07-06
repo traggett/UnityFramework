@@ -460,7 +460,7 @@ namespace Framework
 					}
 					else if (validComponents.Count == 1)
 					{
-						dataChanged = _editorComponent != null || _componentIndex != 0;
+						dataChanged = _editorComponent != validComponents[0] || _componentIndex != 0;
 						_editorComponent = validComponents[0];
 						_componentIndex = 0;
 					}

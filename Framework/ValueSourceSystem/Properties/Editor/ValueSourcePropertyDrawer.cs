@@ -132,7 +132,7 @@ namespace Framework
 					Component currentComponent = sourceObjectProp.objectReferenceValue as Component;
 
 					float height;
-					Component selectedComponent = EditorUtils.ComponentField<MonoBehaviour>(new GUIContent("Source Object"), valuePosition, currentComponent, out height);
+					Component selectedComponent = EditorUtils.ComponentField<MonoBehaviour>(new GUIContent("Source Component"), valuePosition, currentComponent, out height);
 
 					if (currentComponent != selectedComponent)
 					{

@@ -22,6 +22,11 @@ namespace Framework
 					bool IsDebugging();
 #endif
 				}
+				
+				public TimelineEditor()
+				{
+
+				}
 
 
 				#region Private Data
