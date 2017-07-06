@@ -200,7 +200,7 @@ namespace Framework
 					//Warn if there are no valid options for the object
 					if (memeberInfo.Count == 0)
 					{
-						EditorGUI.LabelField(valuePosition, new GUIContent("Component Property"), new GUIContent("Component has no valid IValueSource<" + typeof(T).Name + ">" + " member!"));
+						EditorGUI.LabelField(valuePosition, new GUIContent("Component Property"), new GUIContent("No public IValueSource<" + SystemUtils.GetTypeName(typeof(T)) + ">" + " members!"));
 					}
 					else
 					{

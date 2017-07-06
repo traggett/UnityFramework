@@ -26,6 +26,12 @@ namespace Framework
 				return ObjectField(obj, label, out dataChanged);
 			}
 
+			public static T ObjectField<T>(T obj, GUIContent label)
+			{
+				bool dataChanged;
+				return ObjectField(obj, label, out dataChanged);
+			}
+
 			public static T ObjectField<T>(T obj, string label, out bool dataChanged)
 			{
 				return ObjectField(obj, new GUIContent(label), out dataChanged);

@@ -5,6 +5,7 @@ using System;
 
 namespace Framework
 {
+	using Serialization;
 	using Maths;
 	using Utils;
 
@@ -17,8 +18,8 @@ namespace Framework
 			{
 				private SerializedProperty _unscaledTime;
 
+				private bool _nodeGraphRefFoldOut = true;
 				private SerializedProperty _nodeGraphRef;
-				private bool _nodeGraphRefOut = true;
 				private SerializedProperty _nodeGraphRefAsset;
 
 				private SerializedProperty _floatInputs;
@@ -76,9 +77,9 @@ namespace Framework
 				{
 					EditorGUILayout.PropertyField(_unscaledTime);
 					{
-						_nodeGraphRefOut = EditorGUILayout.Foldout(_nodeGraphRefOut, "Node Graph");
+						_nodeGraphRefFoldOut = EditorGUILayout.Foldout(_nodeGraphRefFoldOut, "Node Graph");
 
-						if (_nodeGraphRefOut)
+						if (_nodeGraphRefFoldOut)
 						{
 							int origIndent = EditorGUI.indentLevel;
 							EditorGUI.indentLevel++;
@@ -346,7 +347,10 @@ namespace Framework
 					if (outputNodeType != null)
 					{
 						object value = node.GetType().GetMethod("GetValue").Invoke(node, new object[] { });
-						EditorGUILayout.LabelField(new GUIContent(node._editorDescription + " (" + SystemUtils.GetTypeName(outputNodeType) + ")"), new GUIContent(value != null ? value.ToString() : null));
+						bool guiEnabled = GUI.enabled;
+						GUI.enabled = false;
+						SerializedObjectEditorGUILayout.ObjectField(value, new GUIContent(node._editorDescription + " (" + SystemUtils.GetTypeName(outputNodeType) + ")"));
+						GUI.enabled = guiEnabled;
 					}
 				}
 			}

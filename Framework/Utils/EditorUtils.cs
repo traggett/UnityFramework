@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
@@ -349,49 +350,60 @@ namespace Framework
 				{
 					//Draw box for selected type of component (if T is an interface need to allow all components)
 					Type componentType = typeof(T).IsInterface ? typeof(Component) : typeof(T);
-					Component selectedComponent = (Component)EditorGUI.ObjectField(position, label, currentComponent, componentType, true);
+					currentComponent = (Component)EditorGUI.ObjectField(position, label, currentComponent, componentType, true);
 					height = EditorGUIUtility.singleLineHeight;
 					
 					//If the component is null or the same as before return it
-					if (selectedComponent == null)
+					if (currentComponent == null)
 					{
 						return null;
 					}
 					//If selected a valid component
 					else
 					{
-						//Find T from the component
-						T obj = selectedComponent as T;
-						Component component = obj != null ? selectedComponent : null;
+						Component component = currentComponent as T != null ? currentComponent : null;
 
-						//Show slider to allow selecting different components on same game object
+						//Show drop down to allow selecting different components on same game object
 						int currentIndex = 0;
-						int numTypedComponents = 0;
-						Component[] components = selectedComponent.gameObject.GetComponents<Component>();
-						
-						for (int i = 0; i < components.Length; i++)
-						{
-							T componentValueSource = components[i] as T;
+						Component[] allComponents = currentComponent.gameObject.GetComponents<Component>();
 
-							if (componentValueSource != null)
+						List<GUIContent> validComponentLabels = new List<GUIContent>();
+						List<Component> validComponents = new List<Component>();
+						List<Type> validComponentTypes = new List<Type>();
+
+						for (int i = 0; i < allComponents.Length; i++)
+						{
+							T typedComponent = allComponents[i] as T;
+
+							if (typedComponent != null)
 							{
-								if (componentValueSource == obj || obj == null)
+								int numberComponentsTheSameType = 0;
+								foreach (Type type in validComponentTypes)
 								{
-									currentIndex = numTypedComponents;
-									obj = componentValueSource;
-									component = components[i];
+									if (type == allComponents[i].GetType())
+									{
+										numberComponentsTheSameType++;
+									}
 								}
 
-								numTypedComponents++;
+								validComponentLabels.Add(new GUIContent(allComponents[i].GetType().Name + (numberComponentsTheSameType > 0 ? " (" + numberComponentsTheSameType + ")" : "")));
+								validComponents.Add(allComponents[i]);
+								validComponentTypes.Add(allComponents[i].GetType());							
+
+								if (allComponents[i] == component || component == null)
+								{
+									currentIndex = validComponents.Count - 1;
+									component = allComponents[i];
+								}
 							}
 						}
 
 						//If theres only one possible component return it
-						if (numTypedComponents == 1)
+						if (validComponents.Count == 1)
 						{
 							return component;
 						}
-						else if (numTypedComponents == 0)
+						else if (validComponents.Count == 0)
 						{
 							return null;
 						}
@@ -399,26 +411,10 @@ namespace Framework
 						else
 						{
 							Rect sliderPosition = new Rect(position.x, position.y + EditorGUIUtility.singleLineHeight, position.width, EditorGUIUtility.singleLineHeight);
-							int selectedIndex = EditorGUI.IntSlider(sliderPosition, "Component Index", currentIndex, 0, numTypedComponents - 1);
+							int selectedIndex = EditorGUI.Popup(sliderPosition, new GUIContent(" "), currentIndex, validComponentLabels.ToArray());
 							height += EditorGUIUtility.singleLineHeight;
-							
-							int index = 0;
-							for (int i = 0; i < components.Length; i++)
-							{
-								T componentValueSource = components[i] as T;
 
-								if (componentValueSource != null)
-								{
-									if (selectedIndex == index)
-									{
-										return components[i];
-									}
-
-									index++;
-								}
-							}
-
-							return null;
+							return validComponents[selectedIndex];
 						}
 					}
 				}
