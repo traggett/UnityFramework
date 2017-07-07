@@ -3,62 +3,50 @@ using UnityEngine;
 namespace Framework
 {
 	using Maths;
+	using System.Collections.Generic;
 
 	namespace AnimationSystem
 	{
 		public class AnimatedCamera : MonoBehaviour
 		{
+			public class Animation
+			{
+				public AnimatedCameraSnapshot[] _snapshots;
+				public float _duration;
+				public eInterpolation _easeType;
+				public WrapMode _wrapMode;
+				public float _animationT;
+				public float _weight;
+			}
+
 			#region Private Data
 			private Camera _camera;
-			private AnimatedCameraSnapshot[] _snapshots;
-			private eInterpolation _easeType;
-			private float _animationTime;
-			private WrapMode _wrapMode;
-			private float _currentAnimationT;
+			private List<Animation> _animations = new List<Animation>();
+			private float _currentAnimationBlendTime;
+			private eInterpolation _currentEaseType;
 			#endregion
 
 			#region MonoBehaviour Calls
-			protected void Update()
+			protected virtual void Update()
 			{
-				if (_snapshots != null)
+				if (_animations.Count > 0)
 				{
-					if (_snapshots.Length == 1)
+					float deltaTime = Time.deltaTime;
+
+					_animations[_animations.Count - 1]._weight += deltaTime;
+
+					if (_animations[_animations.Count - 1]._weight >= 1.0f)
 					{
-						SetFromSnapshot(_snapshots[0]);
+						_animations[_animations.Count - 1]._weight = 1.0f;
+						//Stop all other animations
+						_animations = new List<Animation>() { _animations[_animations.Count - 1] };
 					}
-					else if (_snapshots.Length > 1)
+
+					foreach (Animation animation in _animations)
 					{
-						_currentAnimationT += Time.deltaTime / _animationTime;
-
-						if (_wrapMode == WrapMode.ClampForever)
-						{
-							_currentAnimationT = Mathf.Clamp01(_currentAnimationT);
-						}
-						else if (_wrapMode == WrapMode.Once)
-						{
-							if (_currentAnimationT > 1.0f)
-							{
-								_snapshots = null;
-							}
-						}
-
-						float baseValue = Mathf.Floor(_currentAnimationT);
-						float fraction = _currentAnimationT - baseValue;
-
-						if (_wrapMode == WrapMode.PingPong && ((int)baseValue % 2) == 1)
-						{
-							fraction = 1.0f - fraction;
-						}
-
-						float sectonTDist = 1.0f / (_snapshots.Length - 1);
-						float sectionT = fraction / sectonTDist;
-
-						int sectionIndex = Mathf.FloorToInt(sectionT);
-						sectionT = sectionT - (float)sectionIndex;
-
-						SetFromSnapshots(_snapshots[sectionIndex], _snapshots[sectionIndex + 1], _easeType, sectionT);
+						UpdateAnimation(animation, deltaTime);
 					}
-				}			
+				}
 			}
 			#endregion
 
@@ -71,45 +59,37 @@ namespace Framework
 				return _camera;
 			}
 			
-			public void SetAnimation(AnimatedCameraSnapshot[] snapshots, eInterpolation easeType, float time, WrapMode wrapMode)
+			public void SetAnimation(Animation animation, eInterpolation easeType, float blendTime)
 			{
-				//Event if you pass in one snapshot, want to blend up to.
-				//Should there be difference between a loop time and a blend time?
-
-
-
-				_snapshots = snapshots;
-				_easeType = easeType;
-				_animationTime = time;
-				_wrapMode = wrapMode;
-
-				if (wrapMode == WrapMode.Default)
+				_currentAnimationBlendTime = blendTime;
+				_currentEaseType = easeType;
+				animation._animationT = 0.0f;
+				if (blendTime > 0.0f)
 				{
-					wrapMode = WrapMode.PingPong;
-				}
-
-				_currentAnimationT = 0.0f;
-
-				if (snapshots.Length > 0 && snapshots[0] != null)
+					animation._weight = 0.0f;
+					_animations.Add(animation);
+				}			
+				else
 				{
-					SetFromSnapshot(snapshots[0]);
-				}
+					animation._weight = 1.0f;
+					_animations = new List<Animation>() { animation };
+				}	
 			}
 
-			public virtual void SetFromSnapshot(AnimatedCameraSnapshot snapshot)
+			public virtual void SetFromSnapshot(AnimatedCameraSnapshot snapshot, float weight = 1.0f)
 			{
-				this.transform.position = snapshot.transform.position;
-				this.transform.rotation = snapshot.transform.rotation;
-				GetCamera().fieldOfView = snapshot._fieldOfView;
-				GetCamera().rect = snapshot._cameraRect;
+				this.transform.position = Vector3.Lerp(this.transform.position, snapshot.transform.position, weight);
+				this.transform.rotation = Quaternion.Lerp(this.transform.rotation, snapshot.transform.rotation, weight);
+				GetCamera().fieldOfView = Mathf.Lerp(GetCamera().fieldOfView, snapshot._fieldOfView, weight);
+				GetCamera().rect = MathUtils.Lerp(GetCamera().rect, snapshot._cameraRect, weight);
 			}
 
-			public virtual void SetFromSnapshots(AnimatedCameraSnapshot snapshotFrom, AnimatedCameraSnapshot snapshotTo, eInterpolation easeType, float t)
+			public virtual void SetFromSnapshots(AnimatedCameraSnapshot snapshotFrom, AnimatedCameraSnapshot snapshotTo, eInterpolation easeType, float t, float weight = 1.0f)
 			{
-				this.transform.position = MathUtils.Interpolate(easeType, snapshotFrom.transform.position, snapshotTo.transform.position, t);
-				this.transform.rotation = MathUtils.Interpolate(easeType, snapshotFrom.transform.rotation, snapshotTo.transform.rotation, t);
-				GetCamera().fieldOfView = MathUtils.Interpolate(easeType, snapshotFrom._fieldOfView, snapshotTo._fieldOfView, t);
-				GetCamera().rect = MathUtils.Interpolate(easeType, snapshotFrom._cameraRect, snapshotTo._cameraRect, t);
+				this.transform.position = Vector3.Lerp(this.transform.position, MathUtils.Interpolate(easeType, snapshotFrom.transform.position, snapshotTo.transform.position, t), weight);
+				this.transform.rotation = Quaternion.Lerp(this.transform.rotation, MathUtils.Interpolate(easeType, snapshotFrom.transform.rotation, snapshotTo.transform.rotation, t), weight);
+				GetCamera().fieldOfView = Mathf.Lerp(GetCamera().fieldOfView, MathUtils.Interpolate(easeType, snapshotFrom._fieldOfView, snapshotTo._fieldOfView, t), weight);
+				GetCamera().rect = MathUtils.Lerp(GetCamera().rect, MathUtils.Interpolate(easeType, snapshotFrom._cameraRect, snapshotTo._cameraRect, t), weight);
 			}
 
 			public virtual AnimatedCameraSnapshot CreateSnapshot(string name)
@@ -120,6 +100,46 @@ namespace Framework
 				return snapshot;
 			}
 			#endregion
+
+			private void UpdateAnimation(Animation animation, float deltaTime)
+			{
+				if (animation._snapshots.Length == 1)
+				{
+					SetFromSnapshot(animation._snapshots[0]);
+				}
+				else if (animation._snapshots.Length > 1)
+				{
+					animation._animationT += deltaTime / animation._duration;
+
+					if (animation._wrapMode == WrapMode.ClampForever)
+					{
+						animation._animationT = Mathf.Clamp01(animation._animationT);
+					}
+					else if (animation._wrapMode == WrapMode.Once)
+					{
+						if (animation._animationT > 1.0f)
+						{
+							animation._snapshots = null;
+						}
+					}
+
+					float baseValue = Mathf.Floor(animation._animationT);
+					float fraction = animation._animationT - baseValue;
+
+					if (animation._wrapMode == WrapMode.PingPong && ((int)baseValue % 2) == 1)
+					{
+						fraction = 1.0f - fraction;
+					}
+
+					float sectonTDist = 1.0f / (animation._snapshots.Length - 1);
+					float sectionT = fraction / sectonTDist;
+
+					int sectionIndex = Mathf.FloorToInt(sectionT);
+					sectionT = sectionT - (float)sectionIndex;
+
+					SetFromSnapshots(animation._snapshots[sectionIndex], animation._snapshots[sectionIndex + 1], animation._easeType, sectionT);
+				}
+			}
 		}
 	}
 }

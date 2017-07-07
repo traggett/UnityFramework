@@ -446,7 +446,6 @@ namespace Framework
 							if (allComponents[i] == _editorComponent || _editorComponent == null)
 							{
 								currentIndex = validComponents.Count - 1;
-								_editorComponent = allComponents[i];
 							}
 						}
 					}
@@ -470,6 +469,12 @@ namespace Framework
 						_editorComponent = null;
 						_componentIndex = 0;
 					}
+				}
+				else
+				{
+					dataChanged = _editorComponent != null || _componentIndex != 0;
+					_editorComponent = null;
+					_componentIndex = 0;
 				}
 
 				return dataChanged;

@@ -32,6 +32,14 @@ namespace Framework
 				return lerp;
 			}
 
+			public static FloatRange Lerp(FloatRange from, FloatRange to, float t)
+			{
+				FloatRange lerp = from;
+				lerp._min = Mathf.Lerp(from._min, to._min, t);
+				lerp._max = Mathf.Lerp(from._max, to._max, t);
+				return lerp;
+			}
+
 			public static float Interpolate(eInterpolation type, float start, float end, float t)
 			{
 				return Interpolation.Interpolate(type, start, end, t);
@@ -67,6 +75,12 @@ namespace Framework
 			}
 
 			public static Rect Interpolate(eInterpolation type, Rect from, Rect to, float t)
+			{
+				float lerp = Interpolation.Interpolate(type, 0.0f, 1.0f, t);
+				return Lerp(from, to, lerp);
+			}
+
+			public static FloatRange Interpolate(eInterpolation type, FloatRange from, FloatRange to, float t)
 			{
 				float lerp = Interpolation.Interpolate(type, 0.0f, 1.0f, t);
 				return Lerp(from, to, lerp);

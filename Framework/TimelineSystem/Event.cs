@@ -8,6 +8,7 @@ namespace Framework
 		public abstract class Event : IComparable<Event>
 		{
 			#region Public Data
+			[HideInInspector]
 			public float _time = 0.0f;
 			#endregion
 
