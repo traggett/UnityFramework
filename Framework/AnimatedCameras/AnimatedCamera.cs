@@ -23,7 +23,7 @@ namespace Framework
 			private Camera _camera;
 			private List<Animation> _animations = new List<Animation>();
 			private float _currentAnimationBlendTime;
-			private eInterpolation _currentEaseType;
+			protected eInterpolation _currentEaseType;
 			#endregion
 
 			#region MonoBehaviour Calls
@@ -78,18 +78,18 @@ namespace Framework
 
 			public virtual void SetFromSnapshot(AnimatedCameraSnapshot snapshot, float weight = 1.0f)
 			{
-				this.transform.position = Vector3.Lerp(this.transform.position, snapshot.transform.position, weight);
-				this.transform.rotation = Quaternion.Lerp(this.transform.rotation, snapshot.transform.rotation, weight);
-				GetCamera().fieldOfView = Mathf.Lerp(GetCamera().fieldOfView, snapshot._fieldOfView, weight);
-				GetCamera().rect = MathUtils.Lerp(GetCamera().rect, snapshot._cameraRect, weight);
+				this.transform.position = MathUtils.Interpolate(_currentEaseType, this.transform.position, snapshot.transform.position, weight);
+				this.transform.rotation = MathUtils.Interpolate(_currentEaseType, this.transform.rotation, snapshot.transform.rotation, weight);
+				GetCamera().fieldOfView = MathUtils.Interpolate(_currentEaseType, GetCamera().fieldOfView, snapshot._fieldOfView, weight);
+				GetCamera().rect = MathUtils.Interpolate(_currentEaseType, GetCamera().rect, snapshot._cameraRect, weight);
 			}
 
 			public virtual void SetFromSnapshots(AnimatedCameraSnapshot snapshotFrom, AnimatedCameraSnapshot snapshotTo, eInterpolation easeType, float t, float weight = 1.0f)
 			{
-				this.transform.position = Vector3.Lerp(this.transform.position, MathUtils.Interpolate(easeType, snapshotFrom.transform.position, snapshotTo.transform.position, t), weight);
-				this.transform.rotation = Quaternion.Lerp(this.transform.rotation, MathUtils.Interpolate(easeType, snapshotFrom.transform.rotation, snapshotTo.transform.rotation, t), weight);
-				GetCamera().fieldOfView = Mathf.Lerp(GetCamera().fieldOfView, MathUtils.Interpolate(easeType, snapshotFrom._fieldOfView, snapshotTo._fieldOfView, t), weight);
-				GetCamera().rect = MathUtils.Lerp(GetCamera().rect, MathUtils.Interpolate(easeType, snapshotFrom._cameraRect, snapshotTo._cameraRect, t), weight);
+				this.transform.position = MathUtils.Interpolate(_currentEaseType, this.transform.position, MathUtils.Interpolate(easeType, snapshotFrom.transform.position, snapshotTo.transform.position, t), weight);
+				this.transform.rotation = MathUtils.Interpolate(_currentEaseType, this.transform.rotation, MathUtils.Interpolate(easeType, snapshotFrom.transform.rotation, snapshotTo.transform.rotation, t), weight);
+				GetCamera().fieldOfView = MathUtils.Interpolate(_currentEaseType, GetCamera().fieldOfView, MathUtils.Interpolate(easeType, snapshotFrom._fieldOfView, snapshotTo._fieldOfView, t), weight);
+				GetCamera().rect = MathUtils.Interpolate(_currentEaseType, GetCamera().rect, MathUtils.Interpolate(easeType, snapshotFrom._cameraRect, snapshotTo._cameraRect, t), weight);
 			}
 
 			public virtual AnimatedCameraSnapshot CreateSnapshot(string name)
@@ -105,7 +105,7 @@ namespace Framework
 			{
 				if (animation._snapshots.Length == 1)
 				{
-					SetFromSnapshot(animation._snapshots[0]);
+					SetFromSnapshot(animation._snapshots[0], animation._weight);
 				}
 				else if (animation._snapshots.Length > 1)
 				{
@@ -137,7 +137,7 @@ namespace Framework
 					int sectionIndex = Mathf.FloorToInt(sectionT);
 					sectionT = sectionT - (float)sectionIndex;
 
-					SetFromSnapshots(animation._snapshots[sectionIndex], animation._snapshots[sectionIndex + 1], animation._easeType, sectionT);
+					SetFromSnapshots(animation._snapshots[sectionIndex], animation._snapshots[sectionIndex + 1], animation._easeType, sectionT, animation._weight);
 				}
 			}
 		}
