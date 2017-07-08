@@ -146,15 +146,15 @@ namespace Framework
 				dataChanged |= _gameObject.RenderObjectProperties(new GUIContent("Game Object"));
 
 				bool transformFlagsChanged;
-				_transformFlags = SerializedObjectEditorGUILayout.ObjectField(_transformFlags, "Transform Flags", out transformFlagsChanged);
+				_transformFlags = SerializationEditorGUILayout.ObjectField(_transformFlags, "Transform Flags", out transformFlagsChanged);
 				dataChanged |= transformFlagsChanged;
 
 				bool moveTypeChanged;
-				_moveType = SerializedObjectEditorGUILayout.ObjectField(_moveType, "Move Type", out moveTypeChanged);
+				_moveType = SerializationEditorGUILayout.ObjectField(_moveType, "Move Type", out moveTypeChanged);
 				dataChanged |= moveTypeChanged;
 
 				bool easeChanged;
-				_easeType = SerializedObjectEditorGUILayout.ObjectField(_easeType, "Ease Type", out easeChanged);
+				_easeType = SerializationEditorGUILayout.ObjectField(_easeType, "Ease Type", out easeChanged);
 				dataChanged |= easeChanged;
 
 				EditorGUI.BeginChangeCheck();
@@ -162,7 +162,7 @@ namespace Framework
 				dataChanged |= EditorGUI.EndChangeCheck();
 
 				bool targetChanged;
-				_targetType = SerializedObjectEditorGUILayout.ObjectField(_targetType, "Target Type", out targetChanged);
+				_targetType = SerializationEditorGUILayout.ObjectField(_targetType, "Target Type", out targetChanged);
 				if  (targetChanged)
 				{
 					dataChanged = true;

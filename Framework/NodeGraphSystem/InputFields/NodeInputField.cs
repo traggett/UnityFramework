@@ -51,7 +51,7 @@ namespace Framework
 			protected override bool RenderStaticValueProperty()
 			{
 				bool objectChanged;
-				_value = SerializedObjectEditorGUILayout.ObjectField(_value, "Value", out objectChanged);
+				_value = SerializationEditorGUILayout.ObjectField(_value, "Value", out objectChanged);
 				return objectChanged;
 			}
 #endif

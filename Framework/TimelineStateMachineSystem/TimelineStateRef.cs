@@ -221,7 +221,7 @@ namespace Framework
 						{
 							if (_file._editorAsset != null)
 							{
-								TimelineStateMachine stateMachines = SerializeConverter.FromTextAsset<TimelineStateMachine>(_file._editorAsset);
+								TimelineStateMachine stateMachines = Serializer.FromTextAsset<TimelineStateMachine>(_file._editorAsset);
 								TimelineState[] states = stateMachines._states;
 
 								foreach (TimelineState state in states)
@@ -254,7 +254,7 @@ namespace Framework
 				{
 					case eType.External:
 						{
-							TimelineStateMachine stateMachines = SerializeConverter.FromFile<TimelineStateMachine>(AssetDatabase.GetAssetPath(_file._editorAsset));
+							TimelineStateMachine stateMachines = Serializer.FromFile<TimelineStateMachine>(AssetDatabase.GetAssetPath(_file._editorAsset));
 							states = stateMachines._states;
 						}
 						break;

@@ -17,7 +17,7 @@ namespace Framework
 		public class ComponentMethodRef<T> : ICustomEditorInspector
 		{
 			#region Public Data
-			public ComponentRef<Component> _object = new ComponentRef<Component>();
+			public ComponentRef<Component> _object;
 			public string _methodName = string.Empty;
 			#endregion
 

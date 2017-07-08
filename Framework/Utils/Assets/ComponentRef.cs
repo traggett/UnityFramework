@@ -140,7 +140,7 @@ namespace Framework
 
 					//Show drop down
 					GameObjectRef.eSourceType prevType = _gameObject._sourceType;
-					_gameObject._sourceType = SerializedObjectEditorGUILayout.ObjectField(_gameObject._sourceType, "Source Type", out dataChanged);
+					_gameObject._sourceType = SerializationEditorGUILayout.ObjectField(_gameObject._sourceType, "Source Type", out dataChanged);
 
 					if (prevType != _gameObject._sourceType)
 					{

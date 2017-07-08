@@ -111,8 +111,8 @@ namespace Framework
 						//Otherwise convert fields
 						else if (node != null && obj != null)
 						{
-							SerializedFieldInfo[] serializedFields = SerializedFieldInfo.GetSerializedFields(realObjType);
-							foreach (SerializedFieldInfo serializedField in serializedFields)
+							SerializedObjectMemberInfo[] serializedFields = SerializedObjectMemberInfo.GetSerializedFields(realObjType);
+							foreach (SerializedObjectMemberInfo serializedField in serializedFields)
 							{
 								//First try and find xml node with an id attribute matching our attribute id
 								XmlNode fieldNode = XmlUtils.FindChildWithAttributeValue(node, kXmlFieldIdAttributeTag, serializedField.GetID());
@@ -306,7 +306,7 @@ namespace Framework
 									//Otherwise convert each field
 									else
 									{
-										SerializedFieldInfo[] xmlFields = SerializedFieldInfo.GetSerializedFields(objType);
+										SerializedObjectMemberInfo[] xmlFields = SerializedObjectMemberInfo.GetSerializedFields(objType);
 
 										//Create a default version of this to compare with?
 										if (defualtObject == null)
@@ -314,7 +314,7 @@ namespace Framework
 											defualtObject = CreateInstance(objType);
 										}
 
-										foreach (SerializedFieldInfo xmlField in xmlFields)
+										foreach (SerializedObjectMemberInfo xmlField in xmlFields)
 										{
 											object fieldObj = xmlField.GetValue(obj);
 											object defualtFieldObj = xmlField.GetValue(defualtObject);
@@ -559,8 +559,8 @@ namespace Framework
 					//otherwise check objects fields to see if they need to write
 					else
 					{
-						SerializedFieldInfo[] xmlFields = SerializedFieldInfo.GetSerializedFields(obj.GetType());
-						foreach (SerializedFieldInfo xmlField in xmlFields)
+						SerializedObjectMemberInfo[] xmlFields = SerializedObjectMemberInfo.GetSerializedFields(obj.GetType());
+						foreach (SerializedObjectMemberInfo xmlField in xmlFields)
 						{
 							ObjectConverter fieldConverter = GetConverter(xmlField.GetFieldType());
 							object fieldObj = xmlField.GetValue(obj);

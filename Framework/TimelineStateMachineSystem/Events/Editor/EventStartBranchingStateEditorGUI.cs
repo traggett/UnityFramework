@@ -40,7 +40,7 @@ namespace Framework
 
 						//Draw branch properties
 						bool branchChanged;
-						SerializedObjectEditorGUILayout.ObjectField(evnt._branches[i], string.Empty, out branchChanged);
+						SerializationEditorGUILayout.ObjectField(evnt._branches[i], string.Empty, out branchChanged);
 						dataChanged |= branchChanged;
 
 						if (DrawEditBranchButtons(i))
@@ -74,7 +74,7 @@ namespace Framework
 							EditorGUI.indentLevel++;
 
 							bool objectChanged;
-							backgroundLogic = SerializedObjectEditorGUILayout.ObjectField(backgroundLogic, "", out objectChanged);
+							backgroundLogic = SerializationEditorGUILayout.ObjectField(backgroundLogic, "", out objectChanged);
 							dataChanged |= objectChanged;
 
 							EditorGUI.indentLevel = origIndent;

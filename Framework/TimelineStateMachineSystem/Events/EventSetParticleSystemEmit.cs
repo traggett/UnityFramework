@@ -14,7 +14,7 @@ namespace Framework
 		public class EventSetParticleSystemEmit : Event, IStateMachineEvent
 		{
 			#region Public Data
-			public ComponentRef<ParticleSystem> _particleSystem = new ComponentRef<ParticleSystem>();
+			public ComponentRef<ParticleSystem> _particleSystem;
 			public bool _emission = false;
 			#endregion
 

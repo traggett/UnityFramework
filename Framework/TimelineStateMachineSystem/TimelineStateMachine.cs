@@ -48,7 +48,7 @@ namespace Framework
 			#region Public Interface
 			public static TimelineStateMachine FromTextAsset(TextAsset asset, GameObject sourceObject = null)
 			{
-				TimelineStateMachine timelineStateMachine = SerializeConverter.FromTextAsset<TimelineStateMachine>(asset);
+				TimelineStateMachine timelineStateMachine = Serializer.FromTextAsset<TimelineStateMachine>(asset);
 
 				if (sourceObject != null)
 					GameObjectRef.FixupGameObjectRefs(sourceObject, timelineStateMachine);
@@ -113,7 +113,7 @@ namespace Framework
 			{
 				if (obj != null)
 				{
-					object[] nodeFieldObjects = SerializedFieldInfo.GetSerializedFieldInstances(obj);
+					object[] nodeFieldObjects = SerializedObjectMemberInfo.GetSerializedFieldInstances(obj);
 
 					foreach (object nodeFieldObject in nodeFieldObjects)
 					{

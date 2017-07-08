@@ -349,7 +349,7 @@ namespace Framework
 						object value = node.GetType().GetMethod("GetValue").Invoke(node, new object[] { });
 						bool guiEnabled = GUI.enabled;
 						GUI.enabled = false;
-						SerializedObjectEditorGUILayout.ObjectField(value, new GUIContent(node._editorDescription + " (" + SystemUtils.GetTypeName(outputNodeType) + ")"));
+						SerializationEditorGUILayout.ObjectField(value, new GUIContent(node._editorDescription + " (" + SystemUtils.GetTypeName(outputNodeType) + ")"));
 						GUI.enabled = guiEnabled;
 					}
 				}

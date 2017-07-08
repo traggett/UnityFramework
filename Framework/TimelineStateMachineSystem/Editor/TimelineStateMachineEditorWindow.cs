@@ -45,7 +45,7 @@ namespace Framework
 
 					if (asset != null && !asset.name.StartsWith("TextConv"))
 					{
-						return SerializeConverter.DoesAssetContainObject<TimelineStateMachine>(asset);
+						return Serializer.DoesAssetContainObject<TimelineStateMachine>(asset);
 					}
 
 					return false;

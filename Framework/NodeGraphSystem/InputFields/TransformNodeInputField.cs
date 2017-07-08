@@ -10,7 +10,7 @@ namespace Framework
 		[Serializable]
 		public class TransformNodeInputField : NodeInputFieldBase<Transform>
 		{
-			public ComponentRef<Transform> _value = new ComponentRef<Transform>();
+			public ComponentRef<Transform> _value;
 
 			public static implicit operator Transform(TransformNodeInputField value)
 			{

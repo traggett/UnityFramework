@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Framework
 {
-	using Utils.Editor;
-
 	namespace Serialization
 	{
 		[SerializedObjectEditor(typeof(AnimationCurve), "PropertyField")]

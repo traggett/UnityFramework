@@ -8,7 +8,7 @@ namespace Framework
 {
 	using Utils;
 	using Utils.Editor;
-	using ValueSourceSystem;
+	using DynamicValueSystem;
 	using Serialization;
 
 	namespace NodeGraphSystem
@@ -109,7 +109,7 @@ namespace Framework
 
 							bool fieldChanged;
 							object nodeFieldObject = input._fieldInfo.GetValue(GetEditableObject());
-							nodeFieldObject = SerializedObjectEditorGUILayout.ObjectField(nodeFieldObject, labelContent, out fieldChanged);
+							nodeFieldObject = SerializationEditorGUILayout.ObjectField(nodeFieldObject, labelContent, out fieldChanged);
 							if (fieldChanged)
 							{
 								dataChanged = true;
@@ -121,8 +121,8 @@ namespace Framework
 					//Render other properties
 					bool renderedFirstProperty = false;
 					{
-						SerializedFieldInfo[] serializedFields = SerializedFieldInfo.GetSerializedFields(GetEditableObject().GetType());
-						foreach (SerializedFieldInfo serializedField in serializedFields)
+						SerializedObjectMemberInfo[] serializedFields = SerializedObjectMemberInfo.GetSerializedFields(GetEditableObject().GetType());
+						foreach (SerializedObjectMemberInfo serializedField in serializedFields)
 						{
 							if (!serializedField.HideInEditor() && !SystemUtils.IsSubclassOfRawGeneric(typeof(NodeInputFieldBase<>), serializedField.GetFieldType()))
 							{
@@ -140,7 +140,7 @@ namespace Framework
 
 								bool fieldChanged;
 								object nodeFieldObject = serializedField.GetValue(GetEditableObject());
-								nodeFieldObject = SerializedObjectEditorGUILayout.ObjectField(nodeFieldObject, labelContent, out fieldChanged);
+								nodeFieldObject = SerializationEditorGUILayout.ObjectField(nodeFieldObject, labelContent, out fieldChanged);
 								if (fieldChanged)
 								{
 									dataChanged = true;

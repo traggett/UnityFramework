@@ -126,7 +126,7 @@ namespace Framework
 			{
 				if (node != null)
 				{
-					object[] nodeFieldObjects = SerializedFieldInfo.GetSerializedFieldInstances(node);
+					object[] nodeFieldObjects = SerializedObjectMemberInfo.GetSerializedFieldInstances(node);
 
 					foreach (object nodeFieldObject in nodeFieldObjects)
 					{
@@ -306,7 +306,7 @@ namespace Framework
 
 					//Show drop down
 					eSourceType prevType = _sourceType;
-					_sourceType = SerializedObjectEditorGUILayout.ObjectField(_sourceType, "Source Type", out dataChanged);
+					_sourceType = SerializationEditorGUILayout.ObjectField(_sourceType, "Source Type", out dataChanged);
 
 					if (prevType != _sourceType)
 					{

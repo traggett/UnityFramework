@@ -47,19 +47,6 @@ namespace Framework
 				return Assembly.GetCallingAssembly().GetType(typeName);
 			}
 
-			public static string GetClassName(Type type)
-			{
-				if (type.IsGenericType)
-				{
-					Type genericType = type.GetGenericTypeDefinition();
-					return genericType.Name.Remove(genericType.Name.IndexOf('`'));
-				}
-				else
-				{
-					return type.Name;
-				}
-			}
-
 			public static bool IsTypeOf(Type baseType, Type type)
 			{
 				if (type.IsGenericType)
@@ -194,6 +181,12 @@ namespace Framework
 					return "int";
 				else if (type == typeof(bool))
 					return "bool";
+
+				if (type.IsGenericType)
+				{
+					Type genericType = type.GetGenericTypeDefinition();
+					return genericType.Name.Remove(genericType.Name.IndexOf('`'));
+				}
 
 				return type.Name;
 			}

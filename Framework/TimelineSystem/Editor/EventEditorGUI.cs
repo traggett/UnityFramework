@@ -168,7 +168,7 @@ namespace Framework
 					bool dataChanged = RenderEventTime();
 
 					bool eventChanged;
-					SerializedObjectEditorGUILayout.ObjectField(GetEditableObject(), "Event Properties", out eventChanged);
+					SerializationEditorGUILayout.ObjectField(GetEditableObject(), "Event Properties", out eventChanged);
 					dataChanged |= eventChanged;
 
 					return dataChanged;

@@ -53,7 +53,7 @@ namespace Framework
 
 				if (asset != null)
 				{
-					_localisationMap = SerializeConverter.FromTextAsset<LocalisationMap>(asset);
+					_localisationMap = Serializer.FromTextAsset<LocalisationMap>(asset);
 				}				
 				else
 				{
@@ -116,7 +116,7 @@ namespace Framework
 						path = Application.dataPath + "/Resources/" + kDefaultLocalisationFilePath + ".xml";
 					}
 
-					SerializeConverter.ToFile(_localisationMap, path);
+					Serializer.ToFile(_localisationMap, path);
 				}				
 			}
 

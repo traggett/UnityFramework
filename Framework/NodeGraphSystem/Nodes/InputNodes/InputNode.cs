@@ -3,7 +3,7 @@ using System;
 
 namespace Framework
 {
-	using ValueSourceSystem;
+	using DynamicValueSystem;
 
 	namespace NodeGraphSystem
 	{
@@ -31,7 +31,7 @@ namespace Framework
 			}
 			#endregion
 			
-			public void SetInputSource<TValueSource>(TValueSource obj) where TValueSource : class, IValueSource<T>
+			public void SetInputSource<TDynamicValue>(TDynamicValue obj) where TDynamicValue : class, IValueSource<T>
 			{
 				_inputSource = obj;
 			}

@@ -64,7 +64,7 @@ namespace Framework
 					_timeFormat = timeFormat;
 
 					string editorPrefsText = EditorPrefs.GetString(_editorPrefsTag, "");
-					_editorPrefs = SerializeConverter.FromString<TimelineStateMachineEditorPrefs>(editorPrefsText);
+					_editorPrefs = Serializer.FromString<TimelineStateMachineEditorPrefs>(editorPrefsText);
 
 					if (_editorPrefs == null)
 						_editorPrefs = new TimelineStateMachineEditorPrefs();
@@ -155,7 +155,7 @@ namespace Framework
 						stateMachine._name = System.IO.Path.GetFileNameWithoutExtension(_currentFileName);
 
 						//Save to file
-						SerializeConverter.ToFile(stateMachine, _currentFileName);
+						Serializer.ToFile(stateMachine, _currentFileName);
 
 						ClearDirtyFlag();
 						_stateEditor.ClearDirtyFlag();
@@ -362,7 +362,7 @@ namespace Framework
 				protected override TimelineState CreateCopyFrom(SerializedObjectEditorGUI<TimelineState> editorGUI)
 				{
 					TimelineStateEditorGUI timeLineGUI = (TimelineStateEditorGUI)editorGUI;
-					TimelineState newState = SerializeConverter.CreateCopy(timeLineGUI.GetEditableObject());
+					TimelineState newState = Serializer.CreateCopy(timeLineGUI.GetEditableObject());
 
 					if (timeLineGUI.IsNote)
 					{
@@ -410,7 +410,7 @@ namespace Framework
 				#region Private Functions
 				private void SaveEditorPrefs()
 				{
-					string prefsXml = SerializeConverter.ToString(_editorPrefs);
+					string prefsXml = Serializer.ToString(_editorPrefs);
 					EditorPrefs.SetString(_editorPrefsTag, prefsXml);
 				}
 
@@ -454,7 +454,7 @@ namespace Framework
 				{
 					_currentFileName = fileName;
 
-					TimelineStateMachine stateMachine = SerializeConverter.FromFile<TimelineStateMachine>(fileName);
+					TimelineStateMachine stateMachine = Serializer.FromFile<TimelineStateMachine>(fileName);
 
 					if (stateMachine != null)
 					{

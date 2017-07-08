@@ -4,13 +4,13 @@ using UnityEngine;
 
 namespace Framework
 {
-	using ValueSourceSystem;
+	using DynamicValueSystem;
 	using Utils;
 	using Maths;
 
 	namespace NodeGraphSystem
 	{
-		public class NodeGraphComponent : MonoBehaviour, IDynamicValueSourceContainer
+		public class NodeGraphComponent : MonoBehaviour, IValueSourceContainer
 		{
 			#region Public Data
 			public bool _unscaledTime = false;
@@ -34,7 +34,7 @@ namespace Framework
 			public class FloatInput : IInput, IValueSource<float>
 			{
 				public int _nodeId;
-				public FloatValueSource _valueSource;
+				public DynamicFloat _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public float GetValue() { return _valueSource; }
 			}
@@ -45,7 +45,7 @@ namespace Framework
 			public class IntInput : IInput, IValueSource<int>
 			{
 				public int _nodeId;
-				public IntValueSource _valueSource;
+				public DynamicInt _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public int GetValue() { return _valueSource; }
 			}
@@ -56,7 +56,7 @@ namespace Framework
 			public class FloatRangeInput : IInput, IValueSource<FloatRange>
 			{
 				public int _nodeId;
-				public FloatRangeValueSource _valueSource;
+				public DynamicFloatRange _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public FloatRange GetValue() { return _valueSource; }
 			}
@@ -67,7 +67,7 @@ namespace Framework
 			public class IntRangeInput : IInput, IValueSource<IntRange>
 			{
 				public int _nodeId;
-				public IntRangeValueSource _valueSource;
+				public DynamicIntRange _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public IntRange GetValue() { return _valueSource; }
 			}
@@ -78,7 +78,7 @@ namespace Framework
 			public class Vector2Input : IInput, IValueSource<Vector2>
 			{
 				public int _nodeId;
-				public Vector2ValueSource _valueSource;
+				public DynamicVector2 _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public Vector2 GetValue() { return _valueSource; }
 			}
@@ -89,7 +89,7 @@ namespace Framework
 			public class Vector3Input : IInput, IValueSource<Vector3>
 			{
 				public int _nodeId;
-				public Vector3ValueSource _valueSource;
+				public DynamicVector3 _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public Vector3 GetValue() { return _valueSource; }
 			}
@@ -100,7 +100,7 @@ namespace Framework
 			public class Vector4Input : IInput, IValueSource<Vector4>
 			{
 				public int _nodeId;
-				public Vector4ValueSource _valueSource;
+				public DynamicVector4 _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public Vector4 GetValue() { return _valueSource; }
 			}
@@ -111,7 +111,7 @@ namespace Framework
 			public class QuaternionInput : IInput, IValueSource<Quaternion>
 			{
 				public int _nodeId;
-				public QuaternionValueSource _valueSource;
+				public DynamicQuaternion _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public Quaternion GetValue() { return _valueSource; }
 			}
@@ -122,7 +122,7 @@ namespace Framework
 			public class ColorInput : IInput, IValueSource<Color>
 			{
 				public int _nodeId;
-				public ColorValueSource _valueSource;
+				public DynamicColor _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public Color GetValue() { return _valueSource; }
 			}
@@ -133,7 +133,7 @@ namespace Framework
 			public class StringInput : IInput, IValueSource<string>
 			{
 				public int _nodeId;
-				public StringValueSource _valueSource;
+				public DynamicString _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public string GetValue() { return _valueSource; }
 			}
@@ -144,7 +144,7 @@ namespace Framework
 			public class BoolInput : IInput, IValueSource<bool>
 			{
 				public int _nodeId;
-				public BoolValueSource _valueSource;
+				public DynamicBool _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public bool GetValue() { return _valueSource; }
 			}
@@ -155,7 +155,7 @@ namespace Framework
 			public class GradientInput : IInput, IValueSource<Gradient>
 			{
 				public int _nodeId;
-				public GradientValueSource _valueSource;
+				public DynamicGradient _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public Gradient GetValue() { return _valueSource; }
 			}
@@ -166,7 +166,7 @@ namespace Framework
 			public class AnimationCurveInput : IInput, IValueSource<AnimationCurve>
 			{
 				public int _nodeId;
-				public AnimationCurveValueSource _valueSource;
+				public DynamicAnimationCurve _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public AnimationCurve GetValue() { return _valueSource; }
 			}
@@ -177,7 +177,7 @@ namespace Framework
 			public class ComponentInput : IInput, IValueSource<Component>
 			{
 				public int _nodeId;
-				public ComponentValueSource _valueSource;
+				public DynamicComponentRef _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public Component GetValue() { return _valueSource; }
 			}
@@ -188,7 +188,7 @@ namespace Framework
 			public class TransformInput : IInput, IValueSource<Transform>
 			{
 				public int _nodeId;
-				public TransformValueSource _valueSource;
+				public DynamicTransformRef _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public Transform GetValue() { return _valueSource; }
 			}
@@ -199,7 +199,7 @@ namespace Framework
 			public class GameObjectInput : IInput, IValueSource<GameObject>
 			{
 				public int _nodeId;
-				public GameObjectValueSource _valueSource;
+				public DynamicGameObjectRef _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public GameObject GetValue() { return _valueSource; }
 			}
@@ -210,7 +210,7 @@ namespace Framework
 			public class MaterialInput : IInput, IValueSource<Material>
 			{
 				public int _nodeId;
-				public MaterialValueSource _valueSource;
+				public DynamicMaterialRef _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public Material GetValue() { return _valueSource.GetValue().GetMaterial(); }
 			}
@@ -221,7 +221,7 @@ namespace Framework
 			public class TextureInput : IInput, IValueSource<Texture>
 			{
 				public int _nodeId;
-				public TextureValueSource _valueSource;
+				public DynamicTextureRef _valueSource;
 				public int GetNodeId() { return _nodeId; }
 				public Texture GetValue() { return _valueSource; }
 			}
@@ -282,7 +282,7 @@ namespace Framework
 			}
 			#endregion
 
-			#region IDynamicValueSourceContainer 
+			#region IValueSourceContainer 
 			public object GetValueSource(int index)
 			{
 				if (_outputNodes != null && _outputNodes.Length > index)
@@ -292,7 +292,7 @@ namespace Framework
 			}
 
 #if UNITY_EDITOR
-			public int GetNumberOfValueSources()
+			public int GetNumberOfValueSource()
 			{
 				EnsureNodeGraphIsLoaded();
 

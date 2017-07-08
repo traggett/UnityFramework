@@ -32,7 +32,7 @@ namespace Framework
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 						
-						evnt._preStateType = SerializedObjectEditorGUILayout.ObjectField(evnt._preStateType, "State Type", out dataChanged);
+						evnt._preStateType = SerializationEditorGUILayout.ObjectField(evnt._preStateType, "State Type", out dataChanged);
 
 						switch (evnt._preStateType)
 						{
@@ -53,7 +53,7 @@ namespace Framework
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 						
-						evnt._stateType = SerializedObjectEditorGUILayout.ObjectField(evnt._stateType, "State Type", out dataChanged);
+						evnt._stateType = SerializationEditorGUILayout.ObjectField(evnt._stateType, "State Type", out dataChanged);
 
 						switch (evnt._stateType)
 						{

@@ -3,7 +3,7 @@ using System;
 
 namespace Framework
 {
-	using ValueSourceSystem;
+	using DynamicValueSystem;
 	using MidiSystem;
 
 	namespace NodeGraphSystem

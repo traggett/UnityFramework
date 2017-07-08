@@ -11,7 +11,7 @@ namespace Framework
 		[ConditionalCategory("")]
 		public class ConditionalStateMachineIsRunning : IConditional
 		{
-			public ComponentRef<StateMachine> _stateMachine = new ComponentRef<StateMachine>();
+			public ComponentRef<StateMachine> _stateMachine;
 
 			private StateMachine _stateMachineObj;
 

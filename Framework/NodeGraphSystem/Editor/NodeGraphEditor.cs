@@ -50,7 +50,7 @@ namespace Framework
 					_editorPrefsTag = editorPrefsTag;
 
 					string editorPrefsText = EditorPrefs.GetString(_editorPrefsTag, "");
-					_editorPrefs = SerializeConverter.FromString<NodeGraphEditorPrefs>(editorPrefsText);
+					_editorPrefs = Serializer.FromString<NodeGraphEditorPrefs>(editorPrefsText);
 
 					if (_editorPrefs == null)
 						_editorPrefs = new NodeGraphEditorPrefs();
@@ -98,7 +98,7 @@ namespace Framework
 					{
 						//Save to file
 						NodeGraph nodeGraph = ConvertToNodeGraph();
-						SerializeConverter.ToFile(nodeGraph, _currentFileName);
+						Serializer.ToFile(nodeGraph, _currentFileName);
 
 						ClearDirtyFlag();
 
@@ -191,7 +191,7 @@ namespace Framework
 
 				protected override Node CreateCopyFrom(SerializedObjectEditorGUI<Node> editorGUI)
 				{
-					Node newNode = SerializeConverter.CreateCopy(editorGUI.GetEditableObject());
+					Node newNode = Serializer.CreateCopy(editorGUI.GetEditableObject());
 					newNode._nodeId = GenerateNewNodeId();
 					newNode._editorDescription = editorGUI.GetEditableObject()._editorDescription + " (Copy)";
 					return newNode;
@@ -453,7 +453,7 @@ namespace Framework
 
 				private void SaveEditorPrefs()
 				{
-					string prefsXml = SerializeConverter.ToString(_editorPrefs);
+					string prefsXml = Serializer.ToString(_editorPrefs);
 					EditorPrefs.SetString(_editorPrefsTag, prefsXml);
 				}
 
@@ -473,7 +473,7 @@ namespace Framework
 				{
 					_currentFileName = fileName;
 
-					NodeGraph nodeMachine = SerializeConverter.FromFile<NodeGraph>(fileName);
+					NodeGraph nodeMachine = Serializer.FromFile<NodeGraph>(fileName);
 
 					if (nodeMachine != null)
 					{
@@ -675,7 +675,7 @@ namespace Framework
 
 					if (inputField.IsStaticValue())
 					{
-						object nodeValue = SerializedFieldInfo.GetSerializedFieldInstance(inputValueInstance, "value");
+						object nodeValue = SerializedObjectMemberInfo.GetSerializedFieldInstance(inputValueInstance, "value");
 
 						if (nodeValue != null)
 						{

@@ -19,7 +19,7 @@ namespace Framework
 					EventGoToState evnt = GetEditableObject() as EventGoToState;
 
 					bool dataChanged;
-					evnt._stateType = SerializedObjectEditorGUILayout.ObjectField(evnt._stateType, "State Type", out dataChanged);
+					evnt._stateType = SerializationEditorGUILayout.ObjectField(evnt._stateType, "State Type", out dataChanged);
 
 					switch (evnt._stateType)
 					{

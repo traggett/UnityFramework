@@ -23,7 +23,7 @@ namespace Framework
 			{
 				if (_file != null)
 				{
-					return SerializeConverter.FromTextAsset<NodeGraph>(_file);
+					return Serializer.FromTextAsset<NodeGraph>(_file);
 				}
 
 				return null;

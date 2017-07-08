@@ -7,7 +7,7 @@ using UnityEditor;
 
 namespace Framework
 {
-	using ValueSourceSystem;
+	using DynamicValueSystem;
 	using Utils;
 	using UnityEngine;
 	using Serialization;
@@ -122,7 +122,7 @@ namespace Framework
 					int origIndent = EditorGUI.indentLevel;
 					EditorGUI.indentLevel++;
 
-					_sourceType = SerializedObjectEditorGUILayout.ObjectField(_sourceType, new GUIContent("Input Type", "Static: Value will be constant.\nNode: Value read from other nodes output."), out dataChanged);
+					_sourceType = SerializationEditorGUILayout.ObjectField(_sourceType, new GUIContent("Input Type", "Static: Value will be constant.\nNode: Value read from other nodes output."), out dataChanged);
 					if (dataChanged)
 					{
 						ClearStaticValue();
@@ -166,9 +166,9 @@ namespace Framework
 
 						for (int i = 0; i < _nodeGraph._nodes.Length; i++)
 						{
-							Type valueSourceType = SystemUtils.GetGenericImplementationType(typeof(IValueSource<>), _nodeGraph._nodes[i].GetType());
+							Type DynamicValueType = SystemUtils.GetGenericImplementationType(typeof(IValueSource<>), _nodeGraph._nodes[i].GetType());
 
-							if (valueSourceType != null && valueSourceType.IsAssignableFrom(typeof(T)))
+							if (DynamicValueType != null && DynamicValueType.IsAssignableFrom(typeof(T)))
 							{
 								if (_nodeGraph._nodes[i]._nodeId == _sourceNodeId)
 								{

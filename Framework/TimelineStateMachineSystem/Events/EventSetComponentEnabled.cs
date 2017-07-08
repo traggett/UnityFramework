@@ -14,7 +14,7 @@ namespace Framework
 		public class EventSetComponentEnabled : Event, IStateMachineEvent
 		{
 			#region Public Data
-			public ComponentRef<MonoBehaviour> _target = new ComponentRef<MonoBehaviour>();
+			public ComponentRef<MonoBehaviour> _target;
 			public bool _enabled = false;
 			#endregion
 

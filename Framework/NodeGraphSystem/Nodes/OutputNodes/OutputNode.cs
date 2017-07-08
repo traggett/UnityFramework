@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Framework
 {
-	using ValueSourceSystem;
+	using DynamicValueSystem;
 
 	namespace NodeGraphSystem
 	{

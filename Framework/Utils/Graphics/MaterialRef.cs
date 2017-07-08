@@ -15,11 +15,11 @@ namespace Framework
 		{
 			#region Public Data
 			[SerializeField]
-			private AssetRef<Material> _materialRef = new AssetRef<Material>();
+			private AssetRef<Material> _materialRef;
 			[SerializeField]
-			private int _materialIndex = 0;
+			private int _materialIndex;
 			[SerializeField]
-			private ComponentRef<Renderer> _renderer = new ComponentRef<Renderer>();
+			private ComponentRef<Renderer> _renderer;
 			#endregion
 
 			#region Private Data

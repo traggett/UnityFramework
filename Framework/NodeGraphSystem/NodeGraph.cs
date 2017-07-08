@@ -26,7 +26,7 @@ namespace Framework
 			{
 				if (node != null)
 				{
-					object[] nodeFieldObjects = SerializedFieldInfo.GetSerializedFieldInstances(node);
+					object[] nodeFieldObjects = SerializedObjectMemberInfo.GetSerializedFieldInstances(node);
 
 					foreach (object nodeFieldObject in nodeFieldObjects)
 					{
@@ -181,14 +181,14 @@ namespace Framework
 				//Find NodeInputFieldBase fields in node
 				List<Node> nodes = new List<Node>();
 
-				object[] nodeFieldObjects = SerializedFieldInfo.GetSerializedFieldInstances(node);
+				object[] nodeFieldObjects = SerializedObjectMemberInfo.GetSerializedFieldInstances(node);
 
 				foreach (object nodeFieldObject in nodeFieldObjects)
 				{
 					if (SystemUtils.IsSubclassOfRawGeneric(typeof(NodeInputFieldBase<>), nodeFieldObject.GetType()))
 					{
 						//Check linked node
-						object nodeSourceId = SerializedFieldInfo.GetSerializedFieldInstance(nodeFieldObject, "sourceNodeId");
+						object nodeSourceId = SerializedObjectMemberInfo.GetSerializedFieldInstance(nodeFieldObject, "sourceNodeId");
 
 						if (nodeSourceId != null)
 						{

@@ -51,7 +51,7 @@ namespace Framework
 
 					if (asset != null)
 					{
-						return SerializeConverter.DoesAssetContainObject<NodeGraph>(asset);
+						return Serializer.DoesAssetContainObject<NodeGraph>(asset);
 					}
 
 					return false;

@@ -10,7 +10,7 @@ namespace Framework
 		[Serializable]
 		public class ComponentNodeInputField<T> : NodeInputFieldBase<Component> where T : Component
 		{
-			public ComponentRef<T> _value = new ComponentRef<T>();
+			public ComponentRef<T> _value;
 
 			public static implicit operator T(ComponentNodeInputField<T> value)
 			{

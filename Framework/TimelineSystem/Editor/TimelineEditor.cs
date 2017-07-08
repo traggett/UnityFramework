@@ -204,7 +204,7 @@ namespace Framework
 
 				protected override Event CreateCopyFrom(SerializedObjectEditorGUI<Event> editorGUI)
 				{
-					return SerializeConverter.CreateCopy(editorGUI.GetEditableObject());
+					return Serializer.CreateCopy(editorGUI.GetEditableObject());
 				}
 
 				protected override void SetObjectPosition(SerializedObjectEditorGUI<Event> editorGUI, Vector2 position)

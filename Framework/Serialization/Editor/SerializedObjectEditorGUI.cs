@@ -77,7 +77,7 @@ namespace Framework
 
 			public void SaveUndoState()
 			{
-				_undoObjectXml = SerializeConverter.ToString(_editableObject);
+				_undoObjectXml = Serializer.ToString(_editableObject);
 			}
 
 			public void ClearUndoState()
@@ -91,7 +91,7 @@ namespace Framework
 					throw new Exception();
 
 				//If store an undo command on a temp string representing event, then on undo performed callback recreate event from string.
-				string undoObjectXml = SerializeConverter.ToString(_editableObject);
+				string undoObjectXml = Serializer.ToString(_editableObject);
 				
 				if (RenderObjectProperties(GUIContent.none))
 				{
@@ -119,7 +119,7 @@ namespace Framework
 			public virtual bool RenderObjectProperties(GUIContent label)
 			{
 				bool dataChanged;
-				_editableObject = SerializedObjectEditorGUILayout.ObjectField(_editableObject, label, out dataChanged);
+				_editableObject = SerializationEditorGUILayout.ObjectField(_editableObject, label, out dataChanged);
 				return dataChanged;
 			}
 			#endregion
@@ -146,7 +146,7 @@ namespace Framework
 				{
 					if (!string.IsNullOrEmpty(_undoObjectXml) && _editableObject != null)
 					{
-						_editableObject = (T)SerializeConverter.FromString(_editableObject.GetType(), _undoObjectXml);
+						_editableObject = (T)Serializer.FromString(_editableObject.GetType(), _undoObjectXml);
 						if (_editableObject == null)
 							throw new Exception();
 

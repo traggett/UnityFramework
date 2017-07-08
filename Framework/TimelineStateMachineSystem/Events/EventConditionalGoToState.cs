@@ -39,7 +39,7 @@ namespace Framework
 					EditorGUI.indentLevel++;
 
 					bool objectChanged;
-					_condition = SerializedObjectEditorGUILayout.ObjectField(_condition, "Properties", out objectChanged);
+					_condition = SerializationEditorGUILayout.ObjectField(_condition, "Properties", out objectChanged);
 					dataChanged |= objectChanged;
 					
 					EditorGUI.indentLevel = origIndent;

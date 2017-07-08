@@ -62,7 +62,7 @@ namespace Framework
 					{
 						EditorGUI.indentLevel++;
 						bool objectChanged;
-						_condition = SerializedObjectEditorGUILayout.ObjectField(_condition, "", out objectChanged);
+						_condition = SerializationEditorGUILayout.ObjectField(_condition, "", out objectChanged);
 						dataChanged |= objectChanged;
 
 						EditorGUI.indentLevel--;
