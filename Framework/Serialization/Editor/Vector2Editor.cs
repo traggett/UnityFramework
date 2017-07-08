@@ -9,7 +9,7 @@ namespace Framework
 		public static class Vector2Editor
 		{
 			#region SerializedObjectEditor
-			public static object PropertyField(object obj, GUIContent label, out bool dataChanged)
+			public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
 			{
 				EditorGUI.BeginChangeCheck();
 				obj = EditorGUILayout.Vector2Field(label, (Vector2)obj);

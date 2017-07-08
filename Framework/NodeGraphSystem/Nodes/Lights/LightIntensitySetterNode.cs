@@ -10,7 +10,7 @@ namespace Framework
 		public class LightIntensitySetterNode : Node
 		{
 			#region Public Data
-			public ComponentNodeInputField<Light> _light = new ComponentNodeInputField<Light>();
+			public ComponentNodeInputField<Light> _light;
 			public NodeInputField<float> _intensity = 1.0f;
 			[Tooltip("If set instead of setting an absolute value the value will be multiplied with the original intensity value.")]
 			public NodeInputField<bool> _multiplyWithOriginal = false;

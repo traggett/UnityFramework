@@ -78,20 +78,45 @@ namespace Framework
 
 			public virtual void SetFromSnapshot(AnimatedCameraSnapshot snapshot, float weight = 1.0f)
 			{
-				this.transform.position = MathUtils.Interpolate(_currentEaseType, this.transform.position, snapshot.transform.position, weight);
-				this.transform.rotation = MathUtils.Interpolate(_currentEaseType, this.transform.rotation, snapshot.transform.rotation, weight);
-				GetCamera().fieldOfView = MathUtils.Interpolate(_currentEaseType, GetCamera().fieldOfView, snapshot._fieldOfView, weight);
-				GetCamera().rect = MathUtils.Interpolate(_currentEaseType, GetCamera().rect, snapshot._cameraRect, weight);
+				if (weight > 0.0f)
+				{
+					if (weight < 1.0f)
+					{
+						this.transform.position = MathUtils.Interpolate(_currentEaseType, this.transform.position, snapshot.transform.position, weight);
+						this.transform.rotation = MathUtils.Interpolate(_currentEaseType, this.transform.rotation, snapshot.transform.rotation, weight);
+						GetCamera().fieldOfView = MathUtils.Interpolate(_currentEaseType, GetCamera().fieldOfView, snapshot._fieldOfView, weight);
+						GetCamera().rect = MathUtils.Interpolate(_currentEaseType, GetCamera().rect, snapshot._cameraRect, weight);
+					}
+					else
+					{
+						this.transform.position = snapshot.transform.position;
+						this.transform.rotation = snapshot.transform.rotation;
+						GetCamera().fieldOfView = snapshot._fieldOfView;
+						GetCamera().rect = snapshot._cameraRect;
+					}
+				}
 			}
 
 			public virtual void SetFromSnapshots(AnimatedCameraSnapshot snapshotFrom, AnimatedCameraSnapshot snapshotTo, eInterpolation easeType, float t, float weight = 1.0f)
 			{
-				this.transform.position = MathUtils.Interpolate(_currentEaseType, this.transform.position, MathUtils.Interpolate(easeType, snapshotFrom.transform.position, snapshotTo.transform.position, t), weight);
-				this.transform.rotation = MathUtils.Interpolate(_currentEaseType, this.transform.rotation, MathUtils.Interpolate(easeType, snapshotFrom.transform.rotation, snapshotTo.transform.rotation, t), weight);
-				GetCamera().fieldOfView = MathUtils.Interpolate(_currentEaseType, GetCamera().fieldOfView, MathUtils.Interpolate(easeType, snapshotFrom._fieldOfView, snapshotTo._fieldOfView, t), weight);
-				GetCamera().rect = MathUtils.Interpolate(_currentEaseType, GetCamera().rect, MathUtils.Interpolate(easeType, snapshotFrom._cameraRect, snapshotTo._cameraRect, t), weight);
+				if (weight > 0.0f)
+				{
+					if (weight < 1.0f)
+					{
+						this.transform.position = MathUtils.Interpolate(_currentEaseType, this.transform.position, MathUtils.Interpolate(easeType, snapshotFrom.transform.position, snapshotTo.transform.position, t), weight);
+						this.transform.rotation = MathUtils.Interpolate(_currentEaseType, this.transform.rotation, MathUtils.Interpolate(easeType, snapshotFrom.transform.rotation, snapshotTo.transform.rotation, t), weight);
+						GetCamera().fieldOfView = MathUtils.Interpolate(_currentEaseType, GetCamera().fieldOfView, MathUtils.Interpolate(easeType, snapshotFrom._fieldOfView, snapshotTo._fieldOfView, t), weight);
+						GetCamera().rect = MathUtils.Interpolate(_currentEaseType, GetCamera().rect, MathUtils.Interpolate(easeType, snapshotFrom._cameraRect, snapshotTo._cameraRect, t), weight);
+					}
+					else
+					{
+						this.transform.position =  MathUtils.Interpolate(easeType, snapshotFrom.transform.position, snapshotTo.transform.position, t);
+						this.transform.rotation =  MathUtils.Interpolate(easeType, snapshotFrom.transform.rotation, snapshotTo.transform.rotation, t);
+						GetCamera().fieldOfView =  MathUtils.Interpolate(easeType, snapshotFrom._fieldOfView, snapshotTo._fieldOfView, t);
+						GetCamera().rect = MathUtils.Interpolate(easeType, snapshotFrom._cameraRect, snapshotTo._cameraRect, t);
+					}
+				}
 			}
-
 			public virtual AnimatedCameraSnapshot CreateSnapshot(string name)
 			{
 				GameObject newObj = new GameObject(name);

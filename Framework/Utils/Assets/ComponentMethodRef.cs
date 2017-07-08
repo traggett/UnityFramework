@@ -66,7 +66,7 @@ namespace Framework
 					int origIndent = EditorGUI.indentLevel;
 					EditorGUI.indentLevel++;
 
-					dataChanged |= _object.RenderObjectProperties(new GUIContent("Object"));
+					_object = SerializationEditorGUILayout.ObjectField(_object, new GUIContent("Object"), ref dataChanged);
 
 					if (_object.GetEditorComponent() != null)
 					{

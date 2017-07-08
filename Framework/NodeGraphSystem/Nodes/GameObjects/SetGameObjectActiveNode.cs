@@ -10,7 +10,7 @@ namespace Framework
 		public class SetGameObjectActiveNode : Node
 		{
 			#region Public Data
-			public GameObjectNodeInputField _gameObject = new GameObjectNodeInputField();
+			public GameObjectNodeInputField _gameObject;
 			public NodeInputField<bool> _active = false;
 			#endregion
 

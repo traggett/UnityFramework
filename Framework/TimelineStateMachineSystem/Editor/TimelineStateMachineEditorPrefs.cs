@@ -12,7 +12,7 @@ namespace Framework
 			[Serializable]
 			public sealed class TimelineStateMachineEditorPrefs
 			{
-				public string _fileName = string.Empty;
+				public string _fileName;
 				public int _stateId = -1;
 				public float _zoom = 1.0f;
 				public bool _debug = true;

@@ -10,7 +10,7 @@ namespace Framework
 		public class LightColorSetterNode : Node
 		{
 			#region Public Data
-			public ComponentNodeInputField<Light> _light = new ComponentNodeInputField<Light>();
+			public ComponentNodeInputField<Light> _light;
 			public NodeInputField<Color> _color = Color.white;
 			#endregion
 			

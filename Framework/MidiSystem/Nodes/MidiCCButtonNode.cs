@@ -4,9 +4,9 @@ using System;
 namespace Framework
 {
 	using DynamicValueSystem;
-	using MidiSystem;
+	using NodeGraphSystem;
 
-	namespace NodeGraphSystem
+	namespace MidiSystem
 	{
 		[NodeCategory("Midi")]
 		[Serializable]

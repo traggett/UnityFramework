@@ -166,10 +166,8 @@ namespace Framework
 				public override bool RenderObjectProperties(GUIContent label)
 				{
 					bool dataChanged = RenderEventTime();
-
-					bool eventChanged;
-					SerializationEditorGUILayout.ObjectField(GetEditableObject(), "Event Properties", out eventChanged);
-					dataChanged |= eventChanged;
+					
+					SerializationEditorGUILayout.ObjectField(GetEditableObject(), "Event Properties", ref dataChanged);
 
 					return dataChanged;
 				}

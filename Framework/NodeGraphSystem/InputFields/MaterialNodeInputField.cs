@@ -10,7 +10,7 @@ namespace Framework
 		[Serializable]
 		public class MaterialNodeInputField : NodeInputFieldBase<Material>
 		{
-			public MaterialRef _value = new MaterialRef();
+			public MaterialRef _value;
 			
 			public static implicit operator Material(MaterialNodeInputField value)
 			{
@@ -25,12 +25,7 @@ namespace Framework
 #if UNITY_EDITOR
 			protected override void ClearStaticValue()
 			{
-				_value = new MaterialRef();
-			}
-
-			protected override bool RenderStaticValueProperty()
-			{
-				return _value.RenderObjectProperties(new GUIContent("Value"));
+				_value = null;
 			}
 #endif
 		}

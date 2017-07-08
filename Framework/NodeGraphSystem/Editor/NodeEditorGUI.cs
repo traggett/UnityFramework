@@ -107,13 +107,13 @@ namespace Framework
 							TooltipAttribute fieldToolTipAtt = SystemUtils.GetAttribute<TooltipAttribute>(input._fieldInfo);
 							GUIContent labelContent = fieldToolTipAtt != null ? new GUIContent(fieldName, fieldToolTipAtt.tooltip) : new GUIContent(fieldName);
 
-							bool fieldChanged;
-							object nodeFieldObject = input._fieldInfo.GetValue(GetEditableObject());
-							nodeFieldObject = SerializationEditorGUILayout.ObjectField(nodeFieldObject, labelContent, out fieldChanged);
+							bool fieldChanged = false;
+							object nodeFieldObject = input.GetValue();
+							nodeFieldObject = SerializationEditorGUILayout.ObjectField(nodeFieldObject, labelContent, ref fieldChanged);
 							if (fieldChanged)
 							{
 								dataChanged = true;
-								input._fieldInfo.SetValue(GetEditableObject(), nodeFieldObject);
+								input.SetValue(nodeFieldObject);
 							}
 						}
 					}
@@ -138,9 +138,9 @@ namespace Framework
 								TooltipAttribute fieldToolTipAtt = SystemUtils.GetAttribute<TooltipAttribute>(serializedField);
 								GUIContent labelContent = fieldToolTipAtt != null ? new GUIContent(fieldName, fieldToolTipAtt.tooltip) : new GUIContent(fieldName);
 
-								bool fieldChanged;
+								bool fieldChanged = false;
 								object nodeFieldObject = serializedField.GetValue(GetEditableObject());
-								nodeFieldObject = SerializationEditorGUILayout.ObjectField(nodeFieldObject, labelContent, out fieldChanged);
+								nodeFieldObject = SerializationEditorGUILayout.ObjectField(nodeFieldObject, labelContent, ref fieldChanged);
 								if (fieldChanged)
 								{
 									dataChanged = true;

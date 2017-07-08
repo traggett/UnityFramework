@@ -118,8 +118,8 @@ namespace Framework
 			#region ICustomEditable
 			public virtual bool RenderObjectProperties(GUIContent label)
 			{
-				bool dataChanged;
-				_editableObject = SerializationEditorGUILayout.ObjectField(_editableObject, label, out dataChanged);
+				bool dataChanged = false;
+				_editableObject = SerializationEditorGUILayout.ObjectField(_editableObject, label, ref dataChanged);
 				return dataChanged;
 			}
 			#endregion

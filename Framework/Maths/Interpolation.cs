@@ -122,6 +122,36 @@ namespace Framework
 
 				yield break;
 			}
+
+			public static IEnumerator Interpolate(double value, Action<double> valueSetter, eInterpolation type, double to, float time)
+			{
+				if (time > 0.0f)
+				{
+					double t = 0.0d;
+					double start = value;
+					double invTime = 1.0d / time;
+
+					while (t < 1.0d)
+					{
+						t += Time.deltaTime * invTime;
+
+						if (t > 1.0d)
+							value = to;
+						else
+							value = Interpolate(type, start, to, t);
+
+						valueSetter(value);
+
+						yield return null;
+					}
+				}
+				else
+				{
+					valueSetter(to);
+				}
+
+				yield break;
+			}
 			#endregion
 
 			#region Linear

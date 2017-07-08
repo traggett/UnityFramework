@@ -1,9 +1,8 @@
 using UnityEngine;
-using System;
 
 namespace Framework
 {
-	namespace NodeGraphSystem
+	namespace MidiSystem
 	{
 		public static class MidiNodes
 		{

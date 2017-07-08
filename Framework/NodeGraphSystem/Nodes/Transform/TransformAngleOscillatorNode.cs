@@ -12,7 +12,7 @@ namespace Framework
 		public class TransformAngleOscillatorNode : Node
 		{
 			#region Public Data
-			public TransformNodeInputField _transform = new TransformNodeInputField();
+			public TransformNodeInputField _transform;
 			public NodeInputField<float> _amplitude = 0.0f;
 			public NodeInputField<float> _axisDuration = 0.0f;
 			public NodeInputField<float> _axisDeltaSpeed = 0.0f;

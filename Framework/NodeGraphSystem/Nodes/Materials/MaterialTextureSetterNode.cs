@@ -11,7 +11,7 @@ namespace Framework
 		{
 			#region Public Data
 			
-			public TextureNodeInputField _value = new TextureNodeInputField();
+			public TextureNodeInputField _value;
 			#endregion
 
 			#region Private Data

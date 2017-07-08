@@ -12,7 +12,7 @@ namespace Framework
 		public class TransformGetScaleNode : Node, IValueSource<Vector3>
 		{
 			#region Public Data		
-			public TransformNodeInputField _transform = new TransformNodeInputField();	
+			public TransformNodeInputField _transform;	
 			#endregion
 
 			#region Node

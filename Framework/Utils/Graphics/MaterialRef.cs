@@ -102,7 +102,10 @@ namespace Framework
 					//Draw renderer field
 					if (_editorType == eEdtiorType.Instance)
 					{
-						if (_renderer.RenderObjectProperties(new GUIContent("Renderer")))
+						bool renderChanged = false;
+						_renderer = SerializationEditorGUILayout.ObjectField(_renderer, new GUIContent("Renderer"), ref renderChanged);
+
+						if (renderChanged)
 						{
 							dataChanged = true;
 							_materialRef.ClearAsset();
@@ -126,7 +129,7 @@ namespace Framework
 					}
 					else
 					{
-						dataChanged |= _materialRef.RenderObjectProperties(new GUIContent("Material"));
+						_materialRef = SerializationEditorGUILayout.ObjectField(_materialRef, new GUIContent("Material"), ref dataChanged);
 					}
 					
 					EditorGUI.indentLevel = origIndent;

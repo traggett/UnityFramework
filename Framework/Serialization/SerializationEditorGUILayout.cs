@@ -22,30 +22,66 @@ namespace Framework
 			#region Public Interface
 			public static T ObjectField<T>(T obj, string label)
 			{
-				bool dataChanged;
-				return ObjectField(obj, label, out dataChanged);
+				bool dataChanged = false;
+				return ObjectField(obj, label, ref dataChanged);
 			}
 
 			public static T ObjectField<T>(T obj, GUIContent label)
 			{
-				bool dataChanged;
-				return ObjectField(obj, label, out dataChanged);
+				bool dataChanged = false;
+				return ObjectField(obj, label, ref dataChanged);
 			}
 
-			public static T ObjectField<T>(T obj, string label, out bool dataChanged)
+			public static T ObjectField<T>(T obj, string label, ref bool dataChanged)
 			{
-				return ObjectField(obj, new GUIContent(label), out dataChanged);
+				return ObjectField(obj, new GUIContent(label), ref dataChanged);
 			}
 
 			//The equivalent of a SerializedPropertyField but for objects serialized using Xml.
-			public static T ObjectField<T>(T obj, GUIContent label, out bool dataChanged)
+			public static T ObjectField<T>(T obj, GUIContent label, ref bool dataChanged)
 			{
-				return (T)ObjectField(obj, obj != null ? obj.GetType() : typeof(T), label, out dataChanged);
+				return (T)ObjectField(obj, obj != null ? obj.GetType() : typeof(T), label, ref dataChanged);
+			}
+
+			public static object RenderObjectMemebers(object obj, Type objType, ref bool dataChanged)
+			{
+				SerializedObjectMemberInfo[] serializedFields = SerializedObjectMemberInfo.GetSerializedFields(objType);
+
+				for (int i = 0; i < serializedFields.Length; i++)
+				{
+					if (!serializedFields[i].HideInEditor())
+					{
+						//Create GUIContent for label and optional tooltip
+						string fieldName = StringUtils.FromCamelCase(serializedFields[i].GetID());
+						TooltipAttribute fieldToolTipAtt = SystemUtils.GetAttribute<TooltipAttribute>(serializedFields[i]);
+						GUIContent labelContent = fieldToolTipAtt != null ? new GUIContent(fieldName, fieldToolTipAtt.tooltip) : new GUIContent(fieldName);
+
+						bool fieldChanged = false;
+						object nodeFieldObject = serializedFields[i].GetValue(obj);
+
+						if (serializedFields[i].GetFieldType().IsArray)
+						{
+							nodeFieldObject = ArrayField(labelContent, nodeFieldObject as Array, serializedFields[i].GetFieldType().GetElementType(), ref fieldChanged);
+						}
+						else
+						{
+							nodeFieldObject = ObjectField(nodeFieldObject, nodeFieldObject != null ? nodeFieldObject.GetType() : serializedFields[i].GetFieldType(), labelContent, ref fieldChanged);
+						}
+
+						if (fieldChanged)
+						{
+							dataChanged = true;
+							serializedFields[i].SetValue(obj, nodeFieldObject);
+						}
+					}
+				}
+
+				return obj;
 			}
 			#endregion
 
 			#region Private Functions
-			private static object ObjectField(object obj, Type objType, GUIContent label, out bool dataChanged)
+			private static object ObjectField(object obj, Type objType, GUIContent label, ref bool dataChanged)
 			{
 				//If object is an array show an editable array field
 				if (objType.IsArray)
@@ -60,15 +96,12 @@ namespace Framework
 						return arrayObj as object;
 					}
 
-					dataChanged = false;
 					return obj;
 				}
 
 				//If the object is a ICustomEditable then just need to call its render properties function.
 				if (typeof(ICustomEditorInspector).IsAssignableFrom(objType))
 				{
-					dataChanged = false;
-
 					//If obj is null then need to create new instance for editor?
 					if (obj == null)
 					{
@@ -87,7 +120,7 @@ namespace Framework
 					}
 
 					if (obj != null)
-						dataChanged = ((ICustomEditorInspector)obj).RenderObjectProperties(label);
+						dataChanged |= ((ICustomEditorInspector)obj).RenderObjectProperties(label);
 
 					return obj;
 				}
@@ -97,53 +130,15 @@ namespace Framework
 				if (renderPropertiesDelegate != null)
 				{
 					//If it has one then just need to call its render properties function.
-					return renderPropertiesDelegate(obj, label, out dataChanged);
+					return renderPropertiesDelegate(obj, label, ref dataChanged);
 				}
 
-				//Otherwise loop through each xml field in object and render each as a property field
-				{
-					dataChanged = false;
-
-					SerializedObjectMemberInfo[] serializedFields = SerializedObjectMemberInfo.GetSerializedFields(objType);
-
-					for (int i= 0; i < serializedFields.Length; i++)
-					{
-						if (!serializedFields[i].HideInEditor())
-						{
-							//Create GUIContent for label and optional tooltip
-							string fieldName = StringUtils.FromCamelCase(serializedFields[i].GetID());
-							TooltipAttribute fieldToolTipAtt = SystemUtils.GetAttribute<TooltipAttribute>(serializedFields[i]);
-							GUIContent labelContent = fieldToolTipAtt != null ? new GUIContent(fieldName, fieldToolTipAtt.tooltip) : new GUIContent(fieldName);
-
-							bool fieldChanged;
-							object nodeFieldObject = serializedFields[i].GetValue(obj);
-
-							if (serializedFields[i].GetFieldType().IsArray)
-							{
-								fieldChanged = false;
-								nodeFieldObject = ArrayField(labelContent, nodeFieldObject as Array, serializedFields[i].GetFieldType().GetElementType(), ref fieldChanged);
-							}
-							else
-							{
-								nodeFieldObject = ObjectField(nodeFieldObject, nodeFieldObject != null ? nodeFieldObject.GetType() : serializedFields[i].GetFieldType(), labelContent, out fieldChanged);
-							}
-
-							if (fieldChanged)
-							{
-								dataChanged = true;
-								serializedFields[i].SetValue(obj, nodeFieldObject);
-							}
-						}
-					}
-
-					return obj;
-				}
+				//Otherwise render all the objects memebers as object fields
+				return RenderObjectMemebers(obj, objType, ref dataChanged);
 			}
 
 			private static Array ArrayField(GUIContent label, Array _array, Type arrayType, ref bool dataChanged)
 			{
-				dataChanged = false;
-				
 				label.text += " (" + SystemUtils.GetTypeName(arrayType) + ")";
 
 				bool editorFoldout = EditorGUILayout.Foldout(true, label);
@@ -186,8 +181,9 @@ namespace Framework
 					{
 						for (int i = 0; i < _array.Length; i++)
 						{
-							bool elementChanged;
-							_array.SetValue(ObjectField(_array.GetValue(i), "Element " + i, out elementChanged), i);
+							bool elementChanged = false;
+							object elementObj = ObjectField(_array.GetValue(i), "Element " + i, ref elementChanged);
+							_array.SetValue(elementObj, i);
 							dataChanged |= elementChanged;
 						}
 					}

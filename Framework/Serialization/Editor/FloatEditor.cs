@@ -9,7 +9,7 @@ namespace Framework
 		public static class FloatEditor
 		{
 			#region SerializedObjectEditor
-			public static object PropertyField(object obj, GUIContent label, out bool dataChanged)
+			public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
 			{
 				EditorGUI.BeginChangeCheck();
 				obj = EditorGUILayout.FloatField(label, (float)obj);

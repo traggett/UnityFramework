@@ -32,7 +32,9 @@ namespace Framework
 
 		public abstract class NodeInputFieldBase<T> : IValueSource<T>, INodeInputField, ICustomEditorInspector
 		{
+			[HideInInspector]
 			public eSourceType _sourceType = eSourceType.Static;
+			[HideInInspector]
 			public int _sourceNodeId = -1;
 
 			#region Private Data
@@ -84,7 +86,6 @@ namespace Framework
 			protected abstract T GetStaticValue();
 #if UNITY_EDITOR
 			protected abstract void ClearStaticValue();
-			protected abstract bool RenderStaticValueProperty();
 #endif
 
 			#region IValueSource<T>
@@ -107,7 +108,7 @@ namespace Framework
 
 			#region ICustomEditable
 #if UNITY_EDITOR
-			public virtual bool RenderObjectProperties(GUIContent label)
+			public bool RenderObjectProperties(GUIContent label)
 			{
 				bool dataChanged = false;
 
@@ -122,7 +123,7 @@ namespace Framework
 					int origIndent = EditorGUI.indentLevel;
 					EditorGUI.indentLevel++;
 
-					_sourceType = SerializationEditorGUILayout.ObjectField(_sourceType, new GUIContent("Input Type", "Static: Value will be constant.\nNode: Value read from other nodes output."), out dataChanged);
+					_sourceType = SerializationEditorGUILayout.ObjectField(_sourceType, new GUIContent("Input Type", "Static: Value will be constant.\nNode: Value read from other nodes output."), ref dataChanged);
 					if (dataChanged)
 					{
 						ClearStaticValue();
@@ -133,7 +134,7 @@ namespace Framework
 					{
 						case eSourceType.Static:
 							{
-								dataChanged |= RenderStaticValueProperty();
+								SerializationEditorGUILayout.RenderObjectMemebers(this, GetType(), ref dataChanged);
 							}
 							break;
 						case eSourceType.Node:

@@ -10,7 +10,7 @@ namespace Framework
 		public class TextMeshColorSetterNode : Node
 		{
 			#region Public Data
-			public ComponentNodeInputField<TextMesh> _textMesh = new ComponentNodeInputField<TextMesh>();
+			public ComponentNodeInputField<TextMesh> _textMesh;
 			public NodeInputField<Color> _value = Color.clear;
 			#endregion
 

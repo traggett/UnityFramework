@@ -14,7 +14,7 @@ namespace Framework
 		public class EventDestroyGameObject : Event, IStateMachineEvent
 		{
 			#region Public Data
-			public GameObjectRef _gameObject = new GameObjectRef();
+			public GameObjectRef _gameObject;
 			#endregion
 
 			#region Event

@@ -11,7 +11,7 @@ namespace Framework
 		{
 			#region Public Data
 			
-			public TransformNodeInputField _transform = new TransformNodeInputField();
+			public TransformNodeInputField _transform;
 			
 			public NodeInputField<Vector3> _scale = Vector3.one;
 			

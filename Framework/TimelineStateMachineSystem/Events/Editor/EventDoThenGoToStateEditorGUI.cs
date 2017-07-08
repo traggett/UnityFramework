@@ -1,5 +1,3 @@
-using System;
-
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -32,15 +30,15 @@ namespace Framework
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 						
-						evnt._preStateType = SerializationEditorGUILayout.ObjectField(evnt._preStateType, "State Type", out dataChanged);
+						evnt._preStateType = SerializationEditorGUILayout.ObjectField(evnt._preStateType, "State Type", ref dataChanged);
 
 						switch (evnt._preStateType)
 						{
 							case EventDoThenGoToState.eStateType.Timeline:
-								dataChanged |= evnt._preState.RenderObjectProperties(new GUIContent("State"));
+								evnt._preState = SerializationEditorGUILayout.ObjectField(evnt._preState, new GUIContent("State"), ref dataChanged);
 								break;
 							case EventDoThenGoToState.eStateType.Coroutine:
-								dataChanged |= evnt._preCoroutine.RenderObjectProperties(new GUIContent("State"));
+								evnt._preCoroutine = SerializationEditorGUILayout.ObjectField(evnt._preCoroutine, new GUIContent("State"), ref dataChanged);
 								break;
 						}
 
@@ -53,15 +51,15 @@ namespace Framework
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 						
-						evnt._stateType = SerializationEditorGUILayout.ObjectField(evnt._stateType, "State Type", out dataChanged);
+						evnt._stateType = SerializationEditorGUILayout.ObjectField(evnt._stateType, "State Type", ref dataChanged);
 
 						switch (evnt._stateType)
 						{
 							case EventDoThenGoToState.eStateType.Timeline:
-								dataChanged |= evnt._state.RenderObjectProperties(new GUIContent("State"));
+								evnt._state = SerializationEditorGUILayout.ObjectField(evnt._state, new GUIContent("State"), ref dataChanged);
 								break;
 							case EventDoThenGoToState.eStateType.Coroutine:
-								dataChanged |= evnt._coroutine.RenderObjectProperties(new GUIContent("State"));
+								evnt._coroutine = SerializationEditorGUILayout.ObjectField(evnt._coroutine, new GUIContent("State"), ref dataChanged);
 								break;
 						}
 

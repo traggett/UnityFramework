@@ -79,11 +79,9 @@ namespace Framework
 					int origIndent = EditorGUI.indentLevel;
 					EditorGUI.indentLevel++;
 
-					dataChanged |= _scene.RenderObjectProperties(new GUIContent("Scene"));				
-						
-					bool arrayChanged;
-					_additionalLoadingObjects = SerializationEditorGUILayout.ObjectField(_additionalLoadingObjects, "Additional Loading Objects", out arrayChanged);
-					dataChanged |= arrayChanged;
+
+					_scene = SerializationEditorGUILayout.ObjectField(_scene, "Scene", ref dataChanged);
+					_additionalLoadingObjects = SerializationEditorGUILayout.ObjectField(_additionalLoadingObjects, "Additional Loading Objects", ref dataChanged);
 
 					EditorGUI.indentLevel = origIndent;
 				}

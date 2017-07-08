@@ -9,7 +9,7 @@ namespace Framework
 			[Serializable]
 			public sealed class NodeGraphEditorPrefs
 			{
-				public string _fileName = string.Empty;
+				public string _fileName;
 				public float _zoom = 1.0f;
 			}
 		}

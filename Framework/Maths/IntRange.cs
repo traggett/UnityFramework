@@ -50,6 +50,16 @@ namespace Framework
 				return a._min != b._min || a._max != b._max;
 			}
 
+			public static implicit operator string(IntRange obj)
+			{
+				return "(" + obj._min + ", " + obj._max + ")";
+			}
+
+			public override string ToString()
+			{
+				return "(" + _min + ", " + _max + ")";
+			}
+
 			public override bool Equals(object obj)
 			{
 				if (ReferenceEquals(null, obj))

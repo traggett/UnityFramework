@@ -10,7 +10,7 @@ namespace Framework
 		public class MaterialMainTextureScrollerNode : Node
 		{
 			#region Public Data
-			public MaterialNodeInputField _material = new MaterialNodeInputField();
+			public MaterialNodeInputField _material;
 			public NodeInputField<Vector2> _speed = Vector2.zero;
 			#endregion
 

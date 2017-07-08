@@ -17,7 +17,7 @@ namespace Framework
 		public sealed class ComponentRef<T> : ISerializationCallbackReceiver, ICustomEditorInspector where T : class
 		{
 			#region Public Data
-			public GameObjectRef _gameObject = new GameObjectRef();
+			public GameObjectRef _gameObject;
 			public int _componentIndex = 0;
 			#endregion
 
@@ -39,13 +39,13 @@ namespace Framework
 
 			public static implicit operator string(ComponentRef<T> property)
 			{
-				if (!string.IsNullOrEmpty(property._gameObject._objectName))
+				if (property != null && !string.IsNullOrEmpty(property._gameObject._objectName))
 				{
 					return property._gameObject;
 				}
 				else
 				{
-					return typeof(T).Name;
+					return SystemUtils.GetTypeName(typeof(T));
 				}
 			}
 
@@ -77,24 +77,28 @@ namespace Framework
 			public Component GetBaseComponent()
 			{
 				Component component = null;
-				GameObject obj = _gameObject.GetGameObject();
 
-				if (obj != null)
+				if (_gameObject != null)
 				{
-					Component[] components = obj.GetComponents<Component>();
-					int index = 0;
+					GameObject obj = _gameObject.GetGameObject();
 
-					for (int i = 0; i < components.Length; i++)
+					if (obj != null)
 					{
-						if (components[i] is T)
+						Component[] components = obj.GetComponents<Component>();
+						int index = 0;
+
+						for (int i = 0; i < components.Length; i++)
 						{
-							if (_componentIndex == index)
+							if (components[i] is T)
 							{
-								component = components[i];
-								break;
+								if (_componentIndex == index)
+								{
+									component = components[i];
+									break;
+								}
+
+								index++;
 							}
-							
-							index++;
 						}
 					}
 				}
@@ -140,7 +144,7 @@ namespace Framework
 
 					//Show drop down
 					GameObjectRef.eSourceType prevType = _gameObject._sourceType;
-					_gameObject._sourceType = SerializationEditorGUILayout.ObjectField(_gameObject._sourceType, "Source Type", out dataChanged);
+					_gameObject._sourceType = SerializationEditorGUILayout.ObjectField(_gameObject._sourceType, "Source Type", ref dataChanged);
 
 					if (prevType != _gameObject._sourceType)
 					{

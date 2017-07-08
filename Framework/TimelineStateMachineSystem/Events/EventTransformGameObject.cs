@@ -40,7 +40,7 @@ namespace Framework
 				Transform,
 			}
 			
-			public GameObjectRef _gameObject = new GameObjectRef();
+			public GameObjectRef _gameObject;
 
 			
 			public eTransformFlag _transformFlags = eTransformFlag.Translate;
@@ -58,7 +58,7 @@ namespace Framework
 			public float _duration = 0.0f;
 
 			
-			public GameObjectRef _targetTransform = new GameObjectRef();
+			public GameObjectRef _targetTransform;
 
 			
 			public Vector3 _targetPosition = Vector3.zero;
@@ -142,27 +142,18 @@ namespace Framework
 			public bool RenderObjectProperties(GUIContent label)
 			{
 				bool dataChanged = false;
-
-				dataChanged |= _gameObject.RenderObjectProperties(new GUIContent("Game Object"));
-
-				bool transformFlagsChanged;
-				_transformFlags = SerializationEditorGUILayout.ObjectField(_transformFlags, "Transform Flags", out transformFlagsChanged);
-				dataChanged |= transformFlagsChanged;
-
-				bool moveTypeChanged;
-				_moveType = SerializationEditorGUILayout.ObjectField(_moveType, "Move Type", out moveTypeChanged);
-				dataChanged |= moveTypeChanged;
-
-				bool easeChanged;
-				_easeType = SerializationEditorGUILayout.ObjectField(_easeType, "Ease Type", out easeChanged);
-				dataChanged |= easeChanged;
+				
+				_gameObject = SerializationEditorGUILayout.ObjectField(_gameObject, "Game Object", ref dataChanged);
+				_transformFlags = SerializationEditorGUILayout.ObjectField(_transformFlags, "Transform Flags", ref dataChanged);
+				_moveType = SerializationEditorGUILayout.ObjectField(_moveType, "Move Type", ref dataChanged);
+				_easeType = SerializationEditorGUILayout.ObjectField(_easeType, "Ease Type", ref dataChanged);
 
 				EditorGUI.BeginChangeCheck();
 				_duration = EditorGUILayout.FloatField("Duration", _duration);
 				dataChanged |= EditorGUI.EndChangeCheck();
 
-				bool targetChanged;
-				_targetType = SerializationEditorGUILayout.ObjectField(_targetType, "Target Type", out targetChanged);
+				bool targetChanged = false;
+				_targetType = SerializationEditorGUILayout.ObjectField(_targetType, "Target Type", ref targetChanged);
 				if  (targetChanged)
 				{
 					dataChanged = true;
@@ -177,7 +168,7 @@ namespace Framework
 				{
 					case eTargetType.Transform:
 						{
-							dataChanged |= _targetTransform.RenderObjectProperties(new GUIContent("Target Type"));
+							_targetTransform = SerializationEditorGUILayout.ObjectField(_targetTransform, new GUIContent("Target Type"), ref dataChanged);
 						}
 						break;
 					case eTargetType.LocalDelta:

@@ -14,7 +14,7 @@ namespace Framework
 		public class EventSetMaterialColor : Event, IStateMachineEvent
 		{
 			#region Public Data
-			public MaterialRef _material = new MaterialRef();
+			public MaterialRef _material;
 			public string _propertyName = "_Color";
 			public Color _color = Color.black;
 			public float _duration = 0.0f;

@@ -21,7 +21,7 @@ namespace Framework
 		public class TimelineStateMachine : ISerializationCallbackReceiver
 		{
 			#region Public Data
-			public string _name = string.Empty;
+			public string _name;
 			public TimelineState[] _states = new TimelineState[0];
 
 #if UNITY_EDITOR

@@ -39,9 +39,7 @@ namespace Framework
 						GUI.backgroundColor = orig;
 
 						//Draw branch properties
-						bool branchChanged;
-						SerializationEditorGUILayout.ObjectField(evnt._branches[i], string.Empty, out branchChanged);
-						dataChanged |= branchChanged;
+						SerializationEditorGUILayout.ObjectField(evnt._branches[i], string.Empty, ref dataChanged);
 
 						if (DrawEditBranchButtons(i))
 						{
@@ -72,10 +70,8 @@ namespace Framework
 						{
 							int origIndent = EditorGUI.indentLevel;
 							EditorGUI.indentLevel++;
-
-							bool objectChanged;
-							backgroundLogic = SerializationEditorGUILayout.ObjectField(backgroundLogic, "", out objectChanged);
-							dataChanged |= objectChanged;
+							
+							backgroundLogic = SerializationEditorGUILayout.ObjectField(backgroundLogic, "", ref dataChanged);
 
 							EditorGUI.indentLevel = origIndent;
 						}

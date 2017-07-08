@@ -11,7 +11,7 @@ namespace Framework
 		public static class EnumEditor
 		{
 			#region SerializedObjectEditor
-			public static object PropertyField(object obj, GUIContent label, out bool dataChanged)
+			public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
 			{
 				EditorGUI.BeginChangeCheck();
 				obj = EditorGUILayout.EnumPopup(label, (Enum)obj);

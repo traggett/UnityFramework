@@ -27,11 +27,6 @@ namespace Framework
 			{
 				_value.ClearComponent();
 			}
-
-			protected override bool RenderStaticValueProperty()
-			{
-				return _value.RenderObjectProperties(new GUIContent("Value"));
-			}
 #endif
 		}
 	}

@@ -16,7 +16,7 @@ namespace Framework
 		public sealed class SceneRef : ICustomEditorInspector
 		{
 			#region Public Data
-			public string _scenePath = string.Empty;
+			public string _scenePath;
 			#endregion
 
 			public static implicit operator string(SceneRef property)

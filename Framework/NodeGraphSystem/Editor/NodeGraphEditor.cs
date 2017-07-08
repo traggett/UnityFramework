@@ -9,7 +9,7 @@ namespace Framework
 	using Utils.Editor;
 	using Utils;
 	using Serialization;
-
+	
 	namespace NodeGraphSystem
 	{
 		namespace Editor
@@ -539,16 +539,16 @@ namespace Framework
 
 				private void SetNodeInputFieldLinkNodeID(NodeEditorField nodeField, int nodeId)
 				{
-					object inputValueInstance = nodeField._fieldInfo.GetValue(nodeField._nodeEditorGUI.GetEditableObject());
+					object inputValueInstance = nodeField.GetValue();
 					INodeInputField inputField = inputValueInstance as INodeInputField;
 					inputField.SetSourceNode(nodeId);
-					nodeField._fieldInfo.SetValue(nodeField._nodeEditorGUI.GetEditableObject(), inputValueInstance);
+					nodeField.SetValue(inputValueInstance);
 					nodeField._nodeEditorGUI.MarkAsDirty(true);
 				}
 				
 				private int GetNodeInputFieldLinkNodeId(NodeEditorField nodeField)
 				{
-					object inputValueInstance = nodeField._fieldInfo.GetValue(nodeField._nodeEditorGUI.GetEditableObject());
+					object inputValueInstance = nodeField.GetValue();
 					INodeInputField inputField = inputValueInstance as INodeInputField;
 					return inputField.GetSourceNodeId();
 				}
@@ -670,7 +670,8 @@ namespace Framework
 				private void RenderStaticValueBox(NodeEditorField nodeField, Vector2 position, Color color, float scale)
 				{
 					//Get _value field from the input field and then 
-					object inputValueInstance = nodeField._fieldInfo.GetValue(nodeField._nodeEditorGUI.GetEditableObject());
+					object inputValueInstance = nodeField.GetValue();
+
 					INodeInputField inputField = inputValueInstance as INodeInputField;
 
 					if (inputField.IsStaticValue())

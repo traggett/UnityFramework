@@ -37,15 +37,13 @@ namespace Framework
 				{
 					int origIndent = EditorGUI.indentLevel;
 					EditorGUI.indentLevel++;
-
-					bool objectChanged;
-					_condition = SerializationEditorGUILayout.ObjectField(_condition, "Properties", out objectChanged);
-					dataChanged |= objectChanged;
+					
+					_condition = SerializationEditorGUILayout.ObjectField(_condition, "Properties", ref dataChanged);
 					
 					EditorGUI.indentLevel = origIndent;
 				}
 
-				dataChanged |= _state.RenderObjectProperties(new GUIContent("Go to"));
+				_state = SerializationEditorGUILayout.ObjectField(_state, new GUIContent("Go to"), ref dataChanged);
 
 				EditorGUI.BeginChangeCheck();
 				_duration = EditorGUILayout.FloatField("Time Window", _duration);

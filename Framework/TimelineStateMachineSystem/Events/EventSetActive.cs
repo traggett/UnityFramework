@@ -14,7 +14,7 @@ namespace Framework
 		public class EventSetActive : Event, IStateMachineEvent
 		{
 			#region Public Data
-			public GameObjectRef _target = new GameObjectRef();
+			public GameObjectRef _target;
 			public bool _active = false;
 			#endregion
 

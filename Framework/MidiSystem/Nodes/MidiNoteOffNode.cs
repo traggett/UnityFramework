@@ -4,13 +4,13 @@ using System;
 namespace Framework
 {
 	using DynamicValueSystem;
-	using MidiSystem;
+	using NodeGraphSystem;
 
-	namespace NodeGraphSystem
+	namespace MidiSystem
 	{
 		[NodeCategory("Midi")]
 		[Serializable]
-		public class MidiNoteOnNode : Node, IValueSource<bool>
+		public class MidiNoteOffNode : Node, IValueSource<bool>
 		{
 			#region Public Data
 			public NodeInputField<int> _track = 0;
@@ -30,7 +30,7 @@ namespace Framework
 			#region IValueSource<bool>
 			public bool GetValue()
 			{
-				return MidiSequencer.GetNoteOn(_track, _channel, _note);
+				return MidiSequencer.GetNoteOff(_track, _channel, _note);
 			}
 			#endregion
 		}

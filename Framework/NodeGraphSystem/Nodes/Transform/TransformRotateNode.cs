@@ -10,7 +10,7 @@ namespace Framework
 		public class RotateTransformNode : Node
 		{
 			#region Public Data
-			public TransformNodeInputField _transform = new TransformNodeInputField();		
+			public TransformNodeInputField _transform;		
 			public NodeInputField<Vector3> _axis = Vector3.zero;
 			public NodeInputField<float> _angle = 0.0f;
 			public Space _space = Space.Self;

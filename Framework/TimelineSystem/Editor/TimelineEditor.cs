@@ -371,7 +371,7 @@ namespace Framework
 						foreach (Type type in types)
 						{
 							EventCategoryAttribute eventAttribute = SystemUtils.GetAttribute<EventCategoryAttribute>(type);
-							string category;
+							string category = string.Empty;
 
 							if (eventAttribute != null && !string.IsNullOrEmpty(eventAttribute.Category))
 							{

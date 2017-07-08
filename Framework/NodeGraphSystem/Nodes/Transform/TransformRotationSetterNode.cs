@@ -10,7 +10,7 @@ namespace Framework
 		public class TransformRotationSetterNode : Node
 		{
 			#region Public Data
-			public TransformNodeInputField _transform = new TransformNodeInputField();
+			public TransformNodeInputField _transform;
 			public NodeInputField<Quaternion> _rotation = Quaternion.identity;
 			public Space _space = Space.Self;
 			[Tooltip("If set instead of setting an absolute value the value will be applied as an offset from the original value.")]

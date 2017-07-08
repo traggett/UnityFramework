@@ -16,6 +16,34 @@ namespace Framework
 				public FieldInfo _fieldInfo;
 				public Type _type;
 				public string _name;
+
+				public object GetValue()
+				{
+					object inputValueInstance = _fieldInfo.GetValue(_nodeEditorGUI.GetEditableObject());
+
+					if (inputValueInstance == null)
+					{
+						if (_fieldInfo.FieldType.IsValueType)
+						{
+							inputValueInstance = Activator.CreateInstance(_fieldInfo.FieldType);
+						}
+						else if (_fieldInfo.FieldType.IsClass)
+						{
+							ConstructorInfo constructor = _fieldInfo.FieldType.GetConstructor(Type.EmptyTypes);
+							if (constructor != null)
+								inputValueInstance = constructor.Invoke(null);
+							else
+								throw new Exception("need a parameterless constructor");
+						}
+					}
+
+					return inputValueInstance;
+				}
+
+				public void SetValue(object value)
+				{
+					_fieldInfo.SetValue(_nodeEditorGUI.GetEditableObject(), value);
+				}
 			}
 		}
 	}

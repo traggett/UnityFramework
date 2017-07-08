@@ -4,25 +4,23 @@ using System;
 namespace Framework
 {
 	using DynamicValueSystem;
-	using MidiSystem;
 
 	namespace NodeGraphSystem
 	{
-		[NodeCategory("Midi")]
+		[NodeCategory("Vector4")]
 		[Serializable]
-		public class MidiCCLevelNode : Node, IValueSource<float>
+		public class Vector4DotNode : Node, IValueSource<float>
 		{
 			#region Public Data
-			public NodeInputField<int> _track = 0;
-			public NodeInputField<int> _channel = 16;
-			public NodeInputField<int> _note = 0;
+			public NodeInputField<Vector4> _a = Vector4.zero;
+			public NodeInputField<Vector4> _b = Vector4.zero;
 			#endregion
 
 			#region Node
 #if UNITY_EDITOR
 			public override Color GetEditorColor()
 			{
-				return MidiNodes.kNodeColor;
+				return Vector3Nodes.kNodeColor;
 			}
 #endif
 			#endregion
@@ -30,7 +28,7 @@ namespace Framework
 			#region IValueSource<float>
 			public float GetValue()
 			{
-				return MidiSequencer.GetCCLevel(_track, _channel, _note);
+				return Vector4.Dot(_a, _b);
 			}
 			#endregion
 		}

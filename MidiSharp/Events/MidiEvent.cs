@@ -116,7 +116,7 @@ namespace MidiSharp.Events
 
 			// Translate the pitch into a note name
             string name = string.Empty;
-			switch(pitch)
+			switch (pitch)
 			{
 				case 0: name = "C"; break;
 				case 1: name = "C#"; break;

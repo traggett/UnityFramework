@@ -15,8 +15,8 @@ namespace Framework
 		public sealed class AssetRef<T> : ISerializationCallbackReceiver, ICustomEditorInspector where T : UnityEngine.Object
 		{
 			#region Public Data
-			public string _filePath = string.Empty;
-			public string _fileGUID = string.Empty;
+			public string _filePath;
+			public string _fileGUID;
 			#endregion
 
 			#region Private Data

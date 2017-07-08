@@ -12,7 +12,7 @@ namespace Framework
 		public class TransformGetPositionNode : Node, IValueSource<Vector3>
 		{
 			#region Public Data		
-			public TransformNodeInputField _transform = new TransformNodeInputField();
+			public TransformNodeInputField _transform;
 			public Space _space = Space.World;
 			#endregion
 

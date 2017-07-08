@@ -10,7 +10,7 @@ namespace Framework
 		[Serializable]
 		public class GameObjectNodeInputField : NodeInputFieldBase<GameObject>
 		{
-			public GameObjectRef _value = new GameObjectRef();
+			public GameObjectRef _value;
 
 			public static implicit operator GameObject(GameObjectNodeInputField value)
 			{
@@ -26,11 +26,6 @@ namespace Framework
 			protected override void ClearStaticValue()
 			{
 				_value.ClearGameObject();
-			}
-
-			protected override bool RenderStaticValueProperty()
-			{
-				return _value.RenderObjectProperties(new GUIContent("Value"));
 			}
 #endif
 		}

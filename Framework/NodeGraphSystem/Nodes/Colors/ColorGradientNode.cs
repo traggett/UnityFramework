@@ -12,7 +12,7 @@ namespace Framework
 		public class ColorGradientNode : Node, IValueSource<Color>
 		{
 			#region Public Data	
-			public NodeInputField<Gradient> _gradient = new NodeInputField<Gradient>();
+			public NodeInputField<Gradient> _gradient;
 			public NodeInputField<float> _t = 0.0f;
 			#endregion
 

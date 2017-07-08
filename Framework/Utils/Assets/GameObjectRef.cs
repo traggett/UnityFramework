@@ -25,9 +25,9 @@ namespace Framework
 			#region Public Data
 			public eSourceType _sourceType = eSourceType.Scene;
 			public string _objectName = string.Empty;
-			public SceneRef _scene = new SceneRef();
+			public SceneRef _scene;
 			public int _sceneObjectID = -1;
-			public AssetRef<GameObject> _prefab = new AssetRef<GameObject>();
+			public AssetRef<GameObject> _prefab;
 			#endregion
 
 			#region Private Data
@@ -76,17 +76,20 @@ namespace Framework
 
 			public GameObject GetGameObject()
 			{
-				switch (_sourceType)
+				if (_scene != null)
 				{
-					case eSourceType.Scene:
-						return GetSceneObject(_scene.GetScene());
-					case eSourceType.Prefab:
-						return GetPrefabObject();
-					case eSourceType.Loaded:
-						return GetLoadedObject(_scene.GetScene());
-					default:
-						return null;
+					switch (_sourceType)
+					{
+						case eSourceType.Scene:
+							return GetSceneObject(_scene.GetScene());
+						case eSourceType.Prefab:
+							return GetPrefabObject();
+						case eSourceType.Loaded:
+							return GetLoadedObject(_scene.GetScene());
+					}
 				}
+
+				return null;
 			}
 
 			public bool IsValid()
@@ -281,8 +284,11 @@ namespace Framework
 			public void OnAfterDeserialize()
 			{
 #if UNITY_EDITOR
-				_editorLoaderGameObject = GetGameObjectLoader(_scene.GetScene());
-				_editorGameObject = GetGameObject();
+				if (_scene != null)
+				{
+					_editorLoaderGameObject = GetGameObjectLoader(_scene.GetScene());
+					_editorGameObject = GetGameObject();
+				}
 #endif
 			}
 			#endregion
@@ -306,7 +312,7 @@ namespace Framework
 
 					//Show drop down
 					eSourceType prevType = _sourceType;
-					_sourceType = SerializationEditorGUILayout.ObjectField(_sourceType, "Source Type", out dataChanged);
+					_sourceType = SerializationEditorGUILayout.ObjectField(_sourceType, "Source Type", ref dataChanged);
 
 					if (prevType != _sourceType)
 					{

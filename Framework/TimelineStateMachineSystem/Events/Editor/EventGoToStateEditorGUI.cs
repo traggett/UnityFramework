@@ -18,16 +18,16 @@ namespace Framework
 				{
 					EventGoToState evnt = GetEditableObject() as EventGoToState;
 
-					bool dataChanged;
-					evnt._stateType = SerializationEditorGUILayout.ObjectField(evnt._stateType, "State Type", out dataChanged);
+					bool dataChanged = false;
+					evnt._stateType = SerializationEditorGUILayout.ObjectField(evnt._stateType, "State Type", ref dataChanged);
 
 					switch (evnt._stateType)
 					{
 						case EventGoToState.eStateType.Timeline:
-							dataChanged |= evnt._state.RenderObjectProperties(new GUIContent("State"));
+							evnt._state = SerializationEditorGUILayout.ObjectField(evnt._state, "State", ref dataChanged);
 							break;
 						case EventGoToState.eStateType.Coroutine:
-							dataChanged |= evnt._coroutine.RenderObjectProperties(new GUIContent("State"));
+							evnt._coroutine = SerializationEditorGUILayout.ObjectField(evnt._coroutine, "State", ref dataChanged);
 							break;
 					}
 

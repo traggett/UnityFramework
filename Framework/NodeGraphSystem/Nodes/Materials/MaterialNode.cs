@@ -7,8 +7,8 @@ namespace Framework
 		public abstract class MaterialNode : Node
 		{
 			#region Public Data
-			public MaterialNodeInputField _material = new MaterialNodeInputField();
-			public NodeInputField<string> _propertyName = string.Empty;
+			public MaterialNodeInputField _material;
+			public NodeInputField<string> _propertyName;
 			#endregion
 
 			#region Private Data

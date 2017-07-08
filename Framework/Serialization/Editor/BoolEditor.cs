@@ -9,7 +9,7 @@ namespace Framework
 		public static class BoolEditor
 		{
 			#region SerializedObjectEditor
-			public static object PropertyField(object obj, GUIContent label, out bool dataChanged)
+			public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
 			{
 				EditorGUI.BeginChangeCheck();
 				obj = EditorGUILayout.Toggle(label, (bool)obj);

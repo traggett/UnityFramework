@@ -4,13 +4,13 @@ using System;
 namespace Framework
 {
 	using DynamicValueSystem;
-	using MidiSystem;
+	using NodeGraphSystem;
 
-	namespace NodeGraphSystem
+	namespace MidiSystem
 	{
 		[NodeCategory("Midi")]
 		[Serializable]
-		public class MidiNoteVelocityNode : Node, IValueSource<float>
+		public class MidiCCLevelNode : Node, IValueSource<float>
 		{
 			#region Public Data
 			public NodeInputField<int> _track = 0;
@@ -30,7 +30,7 @@ namespace Framework
 			#region IValueSource<float>
 			public float GetValue()
 			{
-				return MidiSequencer.GetNoteVelocity(_track, _channel, _note);
+				return MidiSequencer.GetCCLevel(_track, _channel, _note);
 			}
 			#endregion
 		}

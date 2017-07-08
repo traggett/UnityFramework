@@ -16,7 +16,7 @@ namespace Framework
 			[HideInInspector]
 			public Vector2 _editorPosition = Vector2.zero;
 			[HideInInspector]
-			public string _editorDescription = string.Empty;
+			public string _editorDescription;
 			#endregion
 
 			public virtual void Init() { }

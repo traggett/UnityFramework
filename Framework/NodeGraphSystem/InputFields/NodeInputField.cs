@@ -2,8 +2,6 @@ using System;
 
 namespace Framework
 {
-	using Serialization;
-
 	namespace NodeGraphSystem
 	{
 		[Serializable]
@@ -46,13 +44,6 @@ namespace Framework
 			protected override void ClearStaticValue()
 			{
 				_value = default(T);
-			}
-
-			protected override bool RenderStaticValueProperty()
-			{
-				bool objectChanged;
-				_value = SerializationEditorGUILayout.ObjectField(_value, "Value", out objectChanged);
-				return objectChanged;
 			}
 #endif
 		}

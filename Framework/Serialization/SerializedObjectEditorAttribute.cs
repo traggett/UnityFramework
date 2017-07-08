@@ -13,7 +13,7 @@ namespace Framework
 		{
 			#region Public Data
 #if UNITY_EDITOR
-			public delegate object RenderPropertiesDelegate(object obj, GUIContent label, out bool dataChanged);
+			public delegate object RenderPropertiesDelegate(object obj, GUIContent label, ref bool dataChanged);
 
 			public readonly Type ObjectType;
 			public readonly string OnRenderPropertiesMethod;

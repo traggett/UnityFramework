@@ -10,7 +10,7 @@ namespace Framework
 		public class TransformEulerRotationSetterNode : Node
 		{
 			#region Public Data
-			public TransformNodeInputField _transform = new TransformNodeInputField();
+			public TransformNodeInputField _transform;
 			public NodeInputField<Vector3> _eulerAngles = Vector3.zero;
 			public Space _space = Space.Self;
 			[Tooltip("If set instead of setting an absolute value the value will be applied as an offset from the original value.")]

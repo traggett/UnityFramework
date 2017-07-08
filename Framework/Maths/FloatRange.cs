@@ -51,6 +51,11 @@ namespace Framework
 
 				return a._min != b._min || a._max != b._max;
 			}
+			
+			public override string ToString()
+			{
+				return "(" + _min + ", " + _max + ")";
+			}
 
 			public override bool Equals(object obj)
 			{
