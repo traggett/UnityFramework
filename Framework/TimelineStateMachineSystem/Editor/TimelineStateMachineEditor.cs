@@ -55,7 +55,7 @@ namespace Framework
 				#region Public Interface
 				public void Init(	string title, IEditorWindow editorWindow, string editorPrefsTag,
 									Type[] allowedTypes, TimelineStateMachineEditorStyle style,
-									TimelineScrollArea.eTimeFormat timeFormat = TimelineScrollArea.eTimeFormat.Seconds)
+									TimelineScrollArea.eTimeFormat timeFormat = TimelineScrollArea.eTimeFormat.Default)
 				{
 					_title = title;
 					_editorPrefsTag = editorPrefsTag;
@@ -130,6 +130,8 @@ namespace Framework
 							Save();
 						}
 					}
+
+					Localisation.WarnIfDirty();
 				}
 
 				public void Load(string fileName)

@@ -17,7 +17,7 @@ namespace Framework
 		public sealed class ComponentRef<T> : ISerializationCallbackReceiver, ICustomEditorInspector where T : class
 		{
 			#region Public Data
-			public GameObjectRef _gameObject;
+			public GameObjectRef _gameObject = new GameObjectRef();
 			public int _componentIndex = 0;
 			#endregion
 

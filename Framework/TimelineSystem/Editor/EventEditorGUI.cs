@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 using UnityEngine;
 #if UNITY_EDITOR
@@ -203,11 +202,28 @@ namespace Framework
 
 				protected bool RenderEventTime()
 				{
-					EditorGUI.BeginChangeCheck();
-					GetEditableObject()._time = EditorGUILayout.FloatField("Time", GetEditableObject()._time);
-					if (EditorGUI.EndChangeCheck())
+					bool dataChanged = false;
+					float time = 0.0f;
+					GUIContent label = new GUIContent("Time");
+
+					switch (GetTimelineEditor().GetTimeFormat())
 					{
-						GetTimelineEditor().SetEventTime(this, GetEditableObject()._time);
+						case TimelineScrollArea.eTimeFormat.Default:
+							{
+								time = Event.RenderTimeField(label, GetEditableObject()._time, out dataChanged);
+							}
+							break;
+						case TimelineScrollArea.eTimeFormat.DaysHoursMins:
+							{
+								time = Event.RenderDaysHoursMinsField(label, GetEditableObject()._time, out dataChanged);
+							}
+							break;
+					}
+
+					if (dataChanged)
+					{
+						GetEditableObject()._time = time;
+						GetTimelineEditor().SetEventTime(this, time);
 						return true;
 					}
 

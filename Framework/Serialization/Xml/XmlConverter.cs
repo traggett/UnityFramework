@@ -356,16 +356,17 @@ namespace Framework
 					return xml;
 				}
 
-#if UNITY_EDITOR
+
 				public static bool ToFile<T>(T obj, string fileName)
 				{
 					XmlDocument xmlDoc = ToXmlDoc(obj);
 					try
 					{
 						xmlDoc.Save(fileName);
+#if UNITY_EDITOR
 						//Refresh the saved asset
 						AssetDatabase.ImportAsset(fileName);
-
+#endif
 						return true;
 					}
 					catch
@@ -373,7 +374,6 @@ namespace Framework
 						return false;
 					}
 				}
-#endif
 
 				public static XmlDocument ToXmlDoc<T>(T obj)
 				{

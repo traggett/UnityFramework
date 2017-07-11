@@ -45,7 +45,7 @@ namespace Framework
 				_language = SystemLanguage.Unknown;
 #if UNITY_EDITOR
 				_editorText = string.Empty;
-				_editorFoldout = false;
+				_editorFoldout = true;
 				_editorHeight = EditorGUIUtility.singleLineHeight;
 #endif
 			}
@@ -183,7 +183,6 @@ namespace Framework
 						{
 							_language = Localisation.GetCurrentLanguage();
 							Localisation.UpdateString(_localisationKey, _language, _text);
-							dataChanged = true;
 						}
 					}
 

@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -5,17 +8,24 @@ using UnityEditor;
 
 namespace Framework
 {
-	using System;
-	using System.Collections.Generic;
 	using Utils;
 	using Serialization;
 
 	namespace LocalisationSystem
 	{
+#if UNITY_EDITOR
+		public class LocalisationUndoState : ScriptableObject
+		{
+			public string _serialisedLocalisationMap;
+		}
+#endif
+
 		public static class Localisation
 		{
 			#region Public Data
 			public static readonly string kDefaultLocalisationFilePath = "Localisation/Localisation";
+			public static readonly string kVariableStartChars = "${";
+			public static readonly string kVariableEndChars = "}";
 			#endregion
 
 			#region Private Data
@@ -23,8 +33,18 @@ namespace Framework
 			private static SystemLanguage _currentLanguage = SystemLanguage.English;
 			private static SystemLanguage _fallBackLanguage = SystemLanguage.English;
 			private static Dictionary<string, string> _variables = new Dictionary<string, string>();
+			private static bool _dirty;
 #if UNITY_EDITOR
 			private static string[] _editorKeys;
+			private static LocalisationUndoState _undoObject;
+			private class LocalisationEditorListener : UnityEditor.AssetModificationProcessor
+			{
+				private static string[] OnWillSaveAssets(string[] paths)
+				{
+					WarnIfDirty();
+					return paths;
+				}
+			}
 #endif
 			#endregion
 
@@ -43,7 +63,7 @@ namespace Framework
 			}
 			#endregion
 #endif
-			
+
 			#region Public Interface
 			public static void LoadStrings()
 			{
@@ -91,13 +111,35 @@ namespace Framework
 
 #if UNITY_EDITOR
 			public static void UpdateString(string key, SystemLanguage language, string text)
-			{
+			{			
 				if (_localisationMap == null)
 					LoadStrings();
 
+				if (_undoObject == null)
+				{
+					_undoObject = LocalisationUndoState.CreateInstance<LocalisationUndoState>();
+					Undo.undoRedoPerformed += UndoRedoCallback;
+				}
+				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+
 				_localisationMap.UpdateString(key, language, text);
+				_dirty = true;
 
 				RefreshEditorKeys();
+
+				Undo.RegisterCompleteObjectUndo(_undoObject, "Localisation strings changed");
+				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+			}
+
+			public static void WarnIfDirty()
+			{
+				if (_dirty)
+				{
+					if (EditorUtility.DisplayDialog("Localization strings have Been Modified", "Do you want to save the changes you made to the localization table?", "Save", "Don't Save"))
+					{
+						SaveStrings();
+					}			
+				}
 			}
 
 			public static void SaveStrings()
@@ -137,9 +179,6 @@ namespace Framework
 			}
 #endif
 			#endregion
-
-			public static readonly string kVariableStartChars = "${";
-			public static readonly string kVariableEndChars = "}";
 
 			#region Private Functions
 			private static string GetString(string key, SystemLanguage language, params KeyValuePair<string, string>[] variables)
@@ -218,6 +257,21 @@ namespace Framework
 			{
 				_editorKeys = _localisationMap.GetStringKeys();
 				ArrayUtils.Insert(ref _editorKeys, "(new key)", 0);
+			}
+#endif
+
+#if UNITY_EDITOR
+			private static void UndoRedoCallback()
+			{
+				if (_undoObject != null && !string.IsNullOrEmpty(_undoObject._serialisedLocalisationMap))
+				{
+					_localisationMap = (LocalisationMap)Serializer.FromString(typeof(LocalisationMap), _undoObject._serialisedLocalisationMap);
+					if (_localisationMap == null)
+						throw new Exception();
+
+					_undoObject._serialisedLocalisationMap = null;
+					_dirty = true;
+				}
 			}
 #endif
 			#endregion

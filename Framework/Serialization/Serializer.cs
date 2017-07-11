@@ -52,7 +52,6 @@ namespace Framework
 				return XmlConverter.ToXmlString(obj);
 			}
 
-#if UNITY_EDITOR
 			public static bool ToFile<T>(T obj, string fileName)
 			{
 				if (Path.GetExtension(fileName).ToLower() == ".xml")
@@ -62,7 +61,6 @@ namespace Framework
 
 				return false;
 			}
-#endif
 
 			public static T CreateCopy<T>(T obj)
 			{

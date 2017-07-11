@@ -33,7 +33,7 @@ namespace Framework
 				{
 					float deltaTime = Time.deltaTime;
 
-					_animations[_animations.Count - 1]._weight += deltaTime;
+					_animations[_animations.Count - 1]._weight += deltaTime / _currentAnimationBlendTime;
 
 					if (_animations[_animations.Count - 1]._weight >= 1.0f)
 					{

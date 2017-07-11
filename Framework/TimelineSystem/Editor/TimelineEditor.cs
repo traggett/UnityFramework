@@ -46,7 +46,7 @@ namespace Framework
 				public void Init(IEditor parent, TimelineScrollArea.eTimeFormat timeFormat)
 				{
 					_timelineArea = new TimelineScrollArea(timeFormat);
-					_visiblePadding = timeFormat == TimelineScrollArea.eTimeFormat.Seconds ? 5.0f : 60.0f * 60.0f;
+					_visiblePadding = timeFormat == TimelineScrollArea.eTimeFormat.Default ? 5.0f : 60.0f * 60.0f;
 					SetEditorWindow(parent);
 				}
 				
@@ -188,6 +188,11 @@ namespace Framework
 
 					evnt.SetTime(time);
 					evnt.MarkAsDirty(true);
+				}
+
+				public TimelineScrollArea.eTimeFormat GetTimeFormat()
+				{
+					return _timelineArea.GetTimeFormat();
 				}
 				#endregion
 

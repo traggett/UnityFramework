@@ -12,8 +12,8 @@ namespace Framework
 		#region Public Data
 		public enum eTimeFormat
 		{
-			Seconds,
-			Hours,
+			Default,
+			DaysHoursMins,
 		}
 
 		public float PlayHeadTime
@@ -73,7 +73,7 @@ namespace Framework
 
 			switch (_timeFormat)
 			{
-				case eTimeFormat.Seconds:
+				case eTimeFormat.Default:
 					{
 						tickModulos = new float[]
 						{
@@ -91,7 +91,7 @@ namespace Framework
 						};
 					}
 					break;
-				case eTimeFormat.Hours:
+				case eTimeFormat.DaysHoursMins:
 					{
 						tickModulos = new float[]
 						{
@@ -101,6 +101,7 @@ namespace Framework
 						60.0f * 10.0f,
 						60.0f * 30.0f,
 						60.0f * 60.0f,
+						60.0f * 60.0f * 24.0f,
 						};
 					}
 					break;
@@ -266,6 +267,11 @@ namespace Framework
 		{
 			return _visibleTimeRect.xMin <= time && time < _visibleTimeRect.xMax;
 		}
+
+		public eTimeFormat GetTimeFormat()
+		{
+			return _timeFormat;
+		}
 		#endregion
 
 		#region Private Functions
@@ -338,7 +344,7 @@ namespace Framework
 			}
 			GL.End();
 
-			int levelWithMinSeparation = Math.Max(_ticks.GetLevelWithMinSeparation(40f), _timeFormat == eTimeFormat.Seconds ? 3 : 1);
+			int levelWithMinSeparation = Math.Max(_ticks.GetLevelWithMinSeparation(40f), _timeFormat == eTimeFormat.Default ? 3 : 1);
 			float[] ticksAtLevel2 = _ticks.GetTicksAtLevel(levelWithMinSeparation, false);
 			for (int k = 0; k < ticksAtLevel2.Length; k++)
 			{
@@ -428,18 +434,24 @@ namespace Framework
 
 			switch (_timeFormat)
 			{
-				case eTimeFormat.Seconds:
+				case eTimeFormat.Default:
 					{
 						float seconds = time % 60.0f;
 						float minutes = (time - seconds) / 60.0f;
 						label += (minutes < 10 ? "0" : string.Empty) + Convert.ToString(minutes) + ':' + (seconds < 10 ? "0" : string.Empty) + Convert.ToString(seconds);
 					}
 					break;
-				case eTimeFormat.Hours:
+				case eTimeFormat.DaysHoursMins:
 					{
 						float minutes = Mathf.Round(time / 60.0f);
 						float hours = Mathf.Floor(minutes / 60.0f);
+						float days = Mathf.Floor(hours / 24.0f);
+						
 						minutes = minutes % 60.0f;
+						hours = hours % 24.0f;
+
+						if (days >= 1.0f)
+							label += Convert.ToString(days) + 'd';
 
 						label += (hours < 10 ? "0" : string.Empty) + Convert.ToString(hours) + 'h' + (minutes < 10 ? "0" : string.Empty) + Convert.ToString(minutes);
 					}

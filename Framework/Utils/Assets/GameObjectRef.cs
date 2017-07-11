@@ -25,9 +25,9 @@ namespace Framework
 			#region Public Data
 			public eSourceType _sourceType = eSourceType.Scene;
 			public string _objectName = string.Empty;
-			public SceneRef _scene;
+			public SceneRef _scene = new SceneRef();
 			public int _sceneObjectID = -1;
-			public AssetRef<GameObject> _prefab;
+			public AssetRef<GameObject> _prefab = new AssetRef<GameObject>();
 			#endregion
 
 			#region Private Data

@@ -16,7 +16,7 @@ namespace Framework
 		public sealed class TimelineStateRef : ISerializationCallbackReceiver, ICustomEditorInspector
 		{
 			#region Public Data		
-			public AssetRef<TextAsset> _file;
+			public AssetRef<TextAsset> _file = new AssetRef<TextAsset>();
 			public int _stateId = -1;
 			//Editor properties
 			public Vector2 _editorExternalLinkPosition = Vector2.zero;
@@ -237,7 +237,7 @@ namespace Framework
 						break;
 					case eType.Internal:
 						{
-							if (GetTimelineState() != null)
+							if (_stateMachine != null && GetTimelineState() != null)
 							{
 								_editorStateName = StringUtils.GetFirstLine(_timelineState.GetDescription());
 							}

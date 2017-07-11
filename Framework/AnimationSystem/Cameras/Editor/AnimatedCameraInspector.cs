@@ -19,7 +19,8 @@ namespace Framework
 			private static readonly int kPreviewScreenResolutionWidth = 1280;
 			private static readonly int kPreviewScreenResolutionHeight = 720;
 			private static readonly float kMouseLookSpeed = 82.0f;
-			private static readonly float kMovementSpeed = 0.16f;
+			private static readonly float kMovementSpeed = 0.075f;
+			private static readonly float kFastMovementSpeed = 0.16f;
 
 			private RenderTexture _targetTexture;
 			private Dictionary<KeyCode, bool> _buttonPressed = new Dictionary<KeyCode, bool>();
@@ -161,6 +162,12 @@ namespace Framework
 					}
 
 					AnimatedCamera camera = (AnimatedCamera)target;
+
+					float speed = kMovementSpeed;
+					
+					if (_buttonPressed.TryGetValue(KeyCode.Space, out held) && held)
+						speed = kFastMovementSpeed;
+
 					camera.transform.Translate(movement * kMovementSpeed, Space.Self);
 
 					UpdateSnapshotFromCamera();
