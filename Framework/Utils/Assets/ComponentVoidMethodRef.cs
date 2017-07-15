@@ -9,26 +9,25 @@ namespace Framework
 	{
 		//Cant have generic type of <void> so have to manually overrider return type in its own class
 		[Serializable]
-		public sealed class ComponentVoidMethodRef : ComponentMethodRef<object>
+		public struct ComponentVoidMethodRef
 		{
-			public new void RunMethod()
+			#region Public Data
+			public ComponentMethodRef<object> _methodRef;
+			#endregion
+		
+			public void RunMethod()
 			{
-				Component component = _object.GetComponent();
+				Component component = _methodRef._object.GetComponent();
 
 				if (component != null)
 				{
-					MethodInfo method = component.GetType().GetMethod(_methodName);
+					MethodInfo method = component.GetType().GetMethod(_methodRef._methodName);
 
 					if (method != null)
 					{
 						method.Invoke(component, null);
 					}
 				}
-			}
-
-			protected override Type GetReturnType()
-			{
-				return typeof(void);
 			}
 		}
 	}

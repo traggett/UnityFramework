@@ -25,7 +25,7 @@ namespace Framework
 #if UNITY_EDITOR
 			protected override void ClearStaticValue()
 			{
-				_value.ClearGameObject();
+				_value = new GameObjectRef();
 			}
 #endif
 		}

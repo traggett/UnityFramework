@@ -21,7 +21,7 @@ namespace Framework
 
 			#region Public Data
 			public eStateType _stateType = eStateType.Timeline;
-			public TimelineStateRef _state = new TimelineStateRef();
+			public TimelineStateRef _state;
 			public CoroutineRef _coroutine = new CoroutineRef();
 			#endregion
 

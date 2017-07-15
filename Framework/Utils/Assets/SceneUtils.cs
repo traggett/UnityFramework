@@ -79,6 +79,13 @@ namespace Framework
 
 				return components.ToArray();
 			}
+
+			public static string GetSceneNameFromPath(string scenePath)
+			{
+				int folder = scenePath.LastIndexOf("/") + 1;
+				int file = scenePath.LastIndexOf(".");
+				return scenePath.Substring(folder, file - folder);
+			}
 		}
 	}
 }

@@ -1,39 +1,56 @@
 using System;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Framework
 {
-	using Serialization;
 
 	namespace Utils
 	{
 		[Serializable]
-		public sealed class MaterialRef : ICustomEditorInspector
+		public struct MaterialRef
 		{
-			#region Public Data
+			#region Private Data
 			[SerializeField]
 			private AssetRef<Material> _materialRef;
 			[SerializeField]
 			private int _materialIndex;
 			[SerializeField]
 			private ComponentRef<Renderer> _renderer;
-			#endregion
-
-			#region Private Data
 #if UNITY_EDITOR
-			private enum eEdtiorType
-			{
-				Instance,
-				Shared,
-			}
-			private eEdtiorType _editorType;
-			private bool _editorFoldout = true;
+			[NonSerialized]
+			public bool _editorFoldout;
 #endif
 			#endregion
+			
 
+#if UNITY_EDITOR
+			public MaterialRef(int materialIndex)
+			{
+				_materialRef = null;
+				_materialIndex = materialIndex;
+				_renderer = new ComponentRef<Renderer>();
+				_editorFoldout = true;
+				_material = null;
+			}
+
+			public MaterialRef(ComponentRef<Renderer> renderer, int materialIndex)
+			{
+				_materialRef = null;
+				_materialIndex = materialIndex;
+				_renderer = renderer;
+				_editorFoldout = true;
+				_material = null;
+			}
+
+			public MaterialRef(AssetRef<Material> materialRef)
+			{
+				_materialRef = materialRef;
+				_materialIndex = -1;
+				_renderer = new ComponentRef<Renderer>();
+				_editorFoldout = true;
+				_material = null;
+			}
+#endif
 			private Material _material;
 
 			public static implicit operator string(MaterialRef property)
@@ -68,77 +85,22 @@ namespace Framework
 				return _material;
 			}
 
-			#region ICustomEditable
 #if UNITY_EDITOR
-			public bool RenderObjectProperties(GUIContent label)
+			public int GetMaterialIndex()
 			{
-				bool dataChanged = false;
+				return _materialIndex;
+			}
 
-				if (label == null)
-					label = new GUIContent();
+			public ComponentRef<Renderer> GetRenderer()
+			{
+				return _renderer;
+			}
 
-				label.text += " (" + this + ")";
-
-				_editorFoldout = EditorGUILayout.Foldout(_editorFoldout, label);
-				if (_editorFoldout)
-				{
-					int origIndent = EditorGUI.indentLevel;
-					EditorGUI.indentLevel++;
-
-					//Draw type dropdown
-					{
-						EditorGUI.BeginChangeCheck();
-						_editorType = (eEdtiorType)EditorGUILayout.EnumPopup("Material Type", _editorType);
-						
-						if (EditorGUI.EndChangeCheck())
-						{
-							dataChanged = true;
-							_materialRef.ClearAsset();
-							_materialIndex = -1;
-							_renderer.ClearComponent();
-						}
-					}
-
-					//Draw renderer field
-					if (_editorType == eEdtiorType.Instance)
-					{
-						bool renderChanged = false;
-						_renderer = SerializationEditorGUILayout.ObjectField(_renderer, new GUIContent("Renderer"), ref renderChanged);
-
-						if (renderChanged)
-						{
-							dataChanged = true;
-							_materialRef.ClearAsset();
-							_materialIndex = 0;
-						}
-
-						//Show drop down for materials
-						Renderer renderer = _renderer.GetEditorComponent();
-
-						if (renderer != null)
-						{
-							string[] materialNames = new string[renderer.sharedMaterials.Length];
-
-							for (int i = 0; i < materialNames.Length; i++)
-							{
-								materialNames[i] = renderer.sharedMaterials[i].name;
-							}
-
-							_materialIndex = EditorGUILayout.Popup("Material", _materialIndex, materialNames);
-						}
-					}
-					else
-					{
-						_materialRef = SerializationEditorGUILayout.ObjectField(_materialRef, new GUIContent("Material"), ref dataChanged);
-					}
-					
-					EditorGUI.indentLevel = origIndent;
-				}
-
-				return dataChanged;
+			public AssetRef<Material> GetAsset()
+			{
+				return _materialRef;
 			}
 #endif
-			#endregion
 		}
 	}
 }

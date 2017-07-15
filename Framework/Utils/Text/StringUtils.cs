@@ -291,6 +291,11 @@ namespace Framework
 				
 				return FromCamelCase(name);
 			}
+
+			public static string RemoveRichText(string text)
+			{
+				return text;
+			}
 		}
 	}
 }

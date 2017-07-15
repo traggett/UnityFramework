@@ -77,7 +77,9 @@ namespace Framework
 				{
 					if (IsExternal)
 					{
-						ExternalStateRef._editorExternalLinkPosition = position;
+						TimelineStateRef externalStateRef = _externalStateRef;
+						externalStateRef._editorExternalLinkPosition = position;
+						_externalStateRef = externalStateRef;
 					}
 					else
 					{

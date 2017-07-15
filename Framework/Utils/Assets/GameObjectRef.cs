@@ -13,8 +13,9 @@ namespace Framework
 	namespace Utils
 	{
 		[Serializable]
-		public sealed class GameObjectRef : ISerializationCallbackReceiver, ICustomEditorInspector
+		public struct GameObjectRef : ISerializationCallbackReceiver
 		{
+			#region Public Data
 			public enum eSourceType
 			{
 				Scene,
@@ -22,22 +23,29 @@ namespace Framework
 				Loaded
 			}
 
-			#region Public Data
-			public eSourceType _sourceType = eSourceType.Scene;
-			public string _objectName = string.Empty;
-			public SceneRef _scene = new SceneRef();
-			public int _sceneObjectID = -1;
-			public AssetRef<GameObject> _prefab = new AssetRef<GameObject>();
+			public eSourceType _sourceType;
+			public string _objectName;
+			public SceneRef _scene;
+			public int _sceneObjectID;
+			public AssetRef<GameObject> _prefab;
 			#endregion
 
 			#region Private Data
 			private GameObject _sourceObject;
+			#endregion
+
+			#region Editor Data
 #if UNITY_EDITOR
-			private GameObject _editorGameObject;
-			private GameObjectLoader _editorLoaderGameObject;
-			private bool _editorFoldout = true;
-			private bool _editorSceneLoaded = false;
-			private bool _editorLoaderIsLoaded = false;
+			[NonSerialized]
+			public GameObject _editorGameObject;
+			[NonSerialized]
+			public GameObjectLoader _editorLoaderGameObject;
+			[NonSerialized]
+			public bool _editorFoldout;
+			[NonSerialized]
+			public bool _editorSceneLoaded;
+			[NonSerialized]
+			public bool _editorLoaderIsLoaded;
 #endif
 			#endregion
 
@@ -102,175 +110,132 @@ namespace Framework
 						return !string.IsNullOrEmpty(_objectName);
 					case eSourceType.Scene:
 					default:
-						return _sceneObjectID != -1 && _scene.IsSceneValid();
+						return _sceneObjectID != -1 && _scene.IsSceneRefValid();
 				}
 			}
 
-			public GameObjectLoader GetGameObjectLoader(Scene scene)
+			public static object FixUpGameObjectRefsInObject(object obj, GameObject gameObject)
 			{
-				GameObjectLoader loader = null;
-
-				if (_sourceType == eSourceType.Loaded)
-				{
-					if (scene.IsValid() && scene.isLoaded)
-					{
-						GameObject obj = SceneIndexer.GetObject(scene, _sceneObjectID);
-						if (obj != null)
-						{
-							loader = obj.GetComponent<GameObjectLoader>();
-						}
-					}
-				}
-
-				return loader;
-			}
-
-			public static void FixupGameObjectRefs(GameObject sourceObject, object node)
-			{
-				if (node != null)
-				{
-					object[] nodeFieldObjects = SerializedObjectMemberInfo.GetSerializedFieldInstances(node);
-
-					foreach (object nodeFieldObject in nodeFieldObjects)
-					{
-						GameObjectRef gameObjectRefProperty = nodeFieldObject as GameObjectRef;
-
-						if (gameObjectRefProperty != null)
-						{
-							gameObjectRefProperty._sourceObject = sourceObject;
-						}
-
-						FixupGameObjectRefs(sourceObject, nodeFieldObject);
-					}
-				}
+				return Serializer.UpdateChildObjects(obj, FixUpGameObjectRef, gameObject);
 			}
 
 #if UNITY_EDITOR
-			public GameObject GetEditorGameObject()
+			public GameObjectRef(eSourceType sourceType)
 			{
-				return _editorGameObject;
-			}
-
-			public void ClearGameObject()
-			{
+				_sourceType = sourceType;
+				_objectName = string.Empty;
+				_scene = new SceneRef();
 				_sceneObjectID = -1;
-				_objectName = null;
-				_scene.ClearScene();
-				_prefab.ClearAsset();
+				_prefab = new AssetRef<GameObject>();
+				_sourceObject = null;
+
 				_editorGameObject = null;
 				_editorLoaderGameObject = null;
+				_editorFoldout = true;
 				_editorSceneLoaded = false;
 				_editorLoaderIsLoaded = false;
 			}
 
-			public void SetSceneGameObject(GameObject gameObject)
+			public GameObjectRef(eSourceType sourceType, GameObject gameObject)
 			{
-				if (gameObject != null && gameObject.scene.IsValid())
+				_sourceType = sourceType;
+				_sourceObject = null;
+				_editorFoldout = true;
+				_editorSceneLoaded = false;
+				_editorLoaderIsLoaded = false;
+				_prefab = new AssetRef<GameObject>();
+				_scene = new SceneRef();
+
+				switch (sourceType)
 				{
-					_editorGameObject = gameObject;
-					_scene.SetScene(gameObject.scene);
-					_objectName = gameObject.name;
-					_sceneObjectID = SceneIndexer.GetIdentifier(gameObject);
-				}
-				else
-				{
-					ClearGameObject();
+					case eSourceType.Prefab:
+						{
+							GameObject prefabRoot = PrefabUtility.FindPrefabRoot(gameObject);
+
+							UnityEngine.Object prefabObj = PrefabUtility.GetPrefabParent(gameObject);
+							if (prefabObj == null)
+							{
+								prefabObj = PrefabUtility.GetPrefabObject(prefabRoot);
+							}
+
+							if (prefabRoot != null && prefabObj != null)
+							{
+								_objectName = GameObjectUtils.GetChildFullName(gameObject, prefabRoot);
+								_editorGameObject = gameObject;
+
+								string prefabPath = AssetDatabase.GetAssetPath(prefabObj);
+								_prefab = new AssetRef<GameObject>(prefabPath);
+							}
+							else
+							{
+								_objectName = string.Empty;
+								_editorGameObject = null;
+							}
+
+
+							_sceneObjectID = -1;
+							_editorLoaderGameObject = null;
+						}
+						break;
+					case eSourceType.Loaded:
+						{
+							GameObjectLoader loader = gameObject.GetComponentInParent<GameObjectLoader>();
+
+							if (loader != null)
+							{
+								_scene.SetScene(loader.gameObject.scene);
+								_sceneObjectID = SceneIndexer.GetIdentifier(loader.gameObject);
+
+								if (gameObject != null && GameObjectUtils.IsChildOf(gameObject.transform, loader.transform))
+								{
+									_objectName = GameObjectUtils.GetChildFullName(gameObject, loader.gameObject);
+									_editorGameObject = gameObject;
+									_editorLoaderGameObject = loader;
+								}
+								else
+								{
+									_objectName = null;
+									_editorGameObject = null;
+									_editorLoaderGameObject = null;
+								}
+							}
+							else
+							{
+								_objectName = null;
+								_editorGameObject = null;
+								_editorLoaderGameObject = null;
+								_sceneObjectID = -1;
+							}
+						}
+						break;
+					default:
+					case eSourceType.Scene:
+						{
+							if (gameObject != null && gameObject.scene.IsValid())
+							{
+								_editorGameObject = gameObject;
+								_scene = new SceneRef();
+								_scene.SetScene(gameObject.scene);
+								_objectName = gameObject.name;
+								_sceneObjectID = SceneIndexer.GetIdentifier(gameObject);
+							}
+							else
+							{
+								_objectName = string.Empty;
+								_editorGameObject = null;
+								_sceneObjectID = -1;
+							}
+
+							_editorLoaderGameObject = null;
+						}
+						break;
+
 				}
 			}
 
-			public void SetPrefabGameObject(GameObject gameObject)
+			public GameObjectLoader GetEditorGameObjectLoader(Scene scene)
 			{
-				GameObject prefabRoot = PrefabUtility.FindPrefabRoot(gameObject);
-
-				UnityEngine.Object prefabObj = PrefabUtility.GetPrefabParent(gameObject);
-				if (prefabObj == null)
-				{
-					prefabObj = PrefabUtility.GetPrefabObject(prefabRoot);
-				}
-
-				if (prefabRoot != null && prefabObj != null)
-				{
-					_objectName = GameObjectUtils.GetChildFullName(gameObject, prefabRoot);
-					_editorGameObject = gameObject;
-
-					string prefabPath = AssetDatabase.GetAssetPath(prefabObj);
-					_prefab.SetAsset(prefabPath);
-				}
-				else
-				{
-					ClearGameObject();
-				}
-			}
-
-			public void SetLoadedGameObject(GameObject gameObject)
-			{
-				GameObjectLoader loader = gameObject.GetComponentInParent<GameObjectLoader>();
-				SetLoadedGameObject(loader, gameObject);
-			}
-
-			public void SetLoadedGameObject(GameObjectLoader loader, GameObject gameObject)
-			{
-				if (loader != null)
-				{
-					_scene.SetScene(loader.gameObject.scene);
-					_sceneObjectID = SceneIndexer.GetIdentifier(loader.gameObject);
-					_editorLoaderGameObject = loader;
-
-					if (gameObject != null && GameObjectUtils.IsChildOf(gameObject.transform, loader.transform))
-					{
-						_objectName = GameObjectUtils.GetChildFullName(gameObject, loader.gameObject);
-						_editorGameObject = gameObject;
-					}
-					else
-					{
-						_objectName = null;
-						_editorGameObject = null;
-					}
-				}
-				else
-				{
-					ClearGameObject();
-				}
-			}
-
-			public bool RenderSceneNotLoadedField()
-			{
-				bool clear = false;
-
-				EditorGUILayout.BeginHorizontal();
-				{
-					EditorGUILayout.LabelField("Scene '" + _scene + "' not loaded");
-
-					if (GUILayout.Button("Load", GUILayout.ExpandWidth(false)))
-					{
-						_scene.OpenSceneInEditor();
-					}
-
-					clear = GUILayout.Button("Clear", GUILayout.ExpandWidth(false));
-				}
-				EditorGUILayout.EndHorizontal();
-
-				return clear;
-			}
-
-			public bool RenderLoadedNotLoadedField(GameObjectLoader loader)
-			{
-				bool clear = false;
-
-				EditorGUILayout.BeginHorizontal();
-				{
-					EditorGUILayout.LabelField("('" + loader.name + "' not loaded)");
-
-					if (GUILayout.Button("Load", GUILayout.ExpandWidth(false)))
-					{
-						loader.Load();
-					}
-
-					clear = GUILayout.Button("Clear", GUILayout.ExpandWidth(false));
-				}
-				EditorGUILayout.EndHorizontal();
-
-				return clear;
+				return GetGameObjectLoader(scene);
 			}
 #endif
 			#endregion
@@ -293,204 +258,18 @@ namespace Framework
 			}
 			#endregion
 
-			#region ICustomEditable
-#if UNITY_EDITOR
-			public bool RenderObjectProperties(GUIContent label)
-			{
-				bool dataChanged = false;
-
-				if (label == null)
-					label = new GUIContent();
-
-				label.text += " (" + this + ")";
-
-				_editorFoldout = EditorGUILayout.Foldout(_editorFoldout, label);
-				if (_editorFoldout)
-				{
-					int origIndent = EditorGUI.indentLevel;
-					EditorGUI.indentLevel++;
-
-					//Show drop down
-					eSourceType prevType = _sourceType;
-					_sourceType = SerializationEditorGUILayout.ObjectField(_sourceType, "Source Type", ref dataChanged);
-
-					if (prevType != _sourceType)
-					{
-						ClearGameObject();
-						dataChanged = true;
-					}
-
-					switch (_sourceType)
-					{
-						case eSourceType.Scene:
-							{
-								dataChanged |= RenderSceneObjectProperties();
-							}
-							break;
-						case eSourceType.Prefab:
-							{
-								dataChanged |= RenderPrefabProperties();
-							}
-							break;
-						case eSourceType.Loaded:
-							{
-								dataChanged |= RenderLoadedProperties();
-							}
-							break;
-					}
-
-					EditorGUI.indentLevel = origIndent;
-				}
-
-				return dataChanged;
-			}
-#endif
-			#endregion
-
 			#region Private Functions
-#if UNITY_EDITOR
-			private bool RenderPrefabProperties()
+			private static object FixUpGameObjectRef(object obj, object gameObject)
 			{
-				GameObject obj = (GameObject)EditorGUILayout.ObjectField("Object", _editorGameObject, typeof(GameObject), true);
-
-				if (obj != _editorGameObject)
+				if (obj.GetType() == typeof(GameObjectRef))
 				{
-					SetPrefabGameObject(obj);
-					return true;
+					GameObjectRef gameObjectRef = (GameObjectRef)obj;
+					gameObjectRef._sourceObject = (GameObject)gameObject;
+					return gameObjectRef;
 				}
 
-				return false;
+				return obj;
 			}
-
-			private bool RenderSceneObjectProperties()
-			{
-				bool dataChanged = false;
-
-				if (_scene.IsSceneValid())
-				{
-					Scene scene = _scene.GetScene();
-
-					if (scene.IsValid() && scene.isLoaded)
-					{
-						if (!_editorSceneLoaded)
-						{
-							_editorGameObject = GetSceneObject(scene);
-							_editorSceneLoaded = true;
-
-							if (_editorGameObject == null)
-							{
-								ClearGameObject();
-								dataChanged = true;
-							}
-						}
-
-						dataChanged |= RenderSceneObjectField();
-					}
-					else
-					{
-						_editorSceneLoaded = false;
-
-						if (RenderSceneNotLoadedField())
-						{
-							ClearGameObject();
-							dataChanged = true;
-						}
-					}
-				}
-				else
-				{
-					dataChanged |= RenderSceneObjectField();
-				}
-
-				return dataChanged;
-			}
-
-			private bool RenderSceneObjectField()
-			{
-				GameObject obj = (GameObject)EditorGUILayout.ObjectField("Object", _editorGameObject, typeof(GameObject), true);
-
-				if (obj != _editorGameObject)
-				{
-					SetSceneGameObject(obj);
-					return true;
-				}
-
-				return false;
-			}
-
-			private bool RenderLoadedProperties()
-			{
-				if (_scene.IsSceneValid())
-				{
-					Scene scene = _scene.GetScene();
-
-					if (scene.IsValid() && scene.isLoaded)
-					{
-						if (!_editorSceneLoaded)
-						{
-							_editorLoaderGameObject = GetGameObjectLoader(scene);
-							_editorGameObject = GetLoadedObject(scene);
-							_editorSceneLoaded = true;
-						}
-
-						if (_editorLoaderGameObject != null)
-						{
-							if (_editorLoaderGameObject.IsLoaded())
-							{
-								if (!_editorLoaderIsLoaded)
-								{
-									_editorGameObject = GetLoadedObject(_scene.GetScene());
-									_editorLoaderIsLoaded = true;
-								}
-
-								return RenderLoadedObjectField();
-							}
-							else
-							{
-								_editorLoaderIsLoaded = false;
-
-								if (RenderLoadedNotLoadedField(_editorLoaderGameObject))
-								{
-									ClearGameObject();
-									return true;
-								}
-							}
-						}
-					}
-					else
-					{
-						_editorSceneLoaded = false;
-
-						if (RenderSceneNotLoadedField())
-						{
-							ClearGameObject();
-							return true;
-						}
-					}
-				}
-				else
-				{
-					return RenderLoadedObjectField();
-				}
-
-				return false;
-			}
-
-			private bool RenderLoadedObjectField()
-			{
-				EditorGUILayout.BeginHorizontal();
-				GameObject obj = (GameObject)EditorGUILayout.ObjectField("Object", _editorGameObject, typeof(GameObject), true);
-				EditorGUILayout.EndHorizontal();
-
-				if (obj != _editorGameObject)
-				{
-					SetLoadedGameObject(obj);
-					return true;
-				}
-
-				return false;
-			}
-#endif
 
 			private GameObject GetSceneObject(Scene scene)
 			{
@@ -562,6 +341,25 @@ namespace Framework
 				}
 
 				return gameObject;
+			}
+
+			private GameObjectLoader GetGameObjectLoader(Scene scene)
+			{
+				GameObjectLoader loader = null;
+
+				if (_sourceType == eSourceType.Loaded)
+				{
+					if (scene.IsValid() && scene.isLoaded)
+					{
+						GameObject obj = SceneIndexer.GetObject(scene, _sceneObjectID);
+						if (obj != null)
+						{
+							loader = obj.GetComponent<GameObjectLoader>();
+						}
+					}
+				}
+
+				return loader;
 			}
 			#endregion
 		}

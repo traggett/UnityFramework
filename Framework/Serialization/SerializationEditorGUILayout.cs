@@ -102,21 +102,13 @@ namespace Framework
 				//If the object is a ICustomEditable then just need to call its render properties function.
 				if (typeof(ICustomEditorInspector).IsAssignableFrom(objType))
 				{
-					//If obj is null then need to create new instance for editor?
+					//If obj is null then need to create new instance for editor
 					if (obj == null)
 					{
-						if (objType.IsValueType)
-						{
-							obj = Activator.CreateInstance(objType);
-						}
-						else if (objType.IsClass)
-						{
-							ConstructorInfo constructor = objType.GetConstructor(Type.EmptyTypes);
-							if (constructor != null)
-								obj = constructor.Invoke(null);
-							else
-								throw new Exception("Classes that implement ICustomEditorInspector need a parameterless constructor");
-						}
+						ConstructorInfo constructor = objType.GetConstructor(Type.EmptyTypes);
+						if (constructor != null)
+							obj = constructor.Invoke(null);
+						throw new Exception("Classes that implement ICustomEditorInspector need a parameterless constructor");
 					}
 
 					if (obj != null)

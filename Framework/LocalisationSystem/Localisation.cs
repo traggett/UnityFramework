@@ -170,7 +170,7 @@ namespace Framework
 				return _editorKeys;
 			}
 
-			public static bool IsValidKey(string key)
+			public static bool IsKeyInTable(string key)
 			{
 				if (_localisationMap == null)
 					LoadStrings();

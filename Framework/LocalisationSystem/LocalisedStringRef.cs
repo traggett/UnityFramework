@@ -8,36 +8,28 @@ using UnityEditor;
 
 namespace Framework
 {
-	using Serialization;
-	using TimelineStateMachineSystem;
-
 	namespace LocalisationSystem
 	{
 		[Serializable]
-		public class LocalisedStringRef : ISerializationCallbackReceiver, ICustomEditorInspector
+		public struct LocalisedStringRef : ISerializationCallbackReceiver
 		{
 			#region Private Data
 			[SerializeField]
 			private string _localisationKey;
-			[SerializeField]
 			private string _text;
-			[SerializeField]
 			private SystemLanguage _language;
 			#endregion
 
 			#region Editor Data
 #if UNITY_EDITOR
-			private string _editorText;
-			private bool _editorFoldout;
+			[NonSerialized]
+			public bool _editorFoldout;
+			private string _editorText;		
 			private float _editorHeight;
-			private TimelineStateMachine _editorStateMachine;
+			private string _editorAutoNameParentName;
 #endif
 			#endregion
-
-			public LocalisedStringRef() : this(string.Empty)
-			{
-			}
-
+			
 			public LocalisedStringRef(string key)
 			{
 				_localisationKey = key;
@@ -47,15 +39,13 @@ namespace Framework
 				_editorText = string.Empty;
 				_editorFoldout = true;
 				_editorHeight = EditorGUIUtility.singleLineHeight;
+				_editorAutoNameParentName = null;
 #endif
 			}
 
 			public static implicit operator string(LocalisedStringRef property)
 			{
-				if (property != null)
-					return property.GetLocalisedString();
-
-				return string.Empty;
+				return property.GetLocalisedString();
 			}
 
 			public static implicit operator LocalisedStringRef(string key)
@@ -93,127 +83,41 @@ namespace Framework
 			}
 			#endregion
 
-			#region ICustomEditable
 #if UNITY_EDITOR
-			public bool RenderObjectProperties(GUIContent label)
+			public string GetLocalisationKey()
 			{
-				bool dataChanged = false;
-				_editorFoldout = EditorGUILayout.Foldout(_editorFoldout, label);
-
-				if (_editorFoldout)
-				{
-					int origIndent = EditorGUI.indentLevel;
-					EditorGUI.indentLevel++;
-
-					//Draw list of possible keys
-					int currentKey = 0;
-					{
-						string[] keys = Localisation.GetStringKeys();
-
-						for (int i = 0; i < keys.Length; i++)
-						{
-							if (keys[i] == _localisationKey)
-							{
-								currentKey = i;
-								break;
-							}
-						}
-
-						EditorGUI.BeginChangeCheck();
-						currentKey = EditorGUILayout.Popup("Localisation Key", currentKey, keys);
-
-						if (EditorGUI.EndChangeCheck())
-						{
-							if (currentKey == 0)
-							{
-								_localisationKey = null;
-								_language = SystemLanguage.Unknown;
-								_text = "";
-							}
-							else
-							{
-								_localisationKey = keys[currentKey];
-								_language = Localisation.GetCurrentLanguage();
-								_text = Localisation.GetString(_localisationKey);
-							}
-
-							dataChanged = true;
-						}
-					}
-
-					//Draw buttons for adding new key
-					if (currentKey == 0)
-					{
-						EditorGUILayout.BeginHorizontal();
-						{
-							_localisationKey = EditorGUILayout.DelayedTextField("New Key", _localisationKey);
-
-							if (GUILayout.Button("Auto", GUILayout.Width(36)))
-							{
-								_localisationKey = GetAutoKey();
-							}
-
-							if (GUILayout.Button("Add", GUILayout.Width(32)) && !string.IsNullOrEmpty(_localisationKey))
-							{
-								//Add new string for new key
-								_language = Localisation.GetCurrentLanguage();
-								Localisation.UpdateString(_localisationKey, _language, _text);
-
-								string[] keys = Localisation.GetStringKeys();
-								for (int i = 0; i < keys.Length; i++)
-								{
-									if (keys[i] == _localisationKey)
-									{
-										currentKey = i;
-										break;
-									}
-								}
-
-								dataChanged = true;
-							}
-						}
-						EditorGUILayout.EndHorizontal();
-					}
-
-					//Draw displayed text (can be edited to update localisation file)
-					{
-						EditorGUI.BeginChangeCheck();
-						_text = EditorGUILayout.TextArea(_text);
-						if (EditorGUI.EndChangeCheck() && currentKey != 0)
-						{
-							_language = Localisation.GetCurrentLanguage();
-							Localisation.UpdateString(_localisationKey, _language, _text);
-						}
-					}
-
-					EditorGUI.indentLevel = origIndent;
-				}
-
-				return dataChanged;
+				return _localisationKey;
 			}
-#endif
-			#endregion
 
-#if UNITY_EDITOR
-			public void SetEditorStateMachine(TimelineStateMachine stateMachine)
+			public SystemLanguage GetDebugLanguage()
 			{
-				_editorStateMachine = stateMachine;
+				return _language;
+			}
+
+			public string GetDebugText()
+			{
+				return _text;
+			}
+
+			public void SetAutoNameParentName(string stateMachineName)
+			{
+				_editorAutoNameParentName = stateMachineName;
 			}
 			
-			private string GetAutoKey()
+			public string GetAutoKey()
 			{
 				string autoKey = null;
 				
-				if (_editorStateMachine != null && !string.IsNullOrEmpty(_editorStateMachine._name))
+				if (!string.IsNullOrEmpty(_editorAutoNameParentName))
 				{
-					string statemachineName = _editorStateMachine._name;
+					string statemachineName = _editorAutoNameParentName;
 
 					//Replace _ with / so each bit will appear in separate dropdown menu (eg TextConv_Hath_Birthday will go to TextConv, Hath, Birthday)
 					statemachineName = statemachineName.Replace('_', '/');
 
 					//Find first free key
 					int index = 0;
-					while (Localisation.IsValidKey(autoKey = statemachineName + "/" + index.ToString("000")))
+					while (Localisation.IsKeyInTable(autoKey = statemachineName + "/" + index.ToString("000")))
 					{
 						index++;
 					}

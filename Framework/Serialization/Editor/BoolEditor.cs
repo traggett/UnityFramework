@@ -13,7 +13,9 @@ namespace Framework
 			{
 				EditorGUI.BeginChangeCheck();
 				obj = EditorGUILayout.Toggle(label, (bool)obj);
-				dataChanged = EditorGUI.EndChangeCheck();
+				if (EditorGUI.EndChangeCheck())
+					dataChanged = true;
+
 				return obj;
 			}
 			#endregion

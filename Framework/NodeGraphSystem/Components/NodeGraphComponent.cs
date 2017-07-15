@@ -7,6 +7,7 @@ namespace Framework
 	using DynamicValueSystem;
 	using Utils;
 	using Maths;
+	using Serialization;
 
 	namespace NodeGraphSystem
 	{
@@ -264,7 +265,7 @@ namespace Framework
 
 				if (_nodegraph != null)
 				{
-					GameObjectRef.FixupGameObjectRefs(this.gameObject, _nodegraph);
+					GameObjectRef.FixUpGameObjectRefsInObject(_nodegraph, this.gameObject);
 					FixupInputs();
 
 					_outputNodes = _nodegraph.GetOutputNodes();

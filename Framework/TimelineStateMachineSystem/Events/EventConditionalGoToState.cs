@@ -17,7 +17,7 @@ namespace Framework
 		public class EventConditionalGoToState : Event, IStateMachineEvent, ICustomEditorInspector
 		{
 			#region Public Data
-			public TimelineStateRef _state = new TimelineStateRef();
+			public TimelineStateRef _state;
 			public IConditional _condition;
 			public float _duration = 0.0f;
 			#endregion

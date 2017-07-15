@@ -13,7 +13,9 @@ namespace Framework
 			{
 				EditorGUI.BeginChangeCheck();
 				obj = EditorGUILayout.Vector2Field(label, (Vector2)obj);
-				dataChanged = EditorGUI.EndChangeCheck();
+				if (EditorGUI.EndChangeCheck())
+					dataChanged = true;
+
 				return obj;
 			}
 			#endregion

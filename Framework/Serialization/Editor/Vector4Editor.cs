@@ -5,14 +5,14 @@ namespace Framework
 {
 	namespace Serialization
 	{
-		[SerializedObjectEditor(typeof(Vector3), "PropertyField")]
-		public static class Vector3Editor
+		[SerializedObjectEditor(typeof(Vector4), "PropertyField")]
+		public static class Vector4Editor
 		{
 			#region SerializedObjectEditor
 			public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
 			{
 				EditorGUI.BeginChangeCheck();
-				obj = EditorGUILayout.Vector3Field(label, (Vector3)obj);
+				obj = EditorGUILayout.Vector4Field(label, (Vector4)obj);
 				if (EditorGUI.EndChangeCheck())
 					dataChanged = true;
 

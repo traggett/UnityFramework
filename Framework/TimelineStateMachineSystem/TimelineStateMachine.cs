@@ -37,7 +37,7 @@ namespace Framework
 
 			public void OnAfterDeserialize()
 			{
-				FixupStateRefs(this, this);
+				FixUpStates();
 #if DEBUG
 				foreach (TimelineState state in _states)
 					state._debugParentStateMachine = this;
@@ -51,7 +51,7 @@ namespace Framework
 				TimelineStateMachine timelineStateMachine = Serializer.FromTextAsset<TimelineStateMachine>(asset);
 
 				if (sourceObject != null)
-					GameObjectRef.FixupGameObjectRefs(sourceObject, timelineStateMachine);
+					GameObjectRef.FixUpGameObjectRefsInObject(timelineStateMachine, sourceObject);
 
 				return timelineStateMachine;
 			}
@@ -108,37 +108,6 @@ namespace Framework
 #endif
 				return PerformState(stateMachine, null, timeline);
 			}
-			
-			public static void FixupStateRefs(TimelineStateMachine timeLineStateMachine, object obj)
-			{
-				if (obj != null)
-				{
-					object[] nodeFieldObjects = SerializedObjectMemberInfo.GetSerializedFieldInstances(obj);
-
-					foreach (object nodeFieldObject in nodeFieldObjects)
-					{
-						TimelineStateRef stateRefProperty = nodeFieldObject as TimelineStateRef;
-
-						if (stateRefProperty != null)
-						{
-							stateRefProperty.FixUpRef(timeLineStateMachine);
-						}
-						else
-						{
-#if UNITY_EDITOR
-							LocalisedStringRef localisedstring = nodeFieldObject as LocalisedStringRef;
-
-							if (localisedstring != null)
-							{
-								localisedstring.SetEditorStateMachine(timeLineStateMachine);
-							}
-#endif
-						}
-
-						FixupStateRefs(timeLineStateMachine, nodeFieldObject);
-					}
-				}
-			}
 
 			public static ITimelineStateMachineTimer GetTimer(GameObject gameObject)
 			{
@@ -151,6 +120,11 @@ namespace Framework
 
 				return timer;
 			}
+
+			public void FixUpStates()
+			{
+				Serializer.UpdateChildObjects(this, FixupStateRefs, this);
+			}
 			#endregion
 
 			#region Private Functions
@@ -158,7 +132,7 @@ namespace Framework
 			{
 				if (timeline != null && timeline._events.Length > 0)
 				{
-					ITimelineStateMachineTimer timer = TimelineStateMachine.GetTimer(stateMachine.gameObject);
+					ITimelineStateMachineTimer timer = GetTimer(stateMachine.gameObject);
 
 					float currentTime = 0.0f;
 					List<Event> nonInstantEvents = new List<Event>();
@@ -273,6 +247,25 @@ namespace Framework
 				}
 
 				nonInstantEvents.Clear();
+			}
+
+			private static object FixupStateRefs(object obj, object stateMachine)
+			{
+				if (obj.GetType() == typeof(TimelineStateRef))
+				{
+					TimelineStateRef timeLineStateRef = (TimelineStateRef)obj;
+					timeLineStateRef.FixUpRef((TimelineStateMachine)stateMachine);
+					return timeLineStateRef;
+				}
+#if UNITY_EDITOR
+				else if (obj.GetType() == typeof(LocalisedStringRef))
+				{
+					LocalisedStringRef localisedStringRef = (LocalisedStringRef)obj;
+					localisedStringRef.SetAutoNameParentName(((TimelineStateMachine)stateMachine)._name);
+					return localisedStringRef;
+				}
+#endif
+				return obj;
 			}
 			#endregion
 		}

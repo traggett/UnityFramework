@@ -18,7 +18,9 @@ namespace Framework
 
 				EditorGUI.BeginChangeCheck();
 				curve = EditorGUILayout.CurveField(label, curve);
-				dataChanged = EditorGUI.EndChangeCheck();
+				if (EditorGUI.EndChangeCheck())
+					dataChanged = true;
+
 				return curve;
 			}
 			#endregion

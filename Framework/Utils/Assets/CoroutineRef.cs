@@ -8,15 +8,17 @@ namespace Framework
 	namespace Utils
 	{
 		[Serializable]
-		public sealed class CoroutineRef : ComponentMethodRef<IEnumerator>
+		public struct CoroutineRef
 		{
+			public ComponentMethodRef<IEnumerator> _methodRef;
+
 			public IEnumerator RunCoroutine()
 			{
-				MonoBehaviour component = _object.GetComponent() as MonoBehaviour;
+				MonoBehaviour component = _methodRef._object.GetComponent() as MonoBehaviour;
 
 				if (component != null)
 				{
-					yield return component.StartCoroutine(RunMethod());
+					yield return component.StartCoroutine(_methodRef.RunMethod());
 				}
 
 				yield break;

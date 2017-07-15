@@ -7,12 +7,10 @@ using UnityEditor;
 
 namespace Framework
 {
-	using Serialization;
-
 	namespace Utils
 	{
 		[Serializable]
-		public sealed class AssetRef<T> : ISerializationCallbackReceiver, ICustomEditorInspector where T : UnityEngine.Object
+		public struct AssetRef<T> : ISerializationCallbackReceiver where T : UnityEngine.Object
 		{
 			#region Public Data
 			public string _filePath;
@@ -24,7 +22,8 @@ namespace Framework
 #if UNITY_EDITOR
 			[NonSerialized]
 			public T _editorAsset;
-			private bool _editorFoldout = true;
+			[NonSerialized]
+			public bool _editorFoldout;
 #endif
 			#endregion
 
@@ -37,9 +36,7 @@ namespace Framework
 #if UNITY_EDITOR
 			public static implicit operator AssetRef<T>(T asset)
 			{
-				AssetRef<T> property = new AssetRef<T>();
-				property.SetAsset(asset);
-				return property;
+				return new AssetRef<T>(asset);
 			}
 #endif
 
@@ -92,9 +89,11 @@ namespace Framework
 			}
 
 #if UNITY_EDITOR
-			public void SetAsset(T asset)
+			public AssetRef(T asset)
 			{
+				_asset = null;
 				_editorAsset = asset;
+				_editorFoldout = true;
 
 				if (asset != null)
 				{
@@ -108,8 +107,12 @@ namespace Framework
 				}
 			}
 
-			public void SetAsset(string assetPath)
+			public AssetRef(string assetPath)
 			{
+				_asset = null;
+				_editorAsset = null;
+				_editorFoldout = true;
+
 				_filePath = assetPath;
 				_fileGUID = AssetDatabase.AssetPathToGUID(assetPath);
 			}
@@ -142,29 +145,7 @@ namespace Framework
 			{
 				bool dataChanged = false;
 
-				if (label == null)
-					label = new GUIContent();
-
-				label.text += " (" + this + ")";
-
-				_editorFoldout = EditorGUILayout.Foldout(_editorFoldout, label);
-
-				if (_editorFoldout)
-				{
-					int origIndent = EditorGUI.indentLevel;
-					EditorGUI.indentLevel++;
-			
-					T asset = EditorGUILayout.ObjectField("File", _editorAsset, typeof(T), false) as T;
-
-					//If asset changed update GUIDS
-					if (_editorAsset != asset)
-					{
-						SetAsset(asset);
-						dataChanged = true;
-					}
-
-					EditorGUI.indentLevel = origIndent;
-				}
+				
 
 				return dataChanged;
 			}

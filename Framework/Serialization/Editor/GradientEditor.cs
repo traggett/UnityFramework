@@ -17,7 +17,9 @@ namespace Framework
 				Rect rect = GUILayoutUtility.GetLastRect();
 				EditorGUI.BeginChangeCheck();
 				Gradient gradient = EditorUtils.GradientField(label, rect, (Gradient)obj);
-				dataChanged = EditorGUI.EndChangeCheck();
+				if (EditorGUI.EndChangeCheck())
+					dataChanged = true;
+
 				return gradient;
 			}
 			#endregion

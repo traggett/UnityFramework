@@ -21,10 +21,10 @@ namespace Framework
 			}
 			#region Public Data
 			public eStateType _stateType = eStateType.Timeline;
-			public TimelineStateRef _state = new TimelineStateRef();
+			public TimelineStateRef _state;
 			public CoroutineRef _coroutine = new CoroutineRef();
 			public eStateType _preStateType = eStateType.Timeline;
-			public TimelineStateRef _preState = new TimelineStateRef();
+			public TimelineStateRef _preState;
 			public CoroutineRef _preCoroutine = new CoroutineRef();
 			#endregion
 

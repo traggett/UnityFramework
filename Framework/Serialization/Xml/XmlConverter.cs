@@ -274,16 +274,16 @@ namespace Framework
 							//If the object is an array create a node for the array and convert each element individually
 							if (objType.IsArray)
 							{
-								object[] arrayField = obj as object[];
+								Array arrayField = obj as Array;
 
 								if (arrayField != null && arrayField.Length > 0)
 								{
 									XmlNode arrayXmlNode = XmlUtils.CreateXmlNode(xmlDoc, kXmlArrayTag);
 
 									//Append all child nodes
-									foreach (object arrayItem in arrayField)
+									for (int i=0; i< arrayField.Length; i++)
 									{
-										XmlNode arrayElementXmlNode = ToXmlNode(arrayItem, xmlDoc);
+										XmlNode arrayElementXmlNode = ToXmlNode(arrayField.GetValue(i), xmlDoc);
 										XmlUtils.SafeAppendChild(arrayXmlNode, arrayElementXmlNode);
 									}
 

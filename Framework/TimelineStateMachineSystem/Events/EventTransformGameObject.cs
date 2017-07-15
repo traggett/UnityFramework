@@ -158,7 +158,7 @@ namespace Framework
 				{
 					dataChanged = true;
 
-					_targetTransform.ClearGameObject();
+					_targetTransform = new GameObjectRef();
 					_targetPosition = Vector3.zero;
 					_targetRotation = Quaternion.identity;
 					_targetScale = Vector3.one;

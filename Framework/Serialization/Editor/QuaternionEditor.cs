@@ -14,9 +14,9 @@ namespace Framework
 				Quaternion quaternion = (Quaternion)obj;
 				EditorGUI.BeginChangeCheck();
 				Vector3 euler = EditorGUILayout.Vector3Field(label, quaternion.eulerAngles);
-				dataChanged = EditorGUI.EndChangeCheck();
-				if (dataChanged)
+				if (EditorGUI.EndChangeCheck())
 				{
+					dataChanged = true;
 					return Quaternion.Euler(euler);
 				}
 

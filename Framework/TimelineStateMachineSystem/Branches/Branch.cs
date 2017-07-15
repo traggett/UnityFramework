@@ -12,7 +12,7 @@ namespace Framework
 		{
 			#region Public Data		
 			public Condition _condition;
-			public TimelineStateRef _goToState = new TimelineStateRef();
+			public TimelineStateRef _goToState;
 			#endregion
 
 			#region Public Interface

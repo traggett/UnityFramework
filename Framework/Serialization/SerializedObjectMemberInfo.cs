@@ -152,9 +152,15 @@ namespace Framework
 				{
 					if (serializedField.GetFieldType().IsArray)
 					{
-						object[] array = (object[])serializedField.GetValue(obj);
+						Array array = (Array)serializedField.GetValue(obj);
+						
 						if (array != null)
-							fieldInstances.AddRange(array);
+						{
+							for (int i=0; i<array.Length; i++)
+							{
+								fieldInstances.Add(array.GetValue(i));
+							}
+						}	
 					}
 					else
 					{

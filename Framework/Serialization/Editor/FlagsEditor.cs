@@ -33,8 +33,7 @@ namespace Framework
 					dataChanged = true;
 					return Enum.ToObject(obj.GetType(), flags);
 				}
-
-				dataChanged =  false;
+				
 				return obj;
 			}
 			#endregion

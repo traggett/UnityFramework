@@ -13,8 +13,6 @@ namespace Framework
 			#region SerializedObjectEditor
 			public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
 			{
-				dataChanged = false;
-
 				IntRange intRange = (IntRange)obj;
 				EditorGUILayout.LabelField(GUIContent.none, GUILayout.Height(EditorGUIUtility.singleLineHeight), GUILayout.ExpandWidth(true));
 				Rect rect = GUILayoutUtility.GetLastRect();

@@ -25,7 +25,7 @@ namespace Framework
 #if UNITY_EDITOR
 			protected override void ClearStaticValue()
 			{
-				_value = null;
+				_value = new MaterialRef();
 			}
 #endif
 		}

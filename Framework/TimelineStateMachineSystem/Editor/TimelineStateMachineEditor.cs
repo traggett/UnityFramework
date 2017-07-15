@@ -270,7 +270,7 @@ namespace Framework
 				public void OnAddedNewXmlNode(object obj)
 				{
 					TimelineStateMachine stateMachine = ConvertToTimelineStateMachine();
-					TimelineStateMachine.FixupStateRefs(stateMachine, obj);
+					stateMachine.FixUpStates();
 				}
 				#endregion
 
@@ -568,7 +568,7 @@ namespace Framework
 
 							if (currentDbugObject != debugObject)
 							{
-								_editorPrefs._debugObject.SetComponent(debugObject, GameObjectRef.eSourceType.Scene);
+								_editorPrefs._debugObject = new ComponentRef<StateMachine>(GameObjectRef.eSourceType.Scene, debugObject);
 								SaveEditorPrefs();
 							}
 

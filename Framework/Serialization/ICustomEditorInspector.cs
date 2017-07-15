@@ -4,6 +4,7 @@ namespace Framework
 {
 	namespace Serialization
 	{
+		//This should only be used by Classes, not structs!
 		public interface ICustomEditorInspector
 		{
 #if UNITY_EDITOR
