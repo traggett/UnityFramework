@@ -11,24 +11,19 @@ namespace Framework
 		[Serializable]
 		public struct ComponentVoidMethodRef
 		{
-			#region Public Data
-			public ComponentMethodRef<object> _methodRef;
-			#endregion
+			[SerializeField]
+			private ComponentMethodRef<object> _methodRef;
 		
 			public void RunMethod()
 			{
-				Component component = _methodRef._object.GetComponent();
-
-				if (component != null)
-				{
-					MethodInfo method = component.GetType().GetMethod(_methodRef._methodName);
-
-					if (method != null)
-					{
-						method.Invoke(component, null);
-					}
-				}
+				_methodRef.RunMethod();
 			}
+#if UNITY_EDITOR
+			public ComponentMethodRef<object> GetMethodRef()
+			{
+				return _methodRef;
+			}
+#endif
 		}
 	}
 }

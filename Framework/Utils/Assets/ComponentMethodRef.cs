@@ -12,8 +12,10 @@ namespace Framework
 		public struct ComponentMethodRef<T>
 		{
 			#region Public Data
-			public ComponentRef<Component> _object;
-			public string _methodName;
+			[SerializeField]
+			private ComponentRef<Component> _component;
+			[SerializeField]
+			private string _methodName;
 			#endregion
 
 #if UNITY_EDITOR
@@ -23,14 +25,14 @@ namespace Framework
 
 			public static implicit operator string(ComponentMethodRef<T> property)
 			{
-				return property._object + "." + property._methodName + "()";
+				return property._component + "." + property._methodName + "()";
 			}
 
 			public T RunMethod()
 			{
 				T returnObj = default(T);
 
-				Component component = _object.GetComponent();
+				Component component = _component.GetComponent();
 
 				if (component != null)
 				{
@@ -44,6 +46,27 @@ namespace Framework
 
 				return returnObj;
 			}
+
+			
+
+#if UNITY_EDITOR
+			public ComponentMethodRef(ComponentRef<Component> componentRef, string methodName)
+			{
+				_component = componentRef;
+				_methodName = methodName;
+				_editorFoldout = true;
+			}
+
+			public ComponentRef<Component> GetComponentRef()
+			{
+				return _component;
+			}
+
+			public string GetMethodName()
+			{
+				return _methodName;
+			}
+#endif
 		}
 	}
 }

@@ -22,16 +22,16 @@ namespace Framework
 			{
 				string description;
 
-				if (_conditions != null && _conditions.Length > 0 && _conditions[0]._condition != null)
+				if (_conditions != null && _conditions.Length > 0 && _conditions[0]._conditional != null)
 				{
-					description = "(" + _conditions[0]._condition.GetEditorDescription();
+					description = "(" + _conditions[0]._conditional.GetEditorDescription();
 
 					for (int i = 1; i < _conditions.Length; i++)
 					{
-						if (_conditions[i]._condition != null)
+						if (_conditions[i]._conditional != null)
 						{
 							description += ") <b>||</b> (";
-							description += _conditions[i]._condition.GetEditorDescription();
+							description += _conditions[i]._conditional.GetEditorDescription();
 						}
 					}
 
@@ -55,7 +55,7 @@ namespace Framework
 			{
 				foreach (Condition condition in _conditions)
 				{
-					condition._condition.OnStartConditionChecking(stateMachine);
+					condition._conditional.OnStartConditionChecking(stateMachine);
 				}
 			}
 
@@ -65,7 +65,7 @@ namespace Framework
 
 				foreach (Condition condition in _conditions)
 				{
-					if (!condition._condition.IsConditionMet(stateMachine))
+					if (!condition._conditional.IsConditionMet(stateMachine))
 					{
 						allConditionsMet = false;
 					}
@@ -78,7 +78,7 @@ namespace Framework
 			{
 				foreach (Condition condition in _conditions)
 				{
-					condition._condition.OnEndConditionChecking(stateMachine);
+					condition._conditional.OnEndConditionChecking(stateMachine);
 				}
 			}
 			#endregion

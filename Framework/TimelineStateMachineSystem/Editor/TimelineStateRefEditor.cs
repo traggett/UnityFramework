@@ -29,10 +29,16 @@ namespace Framework
 						label = new GUIContent();
 
 					label.text += " (" + timelineState + ")";
-
-					timelineState._editorFoldout = EditorGUILayout.Foldout(timelineState._editorFoldout, label);
 					
-					if (timelineState._editorFoldout)
+					bool foldOut = EditorGUILayout.Foldout(timelineState._editorFoldout, label);
+
+					if (foldOut != timelineState._editorFoldout)
+					{
+						timelineState._editorFoldout = foldOut;
+						dataChanged = true;
+					}
+
+					if (foldOut)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -43,7 +49,6 @@ namespace Framework
 						{
 							//If type has changed create a new ref with file set to null if internal or a blank asset ref if external.
 							TimelineStateMachine stateMachine = timelineState.GetStateMachine();
-							bool foldOut = timelineState._editorFoldout;
 							timelineState = new TimelineStateRef();
 							timelineState._editorFoldout = foldOut;
 							timelineState.FixUpRef(stateMachine);
@@ -56,14 +61,17 @@ namespace Framework
 							case eType.Internal:
 								{
 									TimelineStateMachine stateMachine = timelineState.GetStateMachine();
-									int stateId = timelineState._stateId;
-
-									//If changed state id create new state ref
-									if (DrawStateNamePopUps(stateMachine._states, ref stateId))
+									if (stateMachine != null)
 									{
-										timelineState._stateId = stateId;
-										dataChanged = true;
-									}
+										int stateId = timelineState._stateId;
+
+										//If changed state id create new state ref
+										if (DrawStateNamePopUps(stateMachine._states, ref stateId))
+										{
+											timelineState._stateId = stateId;
+											dataChanged = true;
+										}
+									}	
 								}
 								break;
 							case eType.External:

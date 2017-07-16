@@ -1,4 +1,6 @@
 using System;
+
+using UnityEngine;
 using UnityEngine.SceneManagement;
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
@@ -12,8 +14,26 @@ namespace Framework
 		public struct SceneRef
 		{
 			#region Public Data
-			public string _scenePath;
+			[SerializeField]
+			private string _scenePath;
 			#endregion
+
+			public SceneRef(string scenePath)
+			{
+				_scenePath = scenePath;
+			}
+
+			public SceneRef(Scene scene)
+			{
+				if (scene.IsValid())
+				{
+					_scenePath = scene.path;
+				}
+				else
+				{
+					_scenePath = null;
+				}
+			}
 
 			public static implicit operator string(SceneRef property)
 			{
@@ -47,21 +67,9 @@ namespace Framework
 			}
 
 #if UNITY_EDITOR
-			public void ClearScene()
+			public string GetScenePath()
 			{
-				_scenePath = null;
-			}
-
-			public void SetScene(Scene scene)
-			{
-				if (scene.IsValid())
-				{
-					_scenePath = scene.path;
-				}
-				else
-				{
-					_scenePath = null;
-				}
+				return _scenePath;
 			}
 
 			public void OpenSceneInEditor()

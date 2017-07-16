@@ -30,7 +30,7 @@ namespace Framework
 						sceneNames[i + 1] = new GUIContent(SceneUtils.GetSceneNameFromPath(editorScene.path));
 						scenePaths[i] = editorScene.path;
 
-						if (editorScene.path == sceneRef._scenePath)
+						if (editorScene.path == sceneRef.GetScenePath())
 						{
 							currIndex = i + 1;
 						}
@@ -40,7 +40,7 @@ namespace Framework
 					currIndex = EditorGUILayout.Popup(label, currIndex, sceneNames);
 					if (EditorGUI.EndChangeCheck())
 					{
-						sceneRef._scenePath = currIndex == 0 ? null : scenePaths[currIndex - 1];
+						sceneRef = new SceneRef(currIndex == 0 ? null : scenePaths[currIndex - 1]);
 						dataChanged = true;
 					}
 					

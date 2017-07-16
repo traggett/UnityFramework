@@ -267,10 +267,11 @@ namespace Framework
 					GetEditorWindow().OnDeselectObject(obj);
 				}
 
-				public void OnAddedNewXmlNode(object obj)
+				public void OnAddedNewObjectToTimeline(object obj)
 				{
+					//Create a temporary stateMachine and fixUp any TimelineStateRefs etc using it
 					TimelineStateMachine stateMachine = ConvertToTimelineStateMachine();
-					stateMachine.FixUpStates();
+					stateMachine.FixUpStates(obj);
 				}
 				#endregion
 
@@ -359,6 +360,10 @@ namespace Framework
 						if (string.IsNullOrEmpty(state._editorDescription))
 							state._editorDescription = "State" + state._stateId;
 					}
+
+					//Create a temporary stateMachine and fixUp any TimelineStateRefs etc using it
+					TimelineStateMachine stateMachine = ConvertToTimelineStateMachine();
+					stateMachine.FixUpStates(stateMachine);
 				}
 
 				protected override TimelineState CreateCopyFrom(SerializedObjectEditorGUI<TimelineState> editorGUI)
@@ -682,7 +687,7 @@ namespace Framework
 					//Find external link for this state
 					foreach (TimelineStateEditorGUI state in _editableObjects)
 					{
-						if (state.IsExternal && state.ExternalStateRef._stateId == link._timeline._stateId && state.ExternalStateRef._file._fileGUID == link._timeline._file._fileGUID)
+						if (state.IsExternal && state.ExternalStateRef._stateId == link._timeline._stateId && state.ExternalStateRef._file.GetFileGUID() == link._timeline._file.GetFileGUID())
 						{
 							externalState = state;
 							break;

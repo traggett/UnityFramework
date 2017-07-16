@@ -29,8 +29,15 @@ namespace Framework
 
 					label.text += " (" + materialRef + ")";
 
-					materialRef._editorFoldout = EditorGUILayout.Foldout(materialRef._editorFoldout, label);
-					if (materialRef._editorFoldout)
+					bool foldOut = EditorGUILayout.Foldout(materialRef._editorFoldout, label);
+
+					if (foldOut != materialRef._editorFoldout)
+					{
+						materialRef._editorFoldout = foldOut;
+						dataChanged = true;
+					}
+					
+					if (foldOut)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -63,7 +70,7 @@ namespace Framework
 							}
 
 							//Show drop down for materials
-							Renderer renderer = rendererComponentRef._editorComponent as Renderer;
+							Renderer renderer = rendererComponentRef.GetComponent();
 
 							if (renderer != null)
 							{

@@ -24,8 +24,8 @@ namespace Framework
 				if (_condition._not)
 					description += "<b>not</b> ";
 
-				if (_condition._condition != null)
-					description += _condition._condition.GetEditorDescription();
+				if (_condition._conditional != null)
+					description += _condition._conditional.GetEditorDescription();
 				else
 					description += "<condition>";
 
@@ -37,9 +37,9 @@ namespace Framework
 			#region IBranch
 			public bool ShouldBranch(StateMachine stateMachine)
 			{
-				if (_condition._condition != null)
+				if (_condition._conditional != null)
 				{
-					return _condition._condition.IsConditionMet(stateMachine) != _condition._not;
+					return _condition._conditional.IsConditionMet(stateMachine) != _condition._not;
 				}
 
 				return false;
@@ -52,14 +52,14 @@ namespace Framework
 
 			public void OnBranchingStarted(StateMachine stateMachine)
 			{
-				if (_condition._condition != null)
-					_condition._condition.OnStartConditionChecking(stateMachine);
+				if (_condition._conditional != null)
+					_condition._conditional.OnStartConditionChecking(stateMachine);
 			}
 
 			public void OnBranchingFinished(StateMachine stateMachine)
 			{
-				if (_condition._condition != null)
-					_condition._condition.OnEndConditionChecking(stateMachine);
+				if (_condition._conditional != null)
+					_condition._conditional.OnEndConditionChecking(stateMachine);
 			}
 			#endregion
 		}

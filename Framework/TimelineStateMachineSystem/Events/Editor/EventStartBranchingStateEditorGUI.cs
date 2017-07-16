@@ -245,7 +245,7 @@ namespace Framework
 						
 						ArrayUtils.Add(ref evnt._backgroundLogic, newBackgroundLogic);
 						
-						GetTimelineEditor().GetParent().OnAddedNewXmlNode(newBackgroundLogic);
+						GetTimelineEditor().GetParent().OnAddedNewObjectToTimeline(newBackgroundLogic);
 
 						return true;
 					}
@@ -263,7 +263,7 @@ namespace Framework
 							Branch newBranch = new Branch();
 							ArrayUtils.Add(ref evnt._branches, newBranch);
 							
-							GetTimelineEditor().GetParent().OnAddedNewXmlNode(newBranch);
+							GetTimelineEditor().GetParent().OnAddedNewObjectToTimeline(newBranch);
 
 							return true;
 						}

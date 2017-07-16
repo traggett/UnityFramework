@@ -15,7 +15,7 @@ namespace Framework
 				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
 				{
 					ComponentVoidMethodRef componentMethodRef = (ComponentVoidMethodRef)obj;
-					return ComponentMethodRefEditor.ComponentMethodRefField(componentMethodRef._methodRef, typeof(void), label, ref dataChanged);
+					return ComponentMethodRefEditor.ComponentMethodRefField(componentMethodRef.GetMethodRef(), typeof(void), label, ref dataChanged);
 				}
 				#endregion
 			}

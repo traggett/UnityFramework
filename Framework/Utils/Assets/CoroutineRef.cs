@@ -10,11 +10,12 @@ namespace Framework
 		[Serializable]
 		public struct CoroutineRef
 		{
-			public ComponentMethodRef<IEnumerator> _methodRef;
+			[SerializeField]
+			private ComponentMethodRef<IEnumerator> _methodRef;
 
 			public IEnumerator RunCoroutine()
 			{
-				MonoBehaviour component = _methodRef._object.GetComponent() as MonoBehaviour;
+				MonoBehaviour component = _methodRef.GetComponentRef().GetComponent() as MonoBehaviour;
 
 				if (component != null)
 				{

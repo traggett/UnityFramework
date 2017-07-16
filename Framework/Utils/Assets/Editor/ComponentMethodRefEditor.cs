@@ -60,11 +60,14 @@ namespace Framework
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 
-						componentMethodRef._object = SerializationEditorGUILayout.ObjectField(componentMethodRef._object, new GUIContent("Object"), ref dataChanged);
+						bool componentChanged = false;
+						ComponentRef<Component> component = SerializationEditorGUILayout.ObjectField(componentMethodRef.GetComponentRef(), new GUIContent("Object"), ref componentChanged);
 
-						if (componentMethodRef._object._editorComponent != null)
+						Component currentComponent = component.GetBaseComponent();
+
+						if (currentComponent != null)
 						{
-							string[] methodNames = GetMethods(componentMethodRef._object._editorComponent, returnType);
+							string[] methodNames = GetMethods(currentComponent, returnType);
 
 							if (methodNames.Length > 0)
 							{
@@ -72,7 +75,7 @@ namespace Framework
 
 								for (int i = 0; i < methodNames.Length; i++)
 								{
-									if (methodNames[i] == componentMethodRef._methodName)
+									if (methodNames[i] == componentMethodRef.GetMethodName())
 									{
 										currentIndex = i;
 										break;
@@ -83,16 +86,22 @@ namespace Framework
 
 								int newIndex = EditorGUILayout.Popup("Method", currentIndex, methodNames);
 
-								if (EditorGUI.EndChangeCheck())
+								if (EditorGUI.EndChangeCheck() || componentChanged)
 								{
-									componentMethodRef._methodName = methodNames[newIndex];
+									componentMethodRef = new ComponentMethodRef<T>(component, methodNames[newIndex]);
 									dataChanged = true;
 								}
 							}
-							else
+							else if (componentChanged)
 							{
-								componentMethodRef._methodName = null;
+								componentMethodRef = new ComponentMethodRef<T>(component, string.Empty);
+								dataChanged = true;
 							}
+						}
+						else if (componentChanged)
+						{
+							componentMethodRef = new ComponentMethodRef<T>(component, string.Empty);
+							dataChanged = true;
 						}
 
 						EditorGUI.indentLevel = origIndent;

@@ -5,35 +5,28 @@ namespace Framework
 {
 	namespace Utils
 	{
-		[Serializable]
-		// T should be a type of Component or an interface
-		public struct ComponentRef<T> : ISerializationCallbackReceiver where T : class
+		[Serializable]		
+		public struct ComponentRef<T> where T : class // T should be a type of Component or an interface
 		{
 			#region Public Data
-			public GameObjectRef _gameObject;
-			public int _componentIndex;
+			[SerializeField]
+			private GameObjectRef _gameObject;
+			[SerializeField]
+			private int _componentIndex;
 			#endregion
 
 			#region Editor Data
 #if UNITY_EDITOR
 			[NonSerialized]
-			public Component _editorComponent;
-			[NonSerialized]
-			public GameObjectLoader _editorLoaderGameObject;
-			[NonSerialized]
 			public bool _editorFoldout;
-			[NonSerialized]
-			public bool _editorSceneLoaded;
-			[NonSerialized]
-			public bool _editorLoaderIsLoaded;
 #endif
 			#endregion
 
 			public static implicit operator string(ComponentRef<T> property)
 			{
-				if (!string.IsNullOrEmpty(property._gameObject._objectName))
+				if (!string.IsNullOrEmpty(property._gameObject.GetGameObjectName()))
 				{
-					return property._gameObject;
+					return property._gameObject.GetGameObjectName();
 				}
 				else
 				{
@@ -99,31 +92,12 @@ namespace Framework
 			{
 				return _gameObject.IsValid();
 			}
-
-			#region ISerializationCallbackReceiver
-			public void OnBeforeSerialize()
-			{
-
-			}
-
-			public void OnAfterDeserialize()
-			{
-#if UNITY_EDITOR
-				_editorComponent = GetComponent() as Component;
-#endif
-			}
-			#endregion
-
 #if UNITY_EDITOR
 			public ComponentRef(GameObjectRef.eSourceType sourceType)
 			{
 				_gameObject = new GameObjectRef(sourceType);
 				_componentIndex = 0;
-				_editorComponent = null;
-				_editorLoaderGameObject = null;
 				_editorFoldout = true;
-				_editorSceneLoaded = false;
-				_editorLoaderIsLoaded = false;
 			}
 
 			public ComponentRef(GameObjectRef.eSourceType sourceType, Component component)
@@ -131,11 +105,7 @@ namespace Framework
 				GameObject gameObject = component != null ? component.gameObject : null;
 				_gameObject = new GameObjectRef(sourceType, gameObject);
 				_componentIndex = 0;
-				_editorComponent = null;
-				_editorLoaderGameObject = null;
 				_editorFoldout = true;
-				_editorSceneLoaded = false;
-				_editorLoaderIsLoaded = false;
 
 				if (component != null)
 				{
@@ -155,6 +125,24 @@ namespace Framework
 						}
 					}
 				}
+			}
+
+			public ComponentRef(GameObjectRef.eSourceType sourceType, Component component, int componentIndex)
+			{
+				GameObject gameObject = component != null ? component.gameObject : null;
+				_gameObject = new GameObjectRef(sourceType, gameObject);
+				_componentIndex = componentIndex;
+				_editorFoldout = true;
+			}
+
+			public GameObjectRef GetGameObjectRef()
+			{
+				return _gameObject;
+			}
+
+			public int GetComponentIndex()
+			{
+				return _componentIndex;
 			}
 #endif
 		}

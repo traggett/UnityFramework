@@ -13,8 +13,10 @@ namespace Framework
 		public struct AssetRef<T> : ISerializationCallbackReceiver where T : UnityEngine.Object
 		{
 			#region Public Data
-			public string _filePath;
-			public string _fileGUID;
+			[SerializeField]
+			private string _filePath;
+			[SerializeField]
+			private string _fileGUID;
 			#endregion
 
 			#region Private Data
@@ -117,10 +119,14 @@ namespace Framework
 				_fileGUID = AssetDatabase.AssetPathToGUID(assetPath);
 			}
 
-			public void ClearAsset()
+			public string GetFilePath()
 			{
-				_filePath = null;
-				_fileGUID = null;
+				return _filePath;
+			}
+
+			public string GetFileGUID()
+			{
+				return _fileGUID;
 			}
 #endif
 			#endregion

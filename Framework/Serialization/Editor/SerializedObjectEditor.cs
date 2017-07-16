@@ -596,8 +596,8 @@ namespace Framework
 			{
 				Undo.RegisterCompleteObjectUndo(this, "Create Object");
 				T newObject = Activator.CreateInstance(type) as T;
-				OnCreatedNewObject(newObject);
 				SerializedObjectEditorGUI<T> editorGUI = AddNewObject(newObject);
+				OnCreatedNewObject(newObject);
 				GetEditorWindow().OnSelectObject(editorGUI);
 				_selectedObjects.Clear();
 				_selectedObjects.Add(editorGUI);

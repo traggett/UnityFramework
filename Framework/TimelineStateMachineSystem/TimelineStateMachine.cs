@@ -37,7 +37,7 @@ namespace Framework
 
 			public void OnAfterDeserialize()
 			{
-				FixUpStates();
+				FixUpStates(this);
 #if DEBUG
 				foreach (TimelineState state in _states)
 					state._debugParentStateMachine = this;
@@ -76,7 +76,7 @@ namespace Framework
 				if (state != null)
 				{
 #if UNITY_EDITOR && DEBUG
-					string debugFileName = stateRef._file._filePath;
+					string debugFileName = stateRef._file.GetFilePath();
 					TimelineStateMachineDebug.OnTimelineStateStarted(stateMachine, state, debugFileName);
 #endif
 					return PerformState(stateMachine, state, state._timeline);
@@ -121,9 +121,9 @@ namespace Framework
 				return timer;
 			}
 
-			public void FixUpStates()
+			public void FixUpStates(object obj)
 			{
-				Serializer.UpdateChildObjects(this, FixupStateRefs, this);
+				Serializer.UpdateChildObjects(obj, FixupStateRefs, this);
 			}
 			#endregion
 

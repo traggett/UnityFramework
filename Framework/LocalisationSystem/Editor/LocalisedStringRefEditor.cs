@@ -17,10 +17,16 @@ namespace Framework
 				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
 				{
 					LocalisedStringRef localisedString = (LocalisedStringRef)obj;
+					
+					bool foldOut = EditorGUILayout.Foldout(localisedString._editorFoldout, label);
 
-					localisedString._editorFoldout = EditorGUILayout.Foldout(localisedString._editorFoldout, label);
+					if (foldOut != localisedString._editorFoldout)
+					{
+						localisedString._editorFoldout = foldOut;
+						dataChanged = true;
+					}
 
-					if (localisedString._editorFoldout)
+					if (foldOut)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -46,8 +52,6 @@ namespace Framework
 							//If key has changed
 							if (EditorGUI.EndChangeCheck())
 							{
-								bool foldOut = localisedString._editorFoldout;
-
 								if (currentKeyIndex == 0)
 								{
 									localisedString = new LocalisedStringRef();
@@ -83,7 +87,6 @@ namespace Framework
 										Localisation.UpdateString(newKey, Localisation.GetCurrentLanguage(), string.Empty);
 									}
 
-									bool foldOut = localisedString._editorFoldout;
 									localisedString = new LocalisedStringRef(newKey);
 									localisedString._editorFoldout = foldOut;
 

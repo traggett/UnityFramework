@@ -17,7 +17,7 @@ namespace Framework
 			{
 				public interface IEditor : IEditorWindow
 				{
-					void OnAddedNewXmlNode(object obj);
+					void OnAddedNewObjectToTimeline(object obj);
 #if DEBUG
 					bool IsDebugging();
 #endif
@@ -204,7 +204,7 @@ namespace Framework
 
 				protected override void OnCreatedNewObject(Event evnt)
 				{
-					GetParent().OnAddedNewXmlNode(evnt);
+					GetParent().OnAddedNewObjectToTimeline(evnt);
 				}
 
 				protected override Event CreateCopyFrom(SerializedObjectEditorGUI<Event> editorGUI)

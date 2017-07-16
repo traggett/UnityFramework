@@ -17,7 +17,7 @@ namespace Framework
 			[SerializedObjectEditor(typeof(ComponentRef<>), "PropertyField")]
 			public static class ComponentRefEditor
 			{
-				private static GUIContent kLabel = new GUIContent("Object");
+				private static GUIContent kLabel = new GUIContent("Component");
 
 				#region SerializedObjectEditor
 				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
@@ -64,11 +64,11 @@ namespace Framework
 						EditorGUI.indentLevel++;
 
 						//Show drop down for gameobject type.
-						GameObjectRef.eSourceType sourceType = SerializationEditorGUILayout.ObjectField(componentRef._gameObject._sourceType, "Source Type", ref dataChanged);
+						GameObjectRef.eSourceType sourceType = SerializationEditorGUILayout.ObjectField(componentRef.GetGameObjectRef().GetSourceType(), "Source Type", ref dataChanged);
 
-						if (sourceType != componentRef._gameObject._sourceType)
+						if (sourceType != componentRef.GetGameObjectRef().GetSourceType())
 						{
-							componentRef._gameObject = new GameObjectRef(sourceType);
+							componentRef = new ComponentRef<T>(sourceType);
 							dataChanged = true;
 						}
 
@@ -97,16 +97,18 @@ namespace Framework
 					bool dataChanged = false;
 					GameObject gameObject = null;
 
+					Component currentComponent = componentRef.GetBaseComponent();
+
 					//If T is a type of component can just use a normal object field
 					if (typeof(Component).IsAssignableFrom(typeof(T)))
 					{
-						Component component = EditorGUILayout.ObjectField("Component", componentRef._editorComponent, typeof(T), true) as Component;
+						Component component = EditorGUILayout.ObjectField(kLabel, currentComponent, typeof(T), true) as Component;
 						gameObject = component != null ? component.gameObject : null;
 					}
 					//Otherwise allow gameobject to be set and deal with typing when rendering index
 					else
 					{
-						gameObject = (GameObject)EditorGUILayout.ObjectField("Component", componentRef._editorComponent != null ? componentRef._editorComponent.gameObject : null, typeof(GameObject), true);
+						gameObject = (GameObject)EditorGUILayout.ObjectField(kLabel, currentComponent != null ? currentComponent.gameObject : null, typeof(GameObject), true);
 					}
 
 					//Render drop down for typed components on the gameobject
@@ -139,7 +141,7 @@ namespace Framework
 								validComponents.Add(allComponents[i]);
 								validComponentTypes.Add(allComponents[i].GetType());
 
-								if (allComponents[i] == componentRef._editorComponent || componentRef._editorComponent == null)
+								if (allComponents[i] == currentComponent)
 								{
 									currentIndex = validComponents.Count - 1;
 								}
@@ -149,28 +151,28 @@ namespace Framework
 						if (validComponents.Count > 1)
 						{
 							int selectedIndex = EditorGUILayout.Popup(new GUIContent(" "), currentIndex, validComponentLabels.ToArray());
-							dataChanged = componentRef._editorComponent != validComponents[selectedIndex] || componentRef._componentIndex != selectedIndex;
-							componentRef._editorComponent = validComponents[selectedIndex];
-							componentRef._componentIndex = selectedIndex;
+							dataChanged = currentComponent != validComponents[selectedIndex] || componentRef.GetComponentIndex() != selectedIndex;
+							if (dataChanged)
+								componentRef = new ComponentRef<T>(componentRef.GetGameObjectRef().GetSourceType(), validComponents[selectedIndex], selectedIndex);
 						}
 						else if (validComponents.Count == 1)
 						{
-							dataChanged = componentRef._editorComponent != validComponents[0] || componentRef._componentIndex != 0;
-							componentRef._editorComponent = validComponents[0];
-							componentRef._componentIndex = 0;
+							dataChanged = currentComponent != validComponents[0] || componentRef.GetComponentIndex() != 0;
+							if (dataChanged)
+								componentRef = new ComponentRef<T>(componentRef.GetGameObjectRef().GetSourceType(), validComponents[0], 0);
 						}
 						else if (validComponents.Count == 0)
 						{
-							dataChanged = componentRef._editorComponent != null || componentRef._componentIndex != 0;
-							componentRef._editorComponent = null;
-							componentRef._componentIndex = 0;
+							dataChanged = currentComponent != null || componentRef.GetComponentIndex() != 0;
+							if (dataChanged)
+								componentRef = new ComponentRef<T>(componentRef.GetGameObjectRef().GetSourceType());
 						}
 					}
 					else
 					{
-						dataChanged = componentRef._editorComponent != null || componentRef._componentIndex != 0;
-						componentRef._editorComponent = null;
-						componentRef._componentIndex = 0;
+						dataChanged = currentComponent != null || componentRef.GetComponentIndex() != 0;
+						if (dataChanged)
+							componentRef = new ComponentRef<T>(componentRef.GetGameObjectRef().GetSourceType());
 					}
 
 					return dataChanged;
@@ -179,57 +181,32 @@ namespace Framework
 				private static void RenderSceneObjectField<T>(ref ComponentRef<T> componentRef, ref bool dataChanged) where T : class
 				{
 					//If current component is valid
-					if (componentRef._gameObject._scene.IsSceneRefValid())
+					if (componentRef.IsValid())
 					{
 						//Check its scene is loaded
-						Scene scene = componentRef._gameObject._scene.GetScene();
+						Scene scene = componentRef.GetGameObjectRef().GetSceneRef().GetScene();
 
 						if (scene.isLoaded)
 						{
-							//If loaded and not tried finding editor component, find it now
-							if (!componentRef._editorSceneLoaded)
-							{
-								componentRef._editorComponent = componentRef.GetBaseComponent();
-								componentRef._editorSceneLoaded = true;
-
-								//If can no longer find the component, clear it
-								if (componentRef._editorComponent == null)
-								{
-									componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Scene);
-									dataChanged = true;
-								}
-							}
-
 							//Then render component field
 							if (RenderObjectField(ref componentRef))
 							{
-								componentRef._gameObject = new GameObjectRef(GameObjectRef.eSourceType.Scene, componentRef._editorComponent != null ? componentRef._editorComponent.gameObject : null);
+								componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Scene, componentRef.GetBaseComponent());
 								dataChanged = true;
 							}
 						}
-						//If the scene is not loaded show warning...
-						else
+						//If the scene is not loaded show warning and allow clearing of the component
+						else if (GameObjectRefEditor.RenderSceneNotLoadedField(componentRef.GetGameObjectRef()))
 						{
-							componentRef._editorSceneLoaded = false;
-
-							//...and allow clearing of the component
-							if (GameObjectRefEditor.RenderSceneNotLoadedField(componentRef._gameObject._scene))
-							{
-								componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Scene);
-								dataChanged = true;
-							}
-						}
-					}
-					//Else don't have a component set, render component field
-					else
-					{
-						componentRef._editorSceneLoaded = false;
-
-						if (RenderObjectField(ref componentRef))
-						{
-							componentRef._gameObject = new GameObjectRef(GameObjectRef.eSourceType.Scene, componentRef._editorComponent != null ? componentRef._editorComponent.gameObject : null);
+							componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Scene);
 							dataChanged = true;
 						}
+					}
+					//Else don't have a valid component set, renderer object field
+					else if (RenderObjectField(ref componentRef))
+					{
+						componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Scene, componentRef.GetBaseComponent());
+						dataChanged = true;
 					}
 				}
 
@@ -237,7 +214,7 @@ namespace Framework
 				{
 					if (RenderObjectField(ref componentRef))
 					{
-						componentRef._gameObject = new GameObjectRef(GameObjectRef.eSourceType.Prefab, componentRef._editorComponent != null ? componentRef._editorComponent.gameObject : null);
+						componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Prefab, componentRef.GetBaseComponent());
 						dataChanged = true;
 					}
 				}
@@ -245,89 +222,49 @@ namespace Framework
 				private static void RenderLoadedObjectField<T>(ref ComponentRef<T> componentRef, ref bool dataChanged) where T : class
 				{
 					//If the component is valid
-					if (componentRef._gameObject._scene.IsSceneRefValid())
+					if (componentRef.IsValid())
 					{
 						//Check its scene is loaded
-						Scene scene = componentRef._gameObject._scene.GetScene();
+						Scene scene = componentRef.GetGameObjectRef().GetSceneRef().GetScene();
 
 						if (scene.isLoaded)
 						{
 							//If loaded and not tried finding editor loader, find it now
-							if (!componentRef._editorSceneLoaded)
-							{
-								componentRef._editorLoaderGameObject = componentRef._gameObject.GetEditorGameObjectLoader(scene);
-								componentRef._editorSceneLoaded = true;
+							GameObjectLoader gameObjectLoader = componentRef.GetGameObjectRef().GetEditorGameObjectLoader(scene);
 
-								//If can no longer find the editor loader, clear it
-								if (componentRef._editorLoaderGameObject == null)
+							//If have a valid loader...
+							if (gameObjectLoader != null)
+							{
+								//Check its loaded
+								if (gameObjectLoader.IsLoaded())
+								{
+									//Then render component field
+									if (RenderObjectField(ref componentRef))
+									{
+										componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded, componentRef.GetBaseComponent());
+										dataChanged = true;
+									}
+								}
+								//If the loader is not loaded show warning and allow clearing of the component
+								else if (GameObjectRefEditor.RenderLoadedNotLoadedField(gameObjectLoader))
 								{
 									componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded);
 									dataChanged = true;
 								}
 							}
-
-							//If have a valid loader...
-							if (componentRef._editorLoaderGameObject != null)
-							{
-								//Check its loaded
-								if (componentRef._editorLoaderGameObject.IsLoaded())
-								{
-									//If loaded and not tried finding component, find it now
-									if (!componentRef._editorLoaderIsLoaded)
-									{
-										componentRef._editorComponent = componentRef.GetBaseComponent();
-										componentRef._editorLoaderIsLoaded = true;
-
-										//If can no longer find the component, clear it
-										if (componentRef._editorComponent == null)
-										{
-											componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded);
-											dataChanged = true;
-										}
-									}
-
-									//Then render component field
-									if (RenderObjectField(ref componentRef))
-									{
-										componentRef._gameObject = new GameObjectRef(GameObjectRef.eSourceType.Loaded, componentRef._editorComponent != null ? componentRef._editorComponent.gameObject : null);
-										dataChanged = true;
-									}
-								}
-								//If the loader is not loaded show warning...
-								else
-								{
-									componentRef._editorLoaderIsLoaded = false;
-
-									//...and allow clearing of the component
-									if (GameObjectRefEditor.RenderLoadedNotLoadedField(componentRef._editorLoaderGameObject))
-									{
-										componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded);
-										dataChanged = true;
-									}
-								}
-							}
 						}
-						//If the scene is not loaded show warning...
-						else
+						//If the scene is not loaded show warning and allow clearing of the component
+						else if (GameObjectRefEditor.RenderSceneNotLoadedField(componentRef.GetGameObjectRef()))
 						{
-							componentRef._editorSceneLoaded = false;
-
-							//...and allow clearing of the component
-							if (GameObjectRefEditor.RenderSceneNotLoadedField(componentRef._gameObject._scene))
-							{
-								componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded);
-								dataChanged = true;
-							}
+							componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded);
+							dataChanged = true;
 						}
 					}
 					//Else don't have a component set, render component field
-					else
+					else if (RenderObjectField(ref componentRef))
 					{
-						if (RenderObjectField(ref componentRef))
-						{
-							componentRef._gameObject = new GameObjectRef(GameObjectRef.eSourceType.Loaded, componentRef._editorComponent != null ? componentRef._editorComponent.gameObject : null);
-							dataChanged = true;
-						}
+						componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded, componentRef.GetBaseComponent());
+						dataChanged = true;
 					}
 				}
 			}

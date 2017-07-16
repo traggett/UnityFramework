@@ -48,7 +48,8 @@ namespace Framework
 					}
 				}
 
-				Debug.Log(key + " isn't in localisation file.");
+				if (!string.IsNullOrEmpty(key))
+					Debug.Log(key + " isn't in localisation file.");
 
 				return string.Empty;
 			}

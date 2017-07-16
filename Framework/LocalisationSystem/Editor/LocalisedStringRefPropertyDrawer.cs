@@ -17,7 +17,6 @@ namespace Framework
 					EditorGUI.BeginProperty(position, label, property);
 
 					SerializedProperty localisationkeyProperty = property.FindPropertyRelative("_localisationKey");
-					SerializedProperty editorTextProperty = property.FindPropertyRelative("_editorText");
 
 					Rect foldoutPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
@@ -55,12 +54,10 @@ namespace Framework
 								if (currentKey == 0)
 								{
 									localisationkeyProperty.stringValue = null;
-									editorTextProperty.stringValue = "";
 								}
 								else
 								{
 									localisationkeyProperty.stringValue = keys[currentKey];
-									editorTextProperty.stringValue = Localisation.GetString(localisationkeyProperty.stringValue);
 								}	
 							}
 						}
@@ -79,34 +76,31 @@ namespace Framework
 
 							if (GUI.Button(addKeyButton, "Add") && !string.IsNullOrEmpty(localisationkeyProperty.stringValue))
 							{
-								//Add new string for new key
-								Localisation.UpdateString(localisationkeyProperty.stringValue, Localisation.GetCurrentLanguage(), editorTextProperty.stringValue);
-
-								string[] keys = Localisation.GetStringKeys();
-								for (int i = 0; i < keys.Length; i++)
+								if (!Localisation.IsKeyInTable(localisationkeyProperty.stringValue))
 								{
-									if (keys[i] == localisationkeyProperty.stringValue)
-									{
-										currentKey = i;
-										break;
-									}
+									Localisation.UpdateString(localisationkeyProperty.stringValue, Localisation.GetCurrentLanguage(), string.Empty);
 								}
 							}
 						}
 
 						//Draw displayed text (can be edited to update localization file)
 						{
-							int numLines = StringUtils.GetNumberOfLines(editorTextProperty.stringValue);
-							float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
-
-							Rect textPosition = new Rect(position.x, yPos, position.width, height);
-							yPos += height;
-
-							EditorGUI.BeginChangeCheck();
-							editorTextProperty.stringValue = EditorGUI.TextArea(textPosition, editorTextProperty.stringValue);
-							if (EditorGUI.EndChangeCheck() && currentKey != 0)
+							//Only display if have a valid key
+							if (!string.IsNullOrEmpty(localisationkeyProperty.stringValue))
 							{
-								Localisation.UpdateString(localisationkeyProperty.stringValue, Localisation.GetCurrentLanguage(), editorTextProperty.stringValue);
+								string text = Localisation.GetString(localisationkeyProperty.stringValue);
+								int numLines = StringUtils.GetNumberOfLines(text);
+								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
+
+								Rect textPosition = new Rect(position.x, yPos, position.width, height);
+								yPos += height;
+
+								EditorGUI.BeginChangeCheck();
+								text = EditorGUI.TextArea(textPosition, text);
+								if (EditorGUI.EndChangeCheck())
+								{
+									Localisation.UpdateString(localisationkeyProperty.stringValue, Localisation.GetCurrentLanguage(), text);
+								}
 							}
 						}
 
@@ -121,8 +115,7 @@ namespace Framework
 					if (property.isExpanded)
 					{
 						SerializedProperty localisationkeyProperty = property.FindPropertyRelative("_localisationKey");
-						SerializedProperty editorTextProperty = property.FindPropertyRelative("_editorText");
-
+						
 						float height = EditorGUIUtility.singleLineHeight * 2;
 
 						int currentKey = 0;
@@ -142,8 +135,8 @@ namespace Framework
 							height += EditorGUIUtility.singleLineHeight * 2;
 						}
 
-
-						int numLines = StringUtils.GetNumberOfLines(editorTextProperty.stringValue);
+						string text = Localisation.GetString(localisationkeyProperty.stringValue);
+						int numLines = StringUtils.GetNumberOfLines(text);
 						height += (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 
 						return height;

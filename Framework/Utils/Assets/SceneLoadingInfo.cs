@@ -31,8 +31,7 @@ namespace Framework
 
 			public SceneLoadingInfo(string scenePath)
 			{
-				_scene = new SceneRef();
-				_scene._scenePath = scenePath;
+				_scene = new SceneRef(scenePath);
 				_additionalLoadingObjects = null;
 			}
 

@@ -13,7 +13,7 @@ namespace Framework
 	namespace Utils
 	{
 		[Serializable]
-		public struct GameObjectRef : ISerializationCallbackReceiver
+		public struct GameObjectRef
 		{
 			#region Public Data
 			public enum eSourceType
@@ -22,12 +22,16 @@ namespace Framework
 				Prefab,
 				Loaded
 			}
-
-			public eSourceType _sourceType;
-			public string _objectName;
-			public SceneRef _scene;
-			public int _sceneObjectID;
-			public AssetRef<GameObject> _prefab;
+			[SerializeField]
+			private eSourceType _sourceType;
+			[SerializeField]
+			private string _objectName;
+			[SerializeField]
+			private SceneRef _scene;
+			[SerializeField]
+			private int _sceneObjectID;
+			[SerializeField]
+			private AssetRef<GameObject> _prefab;
 			#endregion
 
 			#region Private Data
@@ -37,15 +41,7 @@ namespace Framework
 			#region Editor Data
 #if UNITY_EDITOR
 			[NonSerialized]
-			public GameObject _editorGameObject;
-			[NonSerialized]
-			public GameObjectLoader _editorLoaderGameObject;
-			[NonSerialized]
 			public bool _editorFoldout;
-			[NonSerialized]
-			public bool _editorSceneLoaded;
-			[NonSerialized]
-			public bool _editorLoaderIsLoaded;
 #endif
 			#endregion
 
@@ -72,14 +68,22 @@ namespace Framework
 
 			public override string ToString()
 			{
-				GameObject gameObject = GetGameObject();
-
-				if (gameObject != null)
+				if (!string.IsNullOrEmpty(_objectName))
 				{
-					return gameObject.gameObject.name;
+					return _objectName;
 				}
 
 				return typeof(GameObject).Name;
+			}
+
+			public string GetGameObjectName()
+			{
+				return _objectName;
+			}
+
+			public eSourceType GetSourceType()
+			{
+				return _sourceType;
 			}
 
 			public GameObject GetGameObject()
@@ -128,12 +132,7 @@ namespace Framework
 				_sceneObjectID = -1;
 				_prefab = new AssetRef<GameObject>();
 				_sourceObject = null;
-
-				_editorGameObject = null;
-				_editorLoaderGameObject = null;
 				_editorFoldout = true;
-				_editorSceneLoaded = false;
-				_editorLoaderIsLoaded = false;
 			}
 
 			public GameObjectRef(eSourceType sourceType, GameObject gameObject)
@@ -141,8 +140,6 @@ namespace Framework
 				_sourceType = sourceType;
 				_sourceObject = null;
 				_editorFoldout = true;
-				_editorSceneLoaded = false;
-				_editorLoaderIsLoaded = false;
 				_prefab = new AssetRef<GameObject>();
 				_scene = new SceneRef();
 
@@ -161,7 +158,6 @@ namespace Framework
 							if (prefabRoot != null && prefabObj != null)
 							{
 								_objectName = GameObjectUtils.GetChildFullName(gameObject, prefabRoot);
-								_editorGameObject = gameObject;
 
 								string prefabPath = AssetDatabase.GetAssetPath(prefabObj);
 								_prefab = new AssetRef<GameObject>(prefabPath);
@@ -169,12 +165,9 @@ namespace Framework
 							else
 							{
 								_objectName = string.Empty;
-								_editorGameObject = null;
 							}
 
-
 							_sceneObjectID = -1;
-							_editorLoaderGameObject = null;
 						}
 						break;
 					case eSourceType.Loaded:
@@ -183,27 +176,21 @@ namespace Framework
 
 							if (loader != null)
 							{
-								_scene.SetScene(loader.gameObject.scene);
+								_scene = new SceneRef(loader.gameObject.scene);
 								_sceneObjectID = SceneIndexer.GetIdentifier(loader.gameObject);
 
 								if (gameObject != null && GameObjectUtils.IsChildOf(gameObject.transform, loader.transform))
 								{
 									_objectName = GameObjectUtils.GetChildFullName(gameObject, loader.gameObject);
-									_editorGameObject = gameObject;
-									_editorLoaderGameObject = loader;
 								}
 								else
 								{
 									_objectName = null;
-									_editorGameObject = null;
-									_editorLoaderGameObject = null;
 								}
 							}
 							else
 							{
 								_objectName = null;
-								_editorGameObject = null;
-								_editorLoaderGameObject = null;
 								_sceneObjectID = -1;
 							}
 						}
@@ -213,20 +200,15 @@ namespace Framework
 						{
 							if (gameObject != null && gameObject.scene.IsValid())
 							{
-								_editorGameObject = gameObject;
-								_scene = new SceneRef();
-								_scene.SetScene(gameObject.scene);
+								_scene = new SceneRef(gameObject.scene);
 								_objectName = gameObject.name;
 								_sceneObjectID = SceneIndexer.GetIdentifier(gameObject);
 							}
 							else
 							{
 								_objectName = string.Empty;
-								_editorGameObject = null;
 								_sceneObjectID = -1;
 							}
-
-							_editorLoaderGameObject = null;
 						}
 						break;
 
@@ -237,25 +219,12 @@ namespace Framework
 			{
 				return GetGameObjectLoader(scene);
 			}
-#endif
-			#endregion
 
-			#region ISerializationCallbackReceiver
-			public void OnBeforeSerialize()
+			public SceneRef GetSceneRef()
 			{
-
+				return _scene;
 			}
-
-			public void OnAfterDeserialize()
-			{
-#if UNITY_EDITOR
-				if (_scene != null)
-				{
-					_editorLoaderGameObject = GetGameObjectLoader(_scene.GetScene());
-					_editorGameObject = GetGameObject();
-				}
 #endif
-			}
 			#endregion
 
 			#region Private Functions

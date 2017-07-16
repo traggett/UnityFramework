@@ -13,11 +13,8 @@ namespace Framework
 		[ConditionalCategory("")]
 		public class ConditionalMethodReturnsTrue : IConditional
 		{
-			public ComponentMethodRef<bool> _method = new ComponentMethodRef<bool>();
-
-			private Component _component;
-			private MethodInfo _methodInfo;
-
+			public ComponentMethodRef<bool> _method;
+			
 			#region IConditional
 #if UNITY_EDITOR
 			public string GetEditorDescription()
@@ -33,14 +30,12 @@ namespace Framework
 
 			public void OnStartConditionChecking(StateMachine stateMachine)
 			{
-				_component = _method._object.GetComponent();
-				if (_component != null)
-					_methodInfo = _component.GetType().GetMethod(_method._methodName);
+
 			}
 			
 			public bool IsConditionMet(StateMachine stateMachine)
 			{
-				if (_methodInfo != null && (bool)_methodInfo.Invoke(_component, null))
+				if (_method.RunMethod())
 				{
 					return true;
 				}
