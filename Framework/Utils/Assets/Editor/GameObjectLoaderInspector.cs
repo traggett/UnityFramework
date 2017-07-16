@@ -5,6 +5,8 @@ namespace Framework
 {
 	namespace Utils
 	{
+		using Editor;
+
 		[CustomEditor(typeof(GameObjectLoader), true)]
 		public class GameObjectLoaderInspector : UnityEditor.Editor
 		{
@@ -57,7 +59,7 @@ namespace Framework
 
 				EditorGUILayout.BeginHorizontal();
 				{
-					EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(EditorGUIUtility.labelWidth - (EditorGUI.indentLevel * 15.0f) - 4.0f));
+					EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(EditorUtils.GetLabelWidth()));
 
 					if (GUILayout.Button("Load"))
 					{

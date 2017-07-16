@@ -78,6 +78,8 @@ namespace Framework
 								if (GUILayout.Button("Auto", GUILayout.Width(36)))
 								{
 									newKey = localisedString.GetAutoKey();
+									localisedString = new LocalisedStringRef(newKey);
+									dataChanged = true;
 								}
 
 								if (GUILayout.Button("Add", GUILayout.Width(32)) && !string.IsNullOrEmpty(newKey))
@@ -101,7 +103,7 @@ namespace Framework
 							string currentKey = localisedString.GetLocalisationKey();
 
 							//Only display if have a valid key
-							if (!string.IsNullOrEmpty(currentKey))
+							if (!string.IsNullOrEmpty(currentKey) && Localisation.IsKeyInTable(currentKey))
 							{
 								EditorGUI.BeginChangeCheck();
 								string text = EditorGUILayout.TextArea(Localisation.GetString(currentKey));

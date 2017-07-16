@@ -16,7 +16,7 @@ namespace Framework
 
 					EditorGUILayout.BeginHorizontal();
 					{
-						EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(EditorGUIUtility.labelWidth - (EditorGUI.indentLevel * 15.0f) + 11));
+						EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(EditorUtils.GetLabelWidth()));
 
 						if (GUILayout.Button("Rebuild Scene", GUILayout.ExpandWidth(false)))
 						{

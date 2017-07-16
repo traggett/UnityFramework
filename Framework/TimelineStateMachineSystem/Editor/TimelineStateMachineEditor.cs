@@ -153,8 +153,7 @@ namespace Framework
 						}
 
 						//Update state machine name to reflect filename
-						TimelineStateMachine stateMachine = ConvertToTimelineStateMachine();
-						stateMachine._name = System.IO.Path.GetFileNameWithoutExtension(_currentFileName);
+						TimelineStateMachine stateMachine = ConvertToTimelineStateMachine();	
 
 						//Save to file
 						Serializer.ToFile(stateMachine, _currentFileName);
@@ -437,6 +436,8 @@ namespace Framework
 					TimelineStateMachine stateMachine = new TimelineStateMachine();
 					stateMachine._states = states.ToArray();
 					stateMachine._editorNotes = notes.ToArray();
+					stateMachine._name = System.IO.Path.GetFileNameWithoutExtension(_currentFileName);
+
 					return stateMachine;
 				}
 

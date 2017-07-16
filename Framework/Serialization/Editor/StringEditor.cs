@@ -1,8 +1,11 @@
 using UnityEngine;
 using UnityEditor;
 
+
 namespace Framework
 {
+	using Utils.Editor;
+
 	namespace Serialization
 	{
 		[SerializedObjectEditor(typeof(string), "PropertyField")]
@@ -13,7 +16,7 @@ namespace Framework
 			{
 				EditorGUI.BeginChangeCheck();
 				EditorGUILayout.BeginHorizontal();
-				EditorGUILayout.LabelField(label, GUILayout.Width(EditorGUIUtility.labelWidth - (EditorGUI.indentLevel * 15.0f) - 4.0f));
+				EditorGUILayout.LabelField(label, GUILayout.Width(EditorUtils.GetLabelWidth()));
 				obj = EditorGUILayout.TextArea((string)obj);
 				EditorGUILayout.EndHorizontal();
 				if (EditorGUI.EndChangeCheck())

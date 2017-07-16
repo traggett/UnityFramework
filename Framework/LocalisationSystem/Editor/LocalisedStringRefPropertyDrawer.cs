@@ -3,6 +3,7 @@ using UnityEditor;
 
 namespace Framework
 {
+	using Utils.Editor;
 	using Utils;
 
 	namespace LocalisationSystem
@@ -18,16 +19,17 @@ namespace Framework
 
 					SerializedProperty localisationkeyProperty = property.FindPropertyRelative("_localisationKey");
 
-					Rect foldoutPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
+					float yPos = position.y;
+
+					Rect foldoutPosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
 
 					property.isExpanded = EditorGUI.Foldout(foldoutPosition, property.isExpanded, property.displayName + " (Localised String)");
-					
+					yPos += EditorGUIUtility.singleLineHeight;
+
 					if (property.isExpanded)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
-
-						float yPos = position.y;
 
 						//Draw list of possible keys
 						int currentKey = 0;
@@ -43,8 +45,8 @@ namespace Framework
 								}
 							}
 
-							Rect typePosition = new Rect(position.x, position.y + EditorGUIUtility.singleLineHeight, position.width, EditorGUIUtility.singleLineHeight);
-							yPos += typePosition.height;
+							Rect typePosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
+							yPos += EditorGUIUtility.singleLineHeight;
 
 							EditorGUI.BeginChangeCheck();
 							currentKey = EditorGUI.Popup(typePosition, "Localisation Key", currentKey, keys);
@@ -65,14 +67,31 @@ namespace Framework
 						//Draw button for adding new key
 						if (currentKey == 0)
 						{
-							float buttonWidth = 48.0f;
+							float autoKeybuttonWidth = 42.0f;
+							float addButtonWidth = 38.0f;
+							float buttonSpace = 2.0f;
+							float buttonWidth = autoKeybuttonWidth + buttonSpace + addButtonWidth; 
 
 							Rect addKeyText = new Rect(position.x, yPos, position.width - buttonWidth, EditorGUIUtility.singleLineHeight);
 							localisationkeyProperty.stringValue = EditorGUI.DelayedTextField(addKeyText, "New Key", localisationkeyProperty.stringValue);
-							yPos += addKeyText.height;
 
-							Rect addKeyButton = new Rect(position.x + (position.width - buttonWidth), yPos, buttonWidth, EditorGUIUtility.singleLineHeight);
+							Rect autoKeyButton = new Rect(position.x + (position.width - buttonWidth), yPos, autoKeybuttonWidth, EditorGUIUtility.singleLineHeight);
+							Rect addKeyButton = new Rect(position.x + (position.width - buttonWidth) + buttonSpace + autoKeybuttonWidth, yPos, addButtonWidth, EditorGUIUtility.singleLineHeight);
+
 							yPos += addKeyButton.height;
+
+							if (GUI.Button(autoKeyButton, "Auto"))
+							{
+								LocalisedStringRef localisedStringRef = (LocalisedStringRef)EditorUtils.GetTargetObjectOfProperty(property);
+
+								Component component =  property.serializedObject.targetObject as Component;
+								if (component != null)
+								{
+									localisedStringRef.SetAutoNameParentName(component.gameObject.scene.name + "_" + component.gameObject.name);
+								}
+
+								localisationkeyProperty.stringValue = localisedStringRef.GetAutoKey();
+							}
 
 							if (GUI.Button(addKeyButton, "Add") && !string.IsNullOrEmpty(localisationkeyProperty.stringValue))
 							{
@@ -86,13 +105,14 @@ namespace Framework
 						//Draw displayed text (can be edited to update localization file)
 						{
 							//Only display if have a valid key
-							if (!string.IsNullOrEmpty(localisationkeyProperty.stringValue))
+							if (!string.IsNullOrEmpty(localisationkeyProperty.stringValue) && Localisation.IsKeyInTable(localisationkeyProperty.stringValue))
 							{
 								string text = Localisation.GetString(localisationkeyProperty.stringValue);
 								int numLines = StringUtils.GetNumberOfLines(text);
 								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
+								float labelWidth = EditorUtils.GetLabelWidth();
 
-								Rect textPosition = new Rect(position.x, yPos, position.width, height);
+								Rect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth, height);
 								yPos += height;
 
 								EditorGUI.BeginChangeCheck();
@@ -116,28 +136,14 @@ namespace Framework
 					{
 						SerializedProperty localisationkeyProperty = property.FindPropertyRelative("_localisationKey");
 						
-						float height = EditorGUIUtility.singleLineHeight * 2;
+						float height = EditorGUIUtility.singleLineHeight * 3;
 
-						int currentKey = 0;
-						string[] keys = Localisation.GetStringKeys();
-
-						for (int i = 0; i < keys.Length; i++)
+						if (Localisation.IsKeyInTable(localisationkeyProperty.stringValue))
 						{
-							if (keys[i] == localisationkeyProperty.stringValue)
-							{
-								currentKey = i;
-								break;
-							}
-						}
-
-						if (currentKey == 0)
-						{
-							height += EditorGUIUtility.singleLineHeight * 2;
-						}
-
-						string text = Localisation.GetString(localisationkeyProperty.stringValue);
-						int numLines = StringUtils.GetNumberOfLines(text);
-						height += (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
+							string text = Localisation.GetString(localisationkeyProperty.stringValue);
+							int numLines = StringUtils.GetNumberOfLines(text);
+							height += (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
+						}						
 
 						return height;
 					}
