@@ -13,17 +13,8 @@ namespace Framework
 				public override bool RenderObjectProperties(GUIContent label)
 				{
 					EditorGUI.BeginChangeCheck();
-
-					State state = GetEditableObject();
-
-					state._editorDescription = EditorGUILayout.TextArea(state._editorDescription);
-
+					GetEditableObject()._editorDescription = EditorGUILayout.TextArea(GetEditableObject()._editorDescription);
 					return EditorGUI.EndChangeCheck();
-				}
-
-				protected override string GetStateIdLabel()
-				{
-					return "Note";
 				}
 
 				public override Color GetColor(StateMachineEditorStyle style)
@@ -39,6 +30,11 @@ namespace Framework
 				public override GUIStyle GetTextStyle(StateMachineEditorStyle style)
 				{
 					return style._noteTextStyle;
+				}
+
+				public override bool IsCentred()
+				{
+					return false;
 				}
 			}
 		}

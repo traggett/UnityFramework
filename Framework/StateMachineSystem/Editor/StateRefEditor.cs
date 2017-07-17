@@ -118,7 +118,7 @@ namespace Framework
 
 						for (int i = 0; i < states.Length; i++)
 						{
-							stateNames[i + 1] = "State" + states[i]._stateId + " (" + StringUtils.RemoveRichText(StringUtils.GetFirstLine(states[i].GetDescription())) + ")";
+							stateNames[i + 1] = states[i].GetStateIdLabel() + " " + StringUtils.RemoveRichText(StringUtils.GetFirstLine(states[i].GetDescription()));
 
 							if (states[i]._stateId == stateId)
 							{

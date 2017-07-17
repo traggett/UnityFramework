@@ -14,8 +14,8 @@ namespace Framework
 	namespace TimelineStateMachineSystem
 	{
 		[Serializable]
-		[ConditionalCategory("SaveData")]
-		public class ConditionalSaveDataEnum : IConditional, ISerializationCallbackReceiver, ICustomEditorInspector
+		[ConditionCategory("SaveData")]
+		public class ConditionSaveDataEnum : ToggableCondition, ISerializationCallbackReceiver, ICustomEditorInspector
 		{
 			public SaveDataValueRef<Enum> _saveData;
 			public int _value = -1;
@@ -24,12 +24,12 @@ namespace Framework
 			private Enum _enumValue;
 #endif
 
-			#region IConditional
-			public void OnStartConditionChecking(StateMachineComponent stateMachine)
+			#region Conditional
+			public override void OnStartConditionChecking(StateMachineComponent stateMachine)
 			{
 			}
 
-			public bool IsConditionMet(StateMachineComponent stateMachine)
+			public override bool IsConditionMet(StateMachineComponent stateMachine)
 			{
 				object enumNode = _saveData.GetSaveDataValue();
 
@@ -43,11 +43,11 @@ namespace Framework
 				return false;
 			}
 
-			public void OnEndConditionChecking(StateMachineComponent stateMachine)
+			public override void OnEndConditionChecking(StateMachineComponent stateMachine)
 			{
 			}
 #if UNITY_EDITOR
-			public string GetEditorDescription()
+			public override string GetDescription()
 			{
 				if (_enumValue != null)
 				{
@@ -59,9 +59,9 @@ namespace Framework
 				}
 			}
 
-			public bool AllowInverseVariant()
+			public override string GetTakenText()
 			{
-				return true;
+				return GetDescription();
 			}
 #endif
 			#endregion

@@ -10,11 +10,6 @@ namespace Framework
 			[StateCustomEditorGUI(typeof(StateMachineExternalState))]
 			public class StateMachineExternalStateEditorGUI : StateEditorGUI
 			{
-				//need to point at an object's StateRef
-				//So like a object pointer and a fieldinfo?
-				//then can grab it from the object and set it.
-
-
 				public StateMachineEditorLink ExternalStateRef
 				{
 					get
@@ -76,11 +71,6 @@ namespace Framework
 				{
 					StateMachineEditor editor = (StateMachineEditor)GetEditor();
 					editor.LoadExternalState(this);
-				}
-
-				protected override string GetStateIdLabel()
-				{
-					return "External State";
 				}
 
 				public override Color GetColor(StateMachineEditorStyle style)

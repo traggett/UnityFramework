@@ -294,6 +294,14 @@ namespace Framework
 
 			public static string RemoveRichText(string text)
 			{
+				text = text.Replace("<b>", "");
+				text = text.Replace("</b>", "");
+				text = text.Replace("<B>", "");
+				text = text.Replace("</B>", "");
+				text = text.Replace("<i>", "");
+				text = text.Replace("</i>", "");
+				text = text.Replace("<I>", "");
+				text = text.Replace("</I>", "");
 				return text;
 			}
 		}

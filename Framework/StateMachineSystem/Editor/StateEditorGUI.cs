@@ -70,7 +70,7 @@ namespace Framework
 					return GetEditableObject()._stateId;
 				}
 
-				public string GetEditorDescrition()
+				public string GetStateDescription()
 				{
 					return GetEditableObject().GetDescription();
 				}
@@ -80,7 +80,7 @@ namespace Framework
 					Color origBackgroundColor = GUI.backgroundColor;
 					GUI.backgroundColor = Color.clear;
 
-					GUIStyle stateLabelStyle = style._noteTextStyle;
+					GUIStyle stateLabelStyle = style._stateIdTextStyle;
 					GUIStyle labelStyle = GetTextStyle(style);
 
 					GUI.BeginGroup(renderedRect, EditorUtils.ColoredRoundedBoxStyle);
@@ -98,7 +98,7 @@ namespace Framework
 						//Draw label with colored background
 						GUI.backgroundColor = stateColor;
 
-						GUIContent stateId = new GUIContent(GetStateIdLabel());
+						GUIContent stateId = new GUIContent(GetEditableObject().GetStateIdLabel());
 
 						GUI.BeginGroup(labelRect, EditorUtils.ColoredRoundedBoxStyle);
 						{
@@ -133,9 +133,9 @@ namespace Framework
 
 				public void CalcBounds(StateMachineEditorStyle style)
 				{
-					GUIContent stateId = new GUIContent(GetStateIdLabel());
+					GUIContent stateId = new GUIContent(GetEditableObject().GetStateIdLabel());
 
-					GUIStyle stateLabelStyle = style._noteTextStyle;
+					GUIStyle stateLabelStyle = style._stateIdTextStyle;
 					GUIStyle labelStyle = GetTextStyle(style);
 
 					Vector2 stateIdDimensions = stateLabelStyle.CalcSize(stateId);
@@ -149,34 +149,14 @@ namespace Framework
 					_rect.width = areaWidth;
 					_rect.height = areaHeight;
 
-					_rect.x -= areaWidth * 0.5f;
-					_rect.y -= areaHeight * 0.5f;
+					if (IsCentred())
+					{
+						_rect.x -= areaWidth * 0.5f;
+						_rect.y -= areaHeight * 0.5f;
+					}		
 
 					_rect.x = Mathf.Round(_rect.position.x);
 					_rect.y = Mathf.Round(_rect.position.y);
-				}
-
-				public virtual void OnDoubleClick()
-				{
-
-				}
-
-				public virtual Color GetColor(StateMachineEditorStyle style)
-				{
-					if (GetEditableObject()._editorAutoColor)
-						return style._defaultStateColor;
-					else
-						return GetEditableObject()._editorColor;
-				}
-
-				public virtual GUIStyle GetTextStyle(StateMachineEditorStyle style)
-				{
-					return style._stateTextStyle;
-				}
-
-				public virtual float GetBorderSize(bool selected)
-				{
-					return selected ? 2.0f : 1.0f;
 				}
 
 				public static StateEditorGUI CreateStateEditorGUI(StateMachineEditor editor, State state)
@@ -211,29 +191,42 @@ namespace Framework
 				}
 				#endregion
 
-				#region Private Functions
-				private Vector2 GetLabelSize(GUIStyle style)
+				#region Virtual Interface
+				public virtual void OnDoubleClick()
+				{
+
+				}
+
+				public virtual Color GetColor(StateMachineEditorStyle style)
+				{
+					if (GetEditableObject()._editorAutoColor)
+						return style._defaultStateColor;
+					else
+						return GetEditableObject()._editorColor;
+				}
+
+				public virtual GUIStyle GetTextStyle(StateMachineEditorStyle style)
+				{
+					return style._stateTextStyle;
+				}
+
+				public virtual float GetBorderSize(bool selected)
+				{
+					return selected ? 2.0f : 1.0f;
+				}
+
+				public virtual bool IsCentred()
+				{
+					return true;
+				}
+				#endregion
+
+				#region Protected Functions
+				protected Vector2 GetLabelSize(GUIStyle style)
 				{
 					string labelText = GetStateDescription();
 					Vector2 labelSize = style.CalcSize(new GUIContent(labelText));
 					return labelSize;
-				}
-
-				protected virtual string GetStateIdLabel()
-				{
-					return "State" + GetStateId().ToString("00");
-				}
-
-				protected virtual string GetStateDescription()
-				{
-					if (GetEditableObject()._editorAutoDescription)
-					{
-						return GetEditableObject().GetDescription();
-					}
-					else
-					{
-						return GetEditableObject()._editorDescription;
-					}
 				}
 
 				protected bool RenderStateDescriptionField()

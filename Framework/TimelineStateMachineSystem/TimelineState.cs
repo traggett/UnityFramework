@@ -21,38 +21,6 @@ namespace Framework
 
 			#region Public Interface
 #if UNITY_EDITOR
-			public override string GetDescription()
-			{
-				string label = null;
-
-				if (_editorAutoDescription)
-				{
-					foreach (Event evnt in _timeline._events)
-					{
-						string eventDescription = evnt.GetEditorDescription();
-
-						if (!string.IsNullOrEmpty(eventDescription))
-						{
-							if (label == null)
-							{
-								label = eventDescription;
-							}
-							else
-							{
-								label += "\n" + eventDescription;
-							}
-						}
-					}
-				}
-
-				if (string.IsNullOrEmpty(label))
-				{
-					label = _editorDescription;
-				}
-
-				return label;
-			}
-			
 			public override StateMachineEditorLink[] GetEditorLinks()
 			{
 				List<StateMachineEditorLink> stateLinks = new List<StateMachineEditorLink>();
@@ -71,6 +39,35 @@ namespace Framework
 				}
 
 				return stateLinks.ToArray();
+			}
+
+			public override string GetAutoDescription()
+			{
+				string label = null;
+				
+				foreach (Event evnt in _timeline._events)
+				{
+					string eventDescription = evnt.GetEditorDescription();
+
+					if (!string.IsNullOrEmpty(eventDescription))
+					{
+						if (label == null)
+						{
+							label = eventDescription;
+						}
+						else
+						{
+							label += "\n" + eventDescription;
+						}
+					}
+				}
+
+				return label;
+			}
+
+			public override string GetStateIdLabel()
+			{
+				return "Timeline (State" + _stateId.ToString("00") + ")";
 			}
 #endif
 

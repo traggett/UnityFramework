@@ -8,8 +8,8 @@ namespace Framework
 	namespace StateMachineSystem
 	{
 		[Serializable]
-		[ConditionalCategory("Time")]
-		public class ConditionalAfterTime : IConditional
+		[ConditionCategory("Time")]
+		public class ConditionAfterTime : Condition
 		{
 			#region Public Data
 			public float _timeoutMin = 1.0f;
@@ -18,25 +18,25 @@ namespace Framework
 
 			private float _time;
 
-			#region IConditional
+			#region Conditional
 #if UNITY_EDITOR
-			public string GetEditorDescription()
+			public override string GetDescription()
 			{
-				return "After (<b>" + _timeoutMin + "-" + _timeoutMax + "</b>) secs:";
+				return "After (" + _timeoutMin + "-" + _timeoutMax + ") secs";
 			}
 
-			public bool AllowInverseVariant()
+			public override string GetTakenText()
 			{
-				return false;
+				return GetDescription();
 			}
 #endif
 
-			public void OnStartConditionChecking(StateMachineComponent stateMachine)
+			public override void OnStartConditionChecking(StateMachineComponent stateMachine)
 			{
 				_time = Random.Range(_timeoutMin, _timeoutMax);
 			}
 
-			public bool IsConditionMet(StateMachineComponent stateMachine)
+			public override bool IsConditionMet(StateMachineComponent stateMachine)
 			{
 				ITimelineStateTimer timer = TimelineState.GetTimer(stateMachine.gameObject);
 				_time -= timer.GetDeltaTime();
@@ -44,7 +44,7 @@ namespace Framework
 				return _time <= 0.0f;
 			}
 
-			public void OnEndConditionChecking(StateMachineComponent stateMachine)
+			public override void OnEndConditionChecking(StateMachineComponent stateMachine)
 			{
 			}
 			#endregion

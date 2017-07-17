@@ -23,8 +23,8 @@ namespace Framework
 			#region Private Data
 			private StateMachine _stateMachine;
 			private State _state;
-
 #if UNITY_EDITOR
+			//Editor properties
 			[NonSerialized]
 			public bool _editorFoldout;
 			[NonSerialized]
@@ -36,7 +36,7 @@ namespace Framework
 			public static implicit operator string(StateRef property)
 			{
 #if UNITY_EDITOR
-				return property.GetStateName();
+				return StringUtils.RemoveRichText(property.GetStateName());
 #else
 				return property._file;
 #endif

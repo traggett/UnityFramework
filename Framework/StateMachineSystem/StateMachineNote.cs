@@ -14,6 +14,11 @@ namespace Framework
 			{
 				throw new NotImplementedException();
 			}
+
+			public override string GetStateIdLabel()
+			{
+				return "Note";
+			}
 		}
 	}
 }

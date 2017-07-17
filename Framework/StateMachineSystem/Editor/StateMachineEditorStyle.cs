@@ -12,7 +12,8 @@ namespace Framework
 			public sealed class StateMachineEditorStyle
 			{
 				public GUIStyle _titleStyle;
-				public GUIStyle _stateTitleStyle;
+				public GUIStyle _toolbarStyle;
+				public GUIStyle _stateIdTextStyle;
 				public GUIStyle _stateTextStyle;
 				public GUIStyle _externalStateTextStyle;
 				public GUIStyle _linkTextStyle;
@@ -40,8 +41,13 @@ namespace Framework
 					_titleStyle.richText = true;
 					_titleStyle.alignment = TextAnchor.MiddleCenter;
 					
-					_stateTitleStyle = new GUIStyle(EditorStyles.toolbarButton);
-					_stateTitleStyle.richText = true;
+					_toolbarStyle = new GUIStyle(EditorStyles.toolbarButton);
+					_toolbarStyle.richText = true;
+
+					_stateIdTextStyle = new GUIStyle(EditorUtils.TextStyle);
+					_stateIdTextStyle.fontStyle = FontStyle.Italic;
+					_stateIdTextStyle.padding = new RectOffset(4, 4, 1, 1);
+
 					_stateTextStyle = new GUIStyle(EditorUtils.TextStyle);
 					_stateTextStyle.fontStyle = FontStyle.Bold;
 
@@ -54,7 +60,7 @@ namespace Framework
 
 					_noteTextStyle = new GUIStyle(EditorUtils.TextStyle);
 					_noteTextStyle.fontStyle = FontStyle.Italic;
-					_noteTextStyle.padding = new RectOffset(4, 4, 1, 1);
+					_noteTextStyle.padding = new RectOffset(2, 0, 2, 8);
 
 					_defaultStateColor = Color.grey;
 					_linkColor = Color.red;
@@ -62,7 +68,7 @@ namespace Framework
 					_stateBackground = new Color(1.0f, 1.0f, 1.0f, 0.5f);
 					_stateBackgroundSelected = new Color(1.0f, 1.0f, 1.0f, 1.0f);
 					_externalStateColor = new Color(1.0f, 0.73f, 0.0f, 1.0f);
-					_branchingStateColor = new Color(83 / 255f, 144 / 255f, 165 / 255f);
+					_branchingStateColor = new Color(102 / 255f, 129 / 255f, 116 / 255f);
 					_noteColor = new Color(0.93f, 0.92f, 0.78f);
 					_debugCurrentStateColor = new Color(1.0f, 0.7f, 0.18f);
 					_coroutineStateColor = new Color(156 / 255f, 68 / 255f, 68 / 255f);

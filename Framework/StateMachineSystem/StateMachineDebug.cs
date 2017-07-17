@@ -78,8 +78,7 @@ namespace Framework
 
 			public static void OnTimelineStateStoped(StateMachineComponent stateMachine)
 			{
-				if (!stateMachine.IsGoingToBranchingState())
-					_stateMachineMap.Remove(stateMachine.gameObject);
+				_stateMachineMap.Remove(stateMachine.gameObject);
 			}
 		}
 	}

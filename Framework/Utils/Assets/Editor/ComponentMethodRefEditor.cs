@@ -23,7 +23,7 @@ namespace Framework
 
 					if (methodReturnType != null)
 					{
-						MethodInfo genericFieldMethod = typeof(ComponentMethodRefEditor).GetMethod("ComponentMethodRefField", BindingFlags.Static | BindingFlags.NonPublic);
+						MethodInfo genericFieldMethod = typeof(ComponentMethodRefEditor).GetMethod("ComponentMethodRefField", BindingFlags.Static | BindingFlags.Public);
 						MethodInfo typedFieldMethod = genericFieldMethod.MakeGenericMethod(methodReturnType);
 
 						if (typedFieldMethod != null)

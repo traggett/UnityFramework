@@ -372,7 +372,7 @@ namespace Framework
 					StateEditorGUI timeLineGUI = (StateEditorGUI)editorGUI;
 					State newState = Serializer.CreateCopy(timeLineGUI.GetEditableObject());
 
-					newState._editorDescription = timeLineGUI.GetEditorDescrition() + " (Copy)";
+					newState._editorDescription = timeLineGUI.GetStateDescription() + " (Copy)";
 					newState._stateId = GenerateNewStateId();
 
 					return newState;
@@ -403,9 +403,10 @@ namespace Framework
 
 				protected override void AddContextMenu(GenericMenu menu)
 				{
-					menu.AddItem(new GUIContent("Create New State"), false, AddNewStateMenuCallback);
-					menu.AddItem(new GUIContent("Create New Branching State"), false, AddNewBranchMenuCallback);
-					menu.AddItem(new GUIContent("Add Note"), false, AddNewNoteMenuCallback);
+					menu.AddItem(new GUIContent("Add New Timeline State"), false, AddNewStateMenuCallback, typeof(TimelineState));
+					menu.AddItem(new GUIContent("Add New Conditional State"), false, AddNewStateMenuCallback, typeof(ConditionalState));
+					menu.AddItem(new GUIContent("Add New Coroutine State"), false, AddNewStateMenuCallback, typeof(CoroutineState));
+					menu.AddItem(new GUIContent("Add Note"), false, AddNewStateMenuCallback, typeof(StateMachineNote));
 				}
 				#endregion
 
@@ -593,8 +594,8 @@ namespace Framework
 								{
 									EditorGUILayout.Space();
 
-									string stateText = "state" + ((int)(_editedState.GetStateId())).ToString("000") + " - <b>" + StringUtils.GetFirstLine(_editedState.GetEditorDescrition()) + "</b>";
-									GUILayout.Toggle(true, stateText, _style._stateTitleStyle);
+									string stateText = "state" + ((int)(_editedState.GetStateId())).ToString("000") + " - <b>" + StringUtils.GetFirstLine(_editedState.GetStateDescription()) + "</b>";
+									GUILayout.Toggle(true, stateText, _style._toolbarStyle);
 
 									GUILayout.FlexibleSpace();
 								}
@@ -843,20 +844,11 @@ namespace Framework
 					state.OnDoubleClick();
 				}
 
-				private void AddNewStateMenuCallback()
-				{
-					CreateAndAddNewObject(typeof(TimelineState));
+				private void AddNewStateMenuCallback(object type)
+				{				 
+					CreateAndAddNewObject((Type)type);
 				}
-
-				private void AddNewBranchMenuCallback()
-				{
-					CreateAndAddNewObject(typeof(BranchingState));
-				}
-
-				private void AddNewNoteMenuCallback()
-				{
-					CreateAndAddNewObject(typeof(StateMachineNote));
-				}
+				
 #if DEBUG
 				private void UpdateInPlayMode()
 				{

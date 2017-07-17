@@ -2,9 +2,7 @@ using UnityEngine;
 
 namespace Framework
 {
-	using StateMachineSystem;
-
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[RequireComponent(typeof(Collider))]
 		public class TriggerMsgSender : MonoBehaviour
@@ -19,7 +17,7 @@ namespace Framework
 
 			void OnTriggerEnter(Collider collider)
 			{
-				StateMachineComponent.TriggerMessage(new MsgOnTriggerEnter(_collider, collider));
+				StateMachine.TriggerMessage(new MsgOnTriggerEnter(_collider, collider));
 			}
 		}
 	}

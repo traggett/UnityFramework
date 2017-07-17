@@ -2,9 +2,7 @@ using UnityEngine;
 
 namespace Framework
 {
-	using StateMachineSystem;
-
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		public class MsgOnTriggerEnter : IStateMachineMsg
 		{

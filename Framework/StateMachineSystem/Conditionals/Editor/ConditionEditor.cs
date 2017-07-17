@@ -22,59 +22,54 @@ namespace Framework
 				#region SerializedObjectEditor
 				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
 				{
-					Condition condition = (Condition)obj;
+					Condition currentConditional = (Condition)obj;
+					Condition conditional = DrawAddConditionalDropDown("Condition", currentConditional);
 
-					IConditional conditional = DrawAddConditionalDropDown("Condition", condition._conditional);
-
-					if (condition._conditional != conditional)
+					if (conditional != currentConditional)
 					{
-						condition._conditional = conditional;
 						dataChanged = true;
 					}
 
 					int origIndent = EditorGUI.indentLevel;
 					EditorGUI.indentLevel++;
 
-					if (condition._conditional != null)
+					if (conditional != null)
 					{
-						if (condition._conditional.AllowInverseVariant())
+						if (conditional is ToggableCondition)
 						{
+							ToggableCondition boolConditional = (ToggableCondition)conditional;
+
 							EditorGUI.BeginChangeCheck();
-							condition._not = EditorGUILayout.Toggle("Not", condition._not);
+							boolConditional._not = EditorGUILayout.Toggle("Not", boolConditional._not);
 							if (EditorGUI.EndChangeCheck())
 							{
 								dataChanged = true;
 							}
-						}
-						else if (condition._not)
-						{
-							condition._not = false;
-							dataChanged = true;
-						}
+						}						
 
-						bool foldOut = EditorGUILayout.Foldout(condition._editorFoldout, "Properties");
+						bool foldOut = EditorGUILayout.Foldout(conditional._editorFoldout, "Properties");
 
-						if (foldOut != condition._editorFoldout)
+						if (foldOut != conditional._editorFoldout)
 						{
-							condition._editorFoldout = foldOut;
+							conditional._editorFoldout = foldOut;
 							dataChanged = true;
 						}
 						
-						if (condition._editorFoldout)
+						if (conditional._editorFoldout)
 						{
 							EditorGUI.indentLevel++;
-							condition._conditional = SerializationEditorGUILayout.ObjectField(condition._conditional, "", ref dataChanged);
+							conditional = SerializationEditorGUILayout.ObjectField(conditional, "", ref dataChanged);
 							EditorGUI.indentLevel--;
 						}
 					}
 
 					EditorGUI.indentLevel = origIndent;
 
-					return condition;
+					return conditional;
 				}
 				#endregion
 
-				private static IConditional DrawAddConditionalDropDown(string label, IConditional obj)
+				private static Condition DrawAddConditionalDropDown(string label, Condition obj)
 				{
 					BuildConditionalMap();
 
@@ -97,7 +92,7 @@ namespace Framework
 					if (currIndex != index)
 					{
 						if (index > 0)
-							obj = Activator.CreateInstance(_conditionals[index]) as IConditional;
+							obj = Activator.CreateInstance(_conditionals[index]) as Condition;
 						else
 							obj = null;
 					}
@@ -115,11 +110,11 @@ namespace Framework
 						conditionals.Add(null);
 						conditionalNames.Add("<none>");
 
-						Type[] types = SystemUtils.GetAllSubTypes(typeof(IConditional));
+						Type[] types = SystemUtils.GetAllSubTypes(typeof(Condition));
 
 						foreach (Type type in types)
 						{
-							ConditionalCategoryAttribute conditionalAttribute = SystemUtils.GetAttribute<ConditionalCategoryAttribute>(type);
+							ConditionCategoryAttribute conditionalAttribute = SystemUtils.GetAttribute<ConditionCategoryAttribute>(type);
 
 							string category;
 

@@ -6,9 +6,11 @@ namespace Framework
 	{
 		[Serializable]
 		[ConditionCategory("")]
-		public class ConditionalOR : Condition
+		public class ConditionAND : Condition
 		{
-			public Condition[] _conditions;
+			#region Public Data
+			public Condition[] _conditions = new Condition[0];
+			#endregion
 
 			#region Conditional
 #if UNITY_EDITOR
@@ -24,7 +26,7 @@ namespace Framework
 					{
 						if (_conditions[i] != null)
 						{
-							description += ") || (";
+							description += ") && (";
 							description += _conditions[i].GetDescription();
 						}
 					}
@@ -33,7 +35,7 @@ namespace Framework
 				}
 				else
 				{
-					description = "(condition) || (condition)";
+					description = "(condition) && (condition)";
 				}
 
 				return description;

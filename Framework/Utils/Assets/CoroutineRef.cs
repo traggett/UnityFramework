@@ -13,6 +13,11 @@ namespace Framework
 			[SerializeField]
 			private ComponentMethodRef<IEnumerator> _methodRef;
 
+			public static implicit operator string(CoroutineRef property)
+			{
+				return property._methodRef;
+			}
+
 			public IEnumerator RunCoroutine()
 			{
 				MonoBehaviour component = _methodRef.GetComponentRef().GetComponent() as MonoBehaviour;

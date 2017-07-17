@@ -2,7 +2,7 @@ namespace Framework
 {
 	namespace StateMachineSystem
 	{
-		public abstract class BranchingBackgroundLogic
+		public abstract class ConditionalStateBackgroundLogic
 		{
 			#region Virtual Interface
 			public abstract void OnLogicStarted(StateMachineComponent stateMachine);

@@ -1,7 +1,9 @@
+using UnityEngine;
+
 namespace Framework
 {
 	using StateMachineSystem.Editor;
-	using UnityEngine;
+	using Event = TimelineSystem.Event;
 
 	namespace TimelineStateMachineSystem
 	{
@@ -10,16 +12,11 @@ namespace Framework
 			[StateCustomEditorGUI(typeof(TimelineState))]
 			public class TimeLineStateEditorGUI : StateEditorGUI
 			{
-				#region Public Interface			
+				#region StateEditorGUI		
 				public override void OnDoubleClick()
 				{
 					StateMachineEditor editor = (StateMachineEditor)GetEditor();
 					editor.SwitchToTimelineStateView(GetStateId());
-				}
-
-				protected override string GetStateIdLabel()
-				{
-					return "Timeline (State" + GetStateId().ToString("00") +")";
 				}
 
 				public override bool RenderObjectProperties(GUIContent label)
@@ -29,7 +26,7 @@ namespace Framework
 					dataChanged |= RenderStateDescriptionField();
 					dataChanged |= RenderStateColorField();
 
-					if (GUILayout.Button("Edit"))
+					if (GUILayout.Button("Edit Timeline"))
 					{
 						StateMachineEditor timelineStateMachineEditor = (StateMachineEditor)GetEditor();
 						timelineStateMachineEditor.SwitchToTimelineStateView(GetEditableObject()._stateId);

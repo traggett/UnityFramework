@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 
 using UnityEngine;
 
@@ -19,9 +18,6 @@ namespace Framework
 			private eState _state = eState.NotRunning;
 			private IEnumerator _current;
 			private IEnumerator _next;
-
-			private static List<IStateMachineMsg> _messages = new List<IStateMachineMsg>();
-			private static List<IStateMachineMsg> _messagesToAdd = new List<IStateMachineMsg>();
 			#endregion
 
 			#region Public Interface
@@ -36,10 +32,6 @@ namespace Framework
 				{
 					_next = state;
 				}
-
-#if DEBUG
-				_debugIsGoingToBranchingState = false;
-#endif
 			}
 
 			public void Stop()
@@ -72,42 +64,6 @@ namespace Framework
 			{
 				return _state == eState.Running;
 			}
-
-			#region Messaging
-			public static void TriggerMessage(IStateMachineMsg msg)
-			{
-				_messagesToAdd.Add(msg);
-			}
-
-			public static List<IStateMachineMsg> GetMessages()
-			{
-				return _messages;
-			}
-
-			public static void UseMessage(IStateMachineMsg msg)
-			{
-				_messages.Remove(msg);
-			}
-
-			public static void ClearMessages()
-			{
-				_messages.Clear();
-				_messages.AddRange(_messagesToAdd);
-				_messagesToAdd.Clear();
-			}
-			#endregion
-
-			#region Branching
-			public void GoToBranchingState(params IBranch[] branches)
-			{
-				GoToState(RunBranchingState(branches));
-
-#if DEBUG
-				_debugIsGoingToBranchingState = true;
-#endif
-			}
-			#endregion
-
 			#endregion
 
 			#region Private Functions
@@ -142,51 +98,7 @@ namespace Framework
 
 				_state = eState.NotRunning;
 			}
-
-			private IEnumerator RunBranchingState(params IBranch[] branches)
-			{
-				foreach (IBranch branch in branches)
-				{
-					branch.OnBranchingStarted(this);
-				}
-
-				bool branchTaken = false;
-
-				while (!branchTaken)
-				{
-					foreach (IBranch branch in branches)
-					{
-						if (branch.ShouldBranch(this))
-						{
-							IEnumerator goToState = branch.GetGoToState(this);
-							if (goToState != null)
-							{
-								GoToState(goToState);
-							}
-
-							branchTaken = true;
-							break;
-						}
-					}
-
-					yield return null;
-				}
-
-				foreach (IBranch branch in branches)
-				{
-					branch.OnBranchingFinished(this);
-				}
-			}
 			#endregion
-
-#if DEBUG
-			private bool _debugIsGoingToBranchingState;
-
-			public bool IsGoingToBranchingState()
-			{
-				return _debugIsGoingToBranchingState;
-			}
-#endif
 		}
 	}
 }

@@ -5,13 +5,13 @@ namespace Framework
 	namespace StateMachineSystem
 	{
 		[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-		public sealed class ConditionalCategoryAttribute : Attribute
+		public sealed class ConditionCategoryAttribute : Attribute
 		{
 #if UNITY_EDITOR
 			public readonly string Category;
 #endif
 
-			public ConditionalCategoryAttribute(string category)
+			public ConditionCategoryAttribute(string category)
 			{
 #if UNITY_EDITOR
 				Category = category;
