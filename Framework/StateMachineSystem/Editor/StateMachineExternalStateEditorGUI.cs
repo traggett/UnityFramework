@@ -1,17 +1,21 @@
+using UnityEditor;
+using UnityEngine;
+
 namespace Framework
 {
-	using StateMachineSystem.Editor;
-	using UnityEditor;
-	using UnityEngine;
-
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		namespace Editor
 		{
 			[StateCustomEditorGUI(typeof(StateMachineExternalState))]
 			public class StateMachineExternalStateEditorGUI : StateEditorGUI
 			{
-				public StateRef ExternalStateRef
+				//need to point at an object's StateRef
+				//So like a object pointer and a fieldinfo?
+				//then can grab it from the object and set it.
+
+
+				public StateMachineEditorLink ExternalStateRef
 				{
 					get
 					{
@@ -39,16 +43,16 @@ namespace Framework
 
 				public override void SetPosition(Vector2 position)
 				{
-					StateRef externalStateRef = ExternalStateRef;
+					StateRef externalStateRef = ExternalStateRef.GetStateRef();
 					externalStateRef._editorExternalLinkPosition = position;
-					ExternalStateRef = externalStateRef;
+					ExternalStateRef.SetStateRef(externalStateRef);
 
 					MarkAsDirty(true);
 				}
 
 				public override Vector2 GetPosition()
 				{
-					return ExternalStateRef._editorExternalLinkPosition;
+					return ExternalStateRef.GetStateRef()._editorExternalLinkPosition;
 				}
 
 				public override bool RenderObjectProperties(GUIContent label)

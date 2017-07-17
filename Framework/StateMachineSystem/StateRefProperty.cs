@@ -7,9 +7,7 @@ using UnityEditor;
 #endif
 namespace Framework
 {
-	using StateMachineSystem;
-
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		public struct StateRefProperty

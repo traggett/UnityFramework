@@ -9,6 +9,7 @@ namespace Framework
 	using Utils;
 	using Utils.Editor;
 	using Serialization;
+	using StateMachineSystem;
 
 	namespace TimelineStateMachineSystem
 	{

@@ -64,10 +64,7 @@ namespace Framework
 				for (int i=0; i<_branches.Length; i++)
 				{
 					Branch branch = _branches[i];
-
-					links[i] = new StateMachineEditorLink();
-					links[i]._timeline = branch._goToState;
-					links[i]._description = branch.GetDescription();
+					links[i] = new StateMachineEditorLink(this, "goToState", branch.GetDescription());
 				}
 
 				return links;

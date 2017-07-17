@@ -1,16 +1,14 @@
 using System;
+using System.Collections;
 
 using UnityEngine;
-
 
 namespace Framework
 {
 	using Utils;
 	using Serialization;
-	using System.Collections;
-	using StateMachineSystem;
-
-	namespace TimelineStateMachineSystem
+	
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		public struct StateRef

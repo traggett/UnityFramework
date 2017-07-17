@@ -8,12 +8,11 @@ using UnityEditor;
 
 namespace Framework
 {
-	using StateMachineSystem;
+	using Serialization;
 	using LocalisationSystem;
 	using Utils;
-	using Serialization;
 
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		public class StateMachine : ISerializationCallbackReceiver

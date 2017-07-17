@@ -3,9 +3,7 @@ using UnityEngine;
 
 namespace Framework
 {
-	using StateMachineSystem.Editor;
-
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		namespace Editor
 		{

@@ -6,15 +6,15 @@ using UnityEditor;
 
 namespace Framework
 {
+	using Serialization;
 	using TimelineSystem;
 	using TimelineSystem.Editor;
-	using StateMachineSystem;
+	using TimelineStateMachineSystem;
 	using LocalisationSystem;
 	using Utils;
 	using Utils.Editor;
-	using Serialization;
 
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		namespace Editor
 		{
@@ -249,7 +249,8 @@ namespace Framework
 				{
 					if (ShowOnLoadSaveChangesDialog())
 					{
-						string fileName = AssetDatabase.GetAssetPath(state.ExternalStateRef._file._editorAsset);
+						StateRef stateRef = state.ExternalStateRef.GetStateRef();
+						string fileName = AssetDatabase.GetAssetPath(stateRef._file._editorAsset);
 						LoadFile(fileName);
 					}
 				}
@@ -680,23 +681,31 @@ namespace Framework
 				{
 					StateMachineExternalStateEditorGUI externalState = null;
 
+					StateRef stateRef = link.GetStateRef();
+
 					//Find external link for this state
 					foreach (StateEditorGUI state in _editableObjects)
 					{
 						StateMachineExternalStateEditorGUI extState = state as StateMachineExternalStateEditorGUI;
 
-						if (extState != null && extState.ExternalStateRef._stateId == link._timeline._stateId && extState.ExternalStateRef._file.GetFileGUID() == link._timeline._file.GetFileGUID())
-						{
-							externalState = extState;
-							break;
+						if (extState != null)
+						{						
+							StateRef extStateRef = extState.ExternalStateRef.GetStateRef();
+
+							if (extStateRef._stateId == stateRef._stateId && extStateRef._file.GetFileGUID() == stateRef._file.GetFileGUID())
+							{
+								externalState = extState;
+								break;
+							}
 						}
+						
 					}
 
 					//If none exists, create a new one
 					if (externalState == null)
 					{
 						externalState = (StateMachineExternalStateEditorGUI)AddNewObject(new StateMachineExternalState());
-						externalState.ExternalStateRef = link._timeline;
+						externalState.ExternalStateRef = link;
 						_editableObjects.Add(externalState);
 					}
 
@@ -710,7 +719,7 @@ namespace Framework
 						externalState.ExternalHasRendered = true;
 					}
 
-					RenderLink(link._description, fromState, externalState, edgeFraction);
+					RenderLink(link.GetDescription(), fromState, externalState, edgeFraction);
 				}
 
 				private void RenderLink(string description, StateEditorGUI fromState, StateEditorGUI toState, float edgeFraction)
@@ -755,13 +764,15 @@ namespace Framework
 
 						foreach (StateMachineEditorLink link in links)
 						{
-							if (link._timeline.IsInternal())
+							StateRef stateRef = link.GetStateRef();
+
+							if (stateRef.IsInternal())
 							{
-								StateEditorGUI toState = FindStateForLink(link);
+								StateEditorGUI toState = FindStateForLink(stateRef);
 
 								if (toState != null)
 								{
-									RenderLink(link._description, state, toState, current);
+									RenderLink(link.GetDescription(), state, toState, current);
 								}
 							}
 							else
@@ -786,11 +797,11 @@ namespace Framework
 					return stateId;
 				}
 
-				private StateEditorGUI FindStateForLink(StateMachineEditorLink link)
+				private StateEditorGUI FindStateForLink(StateRef link)
 				{
 					foreach (StateEditorGUI state in _editableObjects)
 					{
-						if (link._timeline.GetStateID() == state.GetStateId())
+						if (link.GetStateID() == state.GetStateId())
 						{
 							return state;
 						}

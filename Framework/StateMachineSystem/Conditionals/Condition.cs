@@ -2,7 +2,7 @@ using System;
 
 namespace Framework
 {
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		public struct Condition

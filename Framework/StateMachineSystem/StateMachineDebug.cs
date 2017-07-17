@@ -5,9 +5,7 @@ using System.Collections.Generic;
 
 namespace Framework
 {
-	using StateMachineSystem;
-	
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		public static class StateMachineDebug
 		{ 
@@ -68,7 +66,7 @@ namespace Framework
 				}
 			}
 
-			public static void OnTimelineStateTimeProgress(StateMachineComponent stateMachine, TimelineState intialState, float time)
+			public static void OnTimelineStateTimeProgress(StateMachineComponent stateMachine, State intialState, float time)
 			{
 				StateInfo stateInfo;
 

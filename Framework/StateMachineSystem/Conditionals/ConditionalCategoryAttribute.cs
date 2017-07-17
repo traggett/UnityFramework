@@ -2,7 +2,7 @@ using System;
 
 namespace Framework
 {
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
 		public sealed class ConditionalCategoryAttribute : Attribute

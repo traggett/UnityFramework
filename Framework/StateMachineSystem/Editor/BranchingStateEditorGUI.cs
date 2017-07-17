@@ -10,7 +10,7 @@ namespace Framework
 	using Serialization;
 	using StateMachineSystem.Editor;
 
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		namespace Editor
 		{
@@ -54,19 +54,22 @@ namespace Framework
 					EditorGUILayout.LabelField("Branches:", EditorStyles.boldLabel);
 					EditorGUILayout.Separator();
 
-					for (int i = 0; i < branchState._branches.Length; i++)
+					if (branchState._branches != null)
 					{
-						GUI.backgroundColor = _branchLabelColor;
-						EditorGUILayout.LabelField(GetBranchLabel(branchState._branches[i], i == 0), EditorUtils.TextTitleStyle, GUILayout.Height(24.0f));
-						GUI.backgroundColor = orig;
-
-						//Draw branch properties
-						SerializationEditorGUILayout.ObjectField(branchState._branches[i], string.Empty, ref dataChanged);
-
-						if (DrawEditBranchButtons(i))
+						for (int i = 0; i < branchState._branches.Length; i++)
 						{
-							dataChanged = true;
-							break;
+							GUI.backgroundColor = _branchLabelColor;
+							EditorGUILayout.LabelField(GetBranchLabel(branchState._branches[i], i == 0), EditorUtils.TextTitleStyle, GUILayout.Height(24.0f));
+							GUI.backgroundColor = orig;
+
+							//Draw branch properties
+							SerializationEditorGUILayout.ObjectField(branchState._branches[i], string.Empty, ref dataChanged);
+
+							if (DrawEditBranchButtons(i))
+							{
+								dataChanged = true;
+								break;
+							}
 						}
 					}
 

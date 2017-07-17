@@ -1,13 +1,11 @@
-using UnityEngine;
+
 using System;
-using System.Reflection;
 
 namespace Framework
 {
-	using StateMachineSystem;
 	using Utils;
 
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		[ConditionalCategory("")]

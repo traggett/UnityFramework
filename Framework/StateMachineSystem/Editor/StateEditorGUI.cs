@@ -1,16 +1,16 @@
+using System;
+using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEditor;
 
 namespace Framework
 {
-	using Utils;
 	using Serialization;
-	using System;
-	using System.Collections.Generic;
+	using Utils;
 	using Utils.Editor;
-	using StateMachineSystem.Editor;
 
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		namespace Editor
 		{

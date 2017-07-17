@@ -3,9 +3,7 @@ using System.Collections;
 
 namespace Framework
 {
-	using StateMachineSystem;
-	
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		public sealed class Branch : IBranch
@@ -47,8 +45,7 @@ namespace Framework
 
 			public IEnumerator GetGoToState(StateMachineComponent stateMachine)
 			{
-				State state = _goToState.GetState(stateMachine.gameObject);
-				return state.PerformState(stateMachine);
+				return _goToState.PerformState(stateMachine);
 			}
 
 			public void OnBranchingStarted(StateMachineComponent stateMachine)

@@ -94,18 +94,19 @@ namespace Framework
 			{
 				StateMachineEditorLink[] links = new StateMachineEditorLink[1];
 
-				links[0] = new StateMachineEditorLink();
-				links[0]._timeline = _state;
+				string description = null;
 
 				switch (_preStateType)
 				{
 					case eStateType.Coroutine:
-						links[0]._description = "Run " + _preCoroutine + " then";
+						description = "Run " + _preCoroutine + " then";
 						break;
 					case eStateType.Timeline:
-						links[0]._description = "Run " + _preState + " then";
+						description = "Run " + _preState + " then";
 						break;
 				}
+
+				links[0] = new StateMachineEditorLink(this, "state", description);
 
 				return links;
 			}

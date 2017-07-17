@@ -1,12 +1,11 @@
-using UnityEngine;
 using System;
 using Random = UnityEngine.Random;
 
 namespace Framework
 {
-	using StateMachineSystem;
+	using TimelineStateMachineSystem;
 
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		[ConditionalCategory("Time")]

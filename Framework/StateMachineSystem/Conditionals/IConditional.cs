@@ -1,8 +1,6 @@
 namespace Framework
 {
-	using StateMachineSystem;
-
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		public interface IConditional
 		{

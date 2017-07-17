@@ -5,7 +5,7 @@ namespace Framework
 {
 	using Utils.Editor;
 
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		namespace Editor
 		{

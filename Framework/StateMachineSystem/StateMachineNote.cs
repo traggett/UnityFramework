@@ -1,11 +1,11 @@
 #if UNITY_EDITOR
+
 using System;
 using System.Collections;
-using Framework.StateMachineSystem;
 
 namespace Framework
 {
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		public class StateMachineNote : State

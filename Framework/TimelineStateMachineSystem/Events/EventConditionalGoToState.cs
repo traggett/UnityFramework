@@ -121,11 +121,7 @@ namespace Framework
 			public StateMachineEditorLink[] GetEditorLinks()
 			{
 				StateMachineEditorLink[] links = new StateMachineEditorLink[1];
-
-				links[0] = new StateMachineEditorLink();
-				links[0]._timeline = _state;
-				links[0]._description = (_condition != null ? _condition.GetEditorDescription() : "...");
-
+				links[0] = new StateMachineEditorLink(this, "state", (_condition != null ? _condition.GetEditorDescription() : "..."));
 				return links;
 			}
 #endif

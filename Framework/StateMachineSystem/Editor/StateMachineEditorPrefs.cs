@@ -2,10 +2,9 @@ using System;
 
 namespace Framework
 {
-	using StateMachineSystem;
 	using Utils;
 
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		namespace Editor
 		{

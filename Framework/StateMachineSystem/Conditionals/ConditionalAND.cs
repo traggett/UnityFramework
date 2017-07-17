@@ -2,9 +2,7 @@ using System;
 
 namespace Framework
 {
-	using StateMachineSystem;
-	
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		[ConditionalCategory("")]

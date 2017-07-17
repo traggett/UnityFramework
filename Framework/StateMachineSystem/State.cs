@@ -5,9 +5,7 @@ using System.Collections;
 
 namespace Framework
 {
-	using StateMachineSystem;
-	
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		public abstract class State

@@ -2,9 +2,7 @@ using UnityEngine;
 
 namespace Framework
 {
-	using StateMachineSystem;
-
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[RequireComponent(typeof(StateMachineComponent))]
 		public class StateMachineStarter : MonoBehaviour

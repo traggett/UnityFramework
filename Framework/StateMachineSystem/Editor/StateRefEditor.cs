@@ -7,7 +7,7 @@ namespace Framework
 	using Utils;
 	using Serialization;
 
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		namespace Editor
 		{

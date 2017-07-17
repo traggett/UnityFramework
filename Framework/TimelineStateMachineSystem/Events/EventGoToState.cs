@@ -98,9 +98,7 @@ namespace Framework
 						break;
 					case eStateType.Timeline:
 						links = new StateMachineEditorLink[1];
-						links[0] = new StateMachineEditorLink();
-						links[0]._timeline = _state;
-						links[0]._description = "Go To";
+						links[0] = new StateMachineEditorLink(this, "state", "Go To");
 						break;
 				}
 

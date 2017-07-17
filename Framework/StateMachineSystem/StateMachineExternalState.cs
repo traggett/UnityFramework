@@ -1,16 +1,17 @@
 #if UNITY_EDITOR
+
 using System;
 using System.Collections;
-using Framework.StateMachineSystem;
 
 namespace Framework
 {
-	namespace TimelineStateMachineSystem
+	namespace StateMachineSystem
 	{
 		[Serializable]
 		public class StateMachineExternalState : State
 		{
-			public StateRef _externalStateRef;
+			[NonSerialized]
+			public StateMachineEditorLink _externalStateRef;
 
 			public override IEnumerator PerformState(StateMachineComponent stateMachine)
 			{
@@ -19,7 +20,8 @@ namespace Framework
 
 			public override string GetDescription()
 			{
-				return (_externalStateRef._file._editorAsset != null ? _externalStateRef._file._editorAsset.name : null);
+				StateRef stateRef = _externalStateRef.GetStateRef();
+				return (stateRef._file._editorAsset != null ? stateRef._file._editorAsset.name : null);
 			}
 		}
 	}

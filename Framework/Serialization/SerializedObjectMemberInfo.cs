@@ -1,11 +1,13 @@
-using Framework.Utils;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+
 using UnityEngine;
 
 namespace Framework
 {
+	using Utils;
+
 	namespace Serialization
 	{
 		public struct SerializedObjectMemberInfo
