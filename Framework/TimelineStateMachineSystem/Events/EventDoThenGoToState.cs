@@ -12,7 +12,7 @@ namespace Framework
 	{
 		[Serializable]
 		[EventCategory("Flow")]
-		public class EventDoThenGoToState : Event, IStateMachineEvent
+		public class EventDoThenGoToState : Event, ITimelineStateEvent
 		{
 			public enum eStateType
 			{
@@ -21,15 +21,15 @@ namespace Framework
 			}
 			#region Public Data
 			public eStateType _stateType = eStateType.Timeline;
-			public TimelineStateRef _state;
+			public StateRef _state;
 			public CoroutineRef _coroutine = new CoroutineRef();
 			public eStateType _preStateType = eStateType.Timeline;
-			public TimelineStateRef _preState;
+			public StateRef _preState;
 			public CoroutineRef _preCoroutine = new CoroutineRef();
 			#endregion
 
 			#region IStateMachineSystemEvent
-			public eEventTriggerReturn Trigger(StateMachine stateMachine)
+			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine)
 			{
 				switch (_preStateType)
 				{
@@ -72,12 +72,12 @@ namespace Framework
 				return eEventTriggerReturn.EventFinishedExitState;
 			}
 
-			public eEventTriggerReturn Update(StateMachine stateMachine, float eventTime)
+			public eEventTriggerReturn Update(StateMachineComponent stateMachine, float eventTime)
 			{
 				return eEventTriggerReturn.EventOngoing;
 			}
 
-			public void End(StateMachine stateMachine) { }
+			public void End(StateMachineComponent stateMachine) { }
 
 #if UNITY_EDITOR
 			public override bool EndsTimeline()
@@ -90,11 +90,11 @@ namespace Framework
 				return new Color(217.0f / 255.0f, 80.0f / 255.0f, 58.0f / 255.0f);
 			}
 
-			public EditorStateLink[] GetEditorLinks()
+			public StateMachineEditorLink[] GetEditorLinks()
 			{
-				EditorStateLink[] links = new EditorStateLink[1];
+				StateMachineEditorLink[] links = new StateMachineEditorLink[1];
 
-				links[0] = new EditorStateLink();
+				links[0] = new StateMachineEditorLink();
 				links[0]._timeline = _state;
 
 				switch (_preStateType)
@@ -148,7 +148,7 @@ namespace Framework
 #endif
 			#endregion
 
-			private static IEnumerator DoStateThenGoTo(StateMachine stateMachine, CoroutineRef coroutine, CoroutineRef goToState)
+			private static IEnumerator DoStateThenGoTo(StateMachineComponent stateMachine, CoroutineRef coroutine, CoroutineRef goToState)
 			{
 				yield return stateMachine.StartCoroutine(coroutine.RunCoroutine());
 
@@ -157,29 +157,29 @@ namespace Framework
 				yield break;
 			}
 
-			private static IEnumerator DoStateThenGoTo(StateMachine stateMachine, CoroutineRef coroutine, TimelineStateRef goToState)
+			private static IEnumerator DoStateThenGoTo(StateMachineComponent stateMachine, CoroutineRef coroutine, StateRef goToState)
 			{
 				yield return stateMachine.StartCoroutine(coroutine.RunCoroutine());
 				
-				stateMachine.GoToState(TimelineStateMachine.Run(stateMachine, goToState));
+				stateMachine.GoToState(StateMachine.Run(stateMachine, goToState));
 
 				yield break;
 			}
 
-			private static IEnumerator DoStateThenGoTo(StateMachine stateMachine, TimelineStateRef TimelineState, CoroutineRef goToState)
+			private static IEnumerator DoStateThenGoTo(StateMachineComponent stateMachine, StateRef TimelineState, CoroutineRef goToState)
 			{
-				yield return stateMachine.StartCoroutine(TimelineStateMachine.Run(stateMachine, TimelineState));
+				yield return stateMachine.StartCoroutine(StateMachine.Run(stateMachine, TimelineState));
 
 				stateMachine.StartCoroutine(goToState.RunCoroutine());
 
 				yield break;
 			}
 
-			private static IEnumerator DoStateThenGoTo(StateMachine stateMachine, TimelineStateRef TimelineState, TimelineStateRef goToState)
+			private static IEnumerator DoStateThenGoTo(StateMachineComponent stateMachine, StateRef TimelineState, StateRef goToState)
 			{
-				yield return stateMachine.StartCoroutine(TimelineStateMachine.Run(stateMachine, TimelineState));
+				yield return stateMachine.StartCoroutine(StateMachine.Run(stateMachine, TimelineState));
 
-				stateMachine.GoToState(TimelineStateMachine.Run(stateMachine, goToState));
+				stateMachine.GoToState(StateMachine.Run(stateMachine, goToState));
 
 				yield break;
 			}

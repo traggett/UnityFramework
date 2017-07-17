@@ -11,7 +11,7 @@ namespace Framework
 	{
 		[Serializable]
 		[EventCategory("Flow")]
-		public class EventCoroutine : Event, IStateMachineEvent
+		public class EventCoroutine : Event, ITimelineStateEvent
 		{
 			#region Public Data
 			public CoroutineRef _coroutine = new CoroutineRef();
@@ -32,16 +32,16 @@ namespace Framework
 			#endregion
 
 			#region IStateMachineSystemEvent
-			public eEventTriggerReturn Trigger(StateMachine stateMachine)
+			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine)
 			{
 				stateMachine.StartCoroutine(_coroutine.RunCoroutine());
 				return eEventTriggerReturn.EventFinished;
 			}
 
-			public eEventTriggerReturn Update(StateMachine stateMachine, float eventTime) { return eEventTriggerReturn.EventFinished; }
-			public void End(StateMachine stateMachine) { }
+			public eEventTriggerReturn Update(StateMachineComponent stateMachine, float eventTime) { return eEventTriggerReturn.EventFinished; }
+			public void End(StateMachineComponent stateMachine) { }
 #if UNITY_EDITOR
-			public EditorStateLink[] GetEditorLinks() { return null; }
+			public StateMachineEditorLink[] GetEditorLinks() { return null; }
 #endif
 			#endregion
 		}

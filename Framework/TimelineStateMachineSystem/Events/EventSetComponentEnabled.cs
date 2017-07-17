@@ -11,7 +11,7 @@ namespace Framework
 	{
 		[Serializable]
 		[EventCategory("Flow")]
-		public class EventSetComponentEnabled : Event, IStateMachineEvent
+		public class EventSetComponentEnabled : Event, ITimelineStateEvent
 		{
 			#region Public Data
 			public ComponentRef<MonoBehaviour> _target;
@@ -33,7 +33,7 @@ namespace Framework
 			#endregion
 
 			#region IStateMachineSystemEvent
-			public eEventTriggerReturn Trigger(StateMachine stateMachine)
+			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine)
 			{
 				MonoBehaviour target = _target.GetComponent();
 
@@ -45,14 +45,14 @@ namespace Framework
 				return eEventTriggerReturn.EventFinished;
 			}
 
-			public eEventTriggerReturn Update(StateMachine stateMachine, float eventTime)
+			public eEventTriggerReturn Update(StateMachineComponent stateMachine, float eventTime)
 			{
 				return eEventTriggerReturn.EventOngoing;
 			}
 
-			public void End(StateMachine stateMachine) { }
+			public void End(StateMachineComponent stateMachine) { }
 #if UNITY_EDITOR
-			public EditorStateLink[] GetEditorLinks() { return null; }
+			public StateMachineEditorLink[] GetEditorLinks() { return null; }
 #endif
 			#endregion
 		}

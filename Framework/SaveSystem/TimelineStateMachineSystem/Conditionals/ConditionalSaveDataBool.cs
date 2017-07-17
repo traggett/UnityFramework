@@ -46,11 +46,11 @@ namespace Framework
 			}
 #endif
 
-			public void OnStartConditionChecking(StateMachine stateMachine)
+			public void OnStartConditionChecking(StateMachineComponent stateMachine)
 			{
 			}
 
-			public bool IsConditionMet(StateMachine stateMachine)
+			public bool IsConditionMet(StateMachineComponent stateMachine)
 			{
 				object boolNode = _saveData.GetSaveDataValue();
 
@@ -62,7 +62,7 @@ namespace Framework
 				return false;
 			}
 
-			public void OnEndConditionChecking(StateMachine stateMachine)
+			public void OnEndConditionChecking(StateMachineComponent stateMachine)
 			{
 			}
 			#endregion

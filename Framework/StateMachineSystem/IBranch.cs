@@ -6,10 +6,10 @@ namespace Framework
 	{
 		public interface IBranch
 		{
-			bool ShouldBranch(StateMachine stateMachine);
-			IEnumerator GetGoToState(StateMachine stateMachine);
-			void OnBranchingStarted(StateMachine stateMachine);
-			void OnBranchingFinished(StateMachine stateMachine);			
+			bool ShouldBranch(StateMachineComponent stateMachine);
+			IEnumerator GetGoToState(StateMachineComponent stateMachine);
+			void OnBranchingStarted(StateMachineComponent stateMachine);
+			void OnBranchingFinished(StateMachineComponent stateMachine);			
 		}
 	}
 }

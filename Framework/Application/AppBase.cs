@@ -43,7 +43,7 @@ namespace Framework
 
 		protected void LateUpdateApp()
 		{
-			StateMachine.ClearMessages();
+			StateMachineComponent.ClearMessages();
 		}
 	}
 }

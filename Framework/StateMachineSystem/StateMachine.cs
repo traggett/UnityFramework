@@ -1,192 +1,141 @@
+using System;
 using System.Collections;
-using System.Collections.Generic;
 
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Framework
 {
-	namespace StateMachineSystem
-	{
-		public class StateMachine : MonoBehaviour
-		{
-			#region Private Data
-			private enum eState
-			{
-				NotRunning,
-				Running,
-				Paused,
-			}
-			private eState _state = eState.NotRunning;
-			private IEnumerator _current;
-			private IEnumerator _next;
+	using StateMachineSystem;
+	using LocalisationSystem;
+	using Utils;
+	using Serialization;
 
-			private static List<IStateMachineMsg> _messages = new List<IStateMachineMsg>();
-			private static List<IStateMachineMsg> _messagesToAdd = new List<IStateMachineMsg>();
+	namespace TimelineStateMachineSystem
+	{
+		[Serializable]
+		public class StateMachine : ISerializationCallbackReceiver
+		{
+			#region Public Data
+			public string _name;
+			public State[] _states = new State[0];
+
+#if UNITY_EDITOR
+			public StateMachineNote[] _editorNotes = new StateMachineNote[0];
+#endif
+			#endregion
+
+			#region ISerializationCallbackReceiver
+			public void OnBeforeSerialize()
+			{
+
+			}
+
+			public void OnAfterDeserialize()
+			{
+				FixUpStates(this);
+#if DEBUG
+				foreach (State state in _states)
+					state._debugParentStateMachine = this;
+#endif
+			}
 			#endregion
 
 			#region Public Interface
-			public void GoToState(IEnumerator state)
+			public static StateMachine FromTextAsset(TextAsset asset, GameObject sourceObject = null)
 			{
-				if (_state == eState.NotRunning)
+				StateMachine timelineStateMachine = Serializer.FromTextAsset<StateMachine>(asset);
+
+				if (sourceObject != null)
+					GameObjectRef.FixUpGameObjectRefsInObject(timelineStateMachine, sourceObject);
+
+				return timelineStateMachine;
+			}
+
+			public State GetState(int timelineId)
+			{
+				foreach (State state in _states)
 				{
-					_current = state;
-					StartCoroutine(Run());
-				}
-				else if (_state == eState.Running)
-				{
-					_next = state;
-				}
-
-#if DEBUG
-				_debugIsGoingToBranchingState = false;
-#endif
-			}
-
-			public void Stop()
-			{
-				StopAllCoroutines();
-				_state = eState.NotRunning;
-			}
-
-			public void Pause()
-			{
-				if (_state != eState.Running)
-				{
-					throw new System.InvalidOperationException("Unable to pause coroutine in state: " + _state);
-				}
-
-				_state = eState.Paused;
-			}
-
-			public void Resume()
-			{
-				if (_state != eState.Paused)
-				{
-					throw new System.InvalidOperationException("Unable to resume coroutine in state: " + _state);
-				}
-
-				_state = eState.Running;
-			}
-
-			public bool IsRunning()
-			{
-				return _state == eState.Running;
-			}
-
-			#region Messaging
-			public static void TriggerMessage(IStateMachineMsg msg)
-			{
-				_messagesToAdd.Add(msg);
-			}
-
-			public static List<IStateMachineMsg> GetMessages()
-			{
-				return _messages;
-			}
-
-			public static void UseMessage(IStateMachineMsg msg)
-			{
-				_messages.Remove(msg);
-			}
-
-			public static void ClearMessages()
-			{
-				_messages.Clear();
-				_messages.AddRange(_messagesToAdd);
-				_messagesToAdd.Clear();
-			}
-			#endregion
-
-			#region Branching
-			public void GoToBranchingState(params IBranch[] branches)
-			{
-				GoToState(RunBranchingState(branches));
-
-#if DEBUG
-				_debugIsGoingToBranchingState = true;
-#endif
-			}
-			#endregion
-
-			#endregion
-
-			#region Private Functions
-			private IEnumerator Run()
-			{
-				if (_state != eState.NotRunning)
-				{
-					throw new System.InvalidOperationException("Unable to start coroutine in state: " + _state);
-				}
-
-				while (_current != null)
-				{
-					_state = eState.Running;
-					while (_current.MoveNext())
+					if (state._stateId == timelineId)
 					{
-						yield return _current.Current;
-
-						while (_state == eState.Paused)
-						{
-							yield return null;
-						}
-
-						if (_state == eState.NotRunning)
-						{
-							yield break;
-						}
+						return state;
 					}
-
-					_current = _next;
-					_next = null;
 				}
 
-				_state = eState.NotRunning;
+				return null;
 			}
 
-			private IEnumerator RunBranchingState(params IBranch[] branches)
+			public static IEnumerator Run(StateMachineComponent stateMachine, StateRef startState, GameObject sourceObject = null)
 			{
-				foreach (IBranch branch in branches)
+				State state = startState.GetState(sourceObject != null ? sourceObject : stateMachine.gameObject);
+
+				if (state != null)
 				{
-					branch.OnBranchingStarted(this);
+#if UNITY_EDITOR && DEBUG
+					string debugFileName = startState._file.GetFilePath();
+					StateMachineDebug.OnStateStarted(stateMachine, state, debugFileName);
+#endif
+					return state.PerformState(stateMachine);
 				}
 
-				bool branchTaken = false;
+				return null;
+			}
 
-				while (!branchTaken)
+			public static IEnumerator Run(StateMachineComponent stateMachine, StateRefProperty startState, GameObject sourceObject = null)
+			{
+				State state = startState.LoadTimelineState(sourceObject != null ? sourceObject : stateMachine.gameObject);
+
+				if (state != null)
 				{
-					foreach (IBranch branch in branches)
-					{
-						if (branch.ShouldBranch(this))
-						{
-							IEnumerator goToState = branch.GetGoToState(this);
-							if (goToState != null)
-							{
-								GoToState(goToState);
-							}
-
-							branchTaken = true;
-							break;
-						}
-					}
-
-					yield return null;
+#if UNITY_EDITOR && DEBUG
+					string debugFileName = AssetDatabase.GetAssetPath(startState.GetFile());
+					StateMachineDebug.OnStateStarted(stateMachine, state, debugFileName);
+#endif
+					return state.PerformState(stateMachine);
 				}
 
-				foreach (IBranch branch in branches)
+				return null;
+			}
+
+			public static IEnumerator Run(StateMachineComponent stateMachine, State startState, GameObject sourceObject = null)
+			{
+				if (startState != null)
 				{
-					branch.OnBranchingFinished(this);
+#if UNITY_EDITOR && DEBUG
+					StateMachineDebug.OnStateStarted(stateMachine, startState, null);
+#endif
+					return startState.PerformState(stateMachine);
 				}
+
+				return null;
+			}
+
+			public void FixUpStates(object obj)
+			{
+				Serializer.UpdateChildObjects(obj, FixupStateRefs, this);
 			}
 			#endregion
 
-#if DEBUG
-			private bool _debugIsGoingToBranchingState;
-
-			public bool IsGoingToBranchingState()
+			private static object FixupStateRefs(object obj, object stateMachine)
 			{
-				return _debugIsGoingToBranchingState;
-			}
+				if (obj.GetType() == typeof(StateRef))
+				{
+					StateRef StateRef = (StateRef)obj;
+					StateRef.FixUpRef((StateMachine)stateMachine);
+					return StateRef;
+				}
+#if UNITY_EDITOR
+				else if (obj.GetType() == typeof(LocalisedStringRef))
+				{
+					LocalisedStringRef localisedStringRef = (LocalisedStringRef)obj;
+					localisedStringRef.SetAutoNameParentName(((StateMachine)stateMachine)._name);
+					return localisedStringRef;
+				}
 #endif
+				return obj;
+			}
 		}
 	}
 }

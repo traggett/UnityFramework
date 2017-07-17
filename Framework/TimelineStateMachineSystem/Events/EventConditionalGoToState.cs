@@ -14,10 +14,10 @@ namespace Framework
 	{
 		[Serializable]
 		[EventCategory("Flow")]
-		public class EventConditionalGoToState : Event, IStateMachineEvent, ICustomEditorInspector
+		public class EventConditionalGoToState : Event, ITimelineStateEvent, ICustomEditorInspector
 		{
 			#region Public Data
-			public TimelineStateRef _state;
+			public StateRef _state;
 			public IConditional _condition;
 			public float _duration = 0.0f;
 			#endregion
@@ -79,7 +79,7 @@ namespace Framework
 			#endregion
 
 			#region IStateMachineSystemEvent
-			public eEventTriggerReturn Trigger(StateMachine stateMachine)
+			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine)
 			{
 				eEventTriggerReturn ret = eEventTriggerReturn.EventFinished;
 
@@ -89,7 +89,7 @@ namespace Framework
 
 					if (_condition.IsConditionMet(stateMachine))
 					{
-						stateMachine.GoToState(TimelineStateMachine.Run(stateMachine, _state));
+						stateMachine.GoToState(StateMachine.Run(stateMachine, _state));
 						ret = eEventTriggerReturn.EventFinishedExitState;
 					}
 					if (_duration > 0.0f)
@@ -101,28 +101,28 @@ namespace Framework
 				return ret;
 			}
 
-			public eEventTriggerReturn Update(StateMachine stateMachine, float eventTime)
+			public eEventTriggerReturn Update(StateMachineComponent stateMachine, float eventTime)
 			{
 				if (_condition.IsConditionMet(stateMachine))
 				{
-					stateMachine.GoToState(TimelineStateMachine.Run(stateMachine, _state));
+					stateMachine.GoToState(StateMachine.Run(stateMachine, _state));
 					return eEventTriggerReturn.EventFinishedExitState;
 				}
 
 				return eEventTriggerReturn.EventOngoing;
 			}
 
-			public void End(StateMachine stateMachine)
+			public void End(StateMachineComponent stateMachine)
 			{
 				_condition.OnEndConditionChecking(stateMachine);
 			}
 
 #if UNITY_EDITOR
-			public EditorStateLink[] GetEditorLinks()
+			public StateMachineEditorLink[] GetEditorLinks()
 			{
-				EditorStateLink[] links = new EditorStateLink[1];
+				StateMachineEditorLink[] links = new StateMachineEditorLink[1];
 
-				links[0] = new EditorStateLink();
+				links[0] = new StateMachineEditorLink();
 				links[0]._timeline = _state;
 				links[0]._description = (_condition != null ? _condition.GetEditorDescription() : "...");
 

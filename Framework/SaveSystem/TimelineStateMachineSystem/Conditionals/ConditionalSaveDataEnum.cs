@@ -25,11 +25,11 @@ namespace Framework
 #endif
 
 			#region IConditional
-			public void OnStartConditionChecking(StateMachine stateMachine)
+			public void OnStartConditionChecking(StateMachineComponent stateMachine)
 			{
 			}
 
-			public bool IsConditionMet(StateMachine stateMachine)
+			public bool IsConditionMet(StateMachineComponent stateMachine)
 			{
 				object enumNode = _saveData.GetSaveDataValue();
 
@@ -43,7 +43,7 @@ namespace Framework
 				return false;
 			}
 
-			public void OnEndConditionChecking(StateMachine stateMachine)
+			public void OnEndConditionChecking(StateMachineComponent stateMachine)
 			{
 			}
 #if UNITY_EDITOR

@@ -10,8 +10,8 @@ namespace Framework
 	{
 		[Serializable]
 		[EventCategory(EventCategoryAttribute.kCoreEvent)]
-		public class EventStartBranchingState : Event, IStateMachineEvent
-		{
+		public class EventStartBranchingState : Event, ITimelineStateEvent
+  		{
 			#region Public Data
 			public Branch[] _branches = new Branch[0];
 			public BranchingBackgroundLogic[] _backgroundLogic = new BranchingBackgroundLogic[0];
@@ -37,7 +37,7 @@ namespace Framework
 			#endregion
 
 			#region IStateMachineSystemEvent
-			public eEventTriggerReturn Trigger(StateMachine stateMachine)
+			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine)
 			{
 				IBranch[] branches = new IBranch[_branches.Length + _backgroundLogic.Length];
 
@@ -49,23 +49,23 @@ namespace Framework
 				return eEventTriggerReturn.EventFinishedExitState;
 			}
 
-			public eEventTriggerReturn Update(StateMachine stateMachine, float eventTime)
+			public eEventTriggerReturn Update(StateMachineComponent stateMachine, float eventTime)
 			{
 				return eEventTriggerReturn.EventOngoing;
 			}
 
-			public void End(StateMachine stateMachine) { }
+			public void End(StateMachineComponent stateMachine) { }
 
 #if UNITY_EDITOR
-			public EditorStateLink[] GetEditorLinks()
+			public StateMachineEditorLink[] GetEditorLinks()
 			{
-				EditorStateLink[] links = new EditorStateLink[_branches.Length];
+				StateMachineEditorLink[] links = new StateMachineEditorLink[_branches.Length];
 
 				for (int i=0; i<_branches.Length; i++)
 				{
 					Branch branch = _branches[i];
 
-					links[i] = new EditorStateLink();
+					links[i] = new StateMachineEditorLink();
 					links[i]._timeline = branch._goToState;
 					links[i]._description = branch.GetDescription();
 				}

@@ -13,7 +13,7 @@ namespace Framework
 	{
 		[Serializable]
 		[EventCategory("Animation")]
-		public class EventSetCameraSnapshot : Event, IStateMachineEvent
+		public class EventSetCameraSnapshot : Event, ITimelineStateEvent
 		{
 			#region Public Data
 			public ComponentRef<AnimatedCamera> _camera;
@@ -42,7 +42,7 @@ namespace Framework
 			#endregion
 
 			#region IStateMachineSystemEvent
-			public eEventTriggerReturn Trigger(StateMachine stateMachine)
+			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine)
 			{
 				AnimatedCamera camera = _camera;
 
@@ -56,14 +56,14 @@ namespace Framework
 				return eEventTriggerReturn.EventFinished;
 			}
 
-			public eEventTriggerReturn Update(StateMachine stateMachine, float eventTime)
+			public eEventTriggerReturn Update(StateMachineComponent stateMachine, float eventTime)
 			{
 				return eEventTriggerReturn.EventOngoing;
 			}
 
-			public void End(StateMachine stateMachine) { }
+			public void End(StateMachineComponent stateMachine) { }
 #if UNITY_EDITOR
-			public EditorStateLink[] GetEditorLinks() { return null; }
+			public StateMachineEditorLink[] GetEditorLinks() { return null; }
 #endif
 			#endregion
 		}

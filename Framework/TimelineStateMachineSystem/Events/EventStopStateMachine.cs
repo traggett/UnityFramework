@@ -10,7 +10,7 @@ namespace Framework
 	{
 		[Serializable]
 		[EventCategory(EventCategoryAttribute.kCoreEvent)]
-		public class EventStopStateMachine : Event, IStateMachineEvent
+		public class EventStopStateMachine : Event, ITimelineStateEvent
 		{
 			#region Event
 #if UNITY_EDITOR
@@ -32,20 +32,20 @@ namespace Framework
 			#endregion
 
 			#region IStateMachineSystemEvent
-			public eEventTriggerReturn Trigger(StateMachine stateMachine)
+			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine)
 			{
 				stateMachine.Stop();
 				return eEventTriggerReturn.EventFinishedExitState;
 			}
 
-			public eEventTriggerReturn Update(StateMachine stateMachine, float eventTime)
+			public eEventTriggerReturn Update(StateMachineComponent stateMachine, float eventTime)
 			{
 				return eEventTriggerReturn.EventOngoing;
 			}
 
-			public void End(StateMachine stateMachine) { }
+			public void End(StateMachineComponent stateMachine) { }
 #if UNITY_EDITOR
-			public EditorStateLink[] GetEditorLinks() { return null; }
+			public StateMachineEditorLink[] GetEditorLinks() { return null; }
 #endif
 			#endregion
 		}

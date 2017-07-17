@@ -11,7 +11,7 @@ namespace Framework
 	{
 		[Serializable]
 		[EventCategory("Flow")]
-		public class EventSetMaterialColor : Event, IStateMachineEvent
+		public class EventSetMaterialColor : Event, ITimelineStateEvent
 		{
 			#region Public Data
 			public MaterialRef _material;
@@ -43,7 +43,7 @@ namespace Framework
 			#endregion
 
 			#region IStateMachineSystemEvent
-			public eEventTriggerReturn Trigger(StateMachine stateMachine)
+			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine)
 			{
 				Material material = _material;
 
@@ -63,7 +63,7 @@ namespace Framework
 				return eEventTriggerReturn.EventFinished;
 			}
 
-			public eEventTriggerReturn Update(StateMachine stateMachine, float eventTime)
+			public eEventTriggerReturn Update(StateMachineComponent stateMachine, float eventTime)
 			{
 				float lerp = eventTime / _duration;
 				Color color = Color.Lerp(_origColor, _color, lerp);
@@ -73,14 +73,14 @@ namespace Framework
 				return eEventTriggerReturn.EventOngoing;
 			}
 
-			public void End(StateMachine stateMachine)
+			public void End(StateMachineComponent stateMachine)
 			{
 				Material material = _material;
 				material.SetColor(_propertyName, _color);
 			}
 
 #if UNITY_EDITOR
-			public EditorStateLink[] GetEditorLinks() { return null; }
+			public StateMachineEditorLink[] GetEditorLinks() { return null; }
 #endif
 			#endregion
 		}

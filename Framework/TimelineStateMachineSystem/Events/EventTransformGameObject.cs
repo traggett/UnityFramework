@@ -16,7 +16,7 @@ namespace Framework
 	{
 		[Serializable]
 		[EventCategory("Animation")]
-		public class EventTransformGameObject : Event, IStateMachineEvent, ICustomEditorInspector
+		public class EventTransformGameObject : Event, ITimelineStateEvent, ICustomEditorInspector
 		{
 			#region Public Data
 			public enum eMoveType
@@ -102,7 +102,7 @@ namespace Framework
 			#endregion
 
 			#region IStateMachineSystemEvent
-			public eEventTriggerReturn Trigger(StateMachine stateMachine)
+			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine)
 			{
 				GameObject gameObject = _gameObject.GetGameObject();
 
@@ -119,7 +119,7 @@ namespace Framework
 				return eEventTriggerReturn.EventFinished;
 			}
 
-			public eEventTriggerReturn Update(StateMachine stateMachine, float eventTime)
+			public eEventTriggerReturn Update(StateMachineComponent stateMachine, float eventTime)
 			{
 				float lerp = eventTime / _duration;
 				UpdateTransform(lerp);
@@ -127,13 +127,13 @@ namespace Framework
 				return eEventTriggerReturn.EventOngoing;
 			}
 
-			public void End(StateMachine stateMachine)
+			public void End(StateMachineComponent stateMachine)
 			{
 				UpdateTransform(1.0f);
 			}
 
 #if UNITY_EDITOR
-			public EditorStateLink[] GetEditorLinks() { return null; }
+			public StateMachineEditorLink[] GetEditorLinks() { return null; }
 #endif
 			#endregion
 
@@ -205,7 +205,7 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private void FindTargets(StateMachine stateMachine)
+			private void FindTargets(StateMachineComponent stateMachine)
 			{
 				if ((_transformFlags & eTransformFlag.Translate) != 0)
 					FindStartPosition(stateMachine);
@@ -229,7 +229,7 @@ namespace Framework
 					UpdateTargetScale(lerp);
 			}
 
-			private void FindStartPosition(StateMachine stateMachine)
+			private void FindStartPosition(StateMachineComponent stateMachine)
 			{
 				switch (_targetType)
 				{
@@ -333,7 +333,7 @@ namespace Framework
 				}
 			}
 
-			private void FindStartRotation(StateMachine stateMachine)
+			private void FindStartRotation(StateMachineComponent stateMachine)
 			{
 				switch (_targetType)
 				{
@@ -437,7 +437,7 @@ namespace Framework
 				}
 			}
 
-			private void FindStartScale(StateMachine stateMachine)
+			private void FindStartScale(StateMachineComponent stateMachine)
 			{
 				switch (_targetType)
 				{

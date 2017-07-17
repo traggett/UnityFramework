@@ -11,7 +11,7 @@ namespace Framework
 	{
 		[Serializable]
 		[EventCategory(EventCategoryAttribute.kCoreEvent)]
-		public class EventGoToState : Event, IStateMachineEvent
+		public class EventGoToState : Event, ITimelineStateEvent
 		{
 			public enum eStateType
 			{
@@ -21,7 +21,7 @@ namespace Framework
 
 			#region Public Data
 			public eStateType _stateType = eStateType.Timeline;
-			public TimelineStateRef _state;
+			public StateRef _state;
 			public CoroutineRef _coroutine = new CoroutineRef();
 			#endregion
 
@@ -61,7 +61,7 @@ namespace Framework
 			#endregion
 
 			#region IStateMachineSystemEvent
-			public eEventTriggerReturn Trigger(StateMachine stateMachine)
+			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine)
 			{
 				switch (_stateType)
 				{
@@ -72,7 +72,7 @@ namespace Framework
 						break;
 					case eStateType.Timeline:
 						{
-							stateMachine.GoToState(TimelineStateMachine.Run(stateMachine, _state));
+							stateMachine.GoToState(StateMachine.Run(stateMachine, _state));
 						}
 						break;
 				}
@@ -80,25 +80,25 @@ namespace Framework
 				return eEventTriggerReturn.EventFinishedExitState;
 			}
 
-			public eEventTriggerReturn Update(StateMachine stateMachine, float eventTime)
+			public eEventTriggerReturn Update(StateMachineComponent stateMachine, float eventTime)
 			{
 				return eEventTriggerReturn.EventOngoing;
 			}
 
-			public void End(StateMachine stateMachine) { }
+			public void End(StateMachineComponent stateMachine) { }
 
 #if UNITY_EDITOR
-			public EditorStateLink[] GetEditorLinks()
+			public StateMachineEditorLink[] GetEditorLinks()
 			{
-				EditorStateLink[] links = null;
+				StateMachineEditorLink[] links = null;
 
 				switch (_stateType)
 				{
 					case eStateType.Coroutine:
 						break;
 					case eStateType.Timeline:
-						links = new EditorStateLink[1];
-						links[0] = new EditorStateLink();
+						links = new StateMachineEditorLink[1];
+						links[0] = new StateMachineEditorLink();
 						links[0]._timeline = _state;
 						links[0]._description = "Go To";
 						break;
