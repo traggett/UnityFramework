@@ -234,12 +234,23 @@ namespace Framework
 
 							if (attribute != null)
 							{
-								if (_editorMap.ContainsKey(attribute.ObjectType))
-								{
-									throw new Exception("Can't initialize XmlObjectEditorAttribute for " + type.FullName + " as already have a editor for type " + attribute.ObjectType);
-								}
+								SerializedObjectEditorAttribute.RenderPropertiesDelegate func = SystemUtils.GetStaticMethodAsDelegate<SerializedObjectEditorAttribute.RenderPropertiesDelegate>(type, attribute.OnRenderPropertiesMethod);
 
-								_editorMap[attribute.ObjectType] = SystemUtils.GetStaticMethodAsDelegate<SerializedObjectEditorAttribute.RenderPropertiesDelegate>(type, attribute.OnRenderPropertiesMethod);
+								_editorMap[attribute.ObjectType] = func;
+
+
+								if (attribute.UseForChildTypes)
+								{
+									Type[] childTypes = SystemUtils.GetAllSubTypes(attribute.ObjectType);
+
+									foreach (Type childType in childTypes)
+									{
+										if (!_editorMap.ContainsKey(childType))
+										{
+											_editorMap[childType] = func;
+										}
+									}
+								}
 							}
 						}
 					}

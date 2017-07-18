@@ -25,7 +25,7 @@ namespace Framework
 			[NonSerialized]
 			public T _editorAsset;
 			[NonSerialized]
-			public bool _editorFoldout;
+			public bool _editorCollapsed;
 #endif
 			#endregion
 
@@ -95,7 +95,7 @@ namespace Framework
 			{
 				_asset = null;
 				_editorAsset = asset;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 
 				if (asset != null)
 				{
@@ -113,7 +113,7 @@ namespace Framework
 			{
 				_asset = null;
 				_editorAsset = null;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 
 				_filePath = assetPath;
 				_fileGUID = AssetDatabase.AssetPathToGUID(assetPath);

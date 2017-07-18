@@ -800,11 +800,16 @@ namespace Framework
 
 				private StateEditorGUI FindStateForLink(StateRef link)
 				{
-					foreach (StateEditorGUI state in _editableObjects)
+					int stateId = link.GetStateID();
+
+					if (stateId != -1)
 					{
-						if (link.GetStateID() == state.GetStateId())
+						foreach (StateEditorGUI state in _editableObjects)
 						{
-							return state;
+							if (stateId == state.GetStateId())
+							{
+								return state;
+							}
 						}
 					}
 

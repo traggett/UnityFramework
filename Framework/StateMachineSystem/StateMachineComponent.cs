@@ -8,6 +8,10 @@ namespace Framework
 	{
 		public class StateMachineComponent : MonoBehaviour
 		{
+			#region Public Data
+			public StateRefProperty _initialState;
+			#endregion
+
 			#region Private Data
 			private enum eState
 			{
@@ -18,6 +22,14 @@ namespace Framework
 			private eState _state = eState.NotRunning;
 			private IEnumerator _current;
 			private IEnumerator _next;
+			#endregion
+
+			#region MonoBehaviour
+			void Start()
+			{
+				if (_initialState.IsValid())
+					GoToState(StateMachine.Run(this, _initialState));
+			}
 			#endregion
 
 			#region Public Interface

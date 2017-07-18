@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Framework
 {
+	using Utils.Editor;
+
 	namespace StateMachineSystem
 	{
 		namespace Editor
@@ -12,14 +14,32 @@ namespace Framework
 			{
 				public override bool RenderObjectProperties(GUIContent label)
 				{
+					bool dataChanged = false;
+
+					dataChanged |= RenderStateColorField("Note Color");
+
+					EditorGUILayout.Separator();
+
+					Color orig = GUI.backgroundColor;
+					GUI.backgroundColor = _titleLabelColor;
+					EditorGUILayout.LabelField("<b>Note:</b>", EditorUtils.TextTitleStyle, GUILayout.Height(24.0f));
+					GUI.backgroundColor = orig;
+
+					EditorGUILayout.Separator();
+
 					EditorGUI.BeginChangeCheck();
 					GetEditableObject()._editorDescription = EditorGUILayout.TextArea(GetEditableObject()._editorDescription);
-					return EditorGUI.EndChangeCheck();
+					dataChanged |= EditorGUI.EndChangeCheck();
+
+					return dataChanged;
 				}
 
 				public override Color GetColor(StateMachineEditorStyle style)
 				{
-					return style._noteColor;
+					if (GetEditableObject()._editorAutoColor)
+						return style._noteColor;
+					else
+						return GetEditableObject()._editorColor;
 				}
 
 				public override float GetBorderSize(bool selected)

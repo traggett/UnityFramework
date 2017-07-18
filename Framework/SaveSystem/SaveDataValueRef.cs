@@ -22,7 +22,7 @@ namespace Framework
 
 #if UNITY_EDITOR
 			[NonSerialized]
-			public bool _editorFoldout;
+			public bool _editorCollapsed;
 			[NonSerialized]
 			public string _editorValueLabel;
 #endif
@@ -78,7 +78,7 @@ namespace Framework
 			{
 				_saveDataType = saveDataType;
 				_valueID = string.Empty;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 				_editorValueLabel = string.Empty;
 			}
 
@@ -86,7 +86,7 @@ namespace Framework
 			{
 				_saveDataType = saveDataType;
 				_valueID = valueID;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 				_editorValueLabel = valueLabel;
 			}
 

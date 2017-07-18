@@ -46,15 +46,15 @@ namespace Framework
 
 					label.text += " (" + assetRef + ")";
 
-					bool foldOut = EditorGUILayout.Foldout(assetRef._editorFoldout, label);
+					bool editorCollapsed = !EditorGUILayout.Foldout(assetRef._editorCollapsed, label);
 
-					if (foldOut != assetRef._editorFoldout)
+					if (editorCollapsed != assetRef._editorCollapsed)
 					{
-						assetRef._editorFoldout = foldOut;
+						assetRef._editorCollapsed = editorCollapsed;
 						dataChanged = true;
 					}
 
-					if (foldOut)
+					if (editorCollapsed)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -65,7 +65,6 @@ namespace Framework
 						if (assetRef._editorAsset != asset)
 						{
 							assetRef = new AssetRef<T>(asset);
-							assetRef._editorFoldout = foldOut;
 							dataChanged = true;
 						}
 

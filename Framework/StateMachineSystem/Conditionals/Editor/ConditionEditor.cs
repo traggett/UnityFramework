@@ -13,7 +13,7 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			[SerializedObjectEditor(typeof(Condition), "PropertyField")]
+			[SerializedObjectEditor(typeof(Condition), "PropertyField", true)]
 			public static class ConditionEditor
 			{
 				private static Type[] _conditionals;
@@ -35,30 +35,22 @@ namespace Framework
 
 					if (conditional != null)
 					{
-						if (conditional is ToggableCondition)
+						conditional = DrawToggle(conditional, ref dataChanged);
+
+						bool editorCollapsed = !EditorGUILayout.Foldout(!conditional._editorCollapsed, "Properties");
+
+						if (editorCollapsed != conditional._editorCollapsed)
 						{
-							ToggableCondition boolConditional = (ToggableCondition)conditional;
-
-							EditorGUI.BeginChangeCheck();
-							boolConditional._not = EditorGUILayout.Toggle("Not", boolConditional._not);
-							if (EditorGUI.EndChangeCheck())
-							{
-								dataChanged = true;
-							}
-						}						
-
-						bool foldOut = EditorGUILayout.Foldout(conditional._editorFoldout, "Properties");
-
-						if (foldOut != conditional._editorFoldout)
-						{
-							conditional._editorFoldout = foldOut;
+							conditional._editorCollapsed = editorCollapsed;
 							dataChanged = true;
 						}
 						
-						if (conditional._editorFoldout)
+						if (!editorCollapsed)
 						{
 							EditorGUI.indentLevel++;
-							conditional = SerializationEditorGUILayout.ObjectField(conditional, "", ref dataChanged);
+							
+							conditional = (Condition)SerializationEditorGUILayout.RenderObjectMemebers(conditional, conditional.GetType(), ref dataChanged);
+
 							EditorGUI.indentLevel--;
 						}
 					}
@@ -69,7 +61,7 @@ namespace Framework
 				}
 				#endregion
 
-				private static Condition DrawAddConditionalDropDown(string label, Condition obj)
+				public static Condition DrawAddConditionalDropDown(string label, Condition obj)
 				{
 					BuildConditionalMap();
 
@@ -98,6 +90,25 @@ namespace Framework
 					}
 
 					return obj;
+				}
+
+				public static Condition DrawToggle(Condition conditional, ref bool dataChanged)
+				{
+					if (conditional is ToggableCondition)
+					{
+						ToggableCondition boolConditional = (ToggableCondition)conditional;
+
+						EditorGUI.BeginChangeCheck();
+						boolConditional._not = EditorGUILayout.Toggle("Not", boolConditional._not);
+						if (EditorGUI.EndChangeCheck())
+						{
+							dataChanged = true;
+						}
+
+						return boolConditional;
+					}
+
+					return conditional;
 				}
 
 				private static void BuildConditionalMap()

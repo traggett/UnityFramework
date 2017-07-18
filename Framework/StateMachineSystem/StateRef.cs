@@ -26,7 +26,7 @@ namespace Framework
 #if UNITY_EDITOR
 			//Editor properties
 			[NonSerialized]
-			public bool _editorFoldout;
+			public bool _editorCollapsed;
 			[NonSerialized]
 			public string _editorStateName;
 #endif

@@ -1,5 +1,6 @@
 using System;
 
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -8,20 +9,20 @@ namespace Framework
 {
 	using StateMachineSystem;
 	using SaveSystem;
-	using UnityEngine;
 	using Serialization;
 
 	namespace TimelineStateMachineSystem
 	{
 		[Serializable]
 		[ConditionCategory("SaveData")]
-		public class ConditionSaveDataEnum : ToggableCondition, ISerializationCallbackReceiver, ICustomEditorInspector
+		public class ConditionSaveDataEnum : ToggableCondition, ISerializationCallbackReceiver
 		{
 			public SaveDataValueRef<Enum> _saveData;
 			public int _value = -1;
 
 #if UNITY_EDITOR
-			private Enum _enumValue;
+			[NonSerialized]
+			public Enum _enumValue;
 #endif
 
 			#region Conditional
@@ -49,19 +50,12 @@ namespace Framework
 #if UNITY_EDITOR
 			public override string GetDescription()
 			{
-				if (_enumValue != null)
-				{
-					return "(<b>" + _saveData + "</b>) is (<b>" + _enumValue + "</b>)";
-				}
-				else
-				{
-					return "(<b>" + _saveData + "</b>) is (<b><value></b>)";
-				}
+				return "If (" + _saveData + " is " + _enumValue + ")";
 			}
 
 			public override string GetTakenText()
 			{
-				return GetDescription();
+				return _saveData + " is " + _enumValue;
 			}
 #endif
 			#endregion
@@ -86,35 +80,7 @@ namespace Framework
 			#endregion
 
 #if UNITY_EDITOR
-			public bool RenderObjectProperties(GUIContent label)
-			{
-				bool dataChanged = false;
-
-				//Save data type (only show enum properties)
-				_saveData = SerializationEditorGUILayout.ObjectField(_saveData, GUIContent.none, ref dataChanged);
-
-				//Possible values
-				Type enumType = GetEnumType();
-
-				if (enumType != null)
-				{
-					Enum enm = (Enum)Enum.ToObject(enumType, _value);
-					_enumValue = EditorGUILayout.EnumPopup("Value", enm);
-					_value = Convert.ToInt32(_enumValue);
-				}
-				else
-				{
-					_enumValue = null;
-					_value = -1;
-				}
-
-				return dataChanged;
-			}
-#endif
-			
-
-#if UNITY_EDITOR
-			private Type GetEnumType()
+			public Type GetEnumType()
 			{
 				object enumNode = _saveData.CreateEditorValueInstance();
 

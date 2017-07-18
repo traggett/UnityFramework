@@ -18,6 +18,7 @@ namespace Framework
 			{
 				#region Private Data
 				private static Dictionary<Type, Type> _editorGUIConstructorMap = null;
+				protected static readonly Color _titleLabelColor = new Color(0.8f, 0.8f, 0.8f, 1.0f);
 
 				public static readonly float kMaxBorderSize = 2.0f;
 				public static readonly float kStateSeperationSize = 4.0f;
@@ -257,11 +258,11 @@ namespace Framework
 					return dataChanged;
 				}
 
-				protected bool RenderStateColorField()
+				protected bool RenderStateColorField(string label = null)
 				{
 					bool dataChanged = false;
 
-					_labelFoldout = EditorGUILayout.Foldout(_labelFoldout, "State Color");
+					_labelFoldout = EditorGUILayout.Foldout(_labelFoldout, label == null ? "State Color" : label);
 					if (_labelFoldout)
 					{
 						int origIndent = EditorGUI.indentLevel;

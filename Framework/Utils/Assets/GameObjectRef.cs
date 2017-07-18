@@ -41,7 +41,7 @@ namespace Framework
 			#region Editor Data
 #if UNITY_EDITOR
 			[NonSerialized]
-			public bool _editorFoldout;
+			public bool _editorCollapsed;
 #endif
 			#endregion
 
@@ -132,14 +132,14 @@ namespace Framework
 				_sceneObjectID = -1;
 				_prefab = new AssetRef<GameObject>();
 				_sourceObject = null;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 			}
 
 			public GameObjectRef(eSourceType sourceType, GameObject gameObject)
 			{
 				_sourceType = sourceType;
 				_sourceObject = null;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 				_prefab = new AssetRef<GameObject>();
 				_scene = new SceneRef();
 

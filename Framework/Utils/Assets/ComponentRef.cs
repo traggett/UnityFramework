@@ -18,7 +18,7 @@ namespace Framework
 			#region Editor Data
 #if UNITY_EDITOR
 			[NonSerialized]
-			public bool _editorFoldout;
+			public bool _editorCollapsed;
 #endif
 			#endregion
 
@@ -97,7 +97,7 @@ namespace Framework
 			{
 				_gameObject = new GameObjectRef(sourceType);
 				_componentIndex = 0;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 			}
 
 			public ComponentRef(GameObjectRef.eSourceType sourceType, Component component)
@@ -105,7 +105,7 @@ namespace Framework
 				GameObject gameObject = component != null ? component.gameObject : null;
 				_gameObject = new GameObjectRef(sourceType, gameObject);
 				_componentIndex = 0;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 
 				if (component != null)
 				{
@@ -132,7 +132,7 @@ namespace Framework
 				GameObject gameObject = component != null ? component.gameObject : null;
 				_gameObject = new GameObjectRef(sourceType, gameObject);
 				_componentIndex = componentIndex;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 			}
 
 			public GameObjectRef GetGameObjectRef()

@@ -47,15 +47,15 @@ namespace Framework
 
 					label.text += " (" + componentMethodRef + ")";
 
-					bool foldOut = EditorGUILayout.Foldout(componentMethodRef._editorFoldout, label);
+					bool editorCollapsed = !EditorGUILayout.Foldout(!componentMethodRef._editorCollapsed, label);
 
-					if (foldOut != componentMethodRef._editorFoldout)
+					if (editorCollapsed != componentMethodRef._editorCollapsed)
 					{
-						componentMethodRef._editorFoldout = foldOut;
+						componentMethodRef._editorCollapsed = editorCollapsed;
 						dataChanged = true;
 					}
 					
-					if (foldOut)
+					if (!editorCollapsed)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;

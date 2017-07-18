@@ -29,15 +29,15 @@ namespace Framework
 
 					label.text += " (" + materialRef + ")";
 
-					bool foldOut = EditorGUILayout.Foldout(materialRef._editorFoldout, label);
+					bool editorCollapsed = EditorGUILayout.Foldout(!materialRef._editorCollapsed, label);
 
-					if (foldOut != materialRef._editorFoldout)
+					if (editorCollapsed != materialRef._editorCollapsed)
 					{
-						materialRef._editorFoldout = foldOut;
+						materialRef._editorCollapsed = editorCollapsed;
 						dataChanged = true;
 					}
 					
-					if (foldOut)
+					if (!editorCollapsed)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;

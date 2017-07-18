@@ -18,7 +18,7 @@ namespace Framework
 			private ComponentRef<Renderer> _renderer;
 #if UNITY_EDITOR
 			[NonSerialized]
-			public bool _editorFoldout;
+			public bool _editorCollapsed;
 #endif
 			#endregion
 			
@@ -29,7 +29,7 @@ namespace Framework
 				_materialRef = null;
 				_materialIndex = materialIndex;
 				_renderer = new ComponentRef<Renderer>();
-				_editorFoldout = true;
+				_editorCollapsed = false;
 				_material = null;
 			}
 
@@ -38,7 +38,7 @@ namespace Framework
 				_materialRef = null;
 				_materialIndex = materialIndex;
 				_renderer = renderer;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 				_material = null;
 			}
 
@@ -47,7 +47,7 @@ namespace Framework
 				_materialRef = materialRef;
 				_materialIndex = -1;
 				_renderer = new ComponentRef<Renderer>();
-				_editorFoldout = true;
+				_editorCollapsed = false;
 				_material = null;
 			}
 #endif

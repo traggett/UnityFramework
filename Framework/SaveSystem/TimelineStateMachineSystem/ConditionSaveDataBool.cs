@@ -15,7 +15,7 @@ namespace Framework
 	{
 		[Serializable]
 		[ConditionCategory("SaveData")]
-		public class ConditionSaveDataBool : ToggableCondition, ICustomEditorInspector
+		public class ConditionSaveDataBool : Condition, ICustomEditorInspector
 		{		
 			public SaveDataValueRef<bool> _saveData;
 			public bool _value = false;

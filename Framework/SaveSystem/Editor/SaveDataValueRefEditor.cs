@@ -50,15 +50,15 @@ namespace Framework
 
 				private static SaveDataValueRef<T> SaveDataRefField<T>(SaveDataValueRef<T> saveDataValueRef, GUIContent label, ref bool dataChanged, Type allowedType)
 				{
-					bool foldOut = EditorGUILayout.Foldout(saveDataValueRef._editorFoldout, label);
+					bool editorCollapsed = !EditorGUILayout.Foldout(!saveDataValueRef._editorCollapsed, label);
 
-					if (foldOut != saveDataValueRef._editorFoldout)
+					if (editorCollapsed != saveDataValueRef._editorCollapsed)
 					{
-						saveDataValueRef._editorFoldout = foldOut;
+						saveDataValueRef._editorCollapsed = editorCollapsed;
 						dataChanged = true;
 					}
 
-					if (foldOut)
+					if (!editorCollapsed)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;

@@ -50,15 +50,15 @@ namespace Framework
 
 					label.text += " (" + componentRef + ")";
 
-					bool foldOut = EditorGUILayout.Foldout(componentRef._editorFoldout, label);
+					bool editorCollapsed = !EditorGUILayout.Foldout(!componentRef._editorCollapsed, label);
 
-					if (foldOut != componentRef._editorFoldout)
+					if (editorCollapsed != componentRef._editorCollapsed)
 					{
-						componentRef._editorFoldout = foldOut;
+						componentRef._editorCollapsed = editorCollapsed;
 						dataChanged = true;
 					}
 
-					if (foldOut)
+					if (!editorCollapsed)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -150,7 +150,7 @@ namespace Framework
 
 						if (validComponents.Count > 1)
 						{
-							int selectedIndex = EditorGUILayout.Popup(new GUIContent(" "), currentIndex, validComponentLabels.ToArray());
+							int selectedIndex = EditorGUILayout.Popup(kLabel, currentIndex, validComponentLabels.ToArray());
 							dataChanged = currentComponent != validComponents[selectedIndex] || componentRef.GetComponentIndex() != selectedIndex;
 							if (dataChanged)
 								componentRef = new ComponentRef<T>(componentRef.GetGameObjectRef().GetSourceType(), validComponents[selectedIndex], selectedIndex);

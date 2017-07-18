@@ -30,15 +30,15 @@ namespace Framework
 
 					label.text += " (" + state + ")";
 					
-					bool foldOut = EditorGUILayout.Foldout(state._editorFoldout, label);
+					bool editorCollapsed = !EditorGUILayout.Foldout(!state._editorCollapsed, label);
 
-					if (foldOut != state._editorFoldout)
+					if (editorCollapsed != state._editorCollapsed)
 					{
-						state._editorFoldout = foldOut;
+						state._editorCollapsed = editorCollapsed;
 						dataChanged = true;
 					}
 
-					if (foldOut)
+					if (!editorCollapsed)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -50,7 +50,6 @@ namespace Framework
 							//If type has changed create a new ref with file set to null if internal or a blank asset ref if external.
 							StateMachine stateMachine = state.GetStateMachine();
 							state = new StateRef();
-							state._editorFoldout = foldOut;
 							state.FixUpRef(stateMachine);
 							state._stateId = type == eType.External ? -1 : 0;
 							dataChanged = true;

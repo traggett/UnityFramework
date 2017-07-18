@@ -17,15 +17,17 @@ namespace Framework
 
 			public readonly Type ObjectType;
 			public readonly string OnRenderPropertiesMethod;
+			public readonly bool UseForChildTypes;
 #endif
 			#endregion
 
 			#region Public Interface
-			public SerializedObjectEditorAttribute(Type objectType, string onRenderPropertiesMethod)
+			public SerializedObjectEditorAttribute(Type objectType, string onRenderPropertiesMethod, bool useForChildTypes = false )
 			{
 #if UNITY_EDITOR
 				ObjectType = objectType;
 				OnRenderPropertiesMethod = onRenderPropertiesMethod;
+				UseForChildTypes = useForChildTypes;
 #endif
 			}
 			#endregion

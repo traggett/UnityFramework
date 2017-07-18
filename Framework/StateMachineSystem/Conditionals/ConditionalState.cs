@@ -88,17 +88,20 @@ namespace Framework
 				string label = "";
 				bool firstBranch = true;
 
-				foreach (ConditionalStateBranch branch in _branches)
+				if (_branches != null)
 				{
-					if (!firstBranch)
-						label += "\nOr ";
+					foreach (ConditionalStateBranch branch in _branches)
+					{
+						if (!firstBranch)
+							label += "\nOr ";
 
-					label += branch.GetDescription();
+						label += branch.GetDescription();
 
-					firstBranch = false;
-				}
+						firstBranch = false;
+					}
+				}			
 
-				if (_backgroundLogic.Length > 0)
+				if (_backgroundLogic != null && _backgroundLogic.Length > 0)
 				{
 					label += "\n\nDuring State:";
 					

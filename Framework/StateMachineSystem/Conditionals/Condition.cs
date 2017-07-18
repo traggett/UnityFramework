@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 
 namespace Framework
 {
+	using Utils;
+
 	namespace StateMachineSystem
 	{
 		[Serializable]
@@ -9,9 +12,11 @@ namespace Framework
 		{
 			#region Private Data		
 #if UNITY_EDITOR
-			[NonSerialized]
-			public bool _editorFoldout;
+			private static Type[] _conditionals;
+			private static string[] _conditionalNames;
 
+			[NonSerialized]
+			public bool _editorCollapsed;
 #endif
 			#endregion
 

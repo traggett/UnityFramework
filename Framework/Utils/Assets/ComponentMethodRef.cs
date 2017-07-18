@@ -20,7 +20,7 @@ namespace Framework
 
 #if UNITY_EDITOR
 			[NonSerialized]
-			public bool _editorFoldout;
+			public bool _editorCollapsed;
 #endif
 
 			public static implicit operator string(ComponentMethodRef<T> property)
@@ -54,7 +54,7 @@ namespace Framework
 			{
 				_component = componentRef;
 				_methodName = methodName;
-				_editorFoldout = true;
+				_editorCollapsed = false;
 			}
 
 			public ComponentRef<Component> GetComponentRef()

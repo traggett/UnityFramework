@@ -26,15 +26,15 @@ namespace Framework
 
 					label.text += " (" + gameObjectRef + ")";
 
-					bool foldOut = EditorGUILayout.Foldout(gameObjectRef._editorFoldout, label);
+					bool editorCollapsed = !EditorGUILayout.Foldout(!gameObjectRef._editorCollapsed, label);
 
-					if (foldOut != gameObjectRef._editorFoldout)
+					if (editorCollapsed != gameObjectRef._editorCollapsed)
 					{
-						gameObjectRef._editorFoldout = foldOut;
+						gameObjectRef._editorCollapsed = editorCollapsed;
 						dataChanged = true;
 					}
 
-					if (foldOut)
+					if (!editorCollapsed)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;

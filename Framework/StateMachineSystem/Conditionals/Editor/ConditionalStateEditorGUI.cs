@@ -16,8 +16,6 @@ namespace Framework
 			[StateCustomEditorGUI(typeof(ConditionalState))]
 			public class ConditionalStateEditorGUI : StateEditorGUI
 			{
-				private static readonly Color _conditionLabelColor = new Color(0.8f, 0.8f, 0.8f, 1.0f);
-
 				#region StateEditorGUI			
 				public override void OnDoubleClick()
 				{
@@ -52,7 +50,7 @@ namespace Framework
 					{
 						for (int i = 0; i < conditionalState._branches.Length; i++)
 						{
-							GUI.backgroundColor = _conditionLabelColor;
+							GUI.backgroundColor = _titleLabelColor;
 							EditorGUILayout.LabelField(GetConditionLabel(conditionalState._branches[i], i == 0), EditorUtils.TextTitleStyle, GUILayout.Height(24.0f));
 							GUI.backgroundColor = orig;
 
@@ -77,30 +75,33 @@ namespace Framework
 					EditorGUILayout.LabelField("Background Logic:", EditorStyles.boldLabel);
 					EditorGUILayout.Separator();
 
-					for (int i = 0; i < conditionalState._backgroundLogic.Length; i++)
+					if (conditionalState._backgroundLogic != null)
 					{
-						ConditionalStateBackgroundLogic backgroundLogic = conditionalState._backgroundLogic[i];
-
-						GUI.backgroundColor = _conditionLabelColor;
-						EditorGUILayout.LabelField(backgroundLogic.GetDescription(), EditorUtils.TextTitleStyle, GUILayout.Height(24.0f));
-						GUI.backgroundColor = orig;
-
-						//Draw backgroundLogic properties
+						for (int i = 0; i < conditionalState._backgroundLogic.Length; i++)
 						{
-							int origIndent = EditorGUI.indentLevel;
-							EditorGUI.indentLevel++;
+							ConditionalStateBackgroundLogic backgroundLogic = conditionalState._backgroundLogic[i];
 
-							backgroundLogic = SerializationEditorGUILayout.ObjectField(backgroundLogic, "", ref dataChanged);
+							GUI.backgroundColor = _titleLabelColor;
+							EditorGUILayout.LabelField(backgroundLogic.GetDescription(), EditorUtils.TextTitleStyle, GUILayout.Height(24.0f));
+							GUI.backgroundColor = orig;
 
-							EditorGUI.indentLevel = origIndent;
+							//Draw backgroundLogic properties
+							{
+								int origIndent = EditorGUI.indentLevel;
+								EditorGUI.indentLevel++;
+
+								backgroundLogic = SerializationEditorGUILayout.ObjectField(backgroundLogic, "", ref dataChanged);
+
+								EditorGUI.indentLevel = origIndent;
+							}
+
+							if (DrawEditBackgroundLogicButtons(i))
+							{
+								dataChanged = true;
+								break;
+							}
 						}
-
-						if (DrawEditBackgroundLogicButtons(i))
-						{
-							dataChanged = true;
-							break;
-						}
-					}
+					}		
 
 					dataChanged |= DrawAddBackgroundLogicButton();
 					#endregion
