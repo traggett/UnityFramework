@@ -20,7 +20,7 @@ namespace Framework
 
 			public IEnumerator RunCoroutine()
 			{
-				MonoBehaviour component = _methodRef.GetComponentRef().GetComponent() as MonoBehaviour;
+				MonoBehaviour component = _methodRef.GetComponent() as MonoBehaviour;
 
 				if (component != null)
 				{

@@ -79,7 +79,7 @@ namespace Framework
 				if (state != null)
 				{
 #if UNITY_EDITOR && DEBUG
-					string debugFileName = startState._file.GetFilePath();
+					string debugFileName = startState.GetExternalFile().GetFilePath();
 					StateMachineDebug.OnStateStarted(stateMachine, state, debugFileName);
 #endif
 					return state.PerformState(stateMachine);
@@ -150,7 +150,7 @@ namespace Framework
 				if (obj.GetType() == typeof(StateRef))
 				{
 					StateRef StateRef = (StateRef)obj;
-					StateRef.FixUpRef((StateMachine)stateMachine);
+					StateRef.SetParentStatemachine((StateMachine)stateMachine);
 					return StateRef;
 				}
 #if UNITY_EDITOR

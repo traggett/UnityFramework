@@ -14,14 +14,16 @@ namespace Framework
 		public struct StateRef
 		{
 			#region Public Data		
-			public AssetRef<TextAsset> _file;
-			public int _stateId;
+			[SerializeField]
+			private AssetRef<TextAsset> _file;
+			[SerializeField]
+			private int _stateId;
 			//Editor properties
 			public Vector2 _editorExternalLinkPosition;
 			#endregion
 
 			#region Private Data
-			private StateMachine _stateMachine;
+			private StateMachine _parentStateMachine;
 			private State _state;
 #if UNITY_EDITOR
 			//Editor properties
@@ -42,9 +44,9 @@ namespace Framework
 #endif
 			}
 
-			public void FixUpRef(StateMachine stateMachine)
+			public void SetParentStatemachine(StateMachine stateMachine)
 			{
-				_stateMachine = stateMachine;
+				_parentStateMachine = stateMachine;
 				_state = null;
 #if UNITY_EDITOR
 				_editorStateName = null;
@@ -63,9 +65,9 @@ namespace Framework
 					//If file path is invalid then its an internal state.
 					if (IsInternal())
 					{
-						if (_stateMachine != null)
+						if (_parentStateMachine != null)
 						{
-							_state = _stateMachine.GetState(_stateId);
+							_state = _parentStateMachine.GetState(_stateId);
 						}
 						else
 						{
@@ -76,9 +78,9 @@ namespace Framework
 					else
 					{
 						TextAsset asset = _file.LoadAsset();
-						_stateMachine = StateMachine.FromTextAsset(asset, sourceObject);
+						_parentStateMachine = StateMachine.FromTextAsset(asset, sourceObject);
 						_file.UnloadAsset();
-						_state = _stateMachine.GetState(_stateId);
+						_state = _parentStateMachine.GetState(_stateId);
 					}
 				}
 
@@ -87,7 +89,7 @@ namespace Framework
 
 			public bool IsInternal()
 			{
-				return _file == null || !_file.IsValid();
+				return _stateId != -1;
 			}
 
 			public IEnumerator PerformState(StateMachineComponent stateMachine, GameObject sourceObject = null)
@@ -106,15 +108,34 @@ namespace Framework
 				return null;
 			}
 
+			
+
 #if UNITY_EDITOR
-			public StateMachine GetStateMachine()
+			public StateRef(int stateId, StateMachine parentStateMachine = null)
 			{
-				return _stateMachine;
+				_file = new AssetRef<TextAsset>();
+				_stateId = stateId;
+				_editorExternalLinkPosition = Vector2.zero;
+				_parentStateMachine = parentStateMachine;
+				_state = null;
+				_editorCollapsed = false;
+				_editorStateName = null;
 			}
 
-			public int GetStateID()
+			public StateRef(TextAsset asset, int stateId, StateMachine parentStateMachine = null)
 			{
-				return _stateId;
+				_file = new AssetRef<TextAsset>(asset);
+				_stateId = stateId;
+				_editorExternalLinkPosition = Vector2.zero;
+				_parentStateMachine = parentStateMachine;
+				_state = null;
+				_editorCollapsed = false;
+				_editorStateName = null;
+			}
+
+			public StateMachine GetParentStateMachine()
+			{
+				return _parentStateMachine;
 			}
 
 			public string GetStateName()
@@ -126,9 +147,19 @@ namespace Framework
 
 				return _editorStateName;
 			}
+
+			public int GetStateID()
+			{
+				return _stateId;
+			}
+
+			public AssetRef<TextAsset> GetExternalFile()
+			{
+				return _file;
+			}
 #endif
 			#endregion
-			
+
 			#region Private Functions
 #if UNITY_EDITOR
 			private void UpdateStateName()
@@ -137,7 +168,7 @@ namespace Framework
 						
 				if (IsInternal())
 				{
-					if (_stateMachine != null && GetState() != null)
+					if (_parentStateMachine != null && GetState() != null)
 					{
 						_editorStateName = StringUtils.GetFirstLine(_state.GetDescription());
 					}

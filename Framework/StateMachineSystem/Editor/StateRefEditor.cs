@@ -19,7 +19,7 @@ namespace Framework
 					Internal,
 					External
 				}
-				
+
 				#region SerializedObjectEditor
 				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
 				{
@@ -43,15 +43,13 @@ namespace Framework
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 
+
 						EditorGUI.BeginChangeCheck();
-						eType type = (eType)EditorGUILayout.EnumPopup("Link Type", (state._file.IsValid() || state._stateId == -1) ? eType.External : eType.Internal);
+						eType type = (eType)EditorGUILayout.EnumPopup("Link Type", state.IsInternal() ? eType.Internal : eType.External);
 						if (EditorGUI.EndChangeCheck())
 						{
 							//If type has changed create a new ref with file set to null if internal or a blank asset ref if external.
-							StateMachine stateMachine = state.GetStateMachine();
-							state = new StateRef();
-							state.FixUpRef(stateMachine);
-							state._stateId = type == eType.External ? -1 : 0;
+							state = new StateRef(type == eType.External ? -1 : 0, state.GetParentStateMachine());
 							dataChanged = true;
 						}
 
@@ -59,15 +57,15 @@ namespace Framework
 						{
 							case eType.Internal:
 								{
-									StateMachine stateMachine = state.GetStateMachine();
+									StateMachine stateMachine = state.GetParentStateMachine();
 									if (stateMachine != null)
 									{
-										int stateId = state._stateId;
+										int stateId = state.GetStateID();
 
 										//If changed state id create new state ref
 										if (DrawStateNamePopUps(stateMachine._states, ref stateId))
 										{
-											state._stateId = stateId;
+											state = new StateRef(stateId, stateMachine);
 											dataChanged = true;
 										}
 									}	
@@ -75,24 +73,23 @@ namespace Framework
 								break;
 							case eType.External:
 								{
-									TextAsset asset = EditorGUILayout.ObjectField("File", state._file._editorAsset, typeof(TextAsset), false) as TextAsset;
+									TextAsset asset = EditorGUILayout.ObjectField("File", state.GetExternalFile()._editorAsset, typeof(TextAsset), false) as TextAsset;
 
 									//If asset changed update GUIDS
-									if (state._file._editorAsset != asset)
+									if (state.GetExternalFile()._editorAsset != asset)
 									{
-										state._file = new AssetRef<TextAsset>(asset);
-										state._stateId = -1;
+										state = new StateRef(asset, -1, state.GetParentStateMachine());
 										dataChanged = true;
 									}
 
 									if (asset != null)
 									{
 										StateMachine stateMachines = Serializer.FromFile<StateMachine>(AssetDatabase.GetAssetPath(asset));
-										int stateId = state._stateId;
+										int stateId = state.GetStateID();
 
 										if (DrawStateNamePopUps(stateMachines._states, ref stateId))
 										{
-											state._stateId = stateId;
+											state = new StateRef(asset, stateId, state.GetParentStateMachine());
 											dataChanged = true;
 										}
 									}

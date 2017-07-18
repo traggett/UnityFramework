@@ -47,7 +47,7 @@ namespace Framework
 				
 				foreach (Event evnt in _timeline._events)
 				{
-					string eventDescription = evnt.GetEditorDescription();
+					string eventDescription = evnt.GetEditorShortDescription();
 
 					if (!string.IsNullOrEmpty(eventDescription))
 					{
@@ -57,7 +57,7 @@ namespace Framework
 						}
 						else
 						{
-							label += "\n" + eventDescription;
+							label += '\n' + eventDescription;
 						}
 					}
 				}

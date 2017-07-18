@@ -47,7 +47,10 @@ namespace Framework
 				return returnObj;
 			}
 
-			
+			public Component GetComponent()
+			{
+				return _component.GetComponent();
+			}
 
 #if UNITY_EDITOR
 			public ComponentMethodRef(ComponentRef<Component> componentRef, string methodName)

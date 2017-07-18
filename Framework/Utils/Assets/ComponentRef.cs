@@ -92,6 +92,12 @@ namespace Framework
 			{
 				return _gameObject.IsValid();
 			}
+
+			public GameObjectRef GetGameObjectRef()
+			{
+				return _gameObject;
+			}
+
 #if UNITY_EDITOR
 			public ComponentRef(GameObjectRef.eSourceType sourceType)
 			{
@@ -133,11 +139,6 @@ namespace Framework
 				_gameObject = new GameObjectRef(sourceType, gameObject);
 				_componentIndex = componentIndex;
 				_editorCollapsed = false;
-			}
-
-			public GameObjectRef GetGameObjectRef()
-			{
-				return _gameObject;
 			}
 
 			public int GetComponentIndex()

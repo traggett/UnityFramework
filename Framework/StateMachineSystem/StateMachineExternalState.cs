@@ -21,7 +21,7 @@ namespace Framework
 			public override string GetAutoDescription()
 			{
 				StateRef stateRef = _externalStateRef.GetStateRef();
-				return (stateRef._file._editorAsset != null ? stateRef._file._editorAsset.name : null);
+				return (stateRef.GetExternalFile()._editorAsset != null ? stateRef.GetExternalFile()._editorAsset.name : null);
 			}
 
 			public override string GetStateIdLabel()

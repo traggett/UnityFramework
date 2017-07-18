@@ -134,7 +134,11 @@ namespace Framework
 
 			public static string[] GetLines(string text)
 			{
-				string[] lines = text.Split('\n');
+				string[] lines = null;
+
+				if (text != null)
+					lines = text.Split('\n');
+
 				return lines;
 			}
 
@@ -148,7 +152,6 @@ namespace Framework
 				}
 
 				return text;
-
 			}
 
 			public static string GetAssetPath(string filePath)
@@ -268,7 +271,7 @@ namespace Framework
 					}
 					else
 					{
-						//Check for two captials in a row?
+						//Check for two capitals in a row?
 						if (char.IsUpper(charString[i]))
 						{
 							chars.Add(' ');
@@ -294,14 +297,18 @@ namespace Framework
 
 			public static string RemoveRichText(string text)
 			{
-				text = text.Replace("<b>", "");
-				text = text.Replace("</b>", "");
-				text = text.Replace("<B>", "");
-				text = text.Replace("</B>", "");
-				text = text.Replace("<i>", "");
-				text = text.Replace("</i>", "");
-				text = text.Replace("<I>", "");
-				text = text.Replace("</I>", "");
+				if (text != null)
+				{
+					text = text.Replace("<b>", "");
+					text = text.Replace("</b>", "");
+					text = text.Replace("<B>", "");
+					text = text.Replace("</B>", "");
+					text = text.Replace("<i>", "");
+					text = text.Replace("</i>", "");
+					text = text.Replace("<I>", "");
+					text = text.Replace("</I>", "");
+				}
+				
 				return text;
 			}
 		}

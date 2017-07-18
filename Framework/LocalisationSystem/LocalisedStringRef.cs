@@ -20,7 +20,7 @@ namespace Framework
 			#region Editor Data
 #if UNITY_EDITOR
 			[NonSerialized]
-			public bool _editorFoldout;	
+			public bool _editorCollapsed;	
 			private string _editorAutoNameParentName;
 #endif
 			#endregion
@@ -31,7 +31,7 @@ namespace Framework
 				_cachedText = string.Empty;
 				_cachedLanguage = SystemLanguage.Unknown;
 #if UNITY_EDITOR
-				_editorFoldout = true;
+				_editorCollapsed = false;
 				_editorAutoNameParentName = null;
 #endif
 			}
@@ -84,6 +84,11 @@ namespace Framework
 				_editorAutoNameParentName = stateMachineName;
 			}
 			
+			public string GetAutoNameParentName()
+			{
+				return _editorAutoNameParentName;
+			}
+
 			public string GetAutoKey()
 			{
 				string autoKey = null;

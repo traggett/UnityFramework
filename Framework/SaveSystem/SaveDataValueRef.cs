@@ -55,12 +55,6 @@ namespace Framework
 				return _saveDataType != null;
 			}
 
-			public SaveDataBlock GetSaveData()
-			{
-				SaveDataBlock data = SaveData.GetByType(_saveDataType);
-				return data;
-			}
-
 			public object GetSaveDataValue()
 			{
 				SaveDataBlock data = SaveData.GetByType(_saveDataType);
@@ -71,6 +65,16 @@ namespace Framework
 				}
 
 				return null;
+			}
+
+			public void SetSaveDataValue(object value)
+			{
+				SaveDataBlock saveData = SaveData.GetByType(_saveDataType);
+
+				if (saveData != null && value != null)
+				{
+					saveData.SetValue(_valueID, value);
+				}
 			}
 
 #if UNITY_EDITOR
@@ -99,7 +103,7 @@ namespace Framework
 			{
 				return _valueID;
 			}
-			
+
 			public SaveDataBlock CreateEditorSaveBlockInstance()
 			{
 				if (_saveDataType !=null)

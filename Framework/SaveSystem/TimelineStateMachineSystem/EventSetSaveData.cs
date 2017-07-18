@@ -34,13 +34,7 @@ namespace Framework
 			#region IStateMachineSystemEvent
 			public eEventTriggerReturn Trigger(StateMachineComponent stateMachine) 
 			{
-				SaveDataBlock saveData = _saveDataProperty.GetSaveData();
-				
-				if (saveData != null && _value != null)
-				{
-					saveData.SetValue(_saveDataProperty.GetSaveValueID(), _value);
-				}
-
+				_saveDataProperty.SetSaveDataValue(_value);
 				return eEventTriggerReturn.EventFinished;
 			}
 

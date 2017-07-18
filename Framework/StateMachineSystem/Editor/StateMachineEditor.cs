@@ -250,7 +250,7 @@ namespace Framework
 					if (ShowOnLoadSaveChangesDialog())
 					{
 						StateRef stateRef = state.ExternalStateRef.GetStateRef();
-						string fileName = AssetDatabase.GetAssetPath(stateRef._file._editorAsset);
+						string fileName = AssetDatabase.GetAssetPath(stateRef.GetExternalFile()._editorAsset);
 						LoadFile(fileName);
 					}
 				}
@@ -693,7 +693,7 @@ namespace Framework
 						{						
 							StateRef extStateRef = extState.ExternalStateRef.GetStateRef();
 
-							if (extStateRef._stateId == stateRef._stateId && extStateRef._file.GetFileGUID() == stateRef._file.GetFileGUID())
+							if (extStateRef.GetStateID() == stateRef.GetStateID() && extStateRef.GetExternalFile().GetFileGUID() == stateRef.GetExternalFile().GetFileGUID())
 							{
 								externalState = extState;
 								break;
@@ -788,7 +788,7 @@ namespace Framework
 
 				private int GenerateNewStateId()
 				{
-					int stateId = 0;
+					int stateId = 1;
 
 					foreach (StateEditorGUI state in _editableObjects)
 					{

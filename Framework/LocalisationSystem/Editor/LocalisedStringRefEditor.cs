@@ -18,15 +18,15 @@ namespace Framework
 				{
 					LocalisedStringRef localisedString = (LocalisedStringRef)obj;
 					
-					bool foldOut = EditorGUILayout.Foldout(localisedString._editorFoldout, label);
+					bool editorCollapsed = !EditorGUILayout.Foldout(!localisedString._editorCollapsed, label);
 
-					if (foldOut != localisedString._editorFoldout)
+					if (editorCollapsed != localisedString._editorCollapsed)
 					{
-						localisedString._editorFoldout = foldOut;
+						localisedString._editorCollapsed = editorCollapsed;
 						dataChanged = true;
 					}
 
-					if (foldOut)
+					if (!editorCollapsed)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -55,12 +55,10 @@ namespace Framework
 								if (currentKeyIndex == 0)
 								{
 									localisedString = new LocalisedStringRef();
-									localisedString._editorFoldout = foldOut;
 								}
 								else
 								{
 									localisedString = new LocalisedStringRef(keys[currentKeyIndex]);
-									localisedString._editorFoldout = foldOut;
 								}
 
 								dataChanged = true;
@@ -75,10 +73,13 @@ namespace Framework
 								string newKey = localisedString.GetLocalisationKey();
 								newKey = EditorGUILayout.DelayedTextField("New Key", newKey);
 
+								string editorParentName = localisedString.GetAutoNameParentName();
+
 								if (GUILayout.Button("Auto", GUILayout.Width(36)))
 								{
 									newKey = localisedString.GetAutoKey();
 									localisedString = new LocalisedStringRef(newKey);
+									localisedString.SetAutoNameParentName(editorParentName);
 									dataChanged = true;
 								}
 
@@ -90,8 +91,7 @@ namespace Framework
 									}
 
 									localisedString = new LocalisedStringRef(newKey);
-									localisedString._editorFoldout = foldOut;
-
+									localisedString.SetAutoNameParentName(editorParentName);
 									dataChanged = true;
 								}
 							}

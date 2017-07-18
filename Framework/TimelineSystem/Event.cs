@@ -86,6 +86,7 @@ namespace Framework
 			public virtual bool EndsTimeline() { return false; }
 			public abstract Color GetColor();
 			public abstract string GetEditorDescription();
+			public virtual string GetEditorShortDescription() { return GetEditorDescription(); }
 #endif
 			#endregion
 

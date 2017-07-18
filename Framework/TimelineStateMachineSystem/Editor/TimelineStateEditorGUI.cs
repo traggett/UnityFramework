@@ -3,8 +3,7 @@ using UnityEngine;
 namespace Framework
 {
 	using StateMachineSystem.Editor;
-	using Event = TimelineSystem.Event;
-
+	
 	namespace TimelineStateMachineSystem
 	{
 		namespace Editor
