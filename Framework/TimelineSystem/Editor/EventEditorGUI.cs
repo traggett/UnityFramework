@@ -53,9 +53,9 @@ namespace Framework
 					MarkAsDirty(true);
 				}
 
-				public void CalcBounds(Vector2 pos, float size)
+				public void CalcBounds(Vector2 pos, float size, GUIStyle style)
 				{
-					Vector2 labelDimensions = GetLabelSize();
+					Vector2 labelDimensions = GetLabelSize(style);
 
 					float areaWidth = labelDimensions.x + kShadowSize + 2.0f;
 					float areaHeight = labelDimensions.y + kShadowSize + kDurationBoxY + 2.0f;
@@ -78,7 +78,7 @@ namespace Framework
 					GUI.backgroundColor = Color.clear;
 					GUI.BeginGroup(_rect);
 					{
-						Vector2 labelSize = GetLabelSize();
+						Vector2 labelSize = GetLabelSize(style);
 						Rect labelRect = new Rect(1.0f, kDurationBoxY, labelSize.x, labelSize.y);
 
 						//Draw shadow
@@ -151,11 +151,11 @@ namespace Framework
 					GUI.Label(new Rect(0, 0, _rect.width, _rect.height), GetEditableObject().GetEditorDescription(), style);
 				}
 
-				public virtual Vector2 GetLabelSize()
+				public virtual Vector2 GetLabelSize(GUIStyle style)
 				{
 					string labelText = GetEditableObject().GetEditorDescription();
 					GUIContent labelContent = new GUIContent(labelText);
-					Vector2 size = EditorUtils.TextStyle.CalcSize(labelContent) ;
+					Vector2 size = style.CalcSize(labelContent) ;
 					return size;
 				}
 				#endregion

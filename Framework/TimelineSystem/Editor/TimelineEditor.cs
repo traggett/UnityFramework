@@ -8,8 +8,7 @@ namespace Framework
 {
 	using Utils;
 	using Serialization;
-	using Utils.Editor;
-
+	
 	namespace TimelineSystem
 	{
 		namespace Editor
@@ -123,7 +122,7 @@ namespace Framework
 								float eventSize = _timelineArea.GetPositonDelta(evnt.GetDuration());
 								Vector2 pos = new Vector2(xPos, yPos);
 
-								evnt.CalcBounds(pos, eventSize);
+								evnt.CalcBounds(pos, eventSize, style);
 								Rect eventRect = evnt.GetBounds();
 								
 								bool overlapping = true;

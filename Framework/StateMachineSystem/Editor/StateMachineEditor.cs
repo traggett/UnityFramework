@@ -119,7 +119,7 @@ namespace Framework
 								{
 									Rect position = new Rect(0.0f, 53.0f, windowSize.x, windowSize.y - 58);
 									needsRepaint = _timelineEditor.NeedsRepaint();
-									_timelineEditor.Render(position, EditorUtils.TextStyle);
+									_timelineEditor.Render(position, _style._stateTextStyle);
 									needsRepaint |= _timelineEditor.NeedsRepaint();
 								}
 								break;
