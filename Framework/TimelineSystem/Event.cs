@@ -49,9 +49,9 @@ namespace Framework
 					int days = EditorGUILayout.IntField(timeSpan.Days, GUILayout.Width(24));
 					EditorGUILayout.LabelField("day(s)", GUILayout.Width(42));
 					int hours = EditorGUILayout.IntField(timeSpan.Hours, GUILayout.Width(24));
-					EditorGUILayout.LabelField("h:", GUILayout.Width(16));
+					EditorGUILayout.LabelField("h", GUILayout.Width(16));
 					int minutes = EditorGUILayout.IntField(timeSpan.Minutes, GUILayout.Width(24));
-					EditorGUILayout.LabelField("m:", GUILayout.Width(18));
+					EditorGUILayout.LabelField("m", GUILayout.Width(18));
 					int seconds = EditorGUILayout.IntField(timeSpan.Seconds, GUILayout.Width(24));
 
 					timeSpan = new TimeSpan(days, hours, minutes, seconds, timeSpan.Milliseconds);

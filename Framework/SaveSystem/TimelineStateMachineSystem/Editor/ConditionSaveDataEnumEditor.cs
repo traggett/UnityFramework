@@ -17,7 +17,7 @@ namespace Framework
 			public static class ConditionSaveDataEnumEditor
 			{
 				#region SerializedObjectEditor
-				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
+				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 				{
 					Condition currentConditional = (Condition)obj;
 					Condition conditional = ConditionEditor.DrawAddConditionalDropDown("Condition", currentConditional);

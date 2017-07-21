@@ -89,7 +89,7 @@ namespace Framework
 
 			public bool IsInternal()
 			{
-				return _stateId != -1;
+				return _stateId != -1 && !_file.IsValid();
 			}
 
 			public IEnumerator PerformState(StateMachineComponent stateMachine, GameObject sourceObject = null)

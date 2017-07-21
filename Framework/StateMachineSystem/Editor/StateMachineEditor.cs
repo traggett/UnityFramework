@@ -119,7 +119,7 @@ namespace Framework
 								{
 									Rect position = new Rect(0.0f, 53.0f, windowSize.x, windowSize.y - 58);
 									needsRepaint = _timelineEditor.NeedsRepaint();
-									_timelineEditor.Render(position);
+									_timelineEditor.Render(position, EditorUtils.TextStyle);
 									needsRepaint |= _timelineEditor.NeedsRepaint();
 								}
 								break;
@@ -572,9 +572,14 @@ namespace Framework
 							if (currentDbugObject != debugObject)
 							{
 								_editorPrefs._debugObject = new ComponentRef<StateMachineComponent>(GameObjectRef.eSourceType.Scene, debugObject);
+
+								if (debugObject != null && _editorPrefs._debugObject.GetComponent() == null)
+								{
+									_editorPrefs._debugObject = new ComponentRef<StateMachineComponent>(GameObjectRef.eSourceType.Prefab, debugObject);
+								}
+
 								SaveEditorPrefs();
 							}
-
 
 							_editorPrefs._debugLockFocus = GUILayout.Toggle(_editorPrefs._debugLockFocus, "Lock Focus", EditorStyles.toolbarButton);
 

@@ -9,7 +9,7 @@ namespace Framework
 		public static class AnimationCurveEditor
 		{
 			#region SerializedObjectEditor
-			public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
+			public static object PropertyField(object obj, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 			{
 				AnimationCurve curve = (AnimationCurve)obj;
 

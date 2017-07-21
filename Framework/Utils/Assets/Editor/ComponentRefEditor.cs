@@ -20,7 +20,7 @@ namespace Framework
 				private static GUIContent kLabel = new GUIContent("Component");
 
 				#region SerializedObjectEditor
-				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
+				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 				{
 					Type componentType = SystemUtils.GetGenericImplementationType(typeof(ComponentRef<>), obj.GetType());
 

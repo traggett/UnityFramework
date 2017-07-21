@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Framework
 {
+	using Utils.Editor;
 	using Serialization;
 
 	namespace LocalisationSystem
@@ -14,7 +15,7 @@ namespace Framework
 			public static class LocalisedStringRefEditor
 			{
 				#region SerializedObjectEditor
-				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
+				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 				{
 					LocalisedStringRef localisedString = (LocalisedStringRef)obj;
 					
@@ -106,7 +107,11 @@ namespace Framework
 							if (!string.IsNullOrEmpty(currentKey) && Localisation.IsKeyInTable(currentKey))
 							{
 								EditorGUI.BeginChangeCheck();
-								string text = EditorGUILayout.TextArea(Localisation.GetString(currentKey));
+								string text;
+								if (style != null)
+									text = EditorGUILayout.TextArea(Localisation.GetString(currentKey), style);
+								else
+									text = EditorGUILayout.TextArea(Localisation.GetString(currentKey));
 								if (EditorGUI.EndChangeCheck())
 								{
 									Localisation.UpdateString(currentKey, Localisation.GetCurrentLanguage(), text);

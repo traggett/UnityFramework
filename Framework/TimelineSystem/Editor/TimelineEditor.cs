@@ -8,6 +8,7 @@ namespace Framework
 {
 	using Utils;
 	using Serialization;
+	using Utils.Editor;
 
 	namespace TimelineSystem
 	{
@@ -104,7 +105,7 @@ namespace Framework
 					return timeLine;
 				}
 				
-				public void Render(Rect position)
+				public void Render(Rect position, GUIStyle style)
 				{
 					//Start main container
 					_timelineArea.BeginTimedArea(position, 0.0f, GetTimelineEndTime(), ref _shownStartTime, ref _shownDuration, 0.0f, _visiblePadding, 0.0f, float.MaxValue, true);
@@ -153,7 +154,7 @@ namespace Framework
 							{
 								float eventSize = _timelineArea.GetPositonDelta(evnt.GetDuration());
 								bool selected = _selectedObjects.Contains(evnt);
-								evnt.RenderOnTimeline(eventSize, selected);
+								evnt.RenderOnTimeline(style, eventSize, selected);
 
 								if (selected)
 								{

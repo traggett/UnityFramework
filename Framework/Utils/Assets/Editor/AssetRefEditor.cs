@@ -16,7 +16,7 @@ namespace Framework
 			public static class AssetRefEditor
 			{
 				#region SerializedObjectEditor
-				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
+				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 				{
 					Type assetType = SystemUtils.GetGenericImplementationType(typeof(AssetRef<>), obj.GetType());
 

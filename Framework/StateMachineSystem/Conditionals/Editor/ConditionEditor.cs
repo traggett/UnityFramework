@@ -20,7 +20,7 @@ namespace Framework
 				private static string[] _conditionalNames;
 
 				#region SerializedObjectEditor
-				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
+				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 				{
 					Condition currentConditional = (Condition)obj;
 					Condition conditional = DrawAddConditionalDropDown("Condition", currentConditional);

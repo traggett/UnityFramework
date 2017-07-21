@@ -72,7 +72,7 @@ namespace Framework
 					_rect = rect;
 				}
 
-				public void RenderOnTimeline(float size, bool isSelected)
+				public void RenderOnTimeline(GUIStyle style, float size, bool isSelected)
 				{
 					Color origBackgroundColor = GUI.backgroundColor;
 					GUI.backgroundColor = Color.clear;
@@ -94,7 +94,6 @@ namespace Framework
 						GUI.backgroundColor = GetColor();
 						GUI.BeginGroup(labelRect, EditorUtils.ColoredHalfRoundedBoxStyle);
 						{
-							GUIStyle style = EditorUtils.TextStyle;
 							float h, s, v;
 							Color.RGBToHSV(GetColor(), out h, out s, out v);
 							style.normal.textColor = v > 0.66f ? Color.black : Color.white;

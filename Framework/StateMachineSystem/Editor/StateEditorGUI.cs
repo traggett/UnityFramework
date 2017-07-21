@@ -247,7 +247,7 @@ namespace Framework
 						if (!GetEditableObject()._editorAutoDescription)
 						{
 							EditorGUI.BeginChangeCheck();
-							GetEditableObject()._editorDescription = EditorGUILayout.DelayedTextField(GetEditableObject()._editorDescription);
+							GetEditableObject()._editorDescription = EditorGUILayout.TextArea(GetEditableObject()._editorDescription);
 							dataChanged |= EditorGUI.EndChangeCheck();
 						}
 

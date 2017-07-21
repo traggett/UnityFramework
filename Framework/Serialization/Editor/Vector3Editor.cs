@@ -9,7 +9,7 @@ namespace Framework
 		public static class Vector3Editor
 		{
 			#region SerializedObjectEditor
-			public static object PropertyField(object obj, GUIContent label, ref bool dataChanged)
+			public static object PropertyField(object obj, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 			{
 				EditorGUI.BeginChangeCheck();
 				obj = EditorGUILayout.Vector3Field(label, (Vector3)obj);

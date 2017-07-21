@@ -20,30 +20,30 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			public static T ObjectField<T>(T obj, string label)
+			public static T ObjectField<T>(T obj, string label, GUIStyle style = null, params GUILayoutOption[] options)
 			{
 				bool dataChanged = false;
 				return ObjectField(obj, label, ref dataChanged);
 			}
 
-			public static T ObjectField<T>(T obj, GUIContent label)
+			public static T ObjectField<T>(T obj, GUIContent label, GUIStyle style = null, params GUILayoutOption[] options)
 			{
 				bool dataChanged = false;
 				return ObjectField(obj, label, ref dataChanged);
 			}
 
-			public static T ObjectField<T>(T obj, string label, ref bool dataChanged)
+			public static T ObjectField<T>(T obj, string label, ref bool dataChanged, GUIStyle style = null, params GUILayoutOption[] options)
 			{
 				return ObjectField(obj, new GUIContent(label), ref dataChanged);
 			}
 
 			//The equivalent of a SerializedPropertyField but for objects serialized using Xml.
-			public static T ObjectField<T>(T obj, GUIContent label, ref bool dataChanged)
+			public static T ObjectField<T>(T obj, GUIContent label, ref bool dataChanged, GUIStyle style = null, params GUILayoutOption[] options)
 			{
-				return (T)ObjectField(obj, obj != null ? obj.GetType() : typeof(T), label, ref dataChanged);
+				return (T)ObjectField(obj, obj != null ? obj.GetType() : typeof(T), label, ref dataChanged, style, options);
 			}
 
-			public static object RenderObjectMemebers(object obj, Type objType, ref bool dataChanged)
+			public static object RenderObjectMemebers(object obj, Type objType, ref bool dataChanged, GUIStyle style = null, params GUILayoutOption[] options)
 			{
 				SerializedObjectMemberInfo[] serializedFields = SerializedObjectMemberInfo.GetSerializedFields(objType);
 
@@ -61,11 +61,11 @@ namespace Framework
 
 						if (serializedFields[i].GetFieldType().IsArray)
 						{
-							nodeFieldObject = ArrayField(labelContent, nodeFieldObject as Array, serializedFields[i].GetFieldType().GetElementType(), ref fieldChanged);
+							nodeFieldObject = ArrayField(labelContent, nodeFieldObject as Array, serializedFields[i].GetFieldType().GetElementType(), ref fieldChanged, style, options);
 						}
 						else
 						{
-							nodeFieldObject = ObjectField(nodeFieldObject, nodeFieldObject != null ? nodeFieldObject.GetType() : serializedFields[i].GetFieldType(), labelContent, ref fieldChanged);
+							nodeFieldObject = ObjectField(nodeFieldObject, nodeFieldObject != null ? nodeFieldObject.GetType() : serializedFields[i].GetFieldType(), labelContent, ref fieldChanged, style, options);
 						}
 
 						if (fieldChanged)
@@ -81,14 +81,14 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private static object ObjectField(object obj, Type objType, GUIContent label, ref bool dataChanged)
+			private static object ObjectField(object obj, Type objType, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 			{
 				//If object is an array show an editable array field
 				if (objType.IsArray)
 				{
 					bool arrayChanged = false;
 					Array arrayObj = obj as Array;
-					arrayObj = ArrayField(label, arrayObj, objType.GetElementType(), ref arrayChanged);
+					arrayObj = ArrayField(label, arrayObj, objType.GetElementType(), ref arrayChanged, style, options);
 
 					if (arrayChanged)
 					{
@@ -122,14 +122,14 @@ namespace Framework
 				if (renderPropertiesDelegate != null)
 				{
 					//If it has one then just need to call its render properties function.
-					return renderPropertiesDelegate(obj, label, ref dataChanged);
+					return renderPropertiesDelegate(obj, label, ref dataChanged, style, options);
 				}
 
 				//Otherwise render all the objects memebers as object fields
-				return RenderObjectMemebers(obj, objType, ref dataChanged);
+				return RenderObjectMemebers(obj, objType, ref dataChanged, style, options);
 			}
 
-			private static Array ArrayField(GUIContent label, Array _array, Type arrayType, ref bool dataChanged)
+			private static Array ArrayField(GUIContent label, Array _array, Type arrayType, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 			{
 				label.text += " (" + SystemUtils.GetTypeName(arrayType) + ")";
 
@@ -174,7 +174,7 @@ namespace Framework
 						for (int i = 0; i < _array.Length; i++)
 						{
 							bool elementChanged = false;
-							object elementObj = ObjectField(_array.GetValue(i), "Element " + i, ref elementChanged);
+							object elementObj = ObjectField(_array.GetValue(i), new GUIContent("Element " + i), ref elementChanged, style, options);
 							_array.SetValue(elementObj, i);
 							dataChanged |= elementChanged;
 						}
