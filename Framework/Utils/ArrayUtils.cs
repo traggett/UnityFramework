@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Framework
 {
@@ -97,6 +98,12 @@ namespace Framework
 				}
 			}
 
+			public static void Sort<T>(ref T[] array, Comparison<T> comparison)
+			{
+				List<T> tempList = new List<T>(array);
+				tempList.Sort(comparison);
+				array = tempList.ToArray();
+			}
 		}
 	}
 }

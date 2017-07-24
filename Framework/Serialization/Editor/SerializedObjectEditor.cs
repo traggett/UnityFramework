@@ -6,8 +6,9 @@ using System.Collections.Generic;
 
 namespace Framework
 {
+	using Utils;
 	using Utils.Editor;
-	
+
 	namespace Serialization
 	{
 		public abstract class SerializedObjectEditor<T> : ScriptableObject where T : class
@@ -34,10 +35,8 @@ namespace Framework
 
 			//Note these should all be SerializedObjectEditorGUI<T> but unity won't serialize them (and thus make them usable in Undo actions) if they are a template class
 			[SerializeField]
-			protected List<ScriptableObject> _editableObjects = new List<ScriptableObject>();
-			[SerializeField]
+			protected ScriptableObject[] _editableObjects = new ScriptableObject[0];
 			protected List<ScriptableObject> _selectedObjects = new List<ScriptableObject>();
-			[SerializeField]
 			protected List<ScriptableObject> _copiedObjects = new List<ScriptableObject>();
 			#endregion
 
@@ -133,9 +132,8 @@ namespace Framework
 					GetEditorWindow().OnDeselectObject(editorGUI);
 				}
 
-				_editableObjects.Clear();
+				_editableObjects = new ScriptableObject[0];
 				_selectedObjects.Clear();
-				//_copiedObjects.Clear();
 				_draggedObject = null;
 
 				Undo.ClearUndo(this);
@@ -152,21 +150,25 @@ namespace Framework
 					editorGUI = CreateObjectEditorGUI(obj);
 					editorGUI.SetEditableObject(obj);
 
-					_editableObjects.Add(editorGUI);
-					SortObjects();
+					_cachedEditableObjects = new List<ScriptableObject>(_editableObjects);
+					ArrayUtils.Add(ref _editableObjects, editorGUI);
 
-					UpdateCachedObjectList();
+					SortObjects();
 				}
 
 				return editorGUI;
 			}
 
-			protected void RemoveObject(SerializedObjectEditorGUI<T> editorGUI)
+			protected void RemoveObject(params SerializedObjectEditorGUI<T>[] editorGUIs)
 			{
-				GetEditorWindow().OnDeselectObject(editorGUI);
-				_editableObjects.Remove(editorGUI);
-				_selectedObjects.Remove(editorGUI);
-				UpdateCachedObjectList();
+				foreach (SerializedObjectEditorGUI<T> editorGUI in editorGUIs)
+				{
+					GetEditorWindow().OnDeselectObject(editorGUI);
+					ArrayUtils.Remove(ref _editableObjects, editorGUI);
+					_selectedObjects.Remove(editorGUI);
+				}
+
+				_cachedEditableObjects = new List<ScriptableObject>(_editableObjects);
 			}
 
 			protected void MarkAsDirty()
@@ -177,7 +179,7 @@ namespace Framework
 
 			protected void SortObjects()
 			{
-				_editableObjects.Sort((a, b) => (((SerializedObjectEditorGUI<T>)a).CompareTo((SerializedObjectEditorGUI<T>)b)));
+				ArrayUtils.Sort(ref _editableObjects, (a, b) => (((SerializedObjectEditorGUI<T>)a).CompareTo((SerializedObjectEditorGUI<T>)b)));
 			}
 			#endregion
 
@@ -206,7 +208,7 @@ namespace Framework
 
 				Vector2 gridPosition = GetEditorPosition(inputEvent.mousePosition);
 
-				for (int i = 0; i < _editableObjects.Count; i++)
+				for (int i = 0; i < _editableObjects.Length; i++)
 				{
 					SerializedObjectEditorGUI<T> evnt = (SerializedObjectEditorGUI<T>)_editableObjects[i];
 					if (evnt.GetBounds().Contains(gridPosition))
@@ -315,6 +317,9 @@ namespace Framework
 				{
 					if (_dragMode == eDragType.LeftClick)
 					{
+						//This sets the current scene as being dirty as well :/
+						//SerializedObject.ApplyModifiedProperties.  should be used instead.
+						//So need a serialzed object for the objects
 						Undo.RegisterCompleteObjectUndo(_selectedObjects.ToArray(), "Move Objects(s)");
 
 						foreach (SerializedObjectEditorGUI<T> evnt in _selectedObjects)
@@ -358,7 +363,7 @@ namespace Framework
 
 						Rect gridDragRect = GetEditorRect(_dragAreaRect);
 
-						for (int i = 0; i < _editableObjects.Count; i++)
+						for (int i = 0; i < _editableObjects.Length; i++)
 						{
 							SerializedObjectEditorGUI<T> editorGUI = (SerializedObjectEditorGUI<T>)_editableObjects[i];
 							//Bounds need to account for scale
@@ -652,18 +657,18 @@ namespace Framework
 					Undo.RegisterCompleteObjectUndo(this, "Cut Object(s)");
 
 					_copiedObjects.Clear();
+					_copiedObjects.AddRange(_selectedObjects);
 
-					List<ScriptableObject> selectedObjects = new List<ScriptableObject>(_selectedObjects);
-
-					foreach (SerializedObjectEditorGUI<T> editorGUI in selectedObjects)
+					SerializedObjectEditorGUI<T>[] selectedObjects = new SerializedObjectEditorGUI<T>[_selectedObjects.Count];
+					for (int i=0; i< _selectedObjects.Count; i++)
 					{
-						_copiedObjects.Add(editorGUI);
-						RemoveObject(editorGUI);
+						selectedObjects[i] = (SerializedObjectEditorGUI<T>)_selectedObjects[i];
 					}
+					
+					RemoveObject(selectedObjects);
 					_selectedObjects.Clear();
 
 					MarkAsDirty();
-
 					_needsRepaint = true;
 				}
 			}
@@ -674,21 +679,18 @@ namespace Framework
 				{
 					Undo.RegisterCompleteObjectUndo(this, "Remove Object(s)");
 
-					foreach (SerializedObjectEditorGUI<T> editorGUI in new List<ScriptableObject>(_selectedObjects))
+					SerializedObjectEditorGUI<T>[] selectedObjects = new SerializedObjectEditorGUI<T>[_selectedObjects.Count];
+					for (int i = 0; i < _selectedObjects.Count; i++)
 					{
-						RemoveObject(editorGUI);
+						selectedObjects[i] = (SerializedObjectEditorGUI<T>)_selectedObjects[i];
 					}
+
+					RemoveObject(selectedObjects);
 					_selectedObjects.Clear();
 
 					MarkAsDirty();
-
 					_needsRepaint = true;
 				}
-			}
-
-			private void UpdateCachedObjectList()
-			{
-				_cachedEditableObjects = new List<ScriptableObject>(_editableObjects);
 			}
 
 			private void UndoRedoCallback()

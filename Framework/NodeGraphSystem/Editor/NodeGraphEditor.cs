@@ -288,7 +288,7 @@ namespace Framework
 					NodeEditorField clickedOnNodeFromField = null;
 					NodeEditorField clickedOnNodeToField = null;
 
-					for (int i = 0; i < _editableObjects.Count && clickedOnNodeFromField == null; i++)
+					for (int i = 0; i < _editableObjects.Length && clickedOnNodeFromField == null; i++)
 					{
 						NodeEditorGUI node = (NodeEditorGUI)_editableObjects[i];
 

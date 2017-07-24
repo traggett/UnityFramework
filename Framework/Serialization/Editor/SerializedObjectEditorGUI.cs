@@ -13,9 +13,10 @@ namespace Framework
 			private bool _dirty;
 			private SerializedObjectEditor<T> _editor;
 			private T _editableObject;
-
 			[SerializeField]
-			private string _undoObjectXml = null;
+			private string _undoObjectSerialized;
+			private SerializedObject _undoObject;
+			private SerializedProperty _undoProperty;
 			#endregion
 
 			#region Public Interfacce
@@ -33,6 +34,8 @@ namespace Framework
 			{
 				_editor = editor;
 				SetEditableObject(obj);
+				_undoObject = new SerializedObject(this);
+				_undoProperty = _undoObject.FindProperty("_undoObjectSerialized");
 			}
 
 			public SerializedObjectEditor<T> GetEditor()
@@ -65,9 +68,6 @@ namespace Framework
 			public void MarkAsDirty(bool dirty)
 			{
 				_dirty = dirty;
-
-				if (_dirty)
-					EditorUtility.SetDirty(this);
 			}
 
 			public bool IsValid()
@@ -77,12 +77,14 @@ namespace Framework
 
 			public void SaveUndoState()
 			{
-				_undoObjectXml = Serializer.ToString(_editableObject);
+				_undoProperty.stringValue = Serializer.ToString(_editableObject);
+				_undoObject.ApplyModifiedProperties();
 			}
 
 			public void ClearUndoState()
 			{
-				_undoObjectXml = null;
+				_undoProperty.stringValue = null;
+				_undoObject.ApplyModifiedPropertiesWithoutUndo();
 			}
 
 			public void RenderProperties()
@@ -92,13 +94,14 @@ namespace Framework
 
 				//If store an undo command on a temp string representing event, then on undo performed callback recreate event from string.
 				string undoObjectXml = Serializer.ToString(_editableObject);
-				
+
 				if (RenderObjectProperties(GUIContent.none))
 				{
-					_undoObjectXml = undoObjectXml;
-					Undo.RegisterCompleteObjectUndo(this, GetEditableObject().GetType().Name + " changed");
+					//Update undo string to be the object before properties were changed..
+					_undoProperty.stringValue = undoObjectXml;
+					_undoObject.ApplyModifiedPropertiesWithoutUndo();
+					//Then save the new object with modified properties (this will add the changes to the undo stack)
 					SaveUndoState();
-
 					GetEditor().SetNeedsRepaint();
 					MarkAsDirty(true);
 				}
@@ -144,14 +147,13 @@ namespace Framework
 			{
 				if (this != null)
 				{
-					if (!string.IsNullOrEmpty(_undoObjectXml) && _editableObject != null)
+					if (!string.IsNullOrEmpty(_undoObjectSerialized) && _editableObject != null)
 					{
-						_editableObject = (T)Serializer.FromString(_editableObject.GetType(), _undoObjectXml);
+						_editableObject = (T)Serializer.FromString(_editableObject.GetType(), _undoObjectSerialized);
 						if (_editableObject == null)
 							throw new Exception();
 
-
-						_undoObjectXml = null;
+						ClearUndoState();
 						GetEditor().SetNeedsRepaint();
 						MarkAsDirty(true);
 					}

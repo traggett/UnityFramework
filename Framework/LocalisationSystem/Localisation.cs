@@ -37,6 +37,9 @@ namespace Framework
 #if UNITY_EDITOR
 			private static string[] _editorKeys;
 			private static LocalisationUndoState _undoObject;
+			private static SerializedObject _undoSerializedObject;
+			private static SerializedProperty _undoProperty;
+
 			private class LocalisationEditorListener : UnityEditor.AssetModificationProcessor
 			{
 				private static string[] OnWillSaveAssets(string[] paths)
@@ -118,17 +121,21 @@ namespace Framework
 				if (_undoObject == null)
 				{
 					_undoObject = LocalisationUndoState.CreateInstance<LocalisationUndoState>();
+					_undoSerializedObject = new SerializedObject(_undoObject);
+					_undoProperty = _undoSerializedObject.FindProperty("_undoObjectSerialized");
 					Undo.undoRedoPerformed += UndoRedoCallback;
 				}
-				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+
+				_undoProperty.stringValue = Serializer.ToString(_localisationMap);
+				_undoSerializedObject.ApplyModifiedPropertiesWithoutUndo();
 
 				_localisationMap.UpdateString(key, language, text);
 				_dirty = true;
 
 				RefreshEditorKeys();
 
-				Undo.RegisterCompleteObjectUndo(_undoObject, "Localisation strings changed");
-				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+				_undoProperty.stringValue = Serializer.ToString(_localisationMap);
+				_undoSerializedObject.ApplyModifiedProperties();
 			}
 
 			public static void WarnIfDirty()
