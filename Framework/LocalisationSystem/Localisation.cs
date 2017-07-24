@@ -122,7 +122,7 @@ namespace Framework
 				{
 					_undoObject = LocalisationUndoState.CreateInstance<LocalisationUndoState>();
 					_undoSerializedObject = new SerializedObject(_undoObject);
-					_undoProperty = _undoSerializedObject.FindProperty("_undoObjectSerialized");
+					_undoProperty = _undoSerializedObject.FindProperty("_serialisedLocalisationMap");
 					Undo.undoRedoPerformed += UndoRedoCallback;
 				}
 
@@ -142,10 +142,27 @@ namespace Framework
 			{
 				if (_dirty)
 				{
-					if (EditorUtility.DisplayDialog("Localization strings have Been Modified", "Do you want to save the changes you made to the localization table?", "Save", "Don't Save"))
+					int option = EditorUtility.DisplayDialogComplex("Localization strings have Been Modified",
+																   "Do you want to save the changes you made to the localization table?",
+																   "Save",
+																   "Save",
+																   "Revert");
+
+					switch (option)
 					{
-						SaveStrings();
-					}			
+						// Save Scene
+						case 0:
+						case 1:
+							SaveStrings(); break;
+						// Revert
+						case 2:
+							{
+								_dirty = false;
+								LoadStrings();
+							}
+
+							break;
+					}
 				}
 			}
 

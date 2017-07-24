@@ -15,8 +15,6 @@ namespace Framework
 			private T _editableObject;
 			[SerializeField]
 			private string _undoObjectSerialized;
-			private SerializedObject _undoObject;
-			private SerializedProperty _undoProperty;
 			#endregion
 
 			#region Public Interfacce
@@ -34,8 +32,6 @@ namespace Framework
 			{
 				_editor = editor;
 				SetEditableObject(obj);
-				_undoObject = new SerializedObject(this);
-				_undoProperty = _undoObject.FindProperty("_undoObjectSerialized");
 			}
 
 			public SerializedObjectEditor<T> GetEditor()
@@ -75,16 +71,20 @@ namespace Framework
 				return _editableObject != null && _editor != null;
 			}
 
+			public void CacheUndoState()
+			{
+				_undoObjectSerialized = Serializer.ToString(_editableObject);
+			}
+
 			public void SaveUndoState()
 			{
-				_undoProperty.stringValue = Serializer.ToString(_editableObject);
-				_undoObject.ApplyModifiedProperties();
+				Undo.RegisterCompleteObjectUndo(this, GetEditableObject().GetType().Name + " changed");
+				_undoObjectSerialized = Serializer.ToString(_editableObject);
 			}
 
 			public void ClearUndoState()
 			{
-				_undoProperty.stringValue = null;
-				_undoObject.ApplyModifiedPropertiesWithoutUndo();
+				_undoObjectSerialized = null;
 			}
 
 			public void RenderProperties()
@@ -93,13 +93,12 @@ namespace Framework
 					throw new Exception();
 
 				//If store an undo command on a temp string representing event, then on undo performed callback recreate event from string.
-				string undoObjectXml = Serializer.ToString(_editableObject);
+				string undoObjectSerialized = Serializer.ToString(_editableObject);
 
 				if (RenderObjectProperties(GUIContent.none))
 				{
 					//Update undo string to be the object before properties were changed..
-					_undoProperty.stringValue = undoObjectXml;
-					_undoObject.ApplyModifiedPropertiesWithoutUndo();
+					_undoObjectSerialized = undoObjectSerialized;			
 					//Then save the new object with modified properties (this will add the changes to the undo stack)
 					SaveUndoState();
 					GetEditor().SetNeedsRepaint();
@@ -123,6 +122,8 @@ namespace Framework
 			{
 				bool dataChanged = false;
 				_editableObject = SerializationEditorGUILayout.ObjectField(_editableObject, label, ref dataChanged);
+				if (_editableObject == null)
+					throw new Exception();
 				return dataChanged;
 			}
 			#endregion
