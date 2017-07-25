@@ -76,61 +76,64 @@ namespace Framework
 						//First find the actual object type from the xmlNode (could be different due to inheritance)
 						Type realObjType = GetRuntimeType(node);
 
-						//If the xml node type and passed in type are both generic then read type from runtime type node
-						if (NeedsRuntimeTypeInfo(objType, realObjType))
+						if (realObjType != null)
 						{
-							realObjType = ReadTypeFromRuntimeTypeInfo(node);
-
-							//If its still can't be found then use passed in type
-							if (realObjType == null)
-								realObjType = objType;
-						}
-						//If we don't have an xmlNode or the object type is invalid then use passed in type
-						else if (node == null || realObjType == null || realObjType.IsAbstract || realObjType.IsGenericType)
-						{
-							realObjType = objType;
-						}
-
-						//Convert objects fields
-						if (defualtObject != null)
-						{
-							obj = defualtObject;
-						}
-						//Create an object instance if default not passed in
-						else if (!realObjType.IsAbstract)
-						{
-							obj = CreateInstance(realObjType);
-						}
-
-						//If the object has an associated converter class, convert the object using it
-						ObjectConverter converter = GetConverter(realObjType);
-						if (converter != null)
-						{
-							obj = converter._onConvertFromXmlNode(obj, node);
-						}
-						//Otherwise convert fields
-						else if (node != null && obj != null)
-						{
-							SerializedObjectMemberInfo[] serializedFields = SerializedObjectMemberInfo.GetSerializedFields(realObjType);
-							foreach (SerializedObjectMemberInfo serializedField in serializedFields)
+							//If the xml node type and passed in type are both generic then read type from runtime type node
+							if (NeedsRuntimeTypeInfo(objType, realObjType))
 							{
-								//First try and find xml node with an id attribute matching our attribute id
-								XmlNode fieldNode = XmlUtils.FindChildWithAttributeValue(node, kXmlFieldIdAttributeTag, serializedField.GetID());
+								realObjType = ReadTypeFromRuntimeTypeInfo(node);
 
-								object fieldObj = serializedField.GetValue(obj);
-								Type fieldObjType = serializedField.GetFieldType();
+								//If its still can't be found then use passed in type
+								if (realObjType == null)
+									realObjType = objType;
+							}
+							//If we don't have an xmlNode or the object type is invalid then use passed in type
+							else if (node == null || realObjType == null || realObjType.IsAbstract || realObjType.IsGenericType)
+							{
+								realObjType = objType;
+							}
 
-								//Convert the object from xml node
-								fieldObj = FromXmlNode(fieldObjType, fieldNode, fieldObj);
+							//Convert objects fields
+							if (defualtObject != null)
+							{
+								obj = defualtObject;
+							}
+							//Create an object instance if default not passed in
+							else if (!realObjType.IsAbstract)
+							{
+								obj = CreateInstance(realObjType);
+							}
 
-								//Then set value on parent object
-								try
+							//If the object has an associated converter class, convert the object using it
+							ObjectConverter converter = GetConverter(realObjType);
+							if (converter != null)
+							{
+								obj = converter._onConvertFromXmlNode(obj, node);
+							}
+							//Otherwise convert fields
+							else if (node != null && obj != null)
+							{
+								SerializedObjectMemberInfo[] serializedFields = SerializedObjectMemberInfo.GetSerializedFields(realObjType);
+								foreach (SerializedObjectMemberInfo serializedField in serializedFields)
 								{
-									serializedField.SetValue(obj, fieldObj);
-								}
-								catch (Exception e)
-								{
-									throw e;
+									//First try and find xml node with an id attribute matching our attribute id
+									XmlNode fieldNode = XmlUtils.FindChildWithAttributeValue(node, kXmlFieldIdAttributeTag, serializedField.GetID());
+
+									object fieldObj = serializedField.GetValue(obj);
+									Type fieldObjType = serializedField.GetFieldType();
+
+									//Convert the object from xml node
+									fieldObj = FromXmlNode(fieldObjType, fieldNode, fieldObj);
+
+									//Then set value on parent object
+									try
+									{
+										serializedField.SetValue(obj, fieldObj);
+									}
+									catch (Exception e)
+									{
+										throw e;
+									}
 								}
 							}
 						}
