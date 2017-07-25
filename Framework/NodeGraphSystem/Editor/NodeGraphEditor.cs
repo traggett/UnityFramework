@@ -241,18 +241,18 @@ namespace Framework
 						if (linkChanged)
 						{
 							List<NodeEditorGUI> effectedNodes = new List<NodeEditorGUI>();
-
+							
 							if (_draggingNodeFieldTo != null)
-							{
-								_draggingNodeFieldTo._nodeEditorGUI.SaveUndoState();
+							{							
 								effectedNodes.Add(_draggingNodeFieldTo._nodeEditorGUI);
+								_draggingNodeFieldTo._nodeEditorGUI.CacheUndoStatePreChanges();
 								SetNodeInputFieldLinkNodeID(_draggingNodeFieldTo, -1);
 							}
 
 							if (mouseOverNodeField != null)
-							{
-								mouseOverNodeField._nodeEditorGUI.SaveUndoState();
+							{							
 								effectedNodes.Add(mouseOverNodeField._nodeEditorGUI);
+								mouseOverNodeField._nodeEditorGUI.CacheUndoStatePreChanges();
 								SetNodeInputFieldLinkNodeID(mouseOverNodeField, _draggingNodeFieldFrom._nodeEditorGUI.GetEditableObject()._nodeId);
 							}
 
@@ -260,14 +260,7 @@ namespace Framework
 
 							foreach (NodeEditorGUI editorGUI in effectedNodes)
 							{
-								editorGUI.SaveUndoState();
-							}
-
-							Undo.FlushUndoRecordObjects();
-
-							foreach (NodeEditorGUI editorGUI in effectedNodes)
-							{
-								editorGUI.ClearUndoState();
+								editorGUI.SaveUndoStatePostChanges();
 							}
 						}
 
@@ -288,7 +281,7 @@ namespace Framework
 					NodeEditorField clickedOnNodeFromField = null;
 					NodeEditorField clickedOnNodeToField = null;
 
-					for (int i = 0; i < _editableObjects.Length && clickedOnNodeFromField == null; i++)
+					for (int i = 0; i < _editableObjects.Count && clickedOnNodeFromField == null; i++)
 					{
 						NodeEditorGUI node = (NodeEditorGUI)_editableObjects[i];
 

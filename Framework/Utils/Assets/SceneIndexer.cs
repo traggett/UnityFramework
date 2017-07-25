@@ -73,10 +73,14 @@ namespace Framework
 				{
 					return -1;
 				}
-				
-				SerializedObject serializedObject = new SerializedObject(gameObject);
+
+				EditorUtility.SetDirty(gameObject);
+
 				PropertyInfo inspectorModeInfo = typeof(SerializedObject).GetProperty("inspectorMode", BindingFlags.NonPublic | BindingFlags.Instance);
+
+				SerializedObject serializedObject = new SerializedObject(gameObject);
 				inspectorModeInfo.SetValue(serializedObject, InspectorMode.Debug, null);
+
 				SerializedProperty localIdProp = serializedObject.FindProperty("m_LocalIdentfierInFile");   //note the misspelling!
 
 				return localIdProp.intValue;

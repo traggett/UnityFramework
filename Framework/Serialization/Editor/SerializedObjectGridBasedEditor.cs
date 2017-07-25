@@ -69,11 +69,11 @@ namespace Framework
 
 			protected void CenterCamera()
 			{
-				if (_editableObjects.Length > 0)
+				if (_editableObjects.Count > 0)
 				{
 					Rect maxBounds = ((SerializedObjectEditorGUI<T>)_editableObjects[0]).GetBounds();
 
-					for (int i = 1; i < _editableObjects.Length; i++)
+					for (int i = 1; i < _editableObjects.Count; i++)
 					{
 						SerializedObjectEditorGUI<T> editorGUI = (SerializedObjectEditorGUI<T>)_editableObjects[i];
 						maxBounds.xMin = Mathf.Min(maxBounds.xMin, editorGUI.GetBounds().xMin);

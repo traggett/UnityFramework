@@ -34,9 +34,7 @@ namespace Framework
 				#region SerializedObjectEditorGUI
 				public override void SetPosition(Vector2 position)
 				{
-					CacheUndoState();
 					GetEditableObject()._editorPosition = position;
-					SaveUndoState();
 					MarkAsDirty(true);
 				}
 

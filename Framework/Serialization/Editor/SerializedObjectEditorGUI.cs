@@ -13,8 +13,9 @@ namespace Framework
 			private bool _dirty;
 			private SerializedObjectEditor<T> _editor;
 			private T _editableObject;
+
 			[SerializeField]
-			private string _undoObjectSerialized;
+			private string _undoObjectSerialized = null;
 			#endregion
 
 			#region Public Interfacce
@@ -64,6 +65,9 @@ namespace Framework
 			public void MarkAsDirty(bool dirty)
 			{
 				_dirty = dirty;
+
+				if (_dirty)
+					EditorUtility.SetDirty(this);
 			}
 
 			public bool IsValid()
@@ -71,20 +75,14 @@ namespace Framework
 				return _editableObject != null && _editor != null;
 			}
 
-			public void CacheUndoState()
+			public void CacheUndoStatePreChanges()
 			{
 				_undoObjectSerialized = Serializer.ToString(_editableObject);
 			}
 
-			public void SaveUndoState()
+			public void SaveUndoStatePostChanges()
 			{
-				Undo.RegisterCompleteObjectUndo(this, GetEditableObject().GetType().Name + " changed");
 				_undoObjectSerialized = Serializer.ToString(_editableObject);
-			}
-
-			public void ClearUndoState()
-			{
-				_undoObjectSerialized = null;
 			}
 
 			public void RenderProperties()
@@ -94,13 +92,13 @@ namespace Framework
 
 				//If store an undo command on a temp string representing event, then on undo performed callback recreate event from string.
 				string undoObjectSerialized = Serializer.ToString(_editableObject);
-
+				
 				if (RenderObjectProperties(GUIContent.none))
 				{
-					//Update undo string to be the object before properties were changed..
-					_undoObjectSerialized = undoObjectSerialized;			
-					//Then save the new object with modified properties (this will add the changes to the undo stack)
-					SaveUndoState();
+					_undoObjectSerialized = undoObjectSerialized;
+					Undo.RegisterCompleteObjectUndo(this, GetEditableObject().GetType().Name + " changed");
+					SaveUndoStatePostChanges();
+
 					GetEditor().SetNeedsRepaint();
 					MarkAsDirty(true);
 				}
@@ -122,8 +120,6 @@ namespace Framework
 			{
 				bool dataChanged = false;
 				_editableObject = SerializationEditorGUILayout.ObjectField(_editableObject, label, ref dataChanged);
-				if (_editableObject == null)
-					throw new Exception();
 				return dataChanged;
 			}
 			#endregion
@@ -142,7 +138,7 @@ namespace Framework
 				return this.GetHashCode().CompareTo(editorGUI.GetHashCode());
 			}
 			#endregion
-
+			
 			#region Private Functions
 			private void UndoRedoCallback()
 			{
@@ -150,13 +146,14 @@ namespace Framework
 				{
 					if (!string.IsNullOrEmpty(_undoObjectSerialized) && _editableObject != null)
 					{
-						_editableObject = (T)Serializer.FromString(_editableObject.GetType(), _undoObjectSerialized);
-						if (_editableObject == null)
-							throw new Exception();
+						string undoObjectSerialized = Serializer.ToString(_editableObject);
 
-						ClearUndoState();
-						GetEditor().SetNeedsRepaint();
-						MarkAsDirty(true);
+						if (_undoObjectSerialized != undoObjectSerialized)
+						{
+							SetEditableObject((T)Serializer.FromString(_editableObject.GetType(), _undoObjectSerialized));
+							GetEditor().SetNeedsRepaint();
+							MarkAsDirty(true);
+						}
 					}
 				}
 			}

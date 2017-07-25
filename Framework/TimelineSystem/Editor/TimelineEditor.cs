@@ -94,8 +94,8 @@ namespace Framework
 
 					Timeline timeLine = new Timeline();
 
-					Event[] events = new Event[_editableObjects.Length];
-					for (int i = 0; i < _editableObjects.Length; i++)
+					Event[] events = new Event[_editableObjects.Count];
+					for (int i = 0; i < _editableObjects.Count; i++)
 					{
 						events[i] = ((EventEditorGUI)_editableObjects[i]).GetEditableObject();
 					}

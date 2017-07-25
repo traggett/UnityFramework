@@ -712,7 +712,7 @@ namespace Framework
 					{
 						externalState = (StateMachineExternalStateEditorGUI)AddNewObject(new StateMachineExternalState());
 						externalState.ExternalStateRef = link;
-						ArrayUtils.Add(ref _editableObjects, externalState);
+						_editableObjects.Add(externalState);
 					}
 
 					if (!externalState.ExternalHasRendered)
