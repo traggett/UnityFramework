@@ -15,9 +15,7 @@ namespace Framework
 				public override bool RenderObjectProperties(GUIContent label)
 				{
 					bool dataChanged = false;
-
-					CoroutineState conditionalState = (CoroutineState)GetEditableObject();
-
+					
 					dataChanged |= RenderStateDescriptionField();
 					dataChanged |= RenderStateColorField();
 

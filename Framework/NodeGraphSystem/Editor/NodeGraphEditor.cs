@@ -599,7 +599,7 @@ namespace Framework
 								{
 									NodeEditorGUI outputNode = GetEditableObject(linkedOutputNodeId);
 
-									if (outputNode != null)
+									if (outputNode != null && outputNode.HasOutput())
 									{
 										RenderLink(outputNode.GetOutputField()._position, nodeInputField._position, _dragMode == eDragType.Custom ? Color.Lerp(kLinkLineColor, Color.black, 0.3f) : kLinkLineColor, scale);
 									}

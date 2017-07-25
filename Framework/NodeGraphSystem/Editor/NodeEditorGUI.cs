@@ -31,8 +31,8 @@ namespace Framework
 				private static readonly Color kShadowColor = new Color(0.0f, 0.0f, 0.0f, 0.35f);
 
 				private Rect _rect;
-				private NodeEditorField[] _inputNodes;
-				private NodeEditorField _outputNode;
+				private NodeEditorField[] _inputNodeFields;
+				private NodeEditorField _outputField;
 				private float _inputFieldWidth;
 				private float _outputFieldWidth;
 				#endregion
@@ -41,25 +41,25 @@ namespace Framework
 				protected override void OnSetObject()
 				{
 					FieldInfo[] inputFields = GetEditableObject().GetEditorInputFields();
-					_inputNodes = new NodeEditorField[inputFields.Length];
+					_inputNodeFields = new NodeEditorField[inputFields.Length];
 
-					for (int i=0; i< _inputNodes.Length; i++)
+					for (int i=0; i< _inputNodeFields.Length; i++)
 					{
-						_inputNodes[i] = new NodeEditorField();
-						_inputNodes[i]._nodeEditorGUI = this;
-						_inputNodes[i]._name = StringUtils.FromPropertyCamelCase(inputFields[i].Name);
-						_inputNodes[i]._fieldInfo = inputFields[i];
-						_inputNodes[i]._type = SystemUtils.GetGenericImplementationType(typeof(NodeInputFieldBase<>), inputFields[i].FieldType);
+						_inputNodeFields[i] = new NodeEditorField();
+						_inputNodeFields[i]._nodeEditorGUI = this;
+						_inputNodeFields[i]._name = StringUtils.FromPropertyCamelCase(inputFields[i].Name);
+						_inputNodeFields[i]._fieldInfo = inputFields[i];
+						_inputNodeFields[i]._type = SystemUtils.GetGenericImplementationType(typeof(NodeInputFieldBase<>), inputFields[i].FieldType);
 					}
 
-					_outputNode = null;
+					_outputField = null;
 					Type outputType = SystemUtils.GetGenericImplementationType(typeof(IValueSource<>), GetEditableObject().GetType());
 					if (outputType != null)
 					{
-						_outputNode = new NodeEditorField();
-						_outputNode._nodeEditorGUI = this;
-						_outputNode._name = "Output";
-						_outputNode._type = outputType;
+						_outputField = new NodeEditorField();
+						_outputField._nodeEditorGUI = this;
+						_outputField._name = "Output";
+						_outputField._type = outputType;
 					}
 
 					_rect = new Rect();
@@ -93,7 +93,7 @@ namespace Framework
 					//Render Inputs
 					bool renderedFirstInput = false;
 					{
-						foreach(NodeEditorField input in _inputNodes)
+						foreach(NodeEditorField input in _inputNodeFields)
 						{
 							if (!renderedFirstInput)
 							{
@@ -157,12 +157,12 @@ namespace Framework
 				#region Public Interface
 				public NodeEditorField[] GetInputFields()
 				{
-					return _inputNodes;
+					return _inputNodeFields;
 				}
 
 				public NodeEditorField GetOutputField()
 				{
-					return _outputNode;
+					return _outputField;
 				}
 
 				public void Render(Rect renderedRect, bool selected, GUIStyle titleStyle, GUIStyle textStyle, float scale, NodeEditorField highlightedField, NodeEditorField draggingFromField)
@@ -219,14 +219,14 @@ namespace Framework
 							}
 							GUI.EndGroup();
 
-							_outputNode._position = new Vector3(renderedRect.x + fieldBox.x + fieldBox.width, renderedRect.y + fieldBox.y + (kLineHeight * scale * 0.5f));
+							_outputField._position = new Vector3(renderedRect.x + fieldBox.x + fieldBox.width, renderedRect.y + fieldBox.y + (kLineHeight * scale * 0.5f));
 						}
 
 						//Draw inputs
 						{
 							fieldBox.width = _inputFieldWidth;
 							fieldBox.x = labelRect.x;
-							foreach (NodeEditorField inputField in _inputNodes)
+							foreach (NodeEditorField inputField in _inputNodeFields)
 							{
 								if (inputField == highlightedField)
 									GUI.backgroundColor = kFieldColorHighlighted;
@@ -278,14 +278,14 @@ namespace Framework
 						}
 
 						_inputFieldWidth = 0.0f;
-						if (_inputNodes.Length > 0)
+						if (_inputNodeFields.Length > 0)
 						{
-							foreach (NodeEditorField inputField in _inputNodes)
+							foreach (NodeEditorField inputField in _inputNodeFields)
 							{
 								float fieldWidth = textStyle.CalcSize(new GUIContent(inputField._name)).x + (kFieldIconPadding + kTextPadding) * scale;
 								_inputFieldWidth = Mathf.Max(fieldWidth, _inputFieldWidth);
 							}
-							numberIOLines = Math.Max(numberIOLines, _inputNodes.Length);
+							numberIOLines = Math.Max(numberIOLines, _inputNodeFields.Length);
 						}
 
 						float ioBoxwidth = _outputFieldWidth + _inputFieldWidth + 3.0f;
