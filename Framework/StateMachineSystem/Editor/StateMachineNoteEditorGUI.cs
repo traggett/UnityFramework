@@ -56,6 +56,11 @@ namespace Framework
 				{
 					return false;
 				}
+
+				public override int GetStateId()
+				{
+					return -1;
+				}
 			}
 		}
 	}

@@ -148,6 +148,21 @@ namespace Framework
 				return _editorStateName;
 			}
 
+			public string GetStateMachineName()
+			{
+				if (IsInternal())
+				{
+					if (_parentStateMachine != null)
+						return _parentStateMachine._name;
+					else
+						return "StateMachine";
+				}
+				else
+				{
+					return _file.GetAssetName();
+				}
+			}
+
 			public int GetStateID()
 			{
 				return _stateId;

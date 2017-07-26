@@ -1,6 +1,7 @@
 using System;
 
 using UnityEngine;
+using System.IO;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -88,6 +89,20 @@ namespace Framework
 			public string GetAssetFilePath()
 			{
 				return StringUtils.GetAssetPath(_filePath);
+			}
+
+			public string GetAssetName()
+			{
+				string name =  Path.GetFileName(_filePath);
+
+				//Remove file extension
+				int index = name.LastIndexOf(".");
+				if (index != -1)
+				{
+					name = name.Substring(0, index);
+				}
+
+				return name;
 			}
 
 #if UNITY_EDITOR

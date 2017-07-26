@@ -47,7 +47,10 @@ namespace Framework
 			
 			public static implicit operator T(NodeInputFieldBase<T> nodeInput)
 			{
-				return nodeInput.GetValue();
+				if (nodeInput != null)
+					return nodeInput.GetValue();
+
+				return default(T);
 			}
 
 			#region INodeInputField

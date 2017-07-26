@@ -66,7 +66,7 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public int GetStateId()
+				public virtual int GetStateId()
 				{
 					return GetEditableObject()._stateId;
 				}
