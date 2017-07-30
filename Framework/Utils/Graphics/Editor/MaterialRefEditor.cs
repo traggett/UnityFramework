@@ -15,7 +15,7 @@ namespace Framework
 			{
 				private enum eEdtiorType
 				{
-					Instance,
+					Instanced,
 					Shared,
 				}
 
@@ -29,7 +29,7 @@ namespace Framework
 
 					label.text += " (" + materialRef + ")";
 
-					bool editorCollapsed = EditorGUILayout.Foldout(!materialRef._editorCollapsed, label);
+					bool editorCollapsed = !EditorGUILayout.Foldout(!materialRef._editorCollapsed, label);
 
 					if (editorCollapsed != materialRef._editorCollapsed)
 					{
@@ -42,7 +42,7 @@ namespace Framework
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 
-						eEdtiorType editorType = materialRef.GetMaterialIndex() == -1 ? eEdtiorType.Shared : eEdtiorType.Instance;
+						eEdtiorType editorType = materialRef.GetMaterialIndex() == -1 ? eEdtiorType.Shared : eEdtiorType.Instanced;
 
 
 						//Draw type dropdown
@@ -58,7 +58,7 @@ namespace Framework
 						}
 
 						//Draw renderer field
-						if (editorType == eEdtiorType.Instance)
+						if (editorType == eEdtiorType.Instanced)
 						{
 							bool renderChanged = false;
 							ComponentRef<Renderer> rendererComponentRef = SerializationEditorGUILayout.ObjectField(materialRef.GetRenderer(), new GUIContent("Renderer"), ref renderChanged);

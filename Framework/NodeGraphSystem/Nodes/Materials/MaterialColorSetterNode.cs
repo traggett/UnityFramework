@@ -9,8 +9,7 @@ namespace Framework
 		[Serializable]
 		public class MaterialColorSetterNode : MaterialNode
 		{
-			#region Public Data
-			
+			#region Public Data			
 			public NodeInputField<Color> _value = Color.clear;
 			#endregion
 

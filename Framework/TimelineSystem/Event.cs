@@ -40,10 +40,12 @@ namespace Framework
 			{
 				dataChanged = false;
 
-				EditorGUILayout.LabelField(label);
+				
 
 				EditorGUILayout.BeginHorizontal();
 				{
+					EditorGUILayout.LabelField(label);
+
 					TimeSpan timeSpan = new TimeSpan(0, 0, 0, 0, (int)(time * 1000.0f));
 
 					int days = EditorGUILayout.IntField(timeSpan.Days, GUILayout.Width(24));

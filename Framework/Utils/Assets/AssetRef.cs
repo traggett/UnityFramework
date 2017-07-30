@@ -46,9 +46,9 @@ namespace Framework
 			public static implicit operator string(AssetRef<T> property)
 			{
 				if (property.IsValid())
-					return System.IO.Path.GetFileNameWithoutExtension(property._filePath);
+					return Path.GetFileNameWithoutExtension(property._filePath);
 
-				return "<" + typeof(T).Name + ">";
+				return typeof(T).Name;
 			}
 
 			public bool IsValid()

@@ -13,7 +13,7 @@ namespace Framework
 			{
 				private enum eEdtiorType
 				{
-					Instance,
+					Instanced,
 					Shared,
 				}
 
@@ -33,7 +33,7 @@ namespace Framework
 
 					if (property.isExpanded)
 					{
-						eEdtiorType editorType = materialIndexProp.intValue != -1 ? eEdtiorType.Instance : eEdtiorType.Shared;
+						eEdtiorType editorType = materialIndexProp.intValue != -1 ? eEdtiorType.Instanced : eEdtiorType.Shared;
 
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -50,7 +50,7 @@ namespace Framework
 							{
 								switch (editorType)
 								{
-									case eEdtiorType.Instance:
+									case eEdtiorType.Instanced:
 										{
 											materialProperty.objectReferenceValue = null;
 											materialIndexProp.intValue = 0;
@@ -71,7 +71,7 @@ namespace Framework
 
 
 						//Draw renderer field
-						if (editorType == eEdtiorType.Instance)
+						if (editorType == eEdtiorType.Instanced)
 						{
 							Rect rendererPosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
 
@@ -119,9 +119,9 @@ namespace Framework
 					if (property.isExpanded)
 					{
 						SerializedProperty materialIndexProp = property.FindPropertyRelative("_materialIndex");
-						eEdtiorType editorType = materialIndexProp.intValue != -1 ? eEdtiorType.Instance : eEdtiorType.Shared;
+						eEdtiorType editorType = materialIndexProp.intValue != -1 ? eEdtiorType.Instanced : eEdtiorType.Shared;
 
-						if (editorType == eEdtiorType.Instance)
+						if (editorType == eEdtiorType.Instanced)
 						{
 							SerializedProperty rendererProp = property.FindPropertyRelative("_renderer");
 

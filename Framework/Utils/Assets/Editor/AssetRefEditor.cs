@@ -46,7 +46,7 @@ namespace Framework
 
 					label.text += " (" + assetRef + ")";
 
-					bool editorCollapsed = !EditorGUILayout.Foldout(assetRef._editorCollapsed, label);
+					bool editorCollapsed = !EditorGUILayout.Foldout(!assetRef._editorCollapsed, label);
 
 					if (editorCollapsed != assetRef._editorCollapsed)
 					{
@@ -54,7 +54,7 @@ namespace Framework
 						dataChanged = true;
 					}
 
-					if (editorCollapsed)
+					if (!editorCollapsed)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
