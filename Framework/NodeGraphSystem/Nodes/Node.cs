@@ -31,18 +31,18 @@ namespace Framework
 
 			public FieldInfo[] GetEditorInputFields()
 			{
-				List<FieldInfo> xmlMembers = new List<FieldInfo>();
+				List<FieldInfo> inputFields = new List<FieldInfo>();
 
 				FieldInfo[] fields = GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
 				foreach (FieldInfo field in fields)
 				{
 					if (SystemUtils.IsSubclassOfRawGeneric(typeof(NodeInputFieldBase<>), field.FieldType))
 					{
-						xmlMembers.Add(field);
+						inputFields.Add(field);
 					}
 				}
 
-				return xmlMembers.ToArray();
+				return inputFields.ToArray();
 			}
 #endif
 		}
