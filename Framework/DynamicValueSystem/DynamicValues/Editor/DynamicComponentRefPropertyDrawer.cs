@@ -27,7 +27,7 @@ namespace Framework
 					return EditorUtils.GetComponentFieldHeight<Component>(currentComponent);
 				}
 
-				protected override bool AllowDraggingComponents()
+				protected override bool AllowDragComponentToSetAsSource()
 				{
 					return false;
 				}

@@ -28,7 +28,7 @@ namespace Framework
 					return materialRefPropertyDrawer.GetPropertyHeight(valueProperty, label);
 				}
 
-				protected override bool AllowDraggingComponents()
+				protected override bool AllowDragComponentToSetAsSource()
 				{
 					return false;
 				}
