@@ -15,12 +15,12 @@ namespace Framework
 			[SerializeField]
 			private TextAsset _file;
 			[SerializeField]
-			private int _timelineId;
+			private int _stateId;
 
 			public StateRefProperty(TextAsset file=null, int TimelineId=-1)
 			{
 				_file = file;
-				_timelineId = TimelineId;
+				_stateId = TimelineId;
 			}
 
 			public State LoadTimelineState(GameObject sourceObject = null)
@@ -28,7 +28,7 @@ namespace Framework
 				if (_file != null)
 				{
 					StateMachine stateMachine = StateMachine.FromTextAsset(_file, sourceObject);
-					return stateMachine.GetState(_timelineId);
+					return stateMachine.GetState(_stateId);
 				}
 
 				return null;

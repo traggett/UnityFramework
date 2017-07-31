@@ -124,7 +124,7 @@ namespace Framework
 
 						EditorGUI.BeginChangeCheck();
 
-						index = EditorGUILayout.Popup("Timeline", index, stateNames);
+						index = EditorGUILayout.Popup("Initial State", index, stateNames);
 
 						if (EditorGUI.EndChangeCheck())
 						{

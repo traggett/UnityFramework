@@ -23,7 +23,6 @@ namespace Framework
 
 					if (property.isExpanded)
 					{
-						
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 
@@ -36,10 +35,7 @@ namespace Framework
 
 						if (fileProp.objectReferenceValue != null)
 						{
-							SerializedProperty TimelineProp = property.FindPropertyRelative("_timelineId");
-
-							//Load all time lines from a file
-							//Get gameobject from  property
+							SerializedProperty stateIdProp = property.FindPropertyRelative("_stateId");
 							StateMachine stateMachine = StateMachine.FromTextAsset((TextAsset)fileProp.objectReferenceValue, FindParentGameObject(property));
 
 							if (stateMachine != null)
@@ -54,16 +50,16 @@ namespace Framework
 									{
 										stateNames[i] = "State" + states[i]._stateId + " (" + states[i]._editorDescription + ")";
 
-										if (states[i]._stateId == TimelineProp.intValue)
+										if (states[i]._stateId == stateIdProp.intValue)
 										{
 											index = i;
 										}
 									}
 
-									Rect TimelinePosition = new Rect(position.x, position.y + EditorGUIUtility.singleLineHeight * 2, position.width, EditorGUIUtility.singleLineHeight);
+									Rect statePosition = new Rect(position.x, position.y + EditorGUIUtility.singleLineHeight * 2, position.width, EditorGUIUtility.singleLineHeight);
 
-									index = EditorGUI.Popup(TimelinePosition, "Timeline", index, stateNames);
-									TimelineProp.intValue = states[index]._stateId;
+									index = EditorGUI.Popup(statePosition, "Initial State", index, stateNames);
+									stateIdProp.intValue = states[index]._stateId;
 
 									_height += EditorGUIUtility.singleLineHeight;
 								}

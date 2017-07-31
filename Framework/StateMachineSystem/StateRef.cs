@@ -71,7 +71,7 @@ namespace Framework
 						}
 						else
 						{
-							throw new Exception("StateRefProperty need to be fixed up by TimelineStateMachine before allowing access to internal state.");
+							throw new Exception("StateRefProperty need to be fixed up by a StateMachine before allowing access to internal state.");
 						}
 					}
 					//Otherwise its pointing at an external asset.
