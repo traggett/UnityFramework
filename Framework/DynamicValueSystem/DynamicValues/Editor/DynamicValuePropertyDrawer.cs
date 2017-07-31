@@ -7,6 +7,7 @@ using System.Reflection;
 
 namespace Framework
 {
+	using UnityEngine;
 	using Utils;
 	using Utils.Editor;
 
@@ -34,7 +35,7 @@ namespace Framework
 						_fieldInfo = fieldInfo;
 						_index = index;
 					}
-				}
+				}		
 
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 				{
@@ -56,7 +57,7 @@ namespace Framework
 						EditorGUI.indentLevel++;
 						
 						eEdtiorType sourceType = (DynamicValue<T>.eSourceType)sourceTypeProperty.intValue == DynamicValue<T>.eSourceType.Static ? eEdtiorType.Static : eEdtiorType.Source;
-						bool tempOverrideType = sourceType == eEdtiorType.Static && EditorUtils.GetDraggingComponent<MonoBehaviour>() != null;
+						bool tempOverrideType = AllowDragComponentToSetAsSource() && sourceType == eEdtiorType.Static && EditorUtils.GetDraggingComponent<MonoBehaviour>() != null;
 						if (tempOverrideType)
 						{
 							sourceType = eEdtiorType.Source;
@@ -128,6 +129,11 @@ namespace Framework
 					return EditorGUIUtility.singleLineHeight;
 				}
 
+				protected virtual bool AllowDragComponentToSetAsSource()
+				{
+					return true;
+				}
+
 				private void DrawSourceObjectField(SerializedProperty sourceObjectProp, SerializedProperty sourceTypeProperty, SerializedProperty sourceObjectMemberNameProp, SerializedProperty sourceObjectMemberIndexProp, Rect valuePosition)
 				{
 					Component currentComponent = sourceObjectProp.objectReferenceValue as Component;
@@ -137,8 +143,12 @@ namespace Framework
 
 					if (currentComponent != selectedComponent)
 					{
+						currentComponent = selectedComponent;
 						sourceObjectProp.objectReferenceValue = selectedComponent;
-						sourceTypeProperty.intValue = Convert.ToInt32(DynamicValue<T>.eSourceType.SourceObject);
+						sourceObjectMemberIndexProp.intValue = -1;
+
+						if (currentComponent == null)
+							sourceTypeProperty.intValue = Convert.ToInt32(DynamicValue<T>.eSourceType.SourceObject);
 					}
 
 					valuePosition.y += height;
@@ -205,10 +215,13 @@ namespace Framework
 					}
 					else
 					{
+						bool valueChanged = index != sourceTypeProperty.intValue;
+
 						EditorGUI.BeginChangeCheck();
 						index = EditorGUI.Popup(valuePosition, new GUIContent("Component Property"), index, memberLabels.ToArray());
+						valueChanged |= EditorGUI.EndChangeCheck();
 
-						if (EditorGUI.EndChangeCheck())
+						if (valueChanged)
 						{
 							sourceTypeProperty.intValue = Convert.ToInt32(memeberInfo[index]._sourceType);
 							sourceObjectMemberNameProp.stringValue = memeberInfo[index]._fieldInfo != null ? memeberInfo[index]._fieldInfo.Name : null;

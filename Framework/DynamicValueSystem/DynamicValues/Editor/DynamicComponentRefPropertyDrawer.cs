@@ -26,6 +26,11 @@ namespace Framework
 					Component currentComponent = valueProperty.objectReferenceValue as Component;
 					return EditorUtils.GetComponentFieldHeight<Component>(currentComponent);
 				}
+
+				protected override bool AllowDraggingComponents()
+				{
+					return false;
+				}
 			}
 		}
 	}

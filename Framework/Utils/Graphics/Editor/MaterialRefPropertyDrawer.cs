@@ -54,6 +54,7 @@ namespace Framework
 										{
 											materialProperty.objectReferenceValue = null;
 											materialIndexProp.intValue = 0;
+											//Try to default to renderer component on this object.
 											Component component = property.serializedObject.targetObject as Component;
 											rendererProp.objectReferenceValue = component != null ? component.GetComponent<Renderer>() : null;
 										}

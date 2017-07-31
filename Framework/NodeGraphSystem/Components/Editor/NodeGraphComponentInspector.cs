@@ -15,6 +15,7 @@ namespace Framework
 		namespace Editor
 		{
 			[CustomEditor(typeof(NodeGraphComponent), true)]
+			[CanEditMultipleObjects]
 			public sealed class NodeGraphComponentInspector : UnityEditor.Editor
 			{
 				private SerializedProperty _unscaledTime;
@@ -96,33 +97,29 @@ namespace Framework
 								ReloadNodeGraph();
 							}
 
-							EditorGUILayout.BeginHorizontal();
+							if (!_nodeGraphRefAsset.hasMultipleDifferentValues)
 							{
-								EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(EditorUtils.GetLabelWidth()));
+								EditorGUILayout.BeginHorizontal();
+								{
+									EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(EditorUtils.GetLabelWidth()));
 
-								if (GUILayout.Button("Edit"))
-								{
-									NodeGraphEditorWindow.Load(_nodeGraphRefAsset.objectReferenceValue as TextAsset);
+									if (GUILayout.Button("Edit"))
+									{
+										NodeGraphEditorWindow.Load(_nodeGraphRefAsset.objectReferenceValue as TextAsset);
+									}
+									else if (GUILayout.Button("Refresh"))
+									{
+										ReloadNodeGraph();
+									}
 								}
-								else if (GUILayout.Button("Refresh"))
-								{
-									ReloadNodeGraph();
-								}
+								EditorGUILayout.EndHorizontal();
 							}
-							EditorGUILayout.EndHorizontal();
 
 							EditorGUI.indentLevel = origIndent;
 						}
 					}
-
-					//In the component need array each type of possible value source for node inputs.
-
-					//In editor want to keep the arrays of value sources matching the input nodes in the graph.
-
-					//Then render all input node value sources
-					//
-
-					if (_nodeGraph != null)
+					
+					if (_nodeGraph != null && !_nodeGraphRefAsset.hasMultipleDifferentValues)
 					{
 						_inputsFoldOut = EditorGUILayout.Foldout(_inputsFoldOut, "Inputs");
 

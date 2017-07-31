@@ -29,11 +29,14 @@ namespace Framework
 				{
 					foreach (ITimelineStateEvent evnt in _timeline._events)
 					{
-						StateMachineEditorLink[] links = evnt.GetEditorLinks();
-
-						if (links != null)
+						if (evnt != null)
 						{
-							stateLinks.AddRange(links);
+							StateMachineEditorLink[] links = evnt.GetEditorLinks();
+
+							if (links != null)
+							{
+								stateLinks.AddRange(links);
+							}
 						}
 					}
 				}

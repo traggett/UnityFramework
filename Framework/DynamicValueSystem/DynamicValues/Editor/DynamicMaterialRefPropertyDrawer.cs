@@ -27,6 +27,11 @@ namespace Framework
 					GUIContent label = new GUIContent("Material");
 					return materialRefPropertyDrawer.GetPropertyHeight(valueProperty, label);
 				}
+
+				protected override bool AllowDraggingComponents()
+				{
+					return false;
+				}
 			}
 		}
 	}

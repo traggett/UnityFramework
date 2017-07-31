@@ -1,4 +1,3 @@
-using UnityEngine;
 using UnityEditor;
 
 namespace Framework
@@ -8,7 +7,7 @@ namespace Framework
 		namespace Editor
 		{
 			[CustomPropertyDrawer(typeof(DynamicBool))]
-			public class DynamicBoolValuePropertyDrawer : DynamicValuePropertyDrawer<bool>
+			public class DynamicBoolPropertyDrawer : DynamicValuePropertyDrawer<bool>
 			{
 			}
 		}

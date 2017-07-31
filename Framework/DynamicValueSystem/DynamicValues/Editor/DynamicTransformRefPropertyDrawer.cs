@@ -10,6 +10,10 @@ namespace Framework
 			[CustomPropertyDrawer(typeof(DynamicTransformRef))]
 			public class DynamicTransformRefPropertyDrawer : DynamicValuePropertyDrawer<Transform>
 			{
+				protected override bool AllowDraggingComponents()
+				{
+					return false;
+				}
 			}
 		}
 	}

@@ -8,7 +8,7 @@ namespace Framework
 		namespace Editor
 		{
 			[CustomPropertyDrawer(typeof(DynamicTextureRef))]
-			public class DynamicTextureRefValuePropertyDrawer : DynamicValuePropertyDrawer<Texture>
+			public class DynamicTextureRefPropertyDrawer : DynamicValuePropertyDrawer<Texture>
 			{
 			}
 		}
