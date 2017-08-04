@@ -361,7 +361,11 @@ namespace Framework
 			private void ResetCameraState()
 			{
 				AnimatedCamera camera = (AnimatedCamera)target;
-				camera.SetState(_cameraOrigState);
+
+				if (camera != null)
+				{
+					camera.SetState(_cameraOrigState);
+				}
 			}
 			#endregion
 		}

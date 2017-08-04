@@ -88,13 +88,10 @@ namespace Framework
 
 			public virtual void SetState(AnimatedCameraState state)
 			{
-				if (this != null)
-				{
-					this.transform.position = state._position;
-					this.transform.rotation = state._rotation;
-					GetCamera().fieldOfView = state._fieldOfView;
-					GetCamera().rect = state._cameraRect;
-				}			
+				this.transform.position = state._position;
+				this.transform.rotation = state._rotation;
+				GetCamera().fieldOfView = state._fieldOfView;
+				GetCamera().rect = state._cameraRect;
 			}
 
 			public void SetState(AnimatedCameraState snapshotState, float weight)
