@@ -76,53 +76,38 @@ namespace Framework
 				}	
 			}
 
-			public virtual void SetFromSnapshot(AnimatedCameraSnapshot snapshot, float weight = 1.0f)
+			public virtual AnimatedCameraState GetState()
 			{
-				if (weight > 0.0f)
-				{
-					if (weight < 1.0f)
-					{
-						this.transform.position = MathUtils.Interpolate(_currentEaseType, this.transform.position, snapshot.transform.position, weight);
-						this.transform.rotation = MathUtils.Interpolate(_currentEaseType, this.transform.rotation, snapshot.transform.rotation, weight);
-						GetCamera().fieldOfView = MathUtils.Interpolate(_currentEaseType, GetCamera().fieldOfView, snapshot._fieldOfView, weight);
-						GetCamera().rect = MathUtils.Interpolate(_currentEaseType, GetCamera().rect, snapshot._cameraRect, weight);
-					}
-					else
-					{
-						this.transform.position = snapshot.transform.position;
-						this.transform.rotation = snapshot.transform.rotation;
-						GetCamera().fieldOfView = snapshot._fieldOfView;
-						GetCamera().rect = snapshot._cameraRect;
-					}
-				}
+				AnimatedCameraState state = ScriptableObject.CreateInstance<AnimatedCameraState>();
+				state._position = this.transform.position;
+				state._rotation = this.transform.rotation;
+				state._cameraRect = GetCamera().rect;
+				state._fieldOfView = GetCamera().fieldOfView;
+				return state;
 			}
 
-			public virtual void SetFromSnapshots(AnimatedCameraSnapshot snapshotFrom, AnimatedCameraSnapshot snapshotTo, eInterpolation easeType, float t, float weight = 1.0f)
+			public virtual void SetState(AnimatedCameraState state)
+			{
+				if (this != null)
+				{
+					this.transform.position = state._position;
+					this.transform.rotation = state._rotation;
+					GetCamera().fieldOfView = state._fieldOfView;
+					GetCamera().rect = state._cameraRect;
+				}			
+			}
+
+			public void SetState(AnimatedCameraState snapshotState, float weight)
 			{
 				if (weight > 0.0f)
 				{
 					if (weight < 1.0f)
 					{
-						this.transform.position = MathUtils.Interpolate(_currentEaseType, this.transform.position, MathUtils.Interpolate(easeType, snapshotFrom.transform.position, snapshotTo.transform.position, t), weight);
-						this.transform.rotation = MathUtils.Interpolate(_currentEaseType, this.transform.rotation, MathUtils.Interpolate(easeType, snapshotFrom.transform.rotation, snapshotTo.transform.rotation, t), weight);
-						GetCamera().fieldOfView = MathUtils.Interpolate(_currentEaseType, GetCamera().fieldOfView, MathUtils.Interpolate(easeType, snapshotFrom._fieldOfView, snapshotTo._fieldOfView, t), weight);
-						GetCamera().rect = MathUtils.Interpolate(_currentEaseType, GetCamera().rect, MathUtils.Interpolate(easeType, snapshotFrom._cameraRect, snapshotTo._cameraRect, t), weight);
+						snapshotState = GetState().InterpolateTo(this, snapshotState, _currentEaseType, weight);
 					}
-					else
-					{
-						this.transform.position =  MathUtils.Interpolate(easeType, snapshotFrom.transform.position, snapshotTo.transform.position, t);
-						this.transform.rotation =  MathUtils.Interpolate(easeType, snapshotFrom.transform.rotation, snapshotTo.transform.rotation, t);
-						GetCamera().fieldOfView =  MathUtils.Interpolate(easeType, snapshotFrom._fieldOfView, snapshotTo._fieldOfView, t);
-						GetCamera().rect = MathUtils.Interpolate(easeType, snapshotFrom._cameraRect, snapshotTo._cameraRect, t);
-					}
+					
+					SetState(snapshotState);
 				}
-			}
-			public virtual AnimatedCameraSnapshot CreateSnapshot(string name)
-			{
-				GameObject newObj = new GameObject(name);
-				newObj.transform.parent = this.transform.parent;
-				AnimatedCameraSnapshot snapshot = newObj.AddComponent<AnimatedCameraSnapshot>();
-				return snapshot;
 			}
 			#endregion
 
@@ -130,7 +115,7 @@ namespace Framework
 			{
 				if (animation._snapshots.Length == 1)
 				{
-					SetFromSnapshot(animation._snapshots[0], animation._weight);
+					SetState(animation._snapshots[0].GetState(), animation._weight);
 				}
 				else if (animation._snapshots.Length > 1)
 				{
@@ -162,7 +147,8 @@ namespace Framework
 					int sectionIndex = Mathf.FloorToInt(sectionT);
 					sectionT = sectionT - (float)sectionIndex;
 
-					SetFromSnapshots(animation._snapshots[sectionIndex], animation._snapshots[sectionIndex + 1], animation._easeType, sectionT, animation._weight);
+					AnimatedCameraState state = animation._snapshots[sectionIndex].GetState().InterpolateTo(this, animation._snapshots[sectionIndex + 1].GetState(), animation._easeType, sectionT);
+					SetState(state, animation._weight);
 				}
 			}
 		}

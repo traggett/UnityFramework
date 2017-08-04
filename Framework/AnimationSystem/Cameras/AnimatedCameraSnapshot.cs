@@ -7,17 +7,26 @@ namespace Framework
 		public class AnimatedCameraSnapshot : MonoBehaviour
 		{
 			#region Public Data
-			public Rect _cameraRect = new Rect(0,0,1,1);
-			public float _fieldOfView = 60.0f;
+			[HideInInspector]
+			public AnimatedCameraState _state;
 			#endregion
 
-#if UNITY_EDITOR
-			public virtual void SetFromCamera(AnimatedCamera camera)
+			public AnimatedCameraState GetState()
 			{
-				this.transform.position = camera.transform.position;
-				this.transform.rotation = camera.transform.rotation;
-				_cameraRect = camera.GetCamera().rect;
-				_fieldOfView = camera.GetCamera().fieldOfView;
+				if (_state == null)
+					_state = ScriptableObject.CreateInstance<AnimatedCameraState>();
+
+				_state._position = this.transform.position;
+				_state._rotation = this.transform.rotation;
+				return _state;
+			}
+			
+#if UNITY_EDITOR
+			public virtual void SetState(AnimatedCameraState state)
+			{
+				this.transform.position = state._position;
+				this.transform.rotation = state._rotation;
+				_state = state;
 			}
 #endif
 		}

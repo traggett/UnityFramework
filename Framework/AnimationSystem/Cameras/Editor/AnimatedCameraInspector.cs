@@ -26,34 +26,21 @@ namespace Framework
 			private Dictionary<KeyCode, bool> _buttonPressed = new Dictionary<KeyCode, bool>();
 			private bool[] _mouseDown = new bool[3];
 
-			private Vector3 _cameraOrigPosition;
-			private Quaternion _camerOrigRotation;
-			private Vector3 _cameraOrigScale;
+			private AnimatedCameraState _cameraOrigState;
 			protected static AnimatedCameraSnapshot _currentSnapshot;
 			#endregion
 
 			private void OnEnable()
 			{
 				EditorApplication.update += Update;
-
-				AnimatedCamera camera = (AnimatedCamera)target;
-				_cameraOrigPosition = camera.transform.position;
-				_camerOrigRotation = camera.transform.rotation;
-				_cameraOrigScale = camera.transform.localScale;
+				CacheCameraState();
 			}
 
 			private void OnDisable()
 			{
 				EditorApplication.update -= Update;
 
-				AnimatedCamera camera = (AnimatedCamera)target;
-
-				if (camera != null)
-				{
-					camera.transform.position = _cameraOrigPosition;
-					camera.transform.rotation = _camerOrigRotation;
-					camera.transform.localScale = _cameraOrigScale;
-				}
+				ResetCameraState();
 			}
 
 			private void Update()
@@ -171,7 +158,12 @@ namespace Framework
 					camera.transform.Translate(movement * kMovementSpeed, Space.Self);
 
 					UpdateSnapshotFromCamera();
-				}		
+				}
+
+				if (_currentSnapshot == null)
+				{
+					CacheCameraState();
+				}
 			}
 
 			private void UpdateSnapshotFromCamera()
@@ -180,7 +172,7 @@ namespace Framework
 
 				if (_currentSnapshot != null)
 				{
-					_currentSnapshot.SetFromCamera(camera);
+					_currentSnapshot.SetState(camera.GetState());
 				}		
 			}
 			
@@ -190,7 +182,7 @@ namespace Framework
 
 				if (_currentSnapshot != null)
 				{
-					camera.SetFromSnapshot(_currentSnapshot);
+					camera.SetState(_currentSnapshot.GetState());
 				}
 			}
 
@@ -322,25 +314,54 @@ namespace Framework
 				{
 					if (newIndex == 0)
 					{
-						_currentSnapshot = null;
+						SetCurrentSnapshot(null);
 					}
 					else if (newIndex == snapshotNames.Length-1)
 					{
 						//Add new snapshot!
-						_currentSnapshot = camera.CreateSnapshot("Snapshot" + newIndex);
+						GameObject newObj = new GameObject("Snapshot" + newIndex);
+						newObj.transform.parent = camera.transform.parent;
+						AnimatedCameraSnapshot newSnapShot = newObj.AddComponent<AnimatedCameraSnapshot>();
+						SetCurrentSnapshot(newSnapShot);
 						UpdateSnapshotFromCamera();
 						return true;
 					}
 					else
 					{
-						//Select new snapshot
-						_currentSnapshot = snapshots[newIndex-1];
-						//Set camera position to snapshot
-						UpdateCameraFromSnapshot(_currentSnapshot);
+						SetCurrentSnapshot(snapshots[newIndex - 1]);
 					}
 				}			
 
 				return false;
+			}
+
+
+			protected virtual void SetCurrentSnapshot(AnimatedCameraSnapshot snapshot)
+			{
+				//Select new snapshot
+				_currentSnapshot = snapshot;
+
+				if (_currentSnapshot != null)
+				{
+					//Set camera position to snapshot
+					UpdateCameraFromSnapshot(_currentSnapshot);
+				}
+				else
+				{
+					ResetCameraState();
+				}
+			}
+
+			private void CacheCameraState()
+			{
+				AnimatedCamera camera = (AnimatedCamera)target;
+				_cameraOrigState = camera.GetState();
+			}
+
+			private void ResetCameraState()
+			{
+				AnimatedCamera camera = (AnimatedCamera)target;
+				camera.SetState(_cameraOrigState);
 			}
 			#endregion
 		}
