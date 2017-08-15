@@ -183,6 +183,22 @@ namespace Framework
 
 				return null;
 			}
+
+			public static T GetComponentInParents<T>(GameObject gameObject, bool includeInactive = false) where T : Component
+			{
+				while (gameObject != null)
+				{
+					Component[] components = gameObject.GetComponentsInParent(typeof(T), includeInactive);
+
+					if (components != null && components.Length > 0)
+						return (T)components[0];
+
+					gameObject = gameObject.transform.parent != null ? gameObject.transform.parent.gameObject : null;
+				}
+
+				return null;
+			}
+
 		}
 	}
 }

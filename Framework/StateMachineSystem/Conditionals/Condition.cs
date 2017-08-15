@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 
 namespace Framework
 {
-	using Utils;
-
 	namespace StateMachineSystem
 	{
 		[Serializable]

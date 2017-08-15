@@ -635,6 +635,7 @@ namespace Framework
 					{
 						T copyObject = CreateCopyFrom(editorGUI);
 						SerializedObjectEditorGUI<T> copyEditorGUI = AddNewObject(copyObject);
+						OnCreatedNewObject(copyObject);
 						SetObjectPosition(copyEditorGUI, _dragPos + editorGUI.GetPosition() - pos);
 					}
 

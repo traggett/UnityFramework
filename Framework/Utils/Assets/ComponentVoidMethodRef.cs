@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 
 using UnityEngine;
 
@@ -13,12 +12,23 @@ namespace Framework
 		{
 			[SerializeField]
 			private ComponentMethodRef<object> _methodRef;
-		
+
+			public static implicit operator string(ComponentVoidMethodRef property)
+			{
+				return property._methodRef;
+			}
+
 			public void RunMethod()
 			{
 				_methodRef.RunMethod();
 			}
+
 #if UNITY_EDITOR
+			public ComponentVoidMethodRef(ComponentMethodRef<object> methodRef)
+			{
+				_methodRef = methodRef;
+			}
+
 			public ComponentMethodRef<object> GetMethodRef()
 			{
 				return _methodRef;

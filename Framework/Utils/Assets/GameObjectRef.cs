@@ -147,20 +147,18 @@ namespace Framework
 				{
 					case eSourceType.Prefab:
 						{
+							GameObject prefabAsset = (GameObject)PrefabUtility.GetPrefabParent(gameObject);
+
+							if (prefabAsset != null)
+								gameObject = prefabAsset;
+
+							//Then find its root
 							GameObject prefabRoot = PrefabUtility.FindPrefabRoot(gameObject);
 
-							UnityEngine.Object prefabObj = PrefabUtility.GetPrefabParent(gameObject);
-							if (prefabObj == null)
-							{
-								prefabObj = PrefabUtility.GetPrefabObject(prefabRoot);
-							}
-
-							if (prefabRoot != null && prefabObj != null)
+							if (prefabRoot != null)
 							{
 								_objectName = GameObjectUtils.GetChildFullName(gameObject, prefabRoot);
-
-								string prefabPath = AssetDatabase.GetAssetPath(prefabObj);
-								_prefab = new AssetRef<GameObject>(prefabPath);
+								_prefab = new AssetRef<GameObject>(prefabRoot);
 							}
 							else
 							{

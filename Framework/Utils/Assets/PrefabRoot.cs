@@ -15,7 +15,7 @@ namespace Framework
 
 					if (root == null)
 					{
-						root = gameObject.GetComponentInParent<PrefabRoot>();
+						root = GameObjectUtils.GetComponentInParents<PrefabRoot>(gameObject, true);
 					}
 
 					if (root != null)

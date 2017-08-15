@@ -191,7 +191,6 @@ namespace Framework
 							//Then render component field
 							if (RenderObjectField(ref componentRef))
 							{
-								componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Scene, componentRef.GetBaseComponent());
 								dataChanged = true;
 							}
 						}
@@ -205,7 +204,6 @@ namespace Framework
 					//Else don't have a valid component set, renderer object field
 					else if (RenderObjectField(ref componentRef))
 					{
-						componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Scene, componentRef.GetBaseComponent());
 						dataChanged = true;
 					}
 				}
@@ -214,7 +212,6 @@ namespace Framework
 				{
 					if (RenderObjectField(ref componentRef))
 					{
-						componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Prefab, componentRef.GetBaseComponent());
 						dataChanged = true;
 					}
 				}
@@ -241,7 +238,6 @@ namespace Framework
 									//Then render component field
 									if (RenderObjectField(ref componentRef))
 									{
-										componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded, componentRef.GetBaseComponent());
 										dataChanged = true;
 									}
 								}
@@ -263,7 +259,6 @@ namespace Framework
 					//Else don't have a component set, render component field
 					else if (RenderObjectField(ref componentRef))
 					{
-						componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded, componentRef.GetBaseComponent());
 						dataChanged = true;
 					}
 				}

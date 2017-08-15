@@ -330,7 +330,11 @@ namespace Framework
 					{
 						SetCurrentSnapshot(snapshots[newIndex - 1]);
 					}
-				}			
+				}
+
+				//Get property on camera and render here?
+				camera.GetCamera().fieldOfView = EditorGUILayout.Slider("Field of View", camera.GetCamera().fieldOfView, 1.0f, 180.0f);
+				camera.GetCamera().rect = EditorGUILayout.RectField("Viewport Rect", camera.GetCamera().rect);
 
 				return false;
 			}

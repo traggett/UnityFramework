@@ -225,7 +225,7 @@ namespace Framework
 
 				public void SwitchToTimelineStateView(int stateId)
 				{
-					StateEditorGUI state = GetTimelineStateGUI(stateId);
+					StateEditorGUI state = GetStateGUI(stateId);
 
 					if (state != null && state.GetEditableObject() is TimelineState)
 					{
@@ -657,7 +657,7 @@ namespace Framework
 					CenterCamera();
 				}
 
-				private StateEditorGUI GetTimelineStateGUI(int stateId)
+				private StateEditorGUI GetStateGUI(int stateId)
 				{
 					foreach (StateEditorGUI editorGUI in _editableObjects)
 					{
@@ -890,15 +890,18 @@ namespace Framework
 										_playModeHighlightedState = stateInfo._state;
 
 										if (_editorPrefs._debugLockFocus)
-											CenterCameraOn(GetTimelineStateGUI(_playModeHighlightedState._stateId));
+											CenterCameraOn(GetStateGUI(_playModeHighlightedState._stateId));
 									}
 									break;
 								case eMode.ViewingTimelineState:
 									{
 										if (stateInfo._state._stateId != _editedState.GetStateId())
 										{
-											_editedState = GetTimelineStateGUI(stateInfo._state._stateId);
-											_timelineEditor.SetTimeline(((TimelineState)stateInfo._state)._timeline);
+											_editedState = GetStateGUI(stateInfo._state._stateId);
+											if (stateInfo._state is TimelineState)
+											{
+												_timelineEditor.SetTimeline(((TimelineState)stateInfo._state)._timeline);
+											}
 										}
 
 										_timelineEditor.SetPlayModeCursorTime(stateInfo._time);

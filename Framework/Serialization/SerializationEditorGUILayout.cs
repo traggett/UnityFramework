@@ -174,9 +174,14 @@ namespace Framework
 						for (int i = 0; i < _array.Length; i++)
 						{
 							bool elementChanged = false;
-							object elementObj = ObjectField(_array.GetValue(i), new GUIContent("Element " + i), ref elementChanged, style, options);
-							_array.SetValue(elementObj, i);
-							dataChanged |= elementChanged;
+							object elementObj = _array.GetValue(i);
+							Type elementType = elementObj != null ? elementObj.GetType() : arrayType;
+							elementObj = ObjectField(elementObj, elementType, new GUIContent("Element " + i), ref elementChanged, style, options);
+							if (elementChanged)
+							{
+								_array.SetValue(elementObj, i);
+								dataChanged = true;
+							}
 						}
 					}
 

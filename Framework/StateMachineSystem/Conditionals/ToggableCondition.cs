@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace Framework
 {
@@ -8,6 +9,7 @@ namespace Framework
 		public abstract class ToggableCondition : Condition
 		{
 			#region Public Data
+			[HideInInspector]
 			public bool _not;
 			#endregion
 		}
