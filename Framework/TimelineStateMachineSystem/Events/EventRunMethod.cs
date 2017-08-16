@@ -26,7 +26,7 @@ namespace Framework
 
 			public override string GetEditorDescription()
 			{
-				return "Run: <b>(" + _method + ")</b>";
+				return _method;
 			}
 #endif
 			#endregion

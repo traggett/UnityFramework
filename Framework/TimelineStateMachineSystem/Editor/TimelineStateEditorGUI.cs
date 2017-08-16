@@ -15,7 +15,7 @@ namespace Framework
 				public override void OnDoubleClick()
 				{
 					StateMachineEditor editor = (StateMachineEditor)GetEditor();
-					editor.SwitchToTimelineStateView(GetStateId());
+					editor.ShowStateDetails(GetStateId());
 				}
 
 				public override bool RenderObjectProperties(GUIContent label)
@@ -28,7 +28,7 @@ namespace Framework
 					if (GUILayout.Button("Edit Timeline"))
 					{
 						StateMachineEditor timelineStateMachineEditor = (StateMachineEditor)GetEditor();
-						timelineStateMachineEditor.SwitchToTimelineStateView(GetEditableObject()._stateId);
+						timelineStateMachineEditor.ShowStateDetails(GetEditableObject()._stateId);
 					}
 
 					return dataChanged;

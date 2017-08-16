@@ -195,7 +195,7 @@ namespace Framework
 				#region Virtual Interface
 				public virtual void OnDoubleClick()
 				{
-
+					
 				}
 
 				public virtual Color GetColor(StateMachineEditorStyle style)

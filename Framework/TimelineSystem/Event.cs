@@ -40,8 +40,6 @@ namespace Framework
 			{
 				dataChanged = false;
 
-				
-
 				EditorGUILayout.BeginHorizontal();
 				{
 					EditorGUILayout.LabelField(label);

@@ -30,8 +30,6 @@ namespace Framework
 				private string _editorPrefsTag;
 				private StateMachineEditorStyle _style;
 				private StateMachineEditorPrefs _editorPrefs;
-
-				
 				
 				private Type[] _allowedEvents;
 				
@@ -46,6 +44,9 @@ namespace Framework
 				private StateEditorGUI _editedState;
 				private StateEditorGUI _lastClickedState;
 				private double _lastClickTime;
+
+				private bool _requestSwitchViews;
+				private int _requestSwitchViewsStateId;
 
 				private TimelineEditor _timelineEditor;
 				private TimelineScrollArea.eTimeFormat _timelineEditorTimeFormat;
@@ -127,6 +128,8 @@ namespace Framework
 					}
 					EditorGUILayout.EndVertical();
 
+					SwitchViewsIfNeeded();
+
 					if (needsRepaint)
 						GetEditorWindow().DoRepaint();
 				}
@@ -207,44 +210,19 @@ namespace Framework
 
 					GetEditorWindow().DoRepaint();
 				}
-
+						
 				public void SwitchToStatemachineView()
 				{
-					if (_editedState != null)
-					{
-						((TimelineState)_editedState.GetEditableObject())._timeline = _timelineEditor.ConvertToTimeline();
-						_timelineEditor.SetTimeline(new Timeline());
-						_editedState = null;
-					}
-
-					_editorPrefs._stateId = -1;
-					SaveEditorPrefs();
-
-					_currentMode = eMode.ViewingStateMachine;
+					_requestSwitchViews = true;
+					_requestSwitchViewsStateId = -1;
 				}
-
-				public void SwitchToTimelineStateView(int stateId)
+				
+				public void ShowStateDetails(int stateId)
 				{
-					StateEditorGUI state = GetStateGUI(stateId);
-
-					if (state != null && state.GetEditableObject() is TimelineState)
-					{
-						TimelineState timelineState = (TimelineState)state.GetEditableObject();
-
-						_currentMode = eMode.ViewingTimelineState;
-						_editedState = state;
-						_timelineEditor.SetTimeline(timelineState._timeline);
-
-						_editorPrefs._stateId = stateId;
-						SaveEditorPrefs();
-
-						foreach (StateEditorGUI stateView in _selectedObjects)
-						{
-							GetEditorWindow().OnDeselectObject(stateView);
-						}
-					}
+					_requestSwitchViews = true;
+					_requestSwitchViewsStateId = stateId;
 				}
-
+				
 				public void LoadExternalState(StateMachineExternalStateEditorGUI state)
 				{
 					if (ShowOnLoadSaveChangesDialog())
@@ -475,7 +453,7 @@ namespace Framework
 						
 						if (_editorPrefs._stateId != -1)
 						{
-							SwitchToTimelineStateView(_editorPrefs._stateId);
+							ShowStateDetails(_editorPrefs._stateId);
 						}
 						else
 						{
@@ -858,7 +836,66 @@ namespace Framework
 				{				 
 					CreateAndAddNewObject((Type)type);
 				}
-				
+
+				private void SwitchViewsIfNeeded()
+				{
+					if (_requestSwitchViews)
+					{
+						if (_requestSwitchViewsStateId != -1)
+						{
+							StateEditorGUI state = GetStateGUI(_requestSwitchViewsStateId);
+
+							if (state != null)
+							{
+								if (state.GetEditableObject() is TimelineState)
+								{
+									TimelineState timelineState = (TimelineState)state.GetEditableObject();
+
+									_currentMode = eMode.ViewingTimelineState;
+									_editedState = state;
+									_timelineEditor.SetTimeline(timelineState._timeline);
+
+									_editorPrefs._stateId = _requestSwitchViewsStateId;
+									SaveEditorPrefs();
+
+									foreach (StateEditorGUI stateView in _selectedObjects)
+									{
+										GetEditorWindow().OnDeselectObject(stateView);
+									}
+								}
+								else
+								{
+									SetViewToStatemachine();
+									_selectedObjects.Clear();
+									_selectedObjects.Add(state);
+									Selection.activeObject = state;
+								}
+							}
+						}
+						else
+						{
+							SetViewToStatemachine();
+						}
+
+						_requestSwitchViews = false;
+					}
+				}
+
+				private void SetViewToStatemachine()
+				{
+					if (_editedState != null)
+					{
+						((TimelineState)_editedState.GetEditableObject())._timeline = _timelineEditor.ConvertToTimeline();
+						_timelineEditor.SetTimeline(new Timeline());
+						_editedState = null;
+					}
+
+					_editorPrefs._stateId = -1;
+					SaveEditorPrefs();
+
+					_currentMode = eMode.ViewingStateMachine;
+				}
+
 #if DEBUG
 				private void UpdateInPlayMode()
 				{
