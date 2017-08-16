@@ -13,13 +13,11 @@ namespace Framework
 		[Serializable]
 		public struct StateRef
 		{
-			#region Public Data		
+			#region Serialized Data		
 			[SerializeField]
 			private AssetRef<TextAsset> _file;
 			[SerializeField]
 			private int _stateId;
-			//Editor properties
-			public Vector2 _editorExternalLinkPosition;
 			#endregion
 
 			#region Private Data
@@ -27,6 +25,7 @@ namespace Framework
 			private State _state;
 #if UNITY_EDITOR
 			//Editor properties
+			public Vector2 _editorExternalLinkPosition;
 			[NonSerialized]
 			public bool _editorCollapsed;
 			[NonSerialized]

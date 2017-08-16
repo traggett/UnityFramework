@@ -8,12 +8,14 @@ namespace Framework
 		[Serializable]
 		public struct MaterialRefProperty
 		{
+			#region Serialized Data
 			[SerializeField]
 			private Material _material;
 			[SerializeField]
 			private int _materialIndex;
 			[SerializeField]
 			private Renderer _renderer;
+			#endregion
 
 			public MaterialRefProperty(Material material = null, int materialIndex=0, Renderer renderer=null)
 			{
@@ -34,12 +36,6 @@ namespace Framework
 
 			public Material GetMaterial()
 			{
-				FindMaterial();
-				return _material;
-			}
-
-			private void FindMaterial()
-			{
 				if (_material == null && _materialIndex != -1 && _renderer != null)
 				{
 					if (0 <= _materialIndex && _materialIndex < _renderer.sharedMaterials.Length)
@@ -47,6 +43,8 @@ namespace Framework
 						_material = _renderer.materials[_materialIndex];
 					}
 				}
+
+				return _material;
 			}
 		}
 	}

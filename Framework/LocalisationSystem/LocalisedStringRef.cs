@@ -10,9 +10,12 @@ namespace Framework
 		[Serializable]
 		public struct LocalisedStringRef
 		{
-			#region Private Data
+			#region Serialized Data
 			[SerializeField]
 			private string _localisationKey;
+			#endregion
+
+			#region Private Data
 			private string _cachedText;
 			private SystemLanguage _cachedLanguage;
 			#endregion

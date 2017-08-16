@@ -8,11 +8,15 @@ namespace Framework
 		[Serializable]		
 		public struct ComponentRef<T> where T : class // T should be a type of Component or an interface
 		{
-			#region Public Data
+			#region Serialized Data
 			[SerializeField]
 			private GameObjectRef _gameObject;
 			[SerializeField]
 			private int _componentIndex;
+			#endregion
+
+			#region Private Data
+			private T _component;
 			#endregion
 
 			#region Editor Data
@@ -53,7 +57,10 @@ namespace Framework
 
 			public T GetComponent()
 			{
-				return GetBaseComponent() as T;
+				if (_component == null)
+					_component = GetBaseComponent() as T;
+
+				return _component;
 			}
 
 			public Component GetBaseComponent()
@@ -103,6 +110,7 @@ namespace Framework
 			{
 				_gameObject = new GameObjectRef(sourceType);
 				_componentIndex = 0;
+				_component = null;
 				_editorCollapsed = false;
 			}
 
@@ -111,6 +119,7 @@ namespace Framework
 				GameObject gameObject = component != null ? component.gameObject : null;
 				_gameObject = new GameObjectRef(sourceType, gameObject);
 				_componentIndex = 0;
+				_component = component as T;
 				_editorCollapsed = false;
 
 				if (component != null)
@@ -138,6 +147,7 @@ namespace Framework
 				GameObject gameObject = component != null ? component.gameObject : null;
 				_gameObject = new GameObjectRef(sourceType, gameObject);
 				_componentIndex = componentIndex;
+				_component = component as T;
 				_editorCollapsed = false;
 			}
 

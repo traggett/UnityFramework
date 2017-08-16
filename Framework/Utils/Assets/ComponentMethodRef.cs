@@ -11,11 +11,15 @@ namespace Framework
 		[Serializable]
 		public struct ComponentMethodRef<T>
 		{
-			#region Public Data
+			#region Serialized Data
 			[SerializeField]
 			private ComponentRef<Component> _component;
 			[SerializeField]
 			private string _methodName;
+			#endregion
+
+			#region Private Data
+			private MethodInfo _method;
 			#endregion
 
 #if UNITY_EDITOR
@@ -36,11 +40,14 @@ namespace Framework
 
 				if (component != null)
 				{
-					MethodInfo method = component.GetType().GetMethod(_methodName);
-
-					if (method != null)
+					if (_method == null)
 					{
-						returnObj = (T)method.Invoke(component, null);
+						_method = component.GetType().GetMethod(_methodName);
+					}
+					
+					if (_method != null)
+					{
+						returnObj = (T)_method.Invoke(component, null);
 					}
 				}
 
@@ -57,6 +64,7 @@ namespace Framework
 			{
 				_component = componentRef;
 				_methodName = methodName;
+				_method = null;
 				_editorCollapsed = false;
 			}
 

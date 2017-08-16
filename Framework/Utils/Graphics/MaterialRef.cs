@@ -9,7 +9,7 @@ namespace Framework
 		[Serializable]
 		public struct MaterialRef
 		{
-			#region Private Data
+			#region Serialized Data
 			[SerializeField]
 			private AssetRef<Material> _materialRef;
 			[SerializeField]
@@ -21,7 +21,10 @@ namespace Framework
 			public bool _editorCollapsed;
 #endif
 			#endregion
-			
+
+			#region Private Data
+			private Material _material;
+			#endregion
 
 #if UNITY_EDITOR
 			public MaterialRef(int materialIndex)
@@ -51,7 +54,6 @@ namespace Framework
 				_material = null;
 			}
 #endif
-			private Material _material;
 
 			public static implicit operator string(MaterialRef property)
 			{

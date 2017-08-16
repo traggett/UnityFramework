@@ -15,13 +15,14 @@ namespace Framework
 		[Serializable]
 		public struct GameObjectRef
 		{
-			#region Public Data
 			public enum eSourceType
 			{
 				Scene,
 				Prefab,
 				Loaded
 			}
+
+			#region Serialized Data
 			[SerializeField]
 			private eSourceType _sourceType;
 			[SerializeField]
@@ -35,6 +36,7 @@ namespace Framework
 			#endregion
 
 			#region Private Data
+			private GameObject _gameObject;
 			private GameObject _sourceObject;
 			#endregion
 
@@ -88,20 +90,23 @@ namespace Framework
 
 			public GameObject GetGameObject()
 			{
-				if (_scene != null)
+				if (_gameObject == null)
 				{
 					switch (_sourceType)
 					{
 						case eSourceType.Scene:
-							return GetSceneObject(_scene.GetScene());
+							_gameObject = GetSceneObject(_scene.GetScene());
+							break;
 						case eSourceType.Prefab:
-							return GetPrefabObject();
+							_gameObject = GetPrefabObject();
+							break;
 						case eSourceType.Loaded:
-							return GetLoadedObject(_scene.GetScene());
+							_gameObject = GetLoadedObject(_scene.GetScene());
+							break;
 					}
 				}
 
-				return null;
+				return _gameObject;
 			}
 
 			public bool IsValid()
@@ -131,6 +136,7 @@ namespace Framework
 				_scene = new SceneRef();
 				_sceneObjectID = -1;
 				_prefab = new AssetRef<GameObject>();
+				_gameObject = null;
 				_sourceObject = null;
 				_editorCollapsed = false;
 			}
@@ -142,6 +148,7 @@ namespace Framework
 				_editorCollapsed = false;
 				_prefab = new AssetRef<GameObject>();
 				_scene = new SceneRef();
+				_gameObject = gameObject;
 
 				switch (sourceType)
 				{
@@ -209,7 +216,6 @@ namespace Framework
 							}
 						}
 						break;
-
 				}
 			}
 
