@@ -17,7 +17,7 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private List<Node> _nodeUpdateList;
+			private Node[] _nodeUpdateList;
 			private float _time;
 			#endregion
 
@@ -93,7 +93,7 @@ namespace Framework
 				}
 
 				//Work out node update order based on dependencies
-				_nodeUpdateList = new List<Node>();
+				List<Node> nodeUpdateList = new List<Node>();
 				List<Node> nodesLeftToAdd = new List<Node>(_nodes);
 				
 				while (nodesLeftToAdd.Count > 0)
@@ -105,8 +105,10 @@ namespace Framework
 						nodesLeftToAdd.Remove(orderedNode);
 					}
 
-					_nodeUpdateList.AddRange(orderedNodes);
+					nodeUpdateList.AddRange(orderedNodes);
 				}
+
+				_nodeUpdateList = nodeUpdateList.ToArray();
 
 				_time = 0.0f;
 			}
@@ -115,9 +117,9 @@ namespace Framework
 			{
 				_time += deltaTime;
 
-				foreach (Node node in _nodeUpdateList)
+				for (int i=0; i<_nodeUpdateList.Length; i++)
 				{
-					node.Update(_time, deltaTime);
+					_nodeUpdateList[i].Update(_time, deltaTime);
 				}
 			}
 			#endregion

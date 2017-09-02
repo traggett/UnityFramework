@@ -34,7 +34,7 @@ namespace Framework
 					return true;
 				}
 
-				if (Application.isEditor)
+				if (Application.isEditor && ! Application.isPlaying)
 					return true;
 
 				return false;

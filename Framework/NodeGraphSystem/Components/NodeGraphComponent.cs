@@ -7,8 +7,7 @@ namespace Framework
 	using DynamicValueSystem;
 	using Utils;
 	using Maths;
-	using Serialization;
-
+	
 	namespace NodeGraphSystem
 	{
 		public class NodeGraphComponent : MonoBehaviour, IValueSourceContainer

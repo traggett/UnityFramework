@@ -35,10 +35,10 @@ namespace Framework
 
 					_animations[_animations.Count - 1]._weight += deltaTime / _currentAnimationBlendTime;
 
-					if (_animations[_animations.Count - 1]._weight >= 1.0f)
+					//If current animation weight is more than 1, Stop all other animations
+					if (_animations.Count > 1 && _animations[_animations.Count - 1]._weight >= 1.0f)
 					{
 						_animations[_animations.Count - 1]._weight = 1.0f;
-						//Stop all other animations
 						_animations = new List<Animation>() { _animations[_animations.Count - 1] };
 					}
 
