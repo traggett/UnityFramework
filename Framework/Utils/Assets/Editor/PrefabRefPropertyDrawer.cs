@@ -29,7 +29,7 @@ namespace Framework
 				EditorGUI.BeginChangeCheck();
 
 				Rect objectFieldRect = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
-				prefabAsset = EditorGUI.ObjectField(objectFieldRect, "Prefab", prefabAsset, typeof(GameObject), false) as GameObject;
+				prefabAsset = EditorGUI.ObjectField(objectFieldRect, label, prefabAsset, typeof(GameObject), false) as GameObject;
 
 				if (EditorGUI.EndChangeCheck())
 				{
