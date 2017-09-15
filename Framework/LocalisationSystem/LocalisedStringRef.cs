@@ -82,9 +82,9 @@ namespace Framework
 				return _cachedText;
 			}
 
-			public void SetAutoNameParentName(string stateMachineName)
+			public void SetAutoNameParentName(string parentName)
 			{
-				_editorAutoNameParentName = stateMachineName;
+				_editorAutoNameParentName = parentName;
 			}
 			
 			public string GetAutoNameParentName()
@@ -98,14 +98,14 @@ namespace Framework
 				
 				if (!string.IsNullOrEmpty(_editorAutoNameParentName))
 				{
-					string statemachineName = _editorAutoNameParentName;
+					string autoNameParent = _editorAutoNameParentName;
 
 					//Replace _ with / so each bit will appear in separate dropdown menu (eg TextConv_Hath_Birthday will go to TextConv, Hath, Birthday)
-					statemachineName = statemachineName.Replace('_', '/');
+					autoNameParent = autoNameParent.Replace('_', '/');
 
 					//Find first free key
 					int index = 0;
-					while (Localisation.IsKeyInTable(autoKey = statemachineName + "/" + index.ToString("000")))
+					while (Localisation.IsKeyInTable(autoKey = autoNameParent + "/" + index.ToString("000")))
 					{
 						index++;
 					}

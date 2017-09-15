@@ -87,7 +87,12 @@ namespace Framework
 								Component component =  property.serializedObject.targetObject as Component;
 								if (component != null)
 								{
-									localisedStringRef.SetAutoNameParentName(component.gameObject.scene.name + "_" + component.gameObject.name);
+									string parentName = component.gameObject.name;
+
+									if (component.gameObject.scene.IsValid())
+										parentName = component.gameObject.scene.name + "_" + parentName;
+
+									localisedStringRef.SetAutoNameParentName(parentName);
 								}
 
 								localisationkeyProperty.stringValue = localisedStringRef.GetAutoKey();

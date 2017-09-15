@@ -58,6 +58,12 @@ namespace Framework
 			{
 				if (Path.GetExtension(fileName).ToLower() == ".xml")
 				{
+					string directory = Path.GetDirectoryName(fileName);
+					if (!Directory.Exists(directory))
+					{
+						Directory.CreateDirectory(directory);
+					}
+
 					return XmlConverter.ToFile<T>(obj, fileName);
 				}
 
