@@ -19,11 +19,15 @@ namespace Framework
 				{
 					string filepath = AssetDatabase.GUIDToAssetPath(fileGUID.stringValue);
 					prefabAsset = AssetDatabase.LoadAssetAtPath(filepath, typeof(GameObject)) as GameObject;
+					if (prefabAsset != null)
+						filePath.stringValue = filepath;
 				}
 
 				if (prefabAsset == null && !string.IsNullOrEmpty(filePath.stringValue))
 				{
 					prefabAsset = AssetDatabase.LoadAssetAtPath(filePath.stringValue, typeof(GameObject)) as GameObject;
+					if (prefabAsset != null)
+						fileGUID.stringValue = AssetDatabase.AssetPathToGUID(filePath.stringValue);
 				}
 
 				EditorGUI.BeginChangeCheck();
