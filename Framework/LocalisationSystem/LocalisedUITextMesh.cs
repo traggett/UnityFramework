@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Framework
 {
@@ -13,18 +14,18 @@ namespace Framework
 			#endregion
 
 			#region Private Data 
-			private Text _text;
+			private Text _UIText;
 			#endregion
 
 			#region MonoBehaviour
 			void Awake()
 			{
-				_text = GetComponent<Text>();
+				_UIText = GetComponent<Text>();
 			}
 
 			void Update()
 			{
-				_textMesh.text = _text;
+				_UIText.text = _text;
 			}
 			#endregion
 		}
