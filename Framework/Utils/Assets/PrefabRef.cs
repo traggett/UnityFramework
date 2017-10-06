@@ -25,12 +25,7 @@ namespace Framework
 
 				if (prefabSourceObject != null)
 				{
-#if UNITY_EDITOR
-					prefab = PrefabUtility.InstantiatePrefab(prefabSourceObject) as GameObject;
-#else
-
 					prefab = GameObjectUtils.SafeInstantiate(prefabSourceObject);
-#endif
 					prefab.name = prefabSourceObject.name;
 				}
 
@@ -49,12 +44,7 @@ namespace Framework
 
 				if (prefabObject != null)
 				{
-#if UNITY_EDITOR
-					prefabInstance = PrefabUtility.InstantiatePrefab(prefabObject) as GameObject;
-#else
-
 					prefabInstance = GameObjectUtils.SafeInstantiate(prefabObject);
-#endif
 					prefabInstance.name = prefabObject.name;
 				}
 
