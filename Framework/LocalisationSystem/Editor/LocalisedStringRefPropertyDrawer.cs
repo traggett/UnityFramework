@@ -65,18 +65,63 @@ namespace Framework
 						}
 
 						//Draw button for adding new key
+						//show drop downs for where to put the key - enum list of all current folders + empty.
+						//select one to preapend 
 						if (currentKey == 0)
 						{
+							float folderNameWidth = 200.0f;
+							float autoKeySlashFakeWidth = 12.0f;
+							float autoKeySlashWidth = 40.0f;
 							float autoKeybuttonWidth = 42.0f;
 							float addButtonWidth = 38.0f;
 							float buttonSpace = 2.0f;
-							float buttonWidth = autoKeybuttonWidth + buttonSpace + addButtonWidth; 
+							float fudge = 13.0f;
+							float keyTextWidth = position.width - EditorUtils.GetLabelWidth() - (folderNameWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth);
+							float buttonWidth = autoKeySlashFakeWidth + keyTextWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth;
 
-							Rect addKeyText = new Rect(position.x, yPos, position.width - buttonWidth, EditorGUIUtility.singleLineHeight);
-							localisationkeyProperty.stringValue = EditorGUI.DelayedTextField(addKeyText, "New Key", localisationkeyProperty.stringValue);
 
-							Rect autoKeyButton = new Rect(position.x + (position.width - buttonWidth), yPos, autoKeybuttonWidth, EditorGUIUtility.singleLineHeight);
-							Rect addKeyButton = new Rect(position.x + (position.width - buttonWidth) + buttonSpace + autoKeybuttonWidth, yPos, addButtonWidth, EditorGUIUtility.singleLineHeight);
+							//Get list of current folder options
+							Rect folderText = new Rect(position.x, yPos, position.width - buttonWidth, EditorGUIUtility.singleLineHeight);
+
+							string[] folders = Localisation.GetStringFolders();
+							int currentFolderIndex = 0;
+							string currentFolder;
+							for (int i = 0; i < folders.Length; i++)
+							{
+								if (folders[i] == Localisation.GetFolderName(localisationkeyProperty.stringValue))
+								{
+									currentFolderIndex = i;
+									break;
+								}
+							}
+							EditorGUI.BeginChangeCheck();
+							int newFolderIndex = EditorGUI.Popup(folderText, "New Key", currentFolderIndex, folders);
+							currentFolder = newFolderIndex == 0 ? "" : folders[newFolderIndex];
+							if (EditorGUI.EndChangeCheck())
+							{
+								if (newFolderIndex != 0)
+									localisationkeyProperty.stringValue = currentFolder + "/" + Localisation.GetKeyWithoutFoldder(localisationkeyProperty.stringValue);
+								else if (currentFolderIndex != 0)
+									localisationkeyProperty.stringValue = Localisation.GetKeyWithoutFoldder(localisationkeyProperty.stringValue);
+							}
+
+							Rect addKeySlash = new Rect(position.x + (position.width - buttonWidth) - fudge, yPos, autoKeySlashWidth, EditorGUIUtility.singleLineHeight);
+							EditorGUI.LabelField(addKeySlash, new GUIContent("/"));
+
+							Rect addKeyText = new Rect(position.x + (position.width - buttonWidth) - fudge + autoKeySlashFakeWidth, yPos, keyTextWidth + fudge, EditorGUIUtility.singleLineHeight);
+							if (newFolderIndex != 0)
+							{
+								string newAddKey = EditorGUI.TextField(addKeyText, Localisation.GetKeyWithoutFoldder(localisationkeyProperty.stringValue));
+								localisationkeyProperty.stringValue = currentFolder + "/" + newAddKey;
+							}
+							else
+							{
+								string newAddKey = EditorGUI.TextField(addKeyText, localisationkeyProperty.stringValue);
+								localisationkeyProperty.stringValue = newAddKey;
+							}
+
+							Rect autoKeyButton = new Rect(position.x + (position.width - buttonWidth) + autoKeySlashFakeWidth + buttonSpace + keyTextWidth, yPos, autoKeybuttonWidth, EditorGUIUtility.singleLineHeight);
+							Rect addKeyButton = new Rect(position.x + (position.width - buttonWidth) + autoKeySlashFakeWidth + buttonSpace + keyTextWidth + buttonSpace + autoKeybuttonWidth, yPos, addButtonWidth, EditorGUIUtility.singleLineHeight);
 
 							yPos += addKeyButton.height;
 
@@ -105,6 +150,9 @@ namespace Framework
 									Localisation.UpdateString(localisationkeyProperty.stringValue, Localisation.GetCurrentLanguage(), string.Empty);
 								}
 							}
+
+
+							
 						}
 
 						//Draw displayed text (can be edited to update localization file)

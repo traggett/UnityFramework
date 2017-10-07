@@ -36,6 +36,7 @@ namespace Framework
 			private static bool _dirty;
 #if UNITY_EDITOR
 			private static string[] _editorKeys;
+			private static string[] _editorFolders;
 			private static LocalisationUndoState _undoObject;
 			private class LocalisationEditorListener : UnityEditor.AssetModificationProcessor
 			{
@@ -174,7 +175,9 @@ namespace Framework
 					}
 
 					Serializer.ToFile(_localisationMap, path);
-				}				
+				}
+
+				_dirty = false;
 			}
 
 			public static string[] GetStringKeys()
@@ -185,6 +188,14 @@ namespace Framework
 				return _editorKeys;
 			}
 
+			public static string[] GetStringFolders()
+			{
+				if (_localisationMap == null)
+					LoadStrings();
+
+				return _editorFolders;
+			}
+
 			public static bool IsKeyInTable(string key)
 			{
 				if (_localisationMap == null)
@@ -192,10 +203,36 @@ namespace Framework
 
 				return _localisationMap.IsValidKey(key);
 			}
+
+			public static string GetFolderName(string key)
+			{
+				string folder = "";
+
+				int lastSlash = key.LastIndexOf('/');
+				if (lastSlash > 0)
+				{
+					folder = key.Substring(0, lastSlash);
+				}
+
+				return folder;
+			}
+
+			public static string GetKeyWithoutFoldder(string key)
+			{
+				string keyWithoutFolder = key;
+
+				int lastSlash = key.LastIndexOf('/');
+				if (lastSlash > 0)
+				{
+					keyWithoutFolder = key.Substring(lastSlash + 1, key.Length - lastSlash - 1);
+				}
+
+				return keyWithoutFolder;
+			}
 #endif
 			#endregion
 
-			#region Private Functions
+				#region Private Functions
 			private static string GetString(string key, SystemLanguage language, params KeyValuePair<string, string>[] variables)
 			{
 				if (_localisationMap == null)
@@ -271,7 +308,21 @@ namespace Framework
 			private static void RefreshEditorKeys()
 			{
 				_editorKeys = _localisationMap.GetStringKeys();
-				ArrayUtils.Insert(ref _editorKeys, "(new key)", 0);
+				ArrayUtils.Insert(ref _editorKeys, "(Add New Key)", 0);
+
+				List<string> folders = new List<string>();
+
+				folders.Add("(Root)");
+
+				for (int i=0; i<_editorKeys.Length; i++)
+				{
+					string folder = GetFolderName(_editorKeys[i]);
+
+					if (!string.IsNullOrEmpty(folder) && !folders.Contains(folder))
+						folders.Add(folder);
+				}
+
+				_editorFolders = folders.ToArray();
 			}
 #endif
 
