@@ -69,7 +69,7 @@ namespace Framework
 						//select one to preapend 
 						if (currentKey == 0)
 						{
-							float folderNameWidth = 200.0f;
+							float folderNameWidth = 160.0f;
 							float autoKeySlashFakeWidth = 12.0f;
 							float autoKeySlashWidth = 40.0f;
 							float autoKeybuttonWidth = 42.0f;

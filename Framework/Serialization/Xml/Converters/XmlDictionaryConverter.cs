@@ -30,13 +30,23 @@ namespace Framework
 							keys[i++] = Convert.ToString(key);
 						}
 
-						//Append all child nodes
+						//Create all child nodes
+						List<XmlNode> childNodes = new List<XmlNode>();
 						i = 0;
 						foreach (object value in dictionary.Values)
 						{
 							XmlNode arrayItemXmlNode = XmlConverter.ToXmlNode(value, node.OwnerDocument);
 							XmlUtils.AddAttribute(node.OwnerDocument, arrayItemXmlNode, "key", keys[i++]);
-							XmlUtils.SafeAppendChild(node, arrayItemXmlNode);
+							childNodes.Add(arrayItemXmlNode);
+						}
+
+						//Sort child nodes
+						childNodes.Sort((x, y) => x.Attributes["key"].Value.CompareTo(y.Attributes["key"].Value));
+
+						//Append child nodes in alphabetical order
+						foreach (XmlNode childNode in childNodes)
+						{
+							XmlUtils.SafeAppendChild(node, childNode);
 						}
 					}
 				}
