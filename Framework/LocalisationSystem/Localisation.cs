@@ -216,7 +216,6 @@ namespace Framework
 
 				return folder;
 			}
-
 			public static string GetKeyWithoutFoldder(string key)
 			{
 				string keyWithoutFolder = key;
@@ -314,16 +313,30 @@ namespace Framework
 
 				folders.Add("(Root)");
 
+				//Also want to add sub folders eg Menus/Options/Volume should add Menus and Menus/Options as folder options
 				for (int i=0; i<_editorKeys.Length; i++)
 				{
-					string folder = GetFolderName(_editorKeys[i]);
+					string[] keyFolders = _editorKeys[i].Split('/');
 
-					if (!string.IsNullOrEmpty(folder) && !folders.Contains(folder))
-						folders.Add(folder);
+					//want to add first item
+					// first item + next
+					if (keyFolders.Length > 1)
+					{
+						string folder = keyFolders[0];
+
+						for (int j = 1; j < keyFolders.Length; j++)
+						{
+							if (!string.IsNullOrEmpty(folder) && !folders.Contains(folder))
+								folders.Add(folder);
+
+							folder += "/" + keyFolders[j];
+						}
+					}
 				}
 
 				_editorFolders = folders.ToArray();
 			}
+
 #endif
 
 #if UNITY_EDITOR
