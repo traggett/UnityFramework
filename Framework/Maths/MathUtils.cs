@@ -226,7 +226,7 @@ namespace Framework
 				return scale;
 			}
 			
-			public static bool ClosestPointsOnTwoLines(out float closestPointLine1T, out float closestPointLine2T, Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
+			public static bool ClosestPointsOnTwoLines(Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2, out float closestPointLine1T, out float closestPointLine2T)
 			{
 				closestPointLine1T = 0.0f;
 				closestPointLine2T = 0.0f;
@@ -259,7 +259,7 @@ namespace Framework
 				}
 			}
 
-			public static bool IntercetionOfTwoNormalisedLines(Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2)
+			public static bool IntercetionOfTwoNormalisedLines(Vector3 linePoint1, Vector3 lineVec1, Vector3 linePoint2, Vector3 lineVec2, out Vector3 intercetion)
 			{
 				float line1DirDotLine2Dir = Vector3.Dot(lineVec1, lineVec2);
 
@@ -273,13 +273,15 @@ namespace Framework
 					float f = Vector3.Dot(lineVec2, r);
 					float s = (line1DirDotLine2Dir * f - c) / d;
 
-					Vector3 interect = linePoint1 + lineVec1 * s;
+					intercetion = linePoint1 + lineVec1 * s;
 
 					return true;
 				}
 
 				else
 				{
+					intercetion = Vector3.zero;
+
 					return false;
 				}
 			}

@@ -21,9 +21,9 @@ namespace Framework
 		void Start()
 		{
 			_particleSystem = GetComponent<ParticleSystem>();
-			_particles = new ParticleSystem.Particle[_particleSystem.maxParticles];
+			_particles = new ParticleSystem.Particle[_particleSystem.main.maxParticles];
 
-			if (_particleSystem.playOnAwake)
+			if (_particleSystem.main.playOnAwake)
 			{
 				Play();
 			}

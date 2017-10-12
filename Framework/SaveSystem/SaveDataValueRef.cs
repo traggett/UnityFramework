@@ -44,7 +44,7 @@ namespace Framework
 						valueId = _editorValueLabel;
 #endif
 
-					return SystemUtils.GetTypeName(_saveDataType) + "." + _valueID;
+					return typeName + "." + valueId;
 				}
 
 				return "SaveDataValueRef";
