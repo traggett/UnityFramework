@@ -50,6 +50,11 @@ namespace Framework
 
 				return prefabInstance;
 			}
+
+			public string GetGUID()
+			{
+				return _fileGUID;
+			}
 		}
 	}
 }

@@ -88,6 +88,7 @@ namespace Framework
 							string currentFolder;
 							for (int i = 0; i < folders.Length; i++)
 							{
+								//To do - if the first bit of our folder exisist then thats the current folder eg Roles/NewRole/Name - Roles/
 								if (folders[i] == Localisation.GetFolderName(localisationkeyProperty.stringValue))
 								{
 									currentFolderIndex = i;
