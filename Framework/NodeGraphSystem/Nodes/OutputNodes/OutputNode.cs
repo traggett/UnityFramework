@@ -12,7 +12,16 @@ namespace Framework
 			public TNodeField _input = new TNodeField();
 			#endregion
 
+			#region Private Data
+			private TOutput _value;
+			#endregion
+
 			#region Node
+			public override void Update(float time, float deltaTime)
+			{
+				_value = _input;
+			}
+
 #if UNITY_EDITOR
 			public override Color GetEditorColor()
 			{
@@ -24,7 +33,7 @@ namespace Framework
 			#region IValueSource
 			public TOutput GetValue()
 			{
-				return _input;
+				return _value;
 			}
 			#endregion
 		}

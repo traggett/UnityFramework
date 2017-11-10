@@ -304,6 +304,11 @@ namespace Framework
 					SerializedProperty serializedInput = inputArrayProperty.GetArrayElementAtIndex(inputArrayProperty.arraySize - 1);
 					SerializedProperty nodeIdProp = serializedInput.FindPropertyRelative("_nodeId");
 					nodeIdProp.intValue = node._nodeId;
+
+					//TO DO
+					//Default some input values to components on this game object? Eg transform could be this transform, renderer this renderer?
+					SerializedProperty valueProp = serializedInput.FindPropertyRelative("_valueSource");
+					
 				}
 
 				private void RemoveOldInputNodes(Node[] inputNodes, SerializedProperty inputArrayProperty)

@@ -16,12 +16,15 @@ namespace Framework
 			public NodeInputField<float> _alpha = 0.0f;
 			#endregion
 
-			#region IValueSource<float>
-			public Color GetValue()
+			#region Private Data
+			private Color _color;
+			#endregion
+
+			#region Node
+			public override void Update(float time, float deltaTime)
 			{
-				Color color = _value;
-				color.a = _alpha;
-				return color;
+				_color = _value;
+				_color.a = _alpha;
 			}
 
 #if UNITY_EDITOR
@@ -30,6 +33,13 @@ namespace Framework
 				return ColorNodes.kNodeColor;
 			}
 #endif
+			#endregion
+
+			#region IValueSource<Color>
+			public Color GetValue()
+			{
+				return _color;
+			}
 			#endregion
 		}
 	}

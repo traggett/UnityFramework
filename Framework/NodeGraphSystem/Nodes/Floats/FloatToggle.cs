@@ -21,11 +21,6 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Init()
-			{
-				_value = 0.0f;
-			}
-
 			public override void Update(float time, float deltaTime)
 			{
 				if (_toggle)

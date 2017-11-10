@@ -15,7 +15,16 @@ namespace Framework
 			public NodeInputField<Vector3> _input = Vector3.zero;
 			#endregion
 
+			#region Private Data
+			private float _value;
+			#endregion
+
 			#region Node
+			public override void Update(float time, float deltaTime)
+			{
+				_value = _input.GetValue().z;
+			}
+
 #if UNITY_EDITOR
 			public override Color GetEditorColor()
 			{
@@ -27,7 +36,7 @@ namespace Framework
 			#region IValueSource<float>
 			public float GetValue()
 			{
-				return _input.GetValue().z;
+				return _value;
 			}
 			#endregion
 		}

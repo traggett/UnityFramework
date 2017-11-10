@@ -22,27 +22,25 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Init()
-			{
-				Transform target = _transform;
-
-				switch (_space)
-				{
-					case Space.Self:
-						_origRotation = target.localRotation;
-						break;
-					case Space.World:
-						_origRotation = target.rotation;
-						break;
-				}
-			}
-
 			public override void Update(float time, float deltaTime)
 			{
 				Transform target = _transform;
 
 				if (target != null)
 				{
+					if (IsFirstUpdate())
+					{
+						switch (_space)
+						{
+							case Space.Self:
+								_origRotation = target.localRotation;
+								break;
+							case Space.World:
+								_origRotation = target.rotation;
+								break;
+						}
+					}
+
 					Quaternion rotation;
 
 					if (_offsetFromOriginal)

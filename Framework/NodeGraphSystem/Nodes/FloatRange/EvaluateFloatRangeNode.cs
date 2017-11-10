@@ -18,7 +18,18 @@ namespace Framework
 			public eInterpolation _easeType = eInterpolation.Linear;
 			#endregion
 
+			#region Private Data
+			private float _value;
+			#endregion
+
 			#region Node
+			public override void Update(float time, float deltaTime)
+			{
+				FloatRange range = _range;
+				float lerp = MathUtils.Interpolate(_easeType, 0.0f, 1.0f, _input);
+				_value = range.Get(lerp);
+			}
+
 #if UNITY_EDITOR
 			public override Color GetEditorColor()
 			{
@@ -30,9 +41,7 @@ namespace Framework
 			#region IValueSource<float>
 			public float GetValue()
 			{
-				FloatRange range = _range;
-				float lerp = MathUtils.Interpolate(_easeType, 0.0f, 1.0f, _input);
-				return range.Get(lerp);
+				return _value;
 			}
 			#endregion
 		}

@@ -22,30 +22,25 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Init()
-			{
-				Transform target = _transform;
-
-				if (target != null)
-				{
-					switch (_space)
-					{
-						case Space.Self:
-							_origPosition = target.transform.localPosition;
-							break;
-						case Space.World:
-							_origPosition = target.transform.position;
-							break;
-					}
-				}
-			}
-
 			public override void Update(float time, float deltaTime)
 			{
 				Transform target = _transform;
 
 				if (target != null)
 				{
+					if (IsFirstUpdate())
+					{
+						switch (_space)
+						{
+							case Space.Self:
+								_origPosition = target.transform.localPosition;
+								break;
+							case Space.World:
+								_origPosition = target.transform.position;
+								break;
+						}
+					}
+
 					Vector3 position = _position;
 
 					if (_offsetFromOriginal)

@@ -10,7 +10,6 @@ namespace Framework
 		public class MaterialTextureSetterNode : MaterialNode
 		{
 			#region Public Data
-			
 			public TextureNodeInputField _value;
 			#endregion
 

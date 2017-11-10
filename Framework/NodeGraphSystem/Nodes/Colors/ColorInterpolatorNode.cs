@@ -19,10 +19,14 @@ namespace Framework
 			public eInterpolation _interpolationtype = eInterpolation.Linear;
 			#endregion
 
-			#region IValueSource<float>
-			public Color GetValue()
+			#region Private Data
+			private Color _color;
+			#endregion
+
+			#region Node
+			public override void Update(float time, float deltaTime)
 			{
-				return MathUtils.Interpolate(_interpolationtype, _from, _to, _t);
+				_color = MathUtils.Interpolate(_interpolationtype, _from, _to, _t);
 			}
 
 #if UNITY_EDITOR
@@ -31,6 +35,13 @@ namespace Framework
 				return ColorNodes.kNodeColor;
 			}
 #endif
+			#endregion
+
+			#region IValueSource<Color>
+			public Color GetValue()
+			{
+				return _color;
+			}
 			#endregion
 		}
 	}

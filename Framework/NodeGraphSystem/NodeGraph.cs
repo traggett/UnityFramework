@@ -87,11 +87,6 @@ namespace Framework
 
 			public void Init()
 			{
-				foreach (Node node in _nodes)
-				{
-					node.Init();
-				}
-
 				//Work out node update order based on dependencies
 				List<Node> nodeUpdateList = new List<Node>();
 				List<Node> nodesLeftToAdd = new List<Node>(_nodes);
@@ -109,8 +104,14 @@ namespace Framework
 				}
 
 				_nodeUpdateList = nodeUpdateList.ToArray();
-
 				_time = 0.0f;
+
+				for (int i = 0; i < _nodeUpdateList.Length; i++)
+				{
+					_nodeUpdateList[i].SetFirstUpdate(true);
+					_nodeUpdateList[i].Update(_time, 0.0f);
+					_nodeUpdateList[i].SetFirstUpdate(false);
+				}
 			}
 
 			public void Update(float deltaTime)

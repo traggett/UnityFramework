@@ -16,7 +16,16 @@ namespace Framework
 			public NodeInputField<float> _b = 1.0f;
 			#endregion
 
+			#region Private Data
+			private float _value;
+			#endregion
+
 			#region Node
+			public override void Update(float time, float deltaTime)
+			{
+				_value = _a * _b;
+			}
+			
 #if UNITY_EDITOR
 			public override Color GetEditorColor()
 			{
@@ -28,7 +37,7 @@ namespace Framework
 			#region IValueSource<float>
 			public float GetValue()
 			{
-				return _a * _b;
+				return _value;
 			}
 			#endregion
 		}

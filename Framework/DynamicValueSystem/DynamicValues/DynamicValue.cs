@@ -77,8 +77,8 @@ namespace Framework
 				switch (_sourceType)
 				{
 					case eSourceType.SourceObject: return _sourceObjectData._valueSource.GetValue();
-					case eSourceType.SourceMember: return (_sourceObjectData._fieldInfo.GetValue(_sourceObject) as IValueSource<T>).GetValue();
-					case eSourceType.SourceDynamicMember: return (_sourceObjectData._dynamicValueSource.GetValueSource(_sourceObjectMemberIndex) as IValueSource<T>).GetValue();
+					case eSourceType.SourceMember: return ((IValueSource<T>)_sourceObjectData._fieldInfo.GetValue(_sourceObject)).GetValue();
+					case eSourceType.SourceDynamicMember: return ((IValueSource<T>)_sourceObjectData._dynamicValueSource.GetValueSource(_sourceObjectMemberIndex)).GetValue();
 					default: return _value;
 				}
 			}
@@ -98,7 +98,7 @@ namespace Framework
 					case eSourceType.Static: break;
 					case eSourceType.SourceObject:
 						{
-							_sourceObjectData._valueSource = _sourceObject as IValueSource<T>; 
+							_sourceObjectData._valueSource = (IValueSource<T>)_sourceObject; 
 						}
 						break;
 					case eSourceType.SourceMember:
@@ -120,7 +120,7 @@ namespace Framework
 						break;
 					case eSourceType.SourceDynamicMember:
 						{
-							_sourceObjectData._dynamicValueSource = _sourceObject as IValueSourceContainer;
+							_sourceObjectData._dynamicValueSource = (IValueSourceContainer)_sourceObject;
 						}
 						break;
 					}

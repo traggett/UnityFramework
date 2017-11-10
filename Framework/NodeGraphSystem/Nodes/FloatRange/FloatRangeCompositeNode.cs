@@ -17,7 +17,16 @@ namespace Framework
 			public NodeInputField<float> _max = 1.0f;
 			#endregion
 
+			#region Private Data
+			private FloatRange _floatRange;
+			#endregion
+
 			#region Node
+			public override void Update(float time, float deltaTime)
+			{
+				_floatRange = new FloatRange(_min, _max);
+			}
+
 #if UNITY_EDITOR
 			public override Color GetEditorColor()
 			{
@@ -29,7 +38,7 @@ namespace Framework
 			#region IValueSource<FloatRange>
 			public FloatRange GetValue()
 			{
-				return new FloatRange(_min, _max);
+				return _floatRange;
 			}
 			#endregion
 		}

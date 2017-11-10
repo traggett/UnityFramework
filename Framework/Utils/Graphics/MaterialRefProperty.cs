@@ -36,11 +36,16 @@ namespace Framework
 
 			public Material GetMaterial()
 			{
-				if (_material == null && _materialIndex != -1 && _renderer != null)
+				//If material is null...
+				if (_material == null)
 				{
-					if (0 <= _materialIndex && _materialIndex < _renderer.sharedMaterials.Length)
+					//..get from renderer / index
+					if (_materialIndex != -1 && _renderer != null)
 					{
-						_material = _renderer.materials[_materialIndex];
+						if (0 <= _materialIndex && _materialIndex < _renderer.sharedMaterials.Length)
+						{
+							_material = _renderer.materials[_materialIndex];
+						}
 					}
 				}
 

@@ -21,16 +21,16 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Init()
-			{
-				UpdateCachedShader();
-				Material material = _material;
-				if (material != null)
-					_originalValue = material.GetFloat(_cachedShaderID);
-			}
-
 			public override void Update(float time, float deltaTime)
 			{
+				if (IsFirstUpdate())
+				{
+					UpdateCachedShader();
+					Material material = _material;
+					if (material != null)
+						_originalValue = material.GetFloat(_cachedShaderID);
+				}
+
 				float value = _value;
 
 				if (_multiplyWithOriginal)

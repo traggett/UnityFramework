@@ -2,6 +2,7 @@ using System;
 
 namespace Framework
 {
+	using UnityEngine;
 	using Utils;
 
 	namespace DynamicValueSystem
@@ -9,6 +10,10 @@ namespace Framework
 		[Serializable]
 		public class DynamicMaterialRef : DynamicValue<MaterialRefProperty>
 		{
+			public Material GetMaterial()
+			{
+				return _value.GetMaterial();
+			}
 		}
 	}
 }

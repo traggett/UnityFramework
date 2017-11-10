@@ -212,7 +212,7 @@ namespace Framework
 				public int _nodeId;
 				public DynamicMaterialRef _valueSource;
 				public int GetNodeId() { return _nodeId; }
-				public Material GetValue() { return _valueSource.GetValue().GetMaterial(); }
+				public Material GetValue() { return _valueSource.GetMaterial(); }
 			}
 			[SerializeField]
 			private MaterialInput[] _materialInputs;
@@ -238,11 +238,8 @@ namespace Framework
 
 				if (Application.isPlaying)
 				{
-					LoadNodeGraph();
-					if (_nodegraph != null)
-						_nodegraph.Init();
+					TryLoadNodeGraph();
 				}
-					
 			}
 
 			void Update()
@@ -258,19 +255,6 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			public void LoadNodeGraph()
-			{
-				_nodegraph = _nodeGraphRef.LoadNodeGraph();
-
-				if (_nodegraph != null)
-				{
-					GameObjectRef.FixUpGameObjectRefsInObject(_nodegraph, this.gameObject);
-					FixupInputs();
-
-					_outputNodes = _nodegraph.GetOutputNodes();
-				}
-			}
-
 			public NodeGraph GetNodeGraph()
 			{
 				return _nodegraph;
@@ -285,6 +269,8 @@ namespace Framework
 			#region IValueSourceContainer 
 			public object GetValueSource(int index)
 			{
+				TryLoadNodeGraph();
+
 				if (_outputNodes != null && _outputNodes.Length > index)
 					return _outputNodes[index];
 
@@ -315,6 +301,41 @@ namespace Framework
 			#endregion
 
 			#region Private Functions 
+			public void TryLoadNodeGraph()
+			{
+				if (_nodegraph == null)
+				{
+					LoadNodeGraph();
+
+					if (_nodegraph != null)
+						_nodegraph.Init();
+				}
+			}
+
+			private void LoadNodeGraph()
+			{
+				_nodegraph = _nodeGraphRef.LoadNodeGraph();
+
+				if (_nodegraph != null)
+				{
+					GameObjectRef.FixUpGameObjectRefsInObject(_nodegraph, this.gameObject);
+					FixupInputs();
+
+					_outputNodes = _nodegraph.GetOutputNodes();
+				}
+			}
+
+#if UNITY_EDITOR
+			private void EnsureNodeGraphIsLoaded()
+			{
+				if (!Application.isPlaying)
+				{
+					if (_nodegraph == null || _nodegraph._nodes.Length == 0)
+						LoadNodeGraph();
+				}
+			}
+#endif
+
 			private void FixupInputs()
 			{
 				FixupInputs<FloatInput, float>(ref _floatInputs);
@@ -356,17 +377,6 @@ namespace Framework
 					}
 				}
 			}
-
-#if UNITY_EDITOR
-			private void EnsureNodeGraphIsLoaded()
-			{
-				if (!Application.isPlaying)
-				{
-					if (_nodegraph == null || _nodegraph._nodes.Length == 0)
-						LoadNodeGraph();
-				}	
-			}
-#endif
 			#endregion
 		}
 	}

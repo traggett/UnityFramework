@@ -9,10 +9,24 @@ namespace Framework
 	{
 		public abstract class InputNode<T> : Node, IValueSource<T>
 		{
+			#region Public Data
 			[HideInInspector]
 			public IValueSource<T> _inputSource;
+			#endregion
+
+			#region Private Data
+			private T _value;
+			#endregion
 
 			#region Node
+			public override void Update(float time, float deltaTime)
+			{
+				if (_inputSource != null)
+					_value = _inputSource.GetValue();
+				else
+					_value = default(T);
+			}
+
 #if UNITY_EDITOR
 			public override Color GetEditorColor()
 			{
@@ -24,10 +38,7 @@ namespace Framework
 			#region IValueSource<T>
 			public T GetValue()
 			{
-				if (_inputSource != null)
-					return _inputSource.GetValue();
-
-				return default(T);
+				return _value;
 			}
 			#endregion
 			

@@ -16,17 +16,17 @@ namespace Framework
 			public NodeInputField<float> _input = 0.0f;
 			#endregion
 
-			#region IValueSource<float>
-			public float GetValue()
+			#region Private Data
+			private float _value;
+			#endregion
+
+			#region Node
+			public override void Update(float time, float deltaTime)
 			{
 				AnimationCurve curve = _curve;
 
 				if (curve != null)
-				{
-					return curve.Evaluate(_input);
-				}
-
-				return _input;
+					_value = curve.Evaluate(_input);
 			}
 
 #if UNITY_EDITOR
@@ -35,6 +35,13 @@ namespace Framework
 				return FloatNodes.kNodeColor;
 			}
 #endif
+			#endregion
+
+			#region IValueSource<float>
+			public float GetValue()
+			{
+				return _value;
+			}
 			#endregion
 		}
 	}

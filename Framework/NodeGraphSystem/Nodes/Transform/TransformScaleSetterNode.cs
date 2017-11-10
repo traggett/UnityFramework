@@ -23,22 +23,17 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Init()
-			{
-				Transform target = _transform;
-
-				if (target != null)
-				{
-					_origScale = target.transform.localScale;
-				}
-			}
-
 			public override void Update(float time, float deltaTime)
 			{
 				Transform target = _transform;
 
 				if (target != null)
 				{
+					if (IsFirstUpdate())
+					{
+						_origScale = target.transform.localScale;
+					}
+
 					Vector3 scale = _scale;
 
 					if (_offsetFromOriginal)

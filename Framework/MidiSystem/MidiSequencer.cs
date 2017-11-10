@@ -18,7 +18,7 @@ namespace Framework
 		public static class MidiSequencer
 		{
 			#region Private Data
-			private static readonly int kMaxTracks = 16;
+			private static readonly int kMaxTracks = 4;
 			private static MidiTrackState[] _midiTracks;
 
 			// Last update frame number

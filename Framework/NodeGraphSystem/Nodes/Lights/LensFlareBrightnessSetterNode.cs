@@ -21,19 +21,17 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Init()
-			{
-				LensFlare lensFlare = _lensFlare;
-				if (lensFlare != null)
-					_origBrightness = lensFlare.brightness;
-			}
-
 			public override void Update(float time, float deltaTime)
 			{
 				LensFlare lensFlare = _lensFlare;
 
 				if (lensFlare != null)
 				{
+					if (IsFirstUpdate())
+					{
+						_origBrightness = lensFlare.brightness;
+					}
+
 					if (_multiplyWithOriginal)
 						lensFlare.brightness = _origBrightness * _brightness;
 					else

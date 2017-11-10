@@ -19,9 +19,21 @@ namespace Framework
 			public string _editorDescription;
 			#endregion
 
-			public virtual void Init() { }
+			#region Private Data 
+			private bool _firstUpdate;
+			#endregion
+
+			public void SetFirstUpdate(bool firstUpdate)
+			{
+				_firstUpdate = firstUpdate;
+			}
 
 			public virtual void Update(float time, float deltaTime) { }
+
+			protected bool IsFirstUpdate()
+			{
+				return _firstUpdate;
+			}
 
 #if UNITY_EDITOR
 			public virtual Color GetEditorColor()

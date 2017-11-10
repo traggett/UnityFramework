@@ -32,24 +32,19 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Init()
-			{
-				Transform target = _transform;
-
-				if (target != null)
-				{
-					_origRotation = target.localRotation;
-					_prevAmplitude = 0.0f;
-					PickOscillationAxis();
-				}
-			}
-
 			public override void Update(float time, float deltaTime)
 			{
 				Transform target = _transform;
 
 				if (target != null)
 				{
+					if (IsFirstUpdate())
+					{
+						_origRotation = target.localRotation;
+						_prevAmplitude = 0.0f;
+						PickOscillationAxis();
+					}
+
 					float amplitude = _amplitude;
 
 					//Update axis

@@ -21,20 +21,17 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Init()
-			{
-				Light light = _light;
-
-				if (light != null)
-					_origIntensity = light.intensity;
-			}
-
 			public override void Update(float time, float deltaTime)
 			{
 				Light light = _light;
 
 				if (light != null)
 				{
+					if (IsFirstUpdate())
+					{
+						_origIntensity = light.intensity;
+					}
+
 					if (_multiplyWithOriginal)
 						light.intensity = _origIntensity * _intensity;
 					else

@@ -231,7 +231,7 @@ namespace Framework
 #endif
 			#endregion
 
-				#region Private Functions
+			#region Private Functions
 			private static string GetString(string key, SystemLanguage language, params KeyValuePair<string, string>[] variables)
 			{
 				if (_localisationMap == null)

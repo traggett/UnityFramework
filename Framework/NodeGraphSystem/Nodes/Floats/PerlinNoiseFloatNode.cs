@@ -18,32 +18,22 @@ namespace Framework
 
 			#region Private Data 
 			private static readonly float kSpeedVariation = 0.05f;
-			private float _time;
 			private float _value;
-			private float _xSeed;
-			private float _ySeed;
+			private float _xSeed = Random.value;
+			private float _ySeed = Random.value;
 			private float _xSpeed;
 			private float _ySpeed;
-			private float _xySpeedVariance;
+			private float _xySpeedVariance = Random.Range(-kSpeedVariation, kSpeedVariation);
 			#endregion
 
 			#region Node
-			public override void Init()
-			{
-				_time = 0.0f;
-				_xSeed = Random.value;
-				_ySeed = Random.value;
-				_xySpeedVariance = Random.Range(-kSpeedVariation, kSpeedVariation);
-			}
-
 			public override void Update(float time, float deltaTime)
 			{
 				float speed = _speed.GetValue();
 				_xSpeed = speed * (1.0f + _xySpeedVariance);
 				_ySpeed = speed * (1.0f - _xySpeedVariance);
-
-				_time += deltaTime;
-				_value = Mathf.PerlinNoise(_xSeed + _time * _xSpeed, _ySeed + _time * _ySpeed);
+				
+				_value = Mathf.PerlinNoise(_xSeed + time * _xSpeed, _ySeed + time * _ySpeed);
 			}
 
 #if UNITY_EDITOR
