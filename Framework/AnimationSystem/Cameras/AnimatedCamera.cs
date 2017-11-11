@@ -17,7 +17,15 @@ namespace Framework
 				public WrapMode _wrapMode;
 				public float _animationT;
 				public float _weight;
+
+				public Animation(params AnimatedCameraSnapshot[] snapshots)
+				{
+					_snapshots = snapshots;
+				}
 			}
+
+
+			public AnimatedCameraSnapshot _intitalSnapshot;
 
 			#region Private Data
 			private Camera _camera;
@@ -27,6 +35,14 @@ namespace Framework
 			#endregion
 
 			#region MonoBehaviour Calls
+			protected virtual void Start()
+			{
+				if (_intitalSnapshot != null)
+				{
+					SetAnimation(new Animation(_intitalSnapshot));
+				}
+			}
+
 			protected virtual void Update()
 			{
 				if (_animations.Count > 0)
@@ -59,7 +75,7 @@ namespace Framework
 				return _camera;
 			}
 			
-			public void SetAnimation(Animation animation, eInterpolation easeType, float blendTime)
+			public void SetAnimation(Animation animation, eInterpolation easeType = eInterpolation.InOutSine, float blendTime = 0.0f)
 			{
 				_currentAnimationBlendTime = blendTime;
 				_currentEaseType = easeType;

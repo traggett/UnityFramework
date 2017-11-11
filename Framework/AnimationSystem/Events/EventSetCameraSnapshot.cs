@@ -48,8 +48,7 @@ namespace Framework
 
 				if (camera != null)
 				{
-					AnimatedCamera.Animation animation = new AnimatedCamera.Animation();
-					animation._snapshots = new AnimatedCameraSnapshot[] { _snapshot.GetComponent() };
+					AnimatedCamera.Animation animation = new AnimatedCamera.Animation(_snapshot.GetComponent());
 					camera.SetAnimation(animation, _blendEaseType, _blendTime);
 				}
 

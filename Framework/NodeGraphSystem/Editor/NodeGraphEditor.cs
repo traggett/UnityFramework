@@ -26,8 +26,9 @@ namespace Framework
 				private static readonly float kLinkIconWidth = 12.0f;
 				private static readonly float kLinkLineNormalDist = 80.0f;
 				
-				private static Dictionary<Type, string> _nodeContextMenuName;
-
+				private static Dictionary<Type, string> _addNodeContextMenu;
+				private static Dictionary<Type, string> _addInputNodeContextMenu;
+				private static Dictionary<Type, string> _addOutputNodeContextMenu;
 				private string _title;
 				private string _editorPrefsTag;
 				private NodeGraphEditorPrefs _editorPrefs;
@@ -208,9 +209,21 @@ namespace Framework
 				{
 					BuildNodeMap();
 
-					foreach (KeyValuePair<Type, string> pair in _nodeContextMenuName)
+					foreach (KeyValuePair<Type, string> pair in _addNodeContextMenu)
 					{
 						string menuItemName = "Add Node/";
+						menu.AddItem(new GUIContent(menuItemName + pair.Value), false, AddNewNodeMenuCallback, pair.Key);
+					}
+
+					foreach (KeyValuePair<Type, string> pair in _addInputNodeContextMenu)
+					{
+						string menuItemName = "Add Input/";
+						menu.AddItem(new GUIContent(menuItemName + pair.Value), false, AddNewNodeMenuCallback, pair.Key);
+					}
+
+					foreach (KeyValuePair<Type, string> pair in _addOutputNodeContextMenu)
+					{
+						string menuItemName = "Add Output/";
 						menu.AddItem(new GUIContent(menuItemName + pair.Value), false, AddNewNodeMenuCallback, pair.Key);
 					}
 				}
@@ -763,9 +776,11 @@ namespace Framework
 
 				private static void BuildNodeMap()
 				{
-					if (_nodeContextMenuName == null)
+					if (_addInputNodeContextMenu == null || _addOutputNodeContextMenu == null || _addNodeContextMenu == null)
 					{
-						_nodeContextMenuName = new Dictionary<Type, string>();
+						_addNodeContextMenu = new Dictionary<Type, string>();
+						_addOutputNodeContextMenu = new Dictionary<Type, string>();
+						_addInputNodeContextMenu = new Dictionary<Type, string>();
 
 						Type[] types = SystemUtils.GetAllSubTypes(typeof(Node));
 
@@ -786,7 +801,18 @@ namespace Framework
 								nodeName = StringUtils.FromCamelCase(type.Name); ;
 							}
 
-							_nodeContextMenuName.Add(type, nodeName);
+							if (SystemUtils.IsSubclassOfRawGeneric(typeof(OutputNode<,>), type))
+							{
+								_addOutputNodeContextMenu.Add(type, nodeName);
+							}
+							else if (SystemUtils.IsSubclassOfRawGeneric(typeof(InputNode<>), type))
+							{
+								_addInputNodeContextMenu.Add(type, nodeName);
+							}
+							else
+							{
+								_addNodeContextMenu.Add(type, nodeName);
+							}
 						}
 					}
 				}

@@ -7,7 +7,6 @@ namespace Framework
 		public class AnimatedCameraSnapshot : MonoBehaviour
 		{
 			#region Public Data
-			[HideInInspector]
 			public AnimatedCameraState _state;
 			#endregion
 

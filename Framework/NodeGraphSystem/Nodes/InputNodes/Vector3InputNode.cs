@@ -5,7 +5,7 @@ namespace Framework
 {
 	namespace NodeGraphSystem
 	{
-		[NodeCategory("Input Nodes")]
+		
 		[Serializable]
 		public class Vector3InputNode : InputNode<Vector3>
 		{
