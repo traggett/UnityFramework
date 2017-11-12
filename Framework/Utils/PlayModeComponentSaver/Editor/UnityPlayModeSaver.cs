@@ -14,16 +14,21 @@ namespace Framework
 			[InitializeOnLoad]
 			public static class UnityPlayModeSaver
 			{
-				private const string kSaveComponentMenuString = "CONTEXT/Component/Save Component Values";
+				#region Strings
+				private const string kSaveComponentMenuString = "CONTEXT/Component/Save Values To Scene";
 				private const string kSaveGameObjectMenuString = "GameObject/Save Game Object";
+				private const string kUndoText = "Set values from Play Mode";
+
 				private const string kEditorPrefRoot = "UnityPlayModeSaver.";
 				private const string kEditorObjects = kEditorPrefRoot + "SavedObjects";
+				#endregion
 
 				static UnityPlayModeSaver()
 				{
 					EditorApplication.playModeStateChanged += ModeChanged;
 				}
 
+				#region Menus
 				[MenuItem(kSaveComponentMenuString)]
 				private static void SaveComponent(MenuCommand command)
 				{
@@ -31,7 +36,7 @@ namespace Framework
 
 					if (Application.isPlaying && component != null)
 					{
-						StoreObject(component);
+						SaveObject(component);
 					}
 				}
 
@@ -41,18 +46,7 @@ namespace Framework
 					Component component = (Component)command.context;
 					return Application.isPlaying && component != null;
 				}
-
-				/*
-				[MenuItem(kSaveGameObjectMenuString, false, 12)]
-				private static void SaveGameObject(MenuCommand command)
-				{
-					GameObject gameObject = (GameObject)command.context;
-
-					if (Application.isPlaying && gameObject != null)
-					{
-						StoreObject(gameObject);
-					}	
-				}*/
+				#endregion
 
 				private static void ModeChanged(PlayModeStateChange state)
 				{
@@ -99,11 +93,14 @@ namespace Framework
 
 							if (restoredObjects.Count > 0)
 							{
-								Undo.RecordObjects(restoredObjects.ToArray(), "Set values from Play Mode");
+								Undo.RecordObjects(restoredObjects.ToArray(), kUndoText);
 
 								for (int i = 0; i < restoredObjects.Count; i++)
 								{
-									EditorJsonUtility.FromJsonOverwrite(restoredObjectsData[i], restoredObjects[i]);
+									if (UseEditorSerialiser(restoredObjects[i]))
+										EditorJsonUtility.FromJsonOverwrite(restoredObjectsData[i], restoredObjects[i]);
+									else
+										JsonUtility.FromJsonOverwrite(restoredObjectsData[i], restoredObjects[i]);
 								}
 							}
 						}
@@ -112,23 +109,38 @@ namespace Framework
 					EditorPrefs.DeleteKey(kEditorObjects);
 				}
 
-				private static void StoreObject(Object obj)
+				private static void SaveObject(Object obj)
 				{
 					int identifier = GetIdentifier(obj);
 
 					if (identifier != -1)
 					{
 						string savedObjects = EditorPrefs.GetString(kEditorObjects);
+						string identifierStr = System.Convert.ToString(identifier);
 
 						if (!string.IsNullOrEmpty(savedObjects))
-							savedObjects += ",";
+						{
+							List<string> objects = new List<string>(savedObjects.Split(','));
 
-						savedObjects += identifier;
-
+							if (!objects.Contains(identifierStr))
+							{
+								savedObjects += "," + identifierStr;
+							}
+						}
+						else
+						{
+							savedObjects = identifierStr;
+						}
+						
 						EditorPrefs.SetString(kEditorObjects, savedObjects);
 
+						string json;
+						
+						if (UseEditorSerialiser(obj))
+							json = EditorJsonUtility.ToJson(obj);
+						else
+							json = JsonUtility.ToJson(obj);
 
-						string json = EditorJsonUtility.ToJson(obj);
 						EditorPrefs.SetString(kEditorPrefRoot + identifier, json);
 					}
 				}
@@ -152,9 +164,17 @@ namespace Framework
 					return null;
 				}
 
+				private static bool UseEditorSerialiser(Object obj)
+				{
+					if (obj is Component && !(obj is MonoBehaviour))
+						return true;
+
+					return false;
+				}
+
 				private static Object CheckGameObject(GameObject gameObject, int identifier)
 				{
-					//Check main gameobject
+					//Check actual gameObject
 					if (GetIdentifier(gameObject) == identifier)
 						return gameObject;
 
