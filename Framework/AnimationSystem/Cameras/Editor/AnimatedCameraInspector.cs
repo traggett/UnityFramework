@@ -339,11 +339,30 @@ namespace Framework
 					}
 				}
 
-				//Get property on camera and render here?
-				camera.GetCamera().fieldOfView = EditorGUILayout.Slider("Field of View", camera.GetCamera().fieldOfView, 1.0f, 180.0f);
-				camera.GetCamera().rect = EditorGUILayout.RectField("Viewport Rect", camera.GetCamera().rect);
+				DrawCameraProperties();
 
 				return false;
+			}
+
+			protected void DrawCameraProperties()
+			{
+				AnimatedCamera camera = (AnimatedCamera)target;
+
+				EditorGUI.BeginChangeCheck();
+				float fieldOfView = EditorGUILayout.Slider("Field of View", camera.GetCamera().fieldOfView, 1.0f, 180.0f);
+				if (EditorGUI.EndChangeCheck())
+				{
+					Undo.RecordObject(camera.GetCamera(), "Changed Field of View");
+					camera.GetCamera().fieldOfView = fieldOfView;
+				}
+
+				EditorGUI.BeginChangeCheck();
+				Rect rect = EditorGUILayout.RectField("Viewport Rect", camera.GetCamera().rect);
+				if (EditorGUI.EndChangeCheck())
+				{
+					Undo.RecordObject(camera.GetCamera(), "Changed Viewport Rect");
+					camera.GetCamera().rect = rect;
+				}
 			}
 
 			protected virtual void SetCurrentSnapshot(IAnimatedCameraStateSource snapshot)
