@@ -7,6 +7,7 @@ namespace Framework
 		[CustomEditor(typeof(AnimatedCameraSnapshot), true)]
 		public class AnimatedCameraSnapshotInspector : UnityEditor.Editor
 		{
+			/*
 			#region Editor Calls
 			public override void OnInspectorGUI()
 			{
@@ -17,7 +18,7 @@ namespace Framework
 				innerEditor.DrawDefaultInspector();
 				serializedObject.ApplyModifiedProperties();
 			}
-			#endregion
+			#endregion*/
 		}
 	}
 }

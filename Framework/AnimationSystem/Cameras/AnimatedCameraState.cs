@@ -8,7 +8,8 @@ namespace Framework
 
 	namespace AnimationSystem
 	{
-		public class AnimatedCameraState : ScriptableObject
+		[Serializable]
+		public class AnimatedCameraState
 		{
 			[HideInInspector]
 			public Vector3 _position;
@@ -20,7 +21,7 @@ namespace Framework
 
 			public virtual AnimatedCameraState InterpolateTo(AnimatedCamera camera, AnimatedCameraState to, eInterpolation ease, float t)
 			{
-				AnimatedCameraState state = CreateInstance<AnimatedCameraState>();
+				AnimatedCameraState state = new AnimatedCameraState();
 
 				state._position = MathUtils.Interpolate(ease, _position, to._position, t);
 				state._rotation = MathUtils.Interpolate(ease, _rotation, to._rotation, t);

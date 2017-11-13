@@ -25,7 +25,7 @@ namespace Framework
 			private bool[] _mouseDown = new bool[3];
 
 			private AnimatedCameraState _cameraOrigState;
-			protected static AnimatedCameraSnapshot _currentSnapshot;
+			protected static IAnimatedCameraStateSource _currentSnapshot;
 			#endregion
 
 			private void OnEnable()
@@ -81,7 +81,9 @@ namespace Framework
 					Vector3 eulerAngles = camera.transform.eulerAngles;
 					eulerAngles += new Vector3(evnt.delta.y / Camera.current.pixelRect.height, evnt.delta.x / Camera.current.pixelRect.width, 0.0f) * kMouseLookSpeed;
 					camera.transform.eulerAngles = eulerAngles;
-					UpdateSnapshotFromCamera();
+
+					if (_currentSnapshot != null)
+						UpdateSnapshotFromCamera(_currentSnapshot);
 				}
 
 				Event.current.Use();
@@ -155,7 +157,7 @@ namespace Framework
 
 					camera.transform.Translate(movement * speed, Space.Self);
 
-					UpdateSnapshotFromCamera();
+					UpdateSnapshotFromCamera(_currentSnapshot);
 				}
 
 				if (_currentSnapshot == null)
@@ -164,17 +166,17 @@ namespace Framework
 				}
 			}
 
-			private void UpdateSnapshotFromCamera()
+			private void UpdateSnapshotFromCamera(IAnimatedCameraStateSource snapshot)
 			{
 				AnimatedCamera camera = (AnimatedCamera)target;
 
-				if (_currentSnapshot != null)
+				if (snapshot != null)
 				{
-					_currentSnapshot.SetState(camera.GetState());
+					snapshot.SetState(camera.GetState());
 				}		
 			}
 			
-			private void UpdateCameraFromSnapshot(AnimatedCameraSnapshot snapshot)
+			private void UpdateCameraFromSnapshot()
 			{
 				AnimatedCamera camera = (AnimatedCamera)target;
 
@@ -284,7 +286,7 @@ namespace Framework
 			{
 				AnimatedCamera camera = (AnimatedCamera)target;
 
-				AnimatedCameraSnapshot[] snapshots = SceneUtils.FindAllInScene<AnimatedCameraSnapshot>(camera.gameObject.scene);
+				IAnimatedCameraStateSource[] snapshots = SceneUtils.FindAllComponentInferfacesInScene<IAnimatedCameraStateSource>(camera.gameObject.scene);
 
 				int index = 0;
 				int currentIndex = 0;
@@ -292,9 +294,9 @@ namespace Framework
 				string[] snapshotNames = new string[snapshots.Length + 2];
 				snapshotNames[index++] = "(None)";
 
-				foreach (AnimatedCameraSnapshot snapshot in snapshots)
+				foreach (IAnimatedCameraStateSource snapshot in snapshots)
 				{
-					snapshotNames[index] = snapshot.gameObject.name;
+					snapshotNames[index] = snapshot.GetName();
 
 					if (snapshot == _currentSnapshot)
 					{
@@ -319,9 +321,16 @@ namespace Framework
 						//Add new snapshot!
 						GameObject newObj = new GameObject("Snapshot" + newIndex);
 						newObj.transform.parent = camera.transform.parent;
-						AnimatedCameraSnapshot newSnapShot = newObj.AddComponent<AnimatedCameraSnapshot>();
-						SetCurrentSnapshot(newSnapShot);
-						UpdateSnapshotFromCamera();
+						newObj.transform.position = camera.transform.position;
+						newObj.transform.rotation = camera.transform.rotation;
+
+						IAnimatedCameraStateSource newSnapShot = newObj.AddComponent(camera.GetAnimatedCameraStateSourceType()) as IAnimatedCameraStateSource;
+						if (newSnapShot != null)
+						{
+							UpdateSnapshotFromCamera(newSnapShot);
+							SetCurrentSnapshot(newSnapShot);
+						}
+						
 						return true;
 					}
 					else
@@ -337,8 +346,7 @@ namespace Framework
 				return false;
 			}
 
-
-			protected virtual void SetCurrentSnapshot(AnimatedCameraSnapshot snapshot)
+			protected virtual void SetCurrentSnapshot(IAnimatedCameraStateSource snapshot)
 			{
 				//Select new snapshot
 				_currentSnapshot = snapshot;
@@ -346,7 +354,7 @@ namespace Framework
 				if (_currentSnapshot != null)
 				{
 					//Set camera position to snapshot
-					UpdateCameraFromSnapshot(_currentSnapshot);
+					UpdateCameraFromSnapshot();
 				}
 				else
 				{

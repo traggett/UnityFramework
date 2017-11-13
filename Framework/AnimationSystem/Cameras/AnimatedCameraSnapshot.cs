@@ -4,16 +4,18 @@ namespace Framework
 {
 	namespace AnimationSystem
 	{
-		public class AnimatedCameraSnapshot : MonoBehaviour
+		public class AnimatedCameraSnapshot : MonoBehaviour, IAnimatedCameraStateSource
 		{
 			#region Public Data
-			public AnimatedCameraState _state;
+			[SerializeField]
+			private AnimatedCameraState _state;
 			#endregion
 
+			#region IAnimatedCameraStateSource
 			public AnimatedCameraState GetState()
 			{
 				if (_state == null)
-					_state = ScriptableObject.CreateInstance<AnimatedCameraState>();
+					_state = new AnimatedCameraState();
 
 				_state._position = this.transform.position;
 				_state._rotation = this.transform.rotation;
@@ -21,13 +23,22 @@ namespace Framework
 			}
 			
 #if UNITY_EDITOR
-			public virtual void SetState(AnimatedCameraState state)
+			public void SetState(AnimatedCameraState state)
 			{
-				this.transform.position = state._position;
-				this.transform.rotation = state._rotation;
+				if (state != null)
+				{
+					this.transform.position = state._position;
+					this.transform.rotation = state._rotation;
+				}
 				_state = state;
 			}
+
+			public string GetName()
+			{
+				return gameObject.name;
+			}
 #endif
+			#endregion
 		}
 	}
 }

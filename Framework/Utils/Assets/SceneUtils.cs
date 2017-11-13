@@ -80,6 +80,39 @@ namespace Framework
 				return components.ToArray();
 			}
 
+
+			public static T[] FindAllComponentInferfacesInScene<T>(Scene scene) where T : class
+			{
+				List<T> components = new List<T>();
+
+				if (scene.IsValid())
+				{
+					foreach (GameObject rootObject in scene.GetRootGameObjects())
+					{
+						AddChildren(rootObject, ref components);
+					}
+				}
+
+				return components.ToArray();			
+			}
+
+			private static void AddChildren<T>(GameObject gameObject, ref List<T> components) where T : class
+			{
+				Component[] cmponents = gameObject.GetComponents<Component>();
+
+				for (int i = 0; i < cmponents.Length; i++)
+				{
+					T typedComp = cmponents[i] as T;
+					if (typedComp != null)
+						components.Add(typedComp);
+				}
+
+				foreach (Transform child in gameObject.transform)
+				{
+					AddChildren(child.gameObject, ref components);
+				}
+			}
+
 			public static string GetSceneNameFromPath(string scenePath)
 			{
 				int folder = scenePath.LastIndexOf("/") + 1;

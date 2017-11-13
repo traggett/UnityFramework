@@ -1,9 +1,11 @@
 using UnityEngine;
 
+using System;
+using System.Collections.Generic;
+
 namespace Framework
 {
 	using Maths;
-	using System.Collections.Generic;
 
 	namespace AnimationSystem
 	{
@@ -11,21 +13,18 @@ namespace Framework
 		{
 			public class Animation
 			{
-				public AnimatedCameraSnapshot[] _snapshots;
+				public AnimatedCameraState[] _states;
 				public float _duration;
 				public eInterpolation _easeType;
 				public WrapMode _wrapMode;
 				public float _animationT;
 				public float _weight;
 
-				public Animation(params AnimatedCameraSnapshot[] snapshots)
+				public Animation(params AnimatedCameraState[] states)
 				{
-					_snapshots = snapshots;
+					_states = states;
 				}
 			}
-
-
-			public AnimatedCameraSnapshot _intitalSnapshot;
 
 			#region Private Data
 			private Camera _camera;
@@ -35,14 +34,6 @@ namespace Framework
 			#endregion
 
 			#region MonoBehaviour Calls
-			protected virtual void Start()
-			{
-				if (_intitalSnapshot != null)
-				{
-					SetAnimation(new Animation(_intitalSnapshot));
-				}
-			}
-
 			protected virtual void Update()
 			{
 				if (_animations.Count > 0)
@@ -94,7 +85,7 @@ namespace Framework
 
 			public virtual AnimatedCameraState GetState()
 			{
-				AnimatedCameraState state = ScriptableObject.CreateInstance<AnimatedCameraState>();
+				AnimatedCameraState state = new AnimatedCameraState();
 				state._position = this.transform.position;
 				state._rotation = this.transform.rotation;
 				state._cameraRect = GetCamera().rect;
@@ -122,15 +113,20 @@ namespace Framework
 					SetState(snapshotState);
 				}
 			}
+
+			public virtual Type GetAnimatedCameraStateSourceType()
+			{
+				return typeof(AnimatedCameraSnapshot);
+			}
 			#endregion
 
 			private void UpdateAnimation(Animation animation, float deltaTime)
 			{
-				if (animation._snapshots.Length == 1)
+				if (animation._states.Length == 1)
 				{
-					SetState(animation._snapshots[0].GetState(), animation._weight);
+					SetState(animation._states[0], animation._weight);
 				}
-				else if (animation._snapshots.Length > 1)
+				else if (animation._states.Length > 1)
 				{
 					animation._animationT += deltaTime / animation._duration;
 
@@ -142,7 +138,7 @@ namespace Framework
 					{
 						if (animation._animationT > 1.0f)
 						{
-							animation._snapshots = null;
+							animation._states = null;
 						}
 					}
 
@@ -154,13 +150,13 @@ namespace Framework
 						fraction = 1.0f - fraction;
 					}
 
-					float sectonTDist = 1.0f / (animation._snapshots.Length - 1);
+					float sectonTDist = 1.0f / (animation._states.Length - 1);
 					float sectionT = fraction / sectonTDist;
 
 					int sectionIndex = Mathf.FloorToInt(sectionT);
 					sectionT = sectionT - (float)sectionIndex;
 
-					AnimatedCameraState state = animation._snapshots[sectionIndex].GetState().InterpolateTo(this, animation._snapshots[sectionIndex + 1].GetState(), animation._easeType, sectionT);
+					AnimatedCameraState state = animation._states[sectionIndex].InterpolateTo(this, animation._states[sectionIndex + 1], animation._easeType, sectionT);
 					SetState(state, animation._weight);
 				}
 			}

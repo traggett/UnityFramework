@@ -17,7 +17,7 @@ namespace Framework
 		{
 			#region Public Data
 			public ComponentRef<AnimatedCamera> _camera;
-			public ComponentRef<AnimatedCameraSnapshot> _snapshot;
+			public ComponentRef<IAnimatedCameraStateSource> _snapshot;
 			public float _blendTime = 0.0f;
 			public eInterpolation _blendEaseType = eInterpolation.InOutSine;
 			#endregion
@@ -48,7 +48,7 @@ namespace Framework
 
 				if (camera != null)
 				{
-					AnimatedCamera.Animation animation = new AnimatedCamera.Animation(_snapshot.GetComponent());
+					AnimatedCamera.Animation animation = new AnimatedCamera.Animation(_snapshot.GetComponent().GetState());
 					camera.SetAnimation(animation, _blendEaseType, _blendTime);
 				}
 

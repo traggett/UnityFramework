@@ -17,7 +17,7 @@ namespace Framework
 		{
 			#region Public Data
 			public ComponentRef<AnimatedCamera> _camera;
-			public ComponentRef<AnimatedCameraSnapshot>[] _animationSnapshots;
+			public ComponentRef<IAnimatedCameraStateSource>[] _animationSnapshots;
 			public float _animationDuration = 1.0f;
 			public eInterpolation _animationEaseType = eInterpolation.InOutSine;
 			public WrapMode _animationWrapMode = WrapMode.PingPong;
@@ -53,10 +53,10 @@ namespace Framework
 				if (camera != null)
 				{
 					AnimatedCamera.Animation animation = new AnimatedCamera.Animation();
-					animation._snapshots = new AnimatedCameraSnapshot[_animationSnapshots.Length];
+					animation._states = new AnimatedCameraState[_animationSnapshots.Length];
 					for (int i=0; i< _animationSnapshots.Length; i++)
 					{
-						animation._snapshots[i] = _animationSnapshots[i].GetComponent();
+						animation._states[i] = _animationSnapshots[i].GetComponent().GetState();
 					}
 					animation._duration = _animationDuration;
 					animation._easeType = _animationEaseType;
