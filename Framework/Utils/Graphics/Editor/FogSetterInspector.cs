@@ -10,32 +10,38 @@ namespace Framework
 		{
 			public override void OnInspectorGUI()
 			{
-				FogSetter fogSetter = (FogSetter)target;
+				SerializedProperty enableFog = serializedObject.FindProperty("_enableFog");
+				SerializedProperty fogColor = serializedObject.FindProperty("_fogColor");
+				SerializedProperty fogMode = serializedObject.FindProperty("_fogMode");
+				SerializedProperty fogStartDistance = serializedObject.FindProperty("_fogStartDistance");
+				SerializedProperty fogEndDistance = serializedObject.FindProperty("_fogEndDistance");
+				SerializedProperty fogDensity = serializedObject.FindProperty("_fogDensity");
 
 				EditorGUI.BeginChangeCheck();
 
-				fogSetter._enableFog = EditorGUILayout.Toggle("Enable Fog", fogSetter._enableFog);
-				fogSetter._fogColor = EditorGUILayout.ColorField("Fog Color", fogSetter._fogColor);
-				fogSetter._fogMode = (FogMode)EditorGUILayout.EnumPopup("Fog Mode", fogSetter._fogMode);
-
-				switch (fogSetter._fogMode)
+				EditorGUILayout.PropertyField(enableFog);
+				EditorGUILayout.PropertyField(fogColor);
+				EditorGUILayout.PropertyField(fogMode);
+			
+				switch ((FogMode)fogColor.intValue)
 				{
 					case FogMode.Linear:
 						{
-							fogSetter._fogStartDistance = EditorGUILayout.FloatField("Fog Start Distance", fogSetter._fogStartDistance);
-							fogSetter._fogEndDistance = EditorGUILayout.FloatField("Fog End Distance", fogSetter._fogEndDistance);
+							EditorGUILayout.PropertyField(fogStartDistance);
+							EditorGUILayout.PropertyField(fogEndDistance);
 						}
 						break;
 					case FogMode.Exponential:
 					case FogMode.ExponentialSquared:
 						{
-							fogSetter._fogDensity = EditorGUILayout.FloatField("Fog Density", fogSetter._fogDensity);
+							EditorGUILayout.PropertyField(fogDensity);
 						}
 						break;
 				}
 
-				if (EditorGUI.EndChangeCheck())
+				if (serializedObject.ApplyModifiedProperties())
 				{
+					FogSetter fogSetter = (FogSetter)target;
 					fogSetter.SetFog();
 				}
 			}

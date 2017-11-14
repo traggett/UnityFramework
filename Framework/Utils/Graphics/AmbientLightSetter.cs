@@ -8,9 +8,14 @@ namespace Framework
 		public class AmbientLightSetter : MonoBehaviour
 		{
 			public AmbientMode _ambientMode = AmbientMode.Flat;
+
+			[ColorUsage(false, true, 0.0f, 1.0f, 0.0f, 1.0f)]
 			public Color _ambientLight = Color.grey;
+			[ColorUsage(false, true, 0.0f, 1.0f, 0.0f, 1.0f)]
 			public Color _ambientEquatorColor = Color.grey;
+			[ColorUsage(false, true, 0.0f, 1.0f, 0.0f, 1.0f)]
 			public Color _ambientGroundColor = Color.grey;
+
 			public Material _skyBox;
 
 #if UNITY_EDITOR
@@ -38,17 +43,20 @@ namespace Framework
 				switch (_ambientMode)
 				{
 					case AmbientMode.Flat:
+						_ambientLight.a = 0.0f;
 						RenderSettings.ambientLight = _ambientLight;
 						RenderSettings.ambientSkyColor = _ambientLight;
 						RenderSettings.ambientEquatorColor = _ambientLight;
 						RenderSettings.ambientGroundColor = _ambientLight;
 						break;
 					case AmbientMode.Trilight:
+						_ambientLight.a = 1.0f;
 						RenderSettings.ambientSkyColor = _ambientLight;
 						RenderSettings.ambientEquatorColor = _ambientEquatorColor;
 						RenderSettings.ambientGroundColor = _ambientGroundColor;
 						break;
 					case AmbientMode.Skybox:
+						_ambientLight.a = 0.0f;
 						RenderSettings.ambientLight = _ambientLight;
 						RenderSettings.ambientSkyColor = _ambientLight;
 						RenderSettings.ambientEquatorColor = _ambientLight;

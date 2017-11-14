@@ -11,6 +11,14 @@ namespace Framework
 			private AnimatedCameraState _state;
 			#endregion
 
+#if UNITY_EDITOR
+			private void Update()
+			{
+				//Update position / rotation
+				GetState();
+			}
+#endif
+
 			#region IAnimatedCameraStateSource
 			public AnimatedCameraState GetState()
 			{

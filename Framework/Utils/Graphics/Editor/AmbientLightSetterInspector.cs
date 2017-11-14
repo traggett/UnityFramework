@@ -10,37 +10,36 @@ namespace Framework
 		public class AmbientLightSetterInspector : UnityEditor.Editor
 		{
 			public override void OnInspectorGUI()
-			{
-				AmbientLightSetter lightSetter = (AmbientLightSetter)target;
-
-				EditorGUI.BeginChangeCheck();
-
-				ColorPickerHDRConfig hdrConfig = new ColorPickerHDRConfig(0.0f, 1.0f, 0.0f, 1.0f);
-
-				lightSetter._ambientMode = (AmbientMode)EditorGUILayout.EnumPopup("Ambient Light Mode", lightSetter._ambientMode);
+			{			
+				SerializedProperty ambientMode = serializedObject.FindProperty("_ambientMode");
+				SerializedProperty ambientLight = serializedObject.FindProperty("_ambientLight");
+				SerializedProperty ambientEquatorColor = serializedObject.FindProperty("_ambientEquatorColor");
+				SerializedProperty ambientGroundColor = serializedObject.FindProperty("_ambientGroundColor");
+				SerializedProperty skyBox = serializedObject.FindProperty("_skyBox");
 				
-				switch (lightSetter._ambientMode)
+				EditorGUILayout.PropertyField(ambientMode);
+
+				switch ((AmbientMode)ambientMode.intValue)
 				{
 					case AmbientMode.Flat:
 						{
-							lightSetter._ambientLight = EditorGUILayout.ColorField(new GUIContent("Ambient Light Color"), lightSetter._ambientLight, true, false, true, hdrConfig);
-							lightSetter._ambientLight.a = 0.0f;
+							EditorGUILayout.PropertyField(ambientLight, new GUIContent("Ambient Light Color"));
 						}
 						break;
 					case AmbientMode.Trilight:
 						{
-							lightSetter._ambientLight = EditorGUILayout.ColorField(new GUIContent("Ambient Sky Color"), lightSetter._ambientLight, true, false, true, hdrConfig);
-							lightSetter._ambientLight.a = 1.0f;
-							lightSetter._ambientEquatorColor = EditorGUILayout.ColorField(new GUIContent("Ambient Equator Color"), lightSetter._ambientEquatorColor, true, false, true, hdrConfig);
-							lightSetter._ambientGroundColor = EditorGUILayout.ColorField(new GUIContent("Ambient Ground Color"), lightSetter._ambientGroundColor, true, false, true, hdrConfig);
+							EditorGUILayout.PropertyField(ambientLight, new GUIContent("Ambient Sky Color"));
+							EditorGUILayout.PropertyField(ambientEquatorColor, new GUIContent("Ambient Equator Color"));
+							EditorGUILayout.PropertyField(ambientGroundColor, new GUIContent("Ambient Ground Color"));
 						}
 						break;
 				}
 
-				lightSetter._skyBox = (Material)EditorGUILayout.ObjectField(new GUIContent("Sky Box"), lightSetter._skyBox, typeof(Material), false);
+				EditorGUILayout.PropertyField(skyBox);
 
-				if (EditorGUI.EndChangeCheck())
+				if (serializedObject.ApplyModifiedProperties())
 				{
+					AmbientLightSetter lightSetter = (AmbientLightSetter)target;
 					lightSetter.SetAmbientLight();
 				}
 			}
