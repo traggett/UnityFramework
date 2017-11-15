@@ -25,7 +25,8 @@ namespace Framework
 				private const string kEditorPrefsObjectJson = ".Json";
 				private const string kEditorPrefsObjectRefs = ".ObjRefs";
 				private const string kEditorPrefsObjectMaterialRefs = ".Materials";
-				private const char kSplitChar = '?';
+				private const char kItemSplitChar = '?';
+				private const char kObjectPathSplitChar = ':';
 				private const string kIdentifierProperty = "m_LocalIdentfierInFile";   //note the misspelling!
 				private const string kInspectorProperty = "inspectorMode";
 				#endregion
@@ -76,7 +77,7 @@ namespace Framework
 				{
 					Component component = command.context as Component;
 
-					return Application.isPlaying && component != null && GetIdentifier(component) != -1;
+					return Application.isPlaying && component != null && GetLocalIdentifier(component) != -1;
 				}
 
 				[MenuItem(kRevertComponentMenuString, false, 12)]
@@ -97,18 +98,72 @@ namespace Framework
 
 					if (Application.isPlaying && component != null)
 					{
-						int identifier = GetIdentifier(component);
+						int identifier = GetLocalIdentifier(component);
 
 						if (identifier != -1)
 						{
 							string scenePath = component.gameObject.scene.path;
 
-							if (GetComponentSaveIndex(identifier, scenePath) != -1)
+							if (GetSavedObjectIndex(identifier, scenePath) != -1)
 								return true;
 						}
 					}
 
 					return false;
+				}
+				#endregion
+
+				#region Component Functions
+				private static void SaveComponent(Component component)
+				{
+					int identifier = GetLocalIdentifier(component);
+
+					if (identifier != -1)
+					{
+						string scenePath = component.gameObject.scene.path;
+
+						int saveObjIndex = GetSavedObjectIndex(identifier, scenePath);
+
+						//If the component isn't already in saved object list add it
+						if (saveObjIndex == -1)
+						{
+							int objectCount = EditorPrefs.GetInt(kEditorPrefsObjectCountKey);
+							saveObjIndex = objectCount;
+							objectCount++;
+							EditorPrefs.SetInt(kEditorPrefsObjectCountKey, objectCount);
+						}
+
+						RestoredObjectData data = GetObjectData(component);
+						string editorPrefKey = kEditorPrefsKey + System.Convert.ToString(saveObjIndex);
+
+						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
+						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectId, System.Convert.ToString(identifier));
+						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectJson, data._json);
+						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectRefs, data._missingObjectRefs);
+						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectMaterialRefs, data._missingMaterials);
+					}
+				}
+
+				private static void RevertComponent(Component component)
+				{
+					int identifier = GetLocalIdentifier(component);
+
+					if (identifier != -1)
+					{
+						string scenePath = component.gameObject.scene.path;
+						int saveObjIndex = GetSavedObjectIndex(identifier, scenePath);
+
+						if (saveObjIndex != -1)
+						{
+							string editorPrefKey = kEditorPrefsKey + System.Convert.ToString(saveObjIndex);
+
+							SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectScene);
+							SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectId);
+							SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectJson);
+							SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectRefs);
+							SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectMaterialRefs);
+						}
+					}
 				}
 				#endregion
 
@@ -130,18 +185,20 @@ namespace Framework
 
 					for (int i = 0; i < numSavedObjects; i++)
 					{
-						if (EditorPrefs.HasKey(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectScene))
-						{
-							string sceneStr = EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectScene);
-							string identifierStr = EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectId);
+						string editorPrefKey = kEditorPrefsKey + System.Convert.ToString(i);
 
-							Object obj = GetObject(sceneStr, SafeConvertToInt(identifierStr));
+						if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectScene))
+						{
+							string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
+							string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectId);
+
+							Object obj = FindObject(sceneStr, SafeConvertToInt(identifierStr));
 
 							if (obj != null)
 							{
-								string jsonStr = EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectJson);
-								string objectRefStr = EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectRefs);
-								string materialStr = EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectMaterialRefs);
+								string jsonStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson);
+								string objectRefStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs);
+								string materialStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs);
 
 								restoredObjects.Add(obj);
 
@@ -157,11 +214,11 @@ namespace Framework
 							}
 						}	
 
-						SafeDeleteEditorPref(EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectScene));
-						SafeDeleteEditorPref(EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectId));
-						SafeDeleteEditorPref(EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectJson));
-						SafeDeleteEditorPref(EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectRefs));
-						SafeDeleteEditorPref(EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectMaterialRefs));
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectScene);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectId);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectJson);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectRefs);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectMaterialRefs);
 					}
 
 					if (restoredObjects.Count > 0)
@@ -177,187 +234,24 @@ namespace Framework
 					EditorPrefs.DeleteKey(kEditorPrefsObjectCountKey);
 				}
 
-				private static void SaveComponent(Component component)
-				{
-					int identifier = GetIdentifier(component);
-
-					if (identifier != -1)
-					{
-						string scenePath = component.gameObject.scene.path;
-
-						int saveObjIndex = GetComponentSaveIndex(identifier, scenePath);
-
-						//If the component isn't already in saved object list add it
-						if (saveObjIndex == -1)
-						{
-							int objectCount = EditorPrefs.GetInt(kEditorPrefsObjectCountKey);
-							saveObjIndex = objectCount;
-							objectCount++;
-							EditorPrefs.SetInt(kEditorPrefsObjectCountKey, objectCount);
-						}
-
-						RestoredObjectData data = GetComponentData(component);
-
-						EditorPrefs.SetString(kEditorPrefsKey + System.Convert.ToString(saveObjIndex) + kEditorPrefsObjectScene, scenePath);
-						EditorPrefs.SetString(kEditorPrefsKey + System.Convert.ToString(saveObjIndex) + kEditorPrefsObjectId, System.Convert.ToString(identifier));
-						EditorPrefs.SetString(kEditorPrefsKey + System.Convert.ToString(saveObjIndex) + kEditorPrefsObjectJson, data._json);
-						EditorPrefs.SetString(kEditorPrefsKey + System.Convert.ToString(saveObjIndex) + kEditorPrefsObjectRefs, data._missingObjectRefs);
-						EditorPrefs.SetString(kEditorPrefsKey + System.Convert.ToString(saveObjIndex) + kEditorPrefsObjectMaterialRefs, data._missingMaterials);
-					}
-				}
-
-				private static void RevertComponent(Component component)
-				{
-					int identifier = GetIdentifier(component);
-
-					if (identifier != -1)
-					{
-						string scenePath = component.gameObject.scene.path;
-						int saveObjIndex = GetComponentSaveIndex(identifier, scenePath);
-
-						if (saveObjIndex != -1)
-						{
-							SafeDeleteEditorPref(kEditorPrefsKey + System.Convert.ToString(saveObjIndex) + kEditorPrefsObjectScene);
-							SafeDeleteEditorPref(kEditorPrefsKey + System.Convert.ToString(saveObjIndex) + kEditorPrefsObjectId);
-							SafeDeleteEditorPref(kEditorPrefsKey + System.Convert.ToString(saveObjIndex) + kEditorPrefsObjectJson);
-							SafeDeleteEditorPref(kEditorPrefsKey + System.Convert.ToString(saveObjIndex) + kEditorPrefsObjectRefs);
-							SafeDeleteEditorPref(kEditorPrefsKey + System.Convert.ToString(saveObjIndex) + kEditorPrefsObjectMaterialRefs);
-						}
-					}
-				}
-
-				private static Object GetObject(string scenePath, int identifier)
-				{
-					Scene scene;
-					if (GetScene(scenePath, out scene))
-					{
-						foreach (GameObject rootObject in scene.GetRootGameObjects())
-						{
-							Object obj = CheckChildren(rootObject, identifier);
-
-							if (obj != null)
-							{
-								return obj;
-							}
-						}
-					}
-					else
-					{
-						Debug.LogError("UnityPlayModeSaver: Can't save Components Play Modes changes as its Scene '" + scenePath + "' is not open in the Editor.");
-					}
-
-					return null;
-				}
-
-				private static bool GetScene(string scenePath, out Scene scene)
-				{
-					for (int i = 0; i < SceneManager.sceneCount; i++)
-					{
-						scene = SceneManager.GetSceneAt(i);
-
-						if (scene.IsValid() && scene.path == scenePath)
-						{
-							if (scene.isLoaded)
-							{
-								return true;
-							}
-						}
-					}
-
-					scene = new Scene();
-					return false;
-				}
-
-				private static Object CheckChildren(GameObject gameObject, int identifier)
-				{
-					//Check game object
-					if (GetIdentifier(gameObject) == identifier)
-						return gameObject;
-
-					//Check components
-					Component[] components = gameObject.GetComponents<Component>();
-
-					foreach (Component component in components)
-					{
-						if (GetIdentifier(component) == identifier)
-							return component;
-					}
-
-					//Check children
-					foreach (Transform child in gameObject.transform)
-					{
-						Object obj = CheckChildren(child.gameObject, identifier);
-
-						if (obj != null)
-							return obj;
-					}
-
-					return null;
-				}
-
-				private static int GetComponentSaveIndex(int identifier, string scenePath)
+				private static int GetSavedObjectIndex(int localIdentifier, string scenePath)
 				{
 					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 
 					for (int i = 0; i < numSavedObjects; i++)
 					{
-						string sceneStr = EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectScene);
-						string identifierStr = EditorPrefs.GetString(kEditorPrefsKey + System.Convert.ToString(i) + kEditorPrefsObjectId);
+						string editorPrefKey = kEditorPrefsKey + System.Convert.ToString(i);
 
-						if (sceneStr == scenePath && identifier == SafeConvertToInt(identifierStr))
+						string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
+						string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectId);
+
+						if (sceneStr == scenePath && localIdentifier == SafeConvertToInt(identifierStr))
 						{
 							return i;
 						}
 					}
 
 					return -1;
-				}
-
-				private static RestoredObjectData GetComponentData(Component component)
-				{
-					RestoredObjectData data = new RestoredObjectData();
-
-					bool unityType = ShouldUseEditorSerialiser(component);
-
-					List<string> materials = new List<string>();
-					List<ObjectRefProperty> objectProperties = unityType ? new List<ObjectRefProperty>() : null;
-
-					GetSpecialCaseProperties(component, materials, objectProperties);
-
-					//If its a Unity in built type we have to restore any scene links as they won't be serialized by EditorJsonUtility
-					if (unityType)
-					{
-						data._json = EditorJsonUtility.ToJson(component);
-
-						//Save any object ptr properties that point at scene objects
-						data._missingObjectRefs = "";
-
-						foreach (ObjectRefProperty prop in objectProperties)
-						{
-							if (!string.IsNullOrEmpty(data._missingObjectRefs))
-								data._missingObjectRefs += kSplitChar;
-
-							data._missingObjectRefs += System.Convert.ToString(prop._objectId) + ":" + prop._propertyPath;
-						}
-					}
-					else
-					{
-						data._json = JsonUtility.ToJson(component);
-						data._missingObjectRefs = "";
-					}
-
-					//Store material properties that now point at a runtime instance of a material (they will get reverted to original values)
-					data._missingMaterials = "";
-
-					foreach (string material in materials)
-					{
-						if (!string.IsNullOrEmpty(data._missingMaterials))
-							data._missingMaterials += kSplitChar;
-
-						data._missingMaterials += material;
-					}
-
-					return data;
 				}
 				
 				private static void RestoreObjectFromData(Object obj, RestoredObjectData data)
@@ -381,66 +275,75 @@ namespace Framework
 					ApplyMaterialsRefs(obj, materialRefs);
 				}
 
-				private static int GetIdentifier(Object obj)
+				private static RestoredObjectData GetObjectData(Object obj)
 				{
-					if (obj != null)
+					RestoredObjectData data = new RestoredObjectData();
+
+					bool unityType = ShouldUseEditorSerialiser(obj);
+
+					List<string> materials = new List<string>();
+					List<ObjectRefProperty> objectProperties = unityType ? new List<ObjectRefProperty>() : null;
+
+					GetSpecialCaseProperties(obj, materials, objectProperties);
+
+					//If Component is a Unity in built type we have to restore any scene links as they won't be serialized by EditorJsonUtility
+					if (unityType)
 					{
-						PropertyInfo inspectorModeInfo = typeof(SerializedObject).GetProperty(kInspectorProperty, BindingFlags.NonPublic | BindingFlags.Instance);
+						data._json = EditorJsonUtility.ToJson(obj);
 
-						SerializedObject serializedObject = new SerializedObject(obj);
-						inspectorModeInfo.SetValue(serializedObject, InspectorMode.Debug, null);
+						//Build missing object refs string
+						data._missingObjectRefs = "";
 
-						SerializedProperty localIdProp = serializedObject.FindProperty(kIdentifierProperty);
+						foreach (ObjectRefProperty prop in objectProperties)
+						{
+							if (!string.IsNullOrEmpty(data._missingObjectRefs))
+								data._missingObjectRefs += kItemSplitChar;
 
-						if (localIdProp != null && localIdProp.intValue != 0)
-							return localIdProp.intValue;
+							data._missingObjectRefs += System.Convert.ToString(prop._objectId) + kObjectPathSplitChar + prop._propertyPath;
+						}
+					}
+					else
+					{
+						data._json = JsonUtility.ToJson(obj);
+						data._missingObjectRefs = "";
 					}
 
-					return -1;
+					//Build missing materials string
+					data._missingMaterials = "";
+
+					foreach (string material in materials)
+					{
+						if (!string.IsNullOrEmpty(data._missingMaterials))
+							data._missingMaterials += kItemSplitChar;
+
+						data._missingMaterials += material;
+					}
+
+					return data;
 				}
 
-				private static bool ShouldUseEditorSerialiser(Object obj)
+				private static void GetSpecialCaseProperties(Object obj, List<string> materials, List<ObjectRefProperty> objectProperties)
 				{
-					if ((obj is Component && !(obj is MonoBehaviour)) || (obj is GameObject))
-						return true;
-
-					return false;
-				}
-
-				private static void GetSpecialCaseProperties(Component component, List<string> materials, List<ObjectRefProperty> objectProperties)
-				{
-					SerializedObject serializedObject = new SerializedObject(component);
+					SerializedObject serializedObject = new SerializedObject(obj);
 					SerializedProperty propertry = serializedObject.GetIterator();
 
 					while (propertry.NextVisible(true))
 					{
+						//Save any object ptr properties that point at scene objects
 						if (propertry.type == "PPtr<Material>")
 						{
 							if (propertry.objectReferenceValue != null && propertry.objectReferenceValue.name.EndsWith("(Instance)"))
 								materials.Add(propertry.propertyPath);
 						}
+						//Store material properties that now point at a runtime instance of a material (they will get reverted to original values)
 						else if (objectProperties != null && propertry.type.StartsWith("PPtr<"))
 						{
-							//Only apply if reference is same scene 
-							bool sameScene = false;
-
-							Component compRef = propertry.objectReferenceValue as Component;
-
-							if (compRef != null)
+							//Only store the object if the reference is within the same scene 
+							Scene objScne = GetObjectScene(obj);
+							
+							if (objScne.IsValid() && objScne == GetObjectScene(propertry.objectReferenceValue))
 							{
-								sameScene = component.gameObject.scene == component.gameObject.scene;
-							}
-							else
-							{
-								GameObject gameObject = propertry.objectReferenceValue as GameObject;
-
-								if (gameObject != null)
-									sameScene = gameObject.scene == component.gameObject.scene;
-							}
-
-							if (sameScene)
-							{
-								int objId = GetIdentifier(propertry.objectReferenceValue);
+								int objId = GetLocalIdentifier(propertry.objectReferenceValue);
 
 								if (objId != -1)
 								{
@@ -456,40 +359,14 @@ namespace Framework
 					}
 				}
 
-				private static List<MaterialRef> FindRuntimeInstancedMaterials(Object obj, string materialStr)
-				{
-					List<MaterialRef> materialRefs = new List<MaterialRef>();
-
-					SerializedObject serializedObject = new SerializedObject(obj);
-					string[] materials = materialStr.Split(kSplitChar);
-
-					foreach (string material in materials)
-					{
-						SerializedProperty materialProp = serializedObject.FindProperty(material);
-
-						if (materialProp != null)
-						{
-							MaterialRef materialRef = new MaterialRef
-							{
-								_material = materialProp.objectReferenceValue as Material,
-								_propertyPath = material
-
-							};
-							materialRefs.Add(materialRef);
-						}
-					}
-
-					return materialRefs;
-				}
-
 				private static void ApplyObjectRefs(Object obj, string sceneStr, string objectRefStr)
 				{
 					SerializedObject serializedObject = new SerializedObject(obj);
-					string[] objectRefs = objectRefStr.Split(kSplitChar);
+					string[] objectRefs = objectRefStr.Split(kItemSplitChar);
 
 					foreach (string objectRef in objectRefs)
 					{
-						int split = objectRef.IndexOf(':');
+						int split = objectRef.IndexOf(kObjectPathSplitChar);
 
 						if (split != -1)
 						{
@@ -503,7 +380,7 @@ namespace Framework
 
 								if (localIdProp != null)
 								{
-									localIdProp.objectReferenceValue = GetObject(sceneStr, id);
+									localIdProp.objectReferenceValue = FindObject(sceneStr, id);
 								}
 							}
 						}
@@ -527,6 +404,146 @@ namespace Framework
 					}
 
 					serializedObject.ApplyModifiedPropertiesWithoutUndo();
+				}
+
+				private static List<MaterialRef> FindRuntimeInstancedMaterials(Object obj, string materialStr)
+				{
+					List<MaterialRef> materialRefs = new List<MaterialRef>();
+
+					SerializedObject serializedObject = new SerializedObject(obj);
+					string[] materials = materialStr.Split(kItemSplitChar);
+
+					foreach (string material in materials)
+					{
+						SerializedProperty materialProp = serializedObject.FindProperty(material);
+
+						if (materialProp != null)
+						{
+							MaterialRef materialRef = new MaterialRef
+							{
+								_material = materialProp.objectReferenceValue as Material,
+								_propertyPath = material
+
+							};
+							materialRefs.Add(materialRef);
+						}
+					}
+
+					return materialRefs;
+				}
+
+				private static int GetLocalIdentifier(Object obj)
+				{
+					if (obj != null)
+					{
+						PropertyInfo inspectorModeInfo = typeof(SerializedObject).GetProperty(kInspectorProperty, BindingFlags.NonPublic | BindingFlags.Instance);
+
+						SerializedObject serializedObject = new SerializedObject(obj);
+						inspectorModeInfo.SetValue(serializedObject, InspectorMode.Debug, null);
+
+						SerializedProperty localIdProp = serializedObject.FindProperty(kIdentifierProperty);
+
+						if (localIdProp != null && localIdProp.intValue != 0)
+							return localIdProp.intValue;
+					}
+
+					return -1;
+				}
+
+				private static Object FindObject(string scenePath, int localIdentifier)
+				{
+					Scene scene;
+					if (GetActiveScene(scenePath, out scene))
+					{
+						foreach (GameObject rootObject in scene.GetRootGameObjects())
+						{
+							Object obj = FindObject(rootObject, localIdentifier);
+
+							if (obj != null)
+							{
+								return obj;
+							}
+						}
+					}
+					else
+					{
+						Debug.LogError("UnityPlayModeSaver: Can't save Components Play Modes changes as its Scene '" + scenePath + "' is not open in the Editor.");
+					}
+
+					return null;
+				}
+
+				private static Object FindObject(GameObject gameObject, int localIdentifier)
+				{
+					//Check game object
+					if (GetLocalIdentifier(gameObject) == localIdentifier)
+						return gameObject;
+
+					//Check components
+					Component[] components = gameObject.GetComponents<Component>();
+
+					foreach (Component component in components)
+					{
+						if (GetLocalIdentifier(component) == localIdentifier)
+							return component;
+					}
+
+					//Check children
+					foreach (Transform child in gameObject.transform)
+					{
+						Object obj = FindObject(child.gameObject, localIdentifier);
+
+						if (obj != null)
+							return obj;
+					}
+
+					return null;
+				}
+
+				private static bool GetActiveScene(string scenePath, out Scene scene)
+				{
+					for (int i = 0; i < SceneManager.sceneCount; i++)
+					{
+						scene = SceneManager.GetSceneAt(i);
+
+						if (scene.IsValid() && scene.path == scenePath)
+						{
+							if (scene.isLoaded)
+							{
+								return true;
+							}
+						}
+					}
+
+					scene = new Scene();
+					return false;
+				}
+
+				private static Scene GetObjectScene(Object obj)
+				{
+					Component component = obj as Component;
+
+					if (component != null)
+					{
+						return component.gameObject.scene;
+					}
+					else
+					{
+						GameObject gameObject = obj as GameObject;
+
+						if (gameObject != null)
+							return gameObject.scene;
+					}
+
+					return new Scene();
+				}
+
+				private static bool ShouldUseEditorSerialiser(Object obj)
+				{
+					if ((obj is Component && !(obj is MonoBehaviour)) || (obj is GameObject))
+						return true;
+
+					return false;
 				}
 
 				private static int SafeConvertToInt(string str)
