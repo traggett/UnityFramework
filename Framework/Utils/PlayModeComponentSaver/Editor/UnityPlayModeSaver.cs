@@ -52,14 +52,14 @@ namespace Framework
 					public Material _material;
 				}
 				#endregion
-
+				
 				#region Constructor
 				static UnityPlayModeSaver()
 				{
 					EditorApplication.playModeStateChanged += OnModeChanged;
 				}
 				#endregion
-
+				
 				#region Menu Functions
 				[MenuItem(kSaveComponentMenuString, false, 12)]
 				private static void SaveComponent(MenuCommand command)
@@ -173,6 +173,7 @@ namespace Framework
 					if (state == PlayModeStateChange.EnteredEditMode)
 					{
 						RestoreSavedObjects();
+						RepaintEditorWindows();
 					}
 				}
 
@@ -544,6 +545,30 @@ namespace Framework
 						return true;
 
 					return false;
+				}
+
+				private static void RepaintEditorWindows()
+				{
+					SceneView.RepaintAll();
+					
+					System.Type inspectorWindowType = System.Type.GetType("UnityEditor.InspectorWindow, UnityEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
+					if (inspectorWindowType != null)
+					{
+						EditorWindow.GetWindow(inspectorWindowType).Repaint();
+					}
+
+					System.Type gameViewType = System.Type.GetType("UnityEditor.GameView, UnityEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
+
+					if (gameViewType != null)
+					{
+						BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
+						MethodInfo methodInfo = gameViewType.GetMethod("RepaintAll", bindingFlags, null, new System.Type[] { }, null);
+
+						if (methodInfo != null)
+						{
+							methodInfo.Invoke(null, null);
+						}
+					}
 				}
 
 				private static int SafeConvertToInt(string str)
