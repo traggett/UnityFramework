@@ -23,7 +23,7 @@ namespace Framework
 				EditorGUILayout.PropertyField(fogColor);
 				EditorGUILayout.PropertyField(fogMode);
 			
-				switch ((FogMode)fogColor.intValue)
+				switch ((FogMode)fogMode.intValue)
 				{
 					case FogMode.Linear:
 						{

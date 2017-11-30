@@ -260,7 +260,7 @@ namespace Framework
 					bool unityType = ShouldUseEditorSerialiser(obj);
 
 					//Find any lost material refs
-					List<MaterialRef> materialRefs = FindRuntimeInstancedMaterials(obj, data._missingMaterials);
+					List<MaterialRef> materialRefs = FindOriginalMaterials(obj, data._missingMaterials);
 
 					if (unityType)
 					{
@@ -330,13 +330,13 @@ namespace Framework
 
 					while (propertry.NextVisible(true))
 					{
-						//Save any object ptr properties that point at scene objects
+						//Store material properties that now point at a runtime instance of a material (they will get reverted to original values)
 						if (propertry.type == "PPtr<Material>")
 						{
 							if (propertry.objectReferenceValue != null && propertry.objectReferenceValue.name.EndsWith("(Instance)"))
 								materials.Add(propertry.propertyPath);
 						}
-						//Store material properties that now point at a runtime instance of a material (they will get reverted to original values)
+						//Save any object ptr properties that point at scene objects
 						else if (objectProperties != null && propertry.type.StartsWith("PPtr<"))
 						{
 							//Only store the object if the reference is within the same scene 
@@ -407,7 +407,7 @@ namespace Framework
 					serializedObject.ApplyModifiedPropertiesWithoutUndo();
 				}
 
-				private static List<MaterialRef> FindRuntimeInstancedMaterials(Object obj, string materialStr)
+				private static List<MaterialRef> FindOriginalMaterials(Object obj, string materialStr)
 				{
 					List<MaterialRef> materialRefs = new List<MaterialRef>();
 

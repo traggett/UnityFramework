@@ -289,7 +289,7 @@ namespace Framework
 				IAnimatedCameraStateSource[] snapshots = SceneUtils.FindAllComponentInferfacesInScene<IAnimatedCameraStateSource>(camera.gameObject.scene);
 
 				int index = 0;
-				int currentIndex = 0;
+				int currentIndex = -1;
 				
 				string[] snapshotNames = new string[snapshots.Length + 2];
 				snapshotNames[index++] = "(None)";
@@ -308,7 +308,7 @@ namespace Framework
 
 				snapshotNames[index++] = "(New Snapshot)";
 
-				int newIndex = EditorGUILayout.Popup("Edit Snapshot", currentIndex, snapshotNames);
+				int newIndex = EditorGUILayout.Popup("Edit Snapshot", currentIndex == -1 ? 0 : currentIndex, snapshotNames);
 
 				if (currentIndex != newIndex)
 				{
