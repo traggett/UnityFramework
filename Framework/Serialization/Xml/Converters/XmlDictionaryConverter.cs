@@ -64,7 +64,15 @@ namespace Framework
 							if (att != null)
 							{
 								object arrayNode = XmlConverter.FromXmlNode(dictionaryTypes[1], entryNode);
-								dictionary.Add(att.Value, arrayNode);
+
+								if (dictionary.Contains(att.Value))
+								{
+									dictionary[att.Value] = arrayNode;
+								}
+								else
+								{
+									dictionary.Add(att.Value, arrayNode);
+								}
 							}
 						}
 
