@@ -425,7 +425,7 @@ namespace Framework
 						}
 						break;
 
-					case EventType.mouseDrag:
+					case EventType.MouseDrag:
 						{
 							OnDragging(inputEvent);
 						}
