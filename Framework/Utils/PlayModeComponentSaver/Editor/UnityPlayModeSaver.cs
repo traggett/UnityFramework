@@ -15,8 +15,14 @@ namespace Framework
 			public static class UnityPlayModeSaver
 			{
 				#region Constants
-				private const string kSaveComponentMenuString = "CONTEXT/Component/Save Values To Scene";
-				private const string kRevertComponentMenuString = "CONTEXT/Component/Revert Play Mode Changes";
+				private const string kSaveMenuString = "\u2714  Save Play Mode Changes";
+				private const string kRevertMenuString = "\u2716  Forget Play Mode Changes";
+
+				private const string kSaveComponentMenuString = "CONTEXT/Component/" + kSaveMenuString;
+				private const string kRevertComponentMenuString = "CONTEXT/Component/" + kRevertMenuString;
+				private const string kSaveGameObjectMenuString = "GameObject/" + kSaveMenuString;
+				private const string kRevertGameObjectMenuString = "GameObject/" + kRevertMenuString;
+
 				private const string kUndoText = "Set Play Mode Values";
 				private const string kEditorPrefsKey = "UnityPlayModeSaver.";
 				private const string kEditorPrefsObjectCountKey = kEditorPrefsKey + "SavedObjects";
@@ -77,7 +83,17 @@ namespace Framework
 				{
 					Component component = command.context as Component;
 
-					return Application.isPlaying && component != null && GetLocalIdentifier(component) != -1;
+					if (Application.isPlaying && component != null)
+					{
+						int id = GetLocalIdentifier(component);
+
+						if (id != -1 && GetSavedObjectIndex(id, component.gameObject.scene.path) == -1)
+						{
+							return true;
+						}
+					}
+
+					return false;
 				}
 
 				[MenuItem(kRevertComponentMenuString, false, 12)]
@@ -111,6 +127,67 @@ namespace Framework
 
 					return false;
 				}
+
+				[MenuItem(kSaveGameObjectMenuString, false, -1)]
+				private static void SaveGameObject(MenuCommand command)
+				{
+					GameObject gameObject = command.context as GameObject;
+
+					if (Application.isPlaying && gameObject != null)
+					{
+						SaveGameObject(gameObject);
+					}
+				}
+
+				[MenuItem(kSaveGameObjectMenuString, true)]
+				private static bool ValidateSaveGameObject(MenuCommand command)
+				{
+					GameObject gameObject = command.context as GameObject;
+					
+					if (Application.isPlaying && gameObject != null)
+					{
+						int id = GetLocalIdentifier(gameObject);
+
+						if (id != -1 && GetSavedObjectIndex(id, gameObject.scene.path) == -1)
+						{
+							return true;
+						}
+					}
+
+					return false;
+				}
+
+				[MenuItem(kRevertGameObjectMenuString, false, -1)]
+				private static void RevertGameObject(MenuCommand command)
+				{
+					GameObject gameObject = command.context as GameObject;
+
+					if (Application.isPlaying && gameObject != null)
+					{
+						RevertGameObject(gameObject);
+					}
+				}
+
+				[MenuItem(kRevertGameObjectMenuString, true)]
+				private static bool ValidateRevertGameObject(MenuCommand command)
+				{
+					GameObject gameObject = command.context as GameObject;
+
+					if (Application.isPlaying && gameObject != null)
+					{
+						int identifier = GetLocalIdentifier(gameObject);
+
+						if (identifier != -1)
+						{
+							string scenePath = gameObject.scene.path;
+
+							if (GetSavedObjectIndex(identifier, scenePath) != -1)
+								return true;
+						}
+					}
+
+					return false;
+				}
 				#endregion
 
 				#region Component Functions
@@ -120,27 +197,7 @@ namespace Framework
 
 					if (identifier != -1)
 					{
-						string scenePath = component.gameObject.scene.path;
-
-						int saveObjIndex = GetSavedObjectIndex(identifier, scenePath);
-
-						//If the component isn't already in saved object list add it
-						if (saveObjIndex == -1)
-						{
-							int objectCount = EditorPrefs.GetInt(kEditorPrefsObjectCountKey);
-							saveObjIndex = objectCount;
-							objectCount++;
-							EditorPrefs.SetInt(kEditorPrefsObjectCountKey, objectCount);
-						}
-
-						RestoredObjectData data = GetObjectData(component);
-						string editorPrefKey = kEditorPrefsKey + System.Convert.ToString(saveObjIndex);
-
-						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
-						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectId, System.Convert.ToString(identifier));
-						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectJson, data._json);
-						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectRefs, data._missingObjectRefs);
-						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectMaterialRefs, data._missingMaterials);
+						SaveObject(component.gameObject.scene.path, identifier);
 					}
 				}
 
@@ -150,18 +207,55 @@ namespace Framework
 
 					if (identifier != -1)
 					{
-						string scenePath = component.gameObject.scene.path;
-						int saveObjIndex = GetSavedObjectIndex(identifier, scenePath);
+						RevertObject(component.gameObject.scene.path, identifier);
+					}
+				}
+				#endregion
 
-						if (saveObjIndex != -1)
+				#region GameObjects Functions
+				private static void SaveGameObject(GameObject gameObject)
+				{
+					int identifier = GetLocalIdentifier(gameObject);
+
+					if (identifier != -1)
+					{
+						SaveObject(gameObject.scene.path, identifier);
+					}
+				}
+
+				private static void RevertGameObject(GameObject gameObject)
+				{
+					int identifier = GetLocalIdentifier(gameObject);
+
+					if (identifier != -1)
+					{
+						RevertObject(gameObject.scene.path, identifier);
+					}
+				}
+
+				private static void AddGameObjectChildObjectValues(GameObject gameObject)
+				{
+					Component[] components = gameObject.GetComponents<Component>();
+
+					for (int i = 0; i < components.Length; i++)
+					{
+						int identifier = GetLocalIdentifier(components[i]);
+
+						if (identifier != -1)
 						{
-							string editorPrefKey = kEditorPrefsKey + System.Convert.ToString(saveObjIndex);
+							SaveObject(gameObject.scene.path, identifier);
+							SaveObjectValues(components[i], identifier);
+						}
+					}
 
-							SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectScene);
-							SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectId);
-							SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectJson);
-							SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectRefs);
-							SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectMaterialRefs);
+					foreach (Transform child in gameObject.transform)
+					{
+						int identifier = GetLocalIdentifier(child.transform);
+
+						if (identifier != -1)
+						{
+							SaveObject(gameObject.scene.path, identifier);
+							SaveObjectValues(child.transform, identifier);
 						}
 					}
 				}
@@ -170,10 +264,98 @@ namespace Framework
 				#region Private Functions
 				private static void OnModeChanged(PlayModeStateChange state)
 				{
-					if (state == PlayModeStateChange.EnteredEditMode)
+					switch (state)
 					{
-						RestoreSavedObjects();
-						RepaintEditorWindows();
+						case PlayModeStateChange.ExitingPlayMode:
+							{
+								SaveObjectValues();
+							}
+							break;
+						case PlayModeStateChange.EnteredEditMode:
+							{
+								RestoreSavedObjects();
+								RepaintEditorWindows();
+							}
+							break;
+						default: break;
+					}
+				}
+
+				private static void SaveObject(string scenePath, int identifier)
+				{
+					int saveObjIndex = GetSavedObjectIndex(identifier, scenePath);
+
+					//If the component isn't already in saved object list add it
+					if (saveObjIndex == -1)
+					{
+						int objectCount = EditorPrefs.GetInt(kEditorPrefsObjectCountKey);
+						saveObjIndex = objectCount;
+						objectCount++;
+						EditorPrefs.SetInt(kEditorPrefsObjectCountKey, objectCount);
+					}
+
+					string editorPrefKey = kEditorPrefsKey + System.Convert.ToString(saveObjIndex);
+
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectId, System.Convert.ToString(identifier));
+				}
+
+				private static void SaveObjectValues(int saveObjIndex)
+				{
+					string editorPrefKey = kEditorPrefsKey + System.Convert.ToString(saveObjIndex);
+
+					if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectScene))
+					{
+						string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
+						string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectId);
+
+						Object obj = FindObject(sceneStr, SafeConvertToInt(identifierStr));
+						SaveObjectValues(obj, saveObjIndex);
+					}
+				}
+
+				private static void SaveObjectValues(Object obj, int saveObjIndex)
+				{
+					RestoredObjectData data = GetObjectData(obj);
+
+					string editorPrefKey = kEditorPrefsKey + System.Convert.ToString(saveObjIndex);
+
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectJson, data._json);
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectRefs, data._missingObjectRefs);
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectMaterialRefs, data._missingMaterials);
+
+					if (obj is GameObject)
+					{
+						AddGameObjectChildObjectValues((GameObject)obj);
+					}
+				}
+
+				private static void SaveObjectValues()
+				{
+					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
+
+					for (int i = 0; i < numSavedObjects; i++)
+					{
+						SaveObjectValues(i);
+
+						//Saving object values can result in more objects being added to list so re-grab the count.
+						numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
+					}
+				}
+
+				private static void RevertObject(string scenePath, int identifier)
+				{
+					int saveObjIndex = GetSavedObjectIndex(identifier, scenePath);
+
+					if (saveObjIndex != -1)
+					{
+						string editorPrefKey = kEditorPrefsKey + System.Convert.ToString(saveObjIndex);
+
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectScene);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectId);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectJson);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectRefs);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectMaterialRefs);
 					}
 				}
 
