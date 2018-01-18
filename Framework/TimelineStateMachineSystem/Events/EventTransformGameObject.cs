@@ -41,32 +41,14 @@ namespace Framework
 			}
 			
 			public GameObjectRef _gameObject;
-
-			
 			public eTransformFlag _transformFlags = eTransformFlag.Translate;
-
-			
 			public eMoveType _moveType = eMoveType.To;
-
-			
 			public eTargetType _targetType = eTargetType.LocalDelta;
-
-			
 			public eInterpolation _easeType = eInterpolation.Linear;
-
-			
 			public float _duration = 0.0f;
-
-			
 			public GameObjectRef _targetTransform;
-
-			
 			public Vector3 _targetPosition = Vector3.zero;
-
-			
 			public Quaternion _targetRotation = Quaternion.identity;
-
-			
 			public Vector3 _targetScale = Vector3.one;
 			#endregion
 
