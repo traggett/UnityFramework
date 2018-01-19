@@ -62,7 +62,7 @@ namespace Framework
 						T asset = EditorGUILayout.ObjectField("File", assetRef._editorAsset, typeof(T), false) as T;
 
 						//If asset changed update GUIDS
-						if (assetRef._editorAsset != asset)
+						if (assetRef._editorAsset != asset || assetRef.GetFilePath() != AssetDatabase.GetAssetPath(asset))
 						{
 							assetRef = new AssetRef<T>(asset);
 							dataChanged = true;

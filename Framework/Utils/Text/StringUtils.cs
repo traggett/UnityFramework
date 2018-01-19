@@ -204,14 +204,19 @@ namespace Framework
 					{
 						index += resouces.Length;
 						runtimePath = runtimePath.Substring(index, runtimePath.Length - index);
-					}
 
-					//Remove file extension
-					index = runtimePath.LastIndexOf(".");
-					if (index != -1)
-					{
-						runtimePath = runtimePath.Substring(0, index);
+						//Remove file extension
+						index = runtimePath.LastIndexOf(".");
+						if (index != -1)
+						{
+							runtimePath = runtimePath.Substring(0, index);
+						}
 					}
+					else
+					{
+						return null;
+					}
+					
 				}
 
 				return runtimePath;

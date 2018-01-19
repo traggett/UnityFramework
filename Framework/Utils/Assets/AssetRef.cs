@@ -116,6 +116,9 @@ namespace Framework
 				{
 					_filePath = AssetDatabase.GetAssetPath(asset);
 					_fileGUID = AssetDatabase.AssetPathToGUID(_filePath);
+
+					if (GetResouceFilePath() == null)
+						Debug.LogError("Asset needs to be inside a Resources folder");
 				}
 				else
 				{

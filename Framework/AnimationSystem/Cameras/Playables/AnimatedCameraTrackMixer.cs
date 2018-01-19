@@ -1,12 +1,12 @@
 using System.Collections.Generic;
 
-using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
 namespace Framework
 {
 	using Maths;
+	using System;
 
 	namespace AnimationSystem
 	{
@@ -31,36 +31,42 @@ namespace Framework
 					_firstFrameHappened = true;
 				}
 
-				int inputCount = playable.GetInputCount();
 				AnimatedCameraState blendedState = _defaultState;
-				
-				for (int i = 0; i < inputCount; i++)
+
+				int inputPort = 0;
+				foreach (TimelineClip clip in _clips)
 				{
-					float inputWeight = playable.GetInputWeight(i);
+					ScriptPlayable<AnimatedCameraPlayableBehaviour> scriptPlayable = (ScriptPlayable<AnimatedCameraPlayableBehaviour>)playable.GetInput(inputPort);
+					AnimatedCameraPlayableBehaviour inputBehaviour = scriptPlayable.GetBehaviour();
 
-					if (!Mathf.Approximately(inputWeight, 0f))
+					if (inputBehaviour != null)
 					{
-						ScriptPlayable<AnimatedCameraPlayableBehaviour> inputPlayable = (ScriptPlayable<AnimatedCameraPlayableBehaviour>)playable.GetInput(i);
-						AnimatedCameraPlayableBehaviour input = inputPlayable.GetBehaviour();
+						double clipStart = clip.hasPreExtrapolation ? clip.extrapolatedStart : clip.start;
+						double clipDuration = clip.hasPreExtrapolation || clip.hasPostExtrapolation ? clip.extrapolatedDuration : clip.duration;
 
-						if (input._snapshot != null)
+						//If currently playing
+						if (_director.time >= clipStart && _director.time <= clipStart + clipDuration)
 						{
-							AnimatedCameraState behaviourState = input._snapshot.GetState();
+							float inputWeight = playable.GetInputWeight(inputPort);
 
-							if (input._snapshotTo != null)
+							AnimatedCameraState behaviourState = inputBehaviour._snapshot.GetState();
+
+							//Interpolated behavior
+							if (inputBehaviour._snapshotTo != null)
 							{
-								float normalisedTime = (float)(inputPlayable.GetTime() * input.inverseDuration);
-								behaviourState = behaviourState.InterpolateTo(_trackBinding, input._snapshotTo.GetState(), input._easeType, normalisedTime);
+								double clipT = Math.Min(Math.Max(_director.time - clip.start, 0.0) / clip.duration, 1.0);
+								behaviourState = behaviourState.InterpolateTo(_trackBinding, inputBehaviour._snapshotTo.GetState(), inputBehaviour._easeType, (float)clipT);
 							}
 
 							//Fade playable over current state using its weight
 							blendedState = blendedState.InterpolateTo(_trackBinding, behaviourState, eInterpolation.Linear, inputWeight);
 						}
 					}
+
+					++inputPort;
 				}
 
 				_trackBinding.SetState(blendedState);
-
 			}
 
 			public override void OnGraphStop(Playable playable)

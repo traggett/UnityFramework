@@ -384,6 +384,7 @@ namespace Framework
 					menu.AddItem(new GUIContent("Add New Timeline State"), false, AddNewStateMenuCallback, typeof(TimelineState));
 					menu.AddItem(new GUIContent("Add New Conditional State"), false, AddNewStateMenuCallback, typeof(ConditionalState));
 					menu.AddItem(new GUIContent("Add New Coroutine State"), false, AddNewStateMenuCallback, typeof(CoroutineState));
+					menu.AddItem(new GUIContent("Add New Playable Graph State"), false, AddNewStateMenuCallback, typeof(PlayableGraphState));
 					menu.AddItem(new GUIContent("Add Note"), false, AddNewStateMenuCallback, typeof(StateMachineNote));
 				}
 				#endregion

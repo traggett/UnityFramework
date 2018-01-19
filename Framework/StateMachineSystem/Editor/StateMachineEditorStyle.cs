@@ -27,6 +27,7 @@ namespace Framework
 				public Color _branchingStateColor;
 				public Color _externalStateColor;
 				public Color _coroutineStateColor;
+				public Color _playableGraphStateColor;
 				public Color _noteColor;
 				public Color _debugCurrentStateColor;
 
@@ -69,10 +70,10 @@ namespace Framework
 					_stateBackgroundSelected = new Color(1.0f, 1.0f, 1.0f, 1.0f);
 					_externalStateColor = new Color(1.0f, 0.73f, 0.0f, 1.0f);
 					_branchingStateColor = new Color(102 / 255f, 129 / 255f, 116 / 255f);
-					_noteColor = new Color(0.93f, 0.92f, 0.78f);
+					_noteColor = new Color(250 / 255f, 245 / 255f, 245 / 255f);
 					_debugCurrentStateColor = new Color(1.0f, 0.7f, 0.18f);
 					_coroutineStateColor = new Color(156 / 255f, 68 / 255f, 68 / 255f);
-
+					_playableGraphStateColor = new Color(245 / 255f, 212 / 255f, 179 / 255f);
 
 					_stateTextStyleFontSize = _stateTextStyle.fontSize;
 					_externalStateTextStyleFontSize = _externalStateTextStyle.fontSize;
