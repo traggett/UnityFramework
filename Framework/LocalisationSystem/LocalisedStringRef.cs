@@ -18,6 +18,7 @@ namespace Framework
 			#region Private Data
 			private string _cachedText;
 			private SystemLanguage _cachedLanguage;
+			private LocalisationVariableInfo[] _cachedVariables;
 			#endregion
 
 			#region Editor Data
@@ -33,6 +34,7 @@ namespace Framework
 				_localisationKey = key;
 				_cachedText = string.Empty;
 				_cachedLanguage = SystemLanguage.Unknown;
+				_cachedVariables = null;
 #if UNITY_EDITOR
 				_editorCollapsed = false;
 				_editorAutoNameParentName = null;
@@ -48,22 +50,37 @@ namespace Framework
 			{
 				return new LocalisedStringRef(key);
 			}
+			
+			//Check variables are updated, if so update variables name
+			//how can we check if a variable has been updated?
+			//Surely its better to cache text in one place??
+			//nah that wont work
+			//so instead somehow need to get told a variable updates
+			//maybe provide interface that registers itself?
+			//get string with interface - all variables in that string are linked to it?
+			//or localised string somehow queues if a variable is dirty??
+
+			//anywhere in code calls setvariable
+
+			//any where in code alls get localised string
+
+			//localisation updates
+
+			//each variable could have a key and a version number
+			//whenever you update a variable that nunmber changes
+			//
+
 
 			public string GetLocalisedString()
 			{
-				if (_cachedLanguage != Localisation.GetCurrentLanguage())
+				if (_cachedLanguage != Localisation.GetCurrentLanguage() || Localisation.AreVariablesOutOfDate(_cachedVariables))
 				{
 					_cachedLanguage = Localisation.GetCurrentLanguage();
 					_cachedText = Localisation.GetString(_localisationKey);
+					_cachedVariables = Localisation.GetVariablesKeys(_cachedText);
 				}
 
 				return _cachedText;
-			}
-
-			public void UpdateVariables(params KeyValuePair<string, string>[] variables)
-			{
-				_cachedLanguage = Localisation.GetCurrentLanguage();
-				_cachedText = Localisation.GetString(_localisationKey, variables);
 			}
 
 #if UNITY_EDITOR

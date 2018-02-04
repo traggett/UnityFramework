@@ -101,9 +101,9 @@ namespace Framework
 							if (EditorGUI.EndChangeCheck())
 							{
 								if (newFolderIndex != 0)
-									localisationkeyProperty.stringValue = currentFolder + "/" + Localisation.GetKeyWithoutFoldder(localisationkeyProperty.stringValue);
+									localisationkeyProperty.stringValue = currentFolder + "/" + Localisation.GetKeyWithoutFolder(localisationkeyProperty.stringValue);
 								else if (currentFolderIndex != 0)
-									localisationkeyProperty.stringValue = Localisation.GetKeyWithoutFoldder(localisationkeyProperty.stringValue);
+									localisationkeyProperty.stringValue = Localisation.GetKeyWithoutFolder(localisationkeyProperty.stringValue);
 							}
 
 							Rect addKeySlash = new Rect(position.x + (position.width - buttonWidth) - fudge, yPos, autoKeySlashWidth, EditorGUIUtility.singleLineHeight);
@@ -112,7 +112,7 @@ namespace Framework
 							Rect addKeyText = new Rect(position.x + (position.width - buttonWidth) - fudge + autoKeySlashFakeWidth, yPos, keyTextWidth + fudge, EditorGUIUtility.singleLineHeight);
 							if (newFolderIndex != 0)
 							{
-								string newAddKey = EditorGUI.TextField(addKeyText, Localisation.GetKeyWithoutFoldder(localisationkeyProperty.stringValue));
+								string newAddKey = EditorGUI.TextField(addKeyText, Localisation.GetKeyWithoutFolder(localisationkeyProperty.stringValue));
 								localisationkeyProperty.stringValue = currentFolder + "/" + newAddKey;
 							}
 							else

@@ -20,6 +20,12 @@ namespace Framework
 		}
 #endif
 
+		public struct LocalisationVariableInfo
+		{
+			public string _key;
+			public int _version;
+		}
+
 		public static class Localisation
 		{
 			#region Public Data
@@ -32,7 +38,13 @@ namespace Framework
 			private static LocalisationMap _localisationMap;
 			private static SystemLanguage _currentLanguage = SystemLanguage.English;
 			private static SystemLanguage _fallBackLanguage = SystemLanguage.English;
-			private static Dictionary<string, string> _variables = new Dictionary<string, string>();
+
+			private struct VariableInfo
+			{
+				public string _value;
+				public int _version;
+			}
+			private static Dictionary<string, VariableInfo> _variables = new Dictionary<string, VariableInfo>();
 			private static bool _dirty;
 #if UNITY_EDITOR
 			private static string[] _editorKeys;
@@ -102,12 +114,73 @@ namespace Framework
 
 			public static void SetVaraiable(string key, string value)
 			{
-				_variables[key] = value;
+				VariableInfo info;
+
+				if (_variables.TryGetValue(key, out info))
+				{
+					info._version++;
+				}
+
+				info._value = value;
+
+				_variables[key] = info;
 			}
 
 			public static void ClearVaraiable(string key)
 			{
 				_variables.Remove(key);
+			}
+
+			public static LocalisationVariableInfo[] GetVariablesKeys(string text)
+			{
+				int index = 0;
+
+				List<LocalisationVariableInfo> keys = new List<LocalisationVariableInfo>();
+
+				while (index < text.Length)
+				{
+					int variableStartIndex = text.IndexOf(kVariableStartChars, index);
+
+					if (variableStartIndex != -1)
+					{
+						int variableEndIndex = text.IndexOf(kVariableEndChars, variableStartIndex);
+						if (variableEndIndex == -1)
+							throw new Exception("Can't find matching end bracket for variable in localised string");
+
+						int variableKeyStartIndex = variableStartIndex + kVariableEndChars.Length + 1;
+						string variableKey = text.Substring(variableKeyStartIndex, variableEndIndex - variableKeyStartIndex);
+
+						VariableInfo info;
+						_variables.TryGetValue(variableKey, out info);
+						keys.Add(new LocalisationVariableInfo { _key = variableKey, _version = info._version } );
+
+						index = variableEndIndex + kVariableEndChars.Length;
+					}
+					else
+					{
+						break;
+					}
+				}
+
+				return keys.ToArray();
+			}
+
+			public static bool AreVariablesOutOfDate(params LocalisationVariableInfo[] varaiables)
+			{
+				for (int i=0; i<varaiables.Length; i++)
+				{
+					VariableInfo info;
+
+					if (_variables.TryGetValue(varaiables[i]._key, out info))
+					{
+						if (varaiables[i]._version != info._version)
+						{
+							return true;
+						}
+					}
+				}
+
+				return false;
 			}
 
 #if UNITY_EDITOR
@@ -216,7 +289,8 @@ namespace Framework
 
 				return folder;
 			}
-			public static string GetKeyWithoutFoldder(string key)
+
+			public static string GetKeyWithoutFolder(string key)
 			{
 				string keyWithoutFolder = key;
 
@@ -257,7 +331,10 @@ namespace Framework
 					{
 						int variableEndIndex = text.IndexOf(kVariableEndChars, variableStartIndex);
 						if (variableEndIndex == -1)
-							throw new Exception("Can't find matching end bracket for variable in localised string");
+						{
+							Debug.LogError("Can't find matching end bracket for variable in localised string");
+							return null;
+						}
 
 						fullText += text.Substring(index, variableStartIndex - index);
 
@@ -280,12 +357,12 @@ namespace Framework
 						//If not found in there check global variables
 						if (!foundKey)
 						{
-							string value;
-							if (_variables.TryGetValue(variableKey, out value))
+							VariableInfo info;
+							if (_variables.TryGetValue(variableKey, out info))
 							{
-								fullText += value;
+								fullText += info._value;
 							}
-							else
+							else if (Application.isPlaying)
 							{
 								Debug.LogError("Can't find variable to replace key '" + variableKey + "'");
 							}
