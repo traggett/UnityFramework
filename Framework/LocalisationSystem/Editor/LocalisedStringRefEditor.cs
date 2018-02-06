@@ -1,10 +1,8 @@
-
 using UnityEditor;
 using UnityEngine;
 
 namespace Framework
 {
-	using Utils.Editor;
 	using Serialization;
 
 	namespace LocalisationSystem
@@ -109,9 +107,9 @@ namespace Framework
 								EditorGUI.BeginChangeCheck();
 								string text;
 								if (style != null)
-									text = EditorGUILayout.TextArea(Localisation.GetString(currentKey), style);
+									text = EditorGUILayout.TextArea(Localisation.GetUnformattedString(currentKey), style);
 								else
-									text = EditorGUILayout.TextArea(Localisation.GetString(currentKey));
+									text = EditorGUILayout.TextArea(Localisation.GetUnformattedString(currentKey));
 								if (EditorGUI.EndChangeCheck())
 								{
 									Localisation.UpdateString(currentKey, Localisation.GetCurrentLanguage(), text);

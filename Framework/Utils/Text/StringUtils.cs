@@ -13,11 +13,14 @@ namespace Framework
 			{
 				int numLines = 1;
 
-				foreach (char c in text)
+				if (!string.IsNullOrEmpty(text))
 				{
-					if (c == '\n' || c == '\r')
+					foreach (char c in text)
 					{
-						numLines++;
+						if (c == '\n' || c == '\r')
+						{
+							numLines++;
+						}
 					}
 				}
 

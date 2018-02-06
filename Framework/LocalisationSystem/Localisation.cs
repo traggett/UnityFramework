@@ -61,22 +61,6 @@ namespace Framework
 #endif
 			#endregion
 
-#if UNITY_EDITOR
-			#region Menu Functions
-			[MenuItem("Localisation/Reload Strings")]
-			private static void MenuReloadStrings()
-			{
-				LoadStrings();
-			}
-
-			[MenuItem("Localisation/Save Strings")]
-			private static void MenuSaveStrings()
-			{
-				SaveStrings();
-			}
-			#endregion
-#endif
-
 			#region Public Interface
 			public static void LoadStrings()
 			{
@@ -112,6 +96,11 @@ namespace Framework
 				return _currentLanguage;
 			}
 
+			public static void SetLanguage(SystemLanguage language)
+			{
+				_currentLanguage = language;
+			}
+
 			public static void SetVaraiable(string key, string value)
 			{
 				VariableInfo info;
@@ -131,7 +120,7 @@ namespace Framework
 				_variables.Remove(key);
 			}
 
-			public static LocalisationVariableInfo[] GetVariablesKeys(string text)
+			public static LocalisationVariableInfo[] GetGlobalVariableKeys(string text)
 			{
 				int index = 0;
 
@@ -165,7 +154,7 @@ namespace Framework
 				return keys.ToArray();
 			}
 
-			public static bool AreVariablesOutOfDate(params LocalisationVariableInfo[] varaiables)
+			public static bool AreGlobalVariablesOutOfDate(params LocalisationVariableInfo[] varaiables)
 			{
 				for (int i=0; i<varaiables.Length; i++)
 				{
@@ -206,9 +195,31 @@ namespace Framework
 				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
 			}
 
+			public static void DeleteString(string key)
+			{
+				if (_localisationMap == null)
+					LoadStrings();
+
+				if (_undoObject == null)
+				{
+					_undoObject = (LocalisationUndoState)ScriptableObject.CreateInstance(typeof(LocalisationUndoState));
+					_undoObject.name = "LocalisationUndoState";
+					Undo.undoRedoPerformed += UndoRedoCallback;
+				}
+				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+
+				_localisationMap.RemoveString(key);
+				_dirty = true;
+
+				RefreshEditorKeys();
+
+				Undo.RegisterCompleteObjectUndo(_undoObject, "Localisation strings changed");
+				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+			}
+
 			public static void WarnIfDirty()
 			{
-				if (_dirty)
+				if (HasUnsavedChanges())
 				{
 					int option = EditorUtility.DisplayDialogComplex("Localization strings have Been Modified",
 																   "Do you want to save the changes you made to the localization table?",
@@ -251,6 +262,11 @@ namespace Framework
 				}
 
 				_dirty = false;
+			}
+
+			public static bool HasUnsavedChanges()
+			{
+				return _dirty;
 			}
 
 			public static string[] GetStringKeys()
@@ -301,6 +317,14 @@ namespace Framework
 				}
 
 				return keyWithoutFolder;
+			}
+
+			public static string GetUnformattedString(string key)
+			{
+				if (_localisationMap == null)
+					LoadStrings();
+
+				return _localisationMap.GetString(key, _currentLanguage, _fallBackLanguage);
 			}
 #endif
 			#endregion

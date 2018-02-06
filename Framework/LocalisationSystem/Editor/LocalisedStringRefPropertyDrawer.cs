@@ -151,9 +151,6 @@ namespace Framework
 									Localisation.UpdateString(localisationkeyProperty.stringValue, Localisation.GetCurrentLanguage(), string.Empty);
 								}
 							}
-
-
-							
 						}
 
 						//Draw displayed text (can be edited to update localization file)
@@ -161,7 +158,7 @@ namespace Framework
 							//Only display if have a valid key
 							if (!string.IsNullOrEmpty(localisationkeyProperty.stringValue) && Localisation.IsKeyInTable(localisationkeyProperty.stringValue))
 							{
-								string text = Localisation.GetString(localisationkeyProperty.stringValue);
+								string text = Localisation.GetUnformattedString(localisationkeyProperty.stringValue);
 								int numLines = StringUtils.GetNumberOfLines(text);
 								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 								float labelWidth = EditorUtils.GetLabelWidth();
@@ -194,7 +191,7 @@ namespace Framework
 
 						if (Localisation.IsKeyInTable(localisationkeyProperty.stringValue))
 						{
-							string text = Localisation.GetString(localisationkeyProperty.stringValue);
+							string text = Localisation.GetUnformattedString(localisationkeyProperty.stringValue);
 							int numLines = StringUtils.GetNumberOfLines(text);
 							height += (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 						}						

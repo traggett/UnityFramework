@@ -234,12 +234,15 @@ namespace Framework
 			#region MonoBehaviour
 			void OnEnable()
 			{
-				_nodegraph = null;
-
-				if (Application.isPlaying)
+				if (Application.isPlaying && _nodegraph == null)
 				{
 					TryLoadNodeGraph();
 				}
+			}
+
+			void OnDisable()
+			{
+				_nodegraph = null;
 			}
 
 			void Update()

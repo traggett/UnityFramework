@@ -51,6 +51,14 @@ namespace Framework
 				return string.Empty;
 			}
 
+			public void RemoveString(string key)
+			{
+				if (!string.IsNullOrEmpty(key))
+				{
+					_strings.Remove(key);
+				}
+			}
+
 			public void UpdateString(string key, SystemLanguage language, string text)
 			{
 				if (!string.IsNullOrEmpty(key))

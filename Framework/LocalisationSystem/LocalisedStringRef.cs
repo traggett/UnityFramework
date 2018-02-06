@@ -51,13 +51,13 @@ namespace Framework
 				return new LocalisedStringRef(key);
 			}
 			
-			public string GetLocalisedString()
+			public string GetLocalisedString(params KeyValuePair<string, string>[] variables)
 			{
-				if (_cachedLanguage != Localisation.GetCurrentLanguage() || Localisation.AreVariablesOutOfDate(_cachedVariables))
+				if (variables.Length > 0 || _cachedLanguage != Localisation.GetCurrentLanguage() || Localisation.AreGlobalVariablesOutOfDate(_cachedVariables))
 				{
 					_cachedLanguage = Localisation.GetCurrentLanguage();
-					_cachedText = Localisation.GetString(_localisationKey);
-					_cachedVariables = Localisation.GetVariablesKeys(_cachedText);
+					_cachedText = Localisation.GetString(_localisationKey, variables);
+					_cachedVariables = Localisation.GetGlobalVariableKeys(_cachedText);
 				}
 
 				return _cachedText;
