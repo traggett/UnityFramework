@@ -17,7 +17,7 @@ namespace Framework
 				{
 					foreach (char c in text)
 					{
-						if (c == '\n' || c == '\r')
+						if (c == '\n')
 						{
 							numLines++;
 						}
@@ -29,7 +29,7 @@ namespace Framework
 
 			public static string[] SplitIntoLines(string text)
 			{
-				return text.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+				return text.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 			}
 
 			public static void WrapText(string text, int maxCharactersPerLine, out string[] wrappedTextLines, out int numLines)

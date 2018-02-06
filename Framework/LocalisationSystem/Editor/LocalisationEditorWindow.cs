@@ -39,6 +39,7 @@ namespace Framework
 				private Vector2 _scrollPosition;
 				private bool _needsRepaint;
 				private string _addNewKey = string.Empty;
+				private string[] _keys;
 
 				private GUIStyle _titleStyle;
 				private GUIStyle _keyStyle;
@@ -89,6 +90,7 @@ namespace Framework
 					InitGUIStyles();
 
 					_needsRepaint = false;
+					_keys = Localisation.GetStringKeys();
 
 					EditorGUILayout.BeginVertical();
 					{
@@ -97,6 +99,8 @@ namespace Framework
 
 						//Render keys / text
 						RenderTable();
+
+						RenderAddKey();
 					}
 					EditorGUILayout.EndVertical();
 
@@ -128,22 +132,20 @@ namespace Framework
 
 				private void InitGUIStyles()
 				{
-					//if (_titleStyle == null)
+					if (_titleStyle == null)
 					{
 						_titleStyle = new GUIStyle(EditorStyles.label);
 						_titleStyle.richText = true;
 						_titleStyle.alignment = TextAnchor.MiddleCenter;
 					}
 
-					//if (_keyStyle == null)
+					if (_keyStyle == null)
 					{
 						_keyStyle = new GUIStyle(EditorStyles.helpBox);
 						_keyStyle.margin = new RectOffset(0, 0, 0, 0);
-						//_keyStyle.fontStyle = FontStyle.Bold;
-						//_keyStyle.fontSize = 11;
 					}
 
-					//if (_textStyle == null)
+					if (_textStyle == null)
 					{
 						_textStyle = new GUIStyle(EditorStyles.textArea);
 						_textStyle.margin = new RectOffset(1, 1, 1, 1);
@@ -234,12 +236,10 @@ namespace Framework
 					{
 						EditorGUILayout.BeginVertical();
 						{
-							string[] keys = Localisation.GetStringKeys();
-
-							for (int i = 1; i < keys.Length; i++)
+							for (int i = 1; i < _keys.Length; i++)
 							{
-								bool selected = keys[i] == _selectedKey;
-								string text = Localisation.GetUnformattedString(keys[i]);
+								bool selected = _keys[i] == _selectedKey;
+								string text = Localisation.GetUnformattedString(_keys[i]);
 								int numLines = StringUtils.GetNumberOfLines(text);
 								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 
@@ -249,9 +249,9 @@ namespace Framework
 								EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle, GUILayout.Height(height));
 								{
 									GUI.backgroundColor = kKeyBackgroundColor;
-									if (GUILayout.Button(keys[i], _keyStyle, GUILayout.Width(_keyWidth), GUILayout.ExpandHeight(true)))
+									if (GUILayout.Button(_keys[i], _keyStyle, GUILayout.Width(_keyWidth), GUILayout.ExpandHeight(true)))
 									{
-										_selectedKey = keys[i];
+										_selectedKey = _keys[i];
 										EditorGUI.FocusTextInControl(string.Empty);
 									}							
 
@@ -260,7 +260,7 @@ namespace Framework
 									text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 									if (EditorGUI.EndChangeCheck())
 									{
-										Localisation.UpdateString(keys[i], Localisation.GetCurrentLanguage(), text);
+										Localisation.UpdateString(_keys[i], Localisation.GetCurrentLanguage(), text);
 									}
 								}
 								EditorGUILayout.EndHorizontal();
@@ -289,8 +289,6 @@ namespace Framework
 
 								GUI.backgroundColor = origBackgroundColor;
 							}
-
-							RenderAddKey();
 						}
 						EditorGUILayout.EndVertical();
 					}
@@ -299,6 +297,8 @@ namespace Framework
 
 				private void RenderAddKey()
 				{
+					EditorGUILayout.Separator();
+
 					EditorGUILayout.BeginHorizontal();
 					{
 						if (GUILayout.Button("Add New", EditorStyles.toolbarButton, GUILayout.Width(_keyWidth)))
@@ -349,6 +349,8 @@ namespace Framework
 						GUILayout.FlexibleSpace();
 					}
 					EditorGUILayout.EndHorizontal();
+
+					EditorGUILayout.Separator();
 				}
 
 				private void HandleInput()
@@ -434,8 +436,23 @@ namespace Framework
 				{
 					_selectedKey = key;
 					_needsRepaint = true;
-					//TO DO! set scroll position to show it centered
+					
+					float toSelected = 0.0f;
 
+					for (int i = 1; i < _keys.Length; i++)
+					{
+						if (_keys[i] == _selectedKey)
+							break;
+
+						string text = Localisation.GetUnformattedString(_keys[i]);
+						int numLines = StringUtils.GetNumberOfLines(text);
+						float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
+
+						toSelected += height;
+					}
+
+					float scrollAreaHeight = this.position.height - kToolBarHeight - 16;
+					_scrollPosition.y = Mathf.Max(toSelected - scrollAreaHeight * 0.5f, 0.0f);
 
 					Focus();
 				}
