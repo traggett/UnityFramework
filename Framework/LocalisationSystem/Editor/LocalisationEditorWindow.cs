@@ -17,10 +17,11 @@ namespace Framework
 				private static readonly string kWindowTitle = "Localisation Editor";
 				private static readonly string kWindowTag = "Localisation";
 				private static readonly string kKeySizePref = "KeySize";
+				private static readonly string kFontSizePref = "FontSize";
 
 				private static readonly float kMinKeysWidth = 180.0f;
-
 				private static readonly float kToolBarHeight = 60.0f;
+				private static readonly int kDefaultFontSize = 10;
 
 				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
 				private static readonly Color kSelectedButtonsBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 0.75f);
@@ -33,6 +34,7 @@ namespace Framework
 				private Rect _resizerRect;
 				private bool _resizing;
 				private int _controlID;
+				private int _fontSize = kDefaultFontSize;
 				private float _resizingOffset;
 				private float _keyWidth = 200.0f;
 				private string _selectedKey;
@@ -56,7 +58,7 @@ namespace Framework
 				#region Menu Stuff
 				private static LocalisationEditorWindow _instance = null;
 
-				[MenuItem("Localisation/Localisation Strings")]
+				[MenuItem("Localisation/Localisation Table")]
 				private static void CreateWindow()
 				{
 					// Get existing open window or if none, make a new one:
@@ -132,6 +134,7 @@ namespace Framework
 				{
 					_controlID = GUIUtility.GetControlID(FocusType.Passive);
 					_keyWidth = EditorPrefs.GetFloat(kWindowTag+"."+ kKeySizePref, kMinKeysWidth);
+					_fontSize = EditorPrefs.GetInt(kWindowTag + "." + kFontSizePref, kDefaultFontSize);
 				}
 
 				private void InitGUIStyles()
@@ -147,12 +150,15 @@ namespace Framework
 					{
 						_keyStyle = new GUIStyle(EditorStyles.helpBox);
 						_keyStyle.margin = new RectOffset(0, 0, 0, 0);
+						_keyStyle.fontSize = _fontSize;
 					}
 
 					if (_textStyle == null)
 					{
 						_textStyle = new GUIStyle(EditorStyles.textArea);
 						_textStyle.margin = new RectOffset(1, 1, 1, 1);
+						_textStyle.font = _keyStyle.font;
+						_textStyle.fontSize = _fontSize;
 					}
 				}
 
@@ -184,7 +190,28 @@ namespace Framework
 							{
 								Localisation.LoadStrings();
 							}
-							
+
+							EditorGUILayout.Separator();
+
+							GUILayout.Button("Scale", EditorStyles.toolbarButton);
+
+							int fontSize = EditorGUILayout.IntSlider(_fontSize, 8, 16);
+
+							if (GUILayout.Button("Reset Scale", EditorStyles.toolbarButton))
+							{
+								fontSize = kDefaultFontSize;
+							}
+
+							if (_fontSize != fontSize)
+							{
+								_fontSize = fontSize;
+								_keyStyle.fontSize = _fontSize;
+								_textStyle.fontSize = _fontSize;
+								EditorPrefs.SetInt(kWindowTag + "." + kFontSizePref, _fontSize);
+							}
+							GUILayout.FlexibleSpace();
+
+
 							GUILayout.FlexibleSpace();
 						}
 						EditorGUILayout.EndHorizontal();
