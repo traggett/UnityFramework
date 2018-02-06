@@ -14,6 +14,9 @@ namespace Framework
 		{
 			public sealed class LocalisationEditorWindow : EditorWindow
 			{
+				public static readonly int kDefaultFontSize = 12;
+				public static readonly float kDefaultKeysWidth = 380.0f;
+
 				private static readonly string kWindowWindowName = "Localisation";
 				private static readonly string kWindowTitle = "Localisation Editor";
 				private static readonly string kWindowTag = "LocalisationEditor.Settings";
@@ -22,8 +25,7 @@ namespace Framework
 
 				private static readonly float kMinKeysWidth = 180.0f;
 				private static readonly float kToolBarHeight = 60.0f;
-				private static readonly int kDefaultFontSize = 12;
-				private static readonly float kDefaultKeysWidth = 380.0f;
+				
 
 				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
 				private static readonly Color kSelectedButtonsBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 0.75f);
@@ -129,9 +131,6 @@ namespace Framework
 					if (_editorPrefs == null)
 					{
 						_editorPrefs = new LocalisationEditorPrefs();
-						_editorPrefs._keyWidth = kDefaultKeysWidth;
-						_editorPrefs._fontSize = kDefaultFontSize;
-						SaveEditorPrefs();
 					}
 
 					_controlID = GUIUtility.GetControlID(FocusType.Passive);

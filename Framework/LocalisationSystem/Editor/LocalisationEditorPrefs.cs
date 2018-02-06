@@ -12,8 +12,8 @@ namespace Framework
 			[Serializable]
 			public sealed class LocalisationEditorPrefs
 			{
-				public float _keyWidth;
-				public int _fontSize;
+				public float _keyWidth = LocalisationEditorWindow.kDefaultKeysWidth;
+				public int _fontSize = LocalisationEditorWindow.kDefaultFontSize;
 				public AssetRef<Font> _font;
 				public string _selectedKey;
 			}
