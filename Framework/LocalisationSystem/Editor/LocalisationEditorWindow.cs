@@ -92,12 +92,8 @@ namespace Framework
 
 					EditorGUILayout.BeginVertical();
 					{
-						//Render tool bar
 						RenderTitleBar();
-
-						//Render keys / text
 						RenderTable();
-
 						RenderAddKey();
 					}
 					EditorGUILayout.EndVertical();
@@ -110,7 +106,17 @@ namespace Framework
 
 				void OnDestroy()
 				{
-					
+					if (Localisation.HasUnsavedChanges())
+					{
+						if (EditorUtility.DisplayDialog("Localisation Table Has Been Modified", "Do you want to save the changes you made to the table?\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
+						{
+							Localisation.SaveStrings();
+						}
+						else
+						{
+							Localisation.LoadStrings();
+						}
+					}
 				}
 				#endregion
 
