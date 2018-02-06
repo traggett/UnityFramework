@@ -33,7 +33,8 @@ namespace Framework
 					}
 					else
 					{
-						Debug.Log("Can't find localised version of string " + key + " for " + language);
+						if (Application.isPlaying)
+							Debug.Log("Can't find localised version of string " + key + " for " + language);
 #if _DEBUG
 						if (fallBackLanguage != SystemLanguage.Unknown && fallBackLanguage != language && 
 							localisedString.TryGetValue(LanguageCodes.GetLanguageCode(fallBackLanguage), out text))
@@ -74,6 +75,17 @@ namespace Framework
 						_strings.Add(key, new Dictionary<string, string>());
 						_strings[key].Add(LanguageCodes.GetLanguageCode(language), text);
 					}
+				}
+			}
+
+			public void ChangeKey(string key, string newKey)
+			{
+				Dictionary<string, string> value;
+
+				if (_strings.TryGetValue(key, out value))
+				{
+					_strings.Remove(key);
+					_strings.Add(newKey, value);
 				}
 			}
 

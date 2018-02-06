@@ -174,47 +174,30 @@ namespace Framework
 
 #if UNITY_EDITOR
 			public static void UpdateString(string key, SystemLanguage language, string text)
-			{			
-				if (_localisationMap == null)
-					LoadStrings();
-
-				if (_undoObject == null)
-				{
-					_undoObject = (LocalisationUndoState)ScriptableObject.CreateInstance(typeof(LocalisationUndoState));
-					_undoObject.name = "LocalisationUndoState";
-					Undo.undoRedoPerformed += UndoRedoCallback;
-				}
-				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+			{
+				OnPreEditorChange();
 
 				_localisationMap.UpdateString(key, language, text);
-				_dirty = true;
 
-				RefreshEditorKeys();
-
-				Undo.RegisterCompleteObjectUndo(_undoObject, "Localisation strings changed");
-				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+				OnPostEditorChange();
 			}
 
 			public static void DeleteString(string key)
 			{
-				if (_localisationMap == null)
-					LoadStrings();
-
-				if (_undoObject == null)
-				{
-					_undoObject = (LocalisationUndoState)ScriptableObject.CreateInstance(typeof(LocalisationUndoState));
-					_undoObject.name = "LocalisationUndoState";
-					Undo.undoRedoPerformed += UndoRedoCallback;
-				}
-				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+				OnPreEditorChange();
 
 				_localisationMap.RemoveString(key);
-				_dirty = true;
 
-				RefreshEditorKeys();
+				OnPostEditorChange();
+			}
 
-				Undo.RegisterCompleteObjectUndo(_undoObject, "Localisation strings changed");
-				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+			public static void ChangeKey(string key, string newKey)
+			{
+				OnPreEditorChange();
+
+				_localisationMap.ChangeKey(key, newKey);
+
+				OnPostEditorChange();
 			}
 
 			public static void WarnIfDirty()
@@ -452,6 +435,30 @@ namespace Framework
 					_undoObject._serialisedLocalisationMap = null;
 					_dirty = true;
 				}
+			}
+
+			private static void OnPreEditorChange()
+			{
+				if (_localisationMap == null)
+					LoadStrings();
+
+				if (_undoObject == null)
+				{
+					_undoObject = (LocalisationUndoState)ScriptableObject.CreateInstance(typeof(LocalisationUndoState));
+					_undoObject.name = "LocalisationUndoState";
+					Undo.undoRedoPerformed += UndoRedoCallback;
+				}
+				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+			}
+
+			private static void OnPostEditorChange()
+			{
+				_dirty = true;
+
+				RefreshEditorKeys();
+
+				Undo.RegisterCompleteObjectUndo(_undoObject, "Localisation strings changed");
+				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
 			}
 #endif
 			#endregion

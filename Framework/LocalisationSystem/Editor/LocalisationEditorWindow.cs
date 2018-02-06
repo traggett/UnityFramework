@@ -39,7 +39,7 @@ namespace Framework
 				private Vector2 _scrollPosition;
 				private bool _needsRepaint;
 				private string _addNewKey = string.Empty;
-				private string[] _keys;
+				private bool _editingKeyName;
 
 				private GUIStyle _titleStyle;
 				private GUIStyle _keyStyle;
@@ -88,18 +88,8 @@ namespace Framework
 					InitGUIStyles();
 
 					_needsRepaint = false;
-					_keys = Localisation.GetStringKeys();
 
-					switch (_sortOrder)
-					{
-						case eKeySortOrder.Asc:
-							Array.Sort(_keys, StringComparer.InvariantCulture);
-							break;
-						case eKeySortOrder.Desc:
-							Array.Sort(_keys, StringComparer.InvariantCulture);
-							Array.Reverse(_keys);
-							break;
-					}
+
 					EditorGUILayout.BeginVertical();
 					{
 						//Render tool bar
@@ -244,10 +234,12 @@ namespace Framework
 					{
 						EditorGUILayout.BeginVertical();
 						{
-							for (int i = 1; i < _keys.Length; i++)
+							string[] keys = GetKeys();
+
+							for (int i = 1; i < keys.Length; i++)
 							{
-								bool selected = _keys[i] == _selectedKey;
-								string text = Localisation.GetUnformattedString(_keys[i]);
+								bool selected = keys[i] == _selectedKey;
+								string text = Localisation.GetUnformattedString(keys[i]);
 								int numLines = StringUtils.GetNumberOfLines(text);
 								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 
@@ -257,18 +249,34 @@ namespace Framework
 								EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle, GUILayout.Height(height));
 								{
 									GUI.backgroundColor = kKeyBackgroundColor;
-									if (GUILayout.Button(_keys[i], _keyStyle, GUILayout.Width(_keyWidth), GUILayout.ExpandHeight(true)))
+
+									if (selected && _editingKeyName)
 									{
-										_selectedKey = _keys[i];
-										EditorGUI.FocusTextInControl(string.Empty);
-									}							
+										EditorGUI.BeginChangeCheck();
+										string key = EditorGUILayout.DelayedTextField(keys[i], _textStyle, GUILayout.Width(_keyWidth), GUILayout.ExpandHeight(true));
+										if (EditorGUI.EndChangeCheck())
+										{
+											_editingKeyName = false;
+											Localisation.ChangeKey(keys[i], key);
+											_needsRepaint = true;
+										}
+									}
+									else
+									{
+										if (GUILayout.Button(keys[i], _keyStyle, GUILayout.Width(_keyWidth), GUILayout.ExpandHeight(true)))
+										{
+											_selectedKey = keys[i];
+											_editingKeyName = false;
+											EditorGUI.FocusTextInControl(string.Empty);
+										}
+									}												
 
 									GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 									EditorGUI.BeginChangeCheck();
 									text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 									if (EditorGUI.EndChangeCheck())
 									{
-										Localisation.UpdateString(_keys[i], Localisation.GetCurrentLanguage(), text);
+										Localisation.UpdateString(keys[i], Localisation.GetCurrentLanguage(), text);
 									}
 								}
 								EditorGUILayout.EndHorizontal();
@@ -282,7 +290,7 @@ namespace Framework
 
 										if (GUILayout.Button("Edit Key", EditorStyles.toolbarButton))
 										{
-
+											_editingKeyName = true;
 										}
 
 										if (GUILayout.Button("Delete", EditorStyles.toolbarButton))
@@ -444,15 +452,17 @@ namespace Framework
 				{
 					_selectedKey = key;
 					_needsRepaint = true;
-					
+
+					string[] keys = GetKeys();
+
 					float toSelected = 0.0f;
 
-					for (int i = 1; i < _keys.Length; i++)
+					for (int i = 1; i < keys.Length; i++)
 					{
-						if (_keys[i] == _selectedKey)
+						if (keys[i] == _selectedKey)
 							break;
 
-						string text = Localisation.GetUnformattedString(_keys[i]);
+						string text = Localisation.GetUnformattedString(keys[i]);
 						int numLines = StringUtils.GetNumberOfLines(text);
 						float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 
@@ -463,6 +473,24 @@ namespace Framework
 					_scrollPosition.y = Mathf.Max(toSelected - scrollAreaHeight * 0.5f, 0.0f);
 
 					Focus();
+				}
+
+				private string[] GetKeys()
+				{
+					string[] keys = Localisation.GetStringKeys();
+
+					switch (_sortOrder)
+					{
+						case eKeySortOrder.Asc:
+							Array.Sort(keys, StringComparer.InvariantCulture);
+							break;
+						case eKeySortOrder.Desc:
+							Array.Sort(keys, StringComparer.InvariantCulture);
+							Array.Reverse(keys);
+							break;
+					}
+
+					return keys;
 				}
 			}
 		}

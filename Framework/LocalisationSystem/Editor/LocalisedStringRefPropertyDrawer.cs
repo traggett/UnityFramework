@@ -153,6 +153,7 @@ namespace Framework
 								if (!Localisation.IsKeyInTable(localisationkeyProperty.stringValue))
 								{
 									Localisation.UpdateString(localisationkeyProperty.stringValue, Localisation.GetCurrentLanguage(), string.Empty);
+									LocalisationEditorWindow.EditString(localisationkeyProperty.stringValue);
 								}
 							}
 						}
@@ -170,7 +171,7 @@ namespace Framework
 								Rect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth - editbuttonWidth, height);
 								EditorGUI.SelectableLabel(textPosition, text);
 
-								Rect editTextPosition = new Rect(textPosition.x + textPosition.width, yPos, editbuttonWidth, height);
+								Rect editTextPosition = new Rect(textPosition.x + textPosition.width, yPos, editbuttonWidth, EditorGUIUtility.singleLineHeight);
 
 								if (GUI.Button(editTextPosition, "Edit"))
 								{
