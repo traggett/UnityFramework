@@ -44,16 +44,14 @@ namespace Framework
 				private GUIStyle _titleStyle;
 				private GUIStyle _keyStyle;
 				private GUIStyle _textStyle;
-				
-				//Make localisted string refs readonly?
-				//add edit button next to text
-				//that button opens the localisation window, with the key selected and scrolled to it
-				//Still allow add key button - can add new keys from refs as before
-				
-				
-				//add new key button to localisation window
-				//add delete key button to localisation window
-				//edit key button?
+
+				private enum eKeySortOrder
+				{
+					None,
+					Asc,
+					Desc
+				}
+				private eKeySortOrder _sortOrder;
 
 				#region Menu Stuff
 				private static LocalisationEditorWindow _instance = null;
@@ -92,6 +90,16 @@ namespace Framework
 					_needsRepaint = false;
 					_keys = Localisation.GetStringKeys();
 
+					switch (_sortOrder)
+					{
+						case eKeySortOrder.Asc:
+							Array.Sort(_keys, StringComparer.InvariantCulture);
+							break;
+						case eKeySortOrder.Desc:
+							Array.Sort(_keys, StringComparer.InvariantCulture);
+							Array.Reverse(_keys);
+							break;
+					}
 					EditorGUILayout.BeginVertical();
 					{
 						//Render tool bar
@@ -193,7 +201,7 @@ namespace Framework
 							{
 								if (GUILayout.Button("Key", EditorStyles.toolbarButton))
 								{
-									//Change sort method
+									_sortOrder = _sortOrder == eKeySortOrder.Asc ? eKeySortOrder.Desc : eKeySortOrder.Asc;
 								}
 							}
 							EditorGUILayout.EndHorizontal();
