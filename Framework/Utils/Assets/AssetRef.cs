@@ -163,19 +163,6 @@ namespace Framework
 			}
 			#endregion
 
-			#region ICustomEditable
-#if UNITY_EDITOR
-			public bool RenderObjectProperties(GUIContent label)
-			{
-				bool dataChanged = false;
-
-				
-
-				return dataChanged;
-			}
-#endif
-			#endregion
-
 #if UNITY_EDITOR
 			private T FindEditorAsset()
 			{

@@ -19,13 +19,12 @@ namespace Framework
 
 				private static readonly string kWindowWindowName = "Localisation";
 				private static readonly string kWindowTitle = "Localisation Editor";
-				private static readonly string kWindowTag = "LocalisationEditor.Settings";
+				private static readonly string kEditorPrefKey = "LocalisationEditor.Settings";
 				private static readonly string kKeySizePref = "KeySize";
 				private static readonly string kFontSizePref = "FontSize";
 
 				private static readonly float kMinKeysWidth = 180.0f;
 				private static readonly float kToolBarHeight = 60.0f;
-				
 
 				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
 				private static readonly Color kSelectedButtonsBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 0.75f);
@@ -36,7 +35,6 @@ namespace Framework
 				private static readonly Color kTextBackgroundColorB = new Color(0.98f, 0.98f, 0.98f, 1.0f);
 
 				private static LocalisationEditorWindow _instance = null;
-
 
 				private LocalisationEditorPrefs _editorPrefs;
 				private Rect _resizerRect;
@@ -118,7 +116,7 @@ namespace Framework
 
 				private void Init()
 				{
-					string editorPrefsText = EditorPrefs.GetString(kWindowTag, "");
+					string editorPrefsText = EditorPrefs.GetString(kEditorPrefKey, "");
 					try
 					{
 						_editorPrefs = Serializer.FromString<LocalisationEditorPrefs>(editorPrefsText);
@@ -161,7 +159,7 @@ namespace Framework
 						_textStyle.fontSize = _editorPrefs._fontSize;
 						_textStyle.padding = new RectOffset(4, 4, 4, 4);
 
-						Font font = _editorPrefs._font.LoadAsset();
+						Font font = _editorPrefs._font.GetAsset();
 						if (font == null)
 							_textStyle.font = _keyStyle.font;
 						else
@@ -172,7 +170,7 @@ namespace Framework
 				private void SaveEditorPrefs()
 				{
 					string prefsXml = Serializer.ToString(_editorPrefs);
-					EditorPrefs.SetString(kWindowTag, prefsXml);
+					EditorPrefs.SetString(kEditorPrefKey, prefsXml);
 				}
 
 				private void RenderTitleBar()
@@ -227,12 +225,12 @@ namespace Framework
 
 							GUILayout.Button("Font", EditorStyles.toolbarButton);
 
-							Font currentFont = _editorPrefs._font.LoadAsset();
+							Font currentFont = _editorPrefs._font.GetAsset();
 							Font font = (Font)EditorGUILayout.ObjectField(currentFont, typeof(Font), false);
 
 							if (currentFont != font)
 							{
-								_editorPrefs._font = new AssetRef<Font>(font);
+								_editorPrefs._font = new EditorAssetRef<Font>(font);
 
 								if (font == null)
 									_textStyle.font = _keyStyle.font;

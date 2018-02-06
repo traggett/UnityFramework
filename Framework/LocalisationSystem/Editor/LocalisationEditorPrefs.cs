@@ -14,7 +14,7 @@ namespace Framework
 			{
 				public float _keyWidth = LocalisationEditorWindow.kDefaultKeysWidth;
 				public int _fontSize = LocalisationEditorWindow.kDefaultFontSize;
-				public AssetRef<Font> _font;
+				public EditorAssetRef<Font> _font;
 				public string _selectedKey;
 			}
 		}
