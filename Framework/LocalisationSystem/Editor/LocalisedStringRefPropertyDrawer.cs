@@ -13,6 +13,15 @@ namespace Framework
 			[CustomPropertyDrawer(typeof(LocalisedStringRef))]
 			public class LocalisedStringRefPropertyDrawer : PropertyDrawer
 			{
+				float folderNameWidth = 160.0f;
+				float autoKeySlashFakeWidth = 12.0f;
+				float autoKeySlashWidth = 40.0f;
+				float autoKeybuttonWidth = 42.0f;
+				float editbuttonWidth = 50.0f;
+				float addButtonWidth = 38.0f;
+				float buttonSpace = 2.0f;
+				float fudge = 13.0f;
+
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 				{
 					EditorGUI.BeginProperty(position, label, property);
@@ -69,13 +78,8 @@ namespace Framework
 						//select one to preapend 
 						if (currentKey == 0)
 						{
-							float folderNameWidth = 160.0f;
-							float autoKeySlashFakeWidth = 12.0f;
-							float autoKeySlashWidth = 40.0f;
-							float autoKeybuttonWidth = 42.0f;
-							float addButtonWidth = 38.0f;
-							float buttonSpace = 2.0f;
-							float fudge = 13.0f;
+							
+
 							float keyTextWidth = position.width - EditorUtils.GetLabelWidth() - (folderNameWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth);
 							float buttonWidth = autoKeySlashFakeWidth + keyTextWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth;
 
@@ -163,15 +167,18 @@ namespace Framework
 								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 								float labelWidth = EditorUtils.GetLabelWidth();
 
-								Rect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth, height);
+								Rect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth - editbuttonWidth, height);
+								EditorGUI.SelectableLabel(textPosition, text);
+
+								Rect editTextPosition = new Rect(textPosition.x + textPosition.width, yPos, editbuttonWidth, height);
+
+								if (GUI.Button(editTextPosition, "Edit"))
+								{
+									LocalisationEditorWindow.EditString(localisationkeyProperty.stringValue);
+								}
+
 								yPos += height;
 
-								EditorGUI.BeginChangeCheck();
-								text = EditorGUI.TextArea(textPosition, text);
-								if (EditorGUI.EndChangeCheck())
-								{
-									Localisation.UpdateString(localisationkeyProperty.stringValue, Localisation.GetCurrentLanguage(), text);
-								}
 							}
 						}
 

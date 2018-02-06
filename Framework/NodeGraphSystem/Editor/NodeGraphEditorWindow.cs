@@ -65,6 +65,7 @@ namespace Framework
 
 					string fileName = AssetDatabase.GetAssetPath(textAsset);
 					_instance.Load(fileName);
+					_instance.Focus();
 				}
 
 				public void Load(string fileName)

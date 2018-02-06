@@ -50,7 +50,7 @@ namespace Framework
 				
 				//add new key button to localisation window
 				//add delete key button to localisation window
-
+				//edit key button?
 
 				#region Menu Stuff
 				private static LocalisationEditorWindow _instance = null;
@@ -112,6 +112,14 @@ namespace Framework
 					
 				}
 				#endregion
+
+				public static void EditString(string key)
+				{
+					if (_instance == null)
+						CreateWindow();
+					
+					_instance.SelectKey(key);
+				}
 
 				private void Init()
 				{
@@ -231,15 +239,13 @@ namespace Framework
 
 							for (int i = 1; i < keys.Length; i++)
 							{
+								bool selected = keys[i] == _selectedKey;
 								string text = Localisation.GetUnformattedString(keys[i]);
 								int numLines = StringUtils.GetNumberOfLines(text);
 								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 
 								Color origBackgroundColor = GUI.backgroundColor;
-								GUI.backgroundColor = i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
-
-								if (keys[i] == _selectedKey)
-									GUI.backgroundColor = kSelectedTextLineBackgroundColor;
+								GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
 
 								EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle, GUILayout.Height(height));
 								{
@@ -259,6 +265,26 @@ namespace Framework
 									}
 								}
 								EditorGUILayout.EndHorizontal();
+
+								if (selected)
+								{
+									EditorGUILayout.BeginHorizontal();
+									{
+										if (GUILayout.Button("Edit Key", EditorStyles.toolbarButton))
+										{
+
+										}
+
+										if (GUILayout.Button("Delete", EditorStyles.toolbarButton))
+										{
+											DeleteSelected();
+										}
+
+										GUILayout.FlexibleSpace();
+									}
+									EditorGUILayout.EndHorizontal();
+								}
+
 								GUI.backgroundColor = origBackgroundColor;
 							}
 						}
@@ -364,6 +390,16 @@ namespace Framework
 						_selectedKey = null;
 						_needsRepaint = true;
 					}
+				}
+
+				private void SelectKey(string key)
+				{
+					_selectedKey = key;
+					_needsRepaint = true;
+					//TO DO! set scroll position to show it centered
+
+
+					Focus();
 				}
 			}
 		}
