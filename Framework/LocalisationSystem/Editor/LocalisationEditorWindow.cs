@@ -23,6 +23,7 @@ namespace Framework
 				private static readonly float kToolBarHeight = 60.0f;
 
 				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
+				private static readonly Color kSelectedButtonsBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 0.75f);
 				private static readonly Color kTextLineBackgroundColorA = new Color(0.7f, 0.7f, 0.7f, 1.0f);
 				private static readonly Color kTextLineBackgroundColorB = new Color(0.82f, 0.82f, 0.82f, 1.0f);
 				private static readonly Color kKeyBackgroundColor = new Color(0.9f, 0.9f, 0.9f, 1.0f);
@@ -37,6 +38,7 @@ namespace Framework
 				private string _selectedKey;
 				private Vector2 _scrollPosition;
 				private bool _needsRepaint;
+				private string _addNewKey = string.Empty;
 
 				private GUIStyle _titleStyle;
 				private GUIStyle _keyStyle;
@@ -95,9 +97,6 @@ namespace Framework
 
 						//Render keys / text
 						RenderTable();
-
-						//Render edit buttons
-						RenderEditButtons();
 					}
 					EditorGUILayout.EndVertical();
 
@@ -268,8 +267,11 @@ namespace Framework
 
 								if (selected)
 								{
-									EditorGUILayout.BeginHorizontal();
+									GUI.backgroundColor = kSelectedButtonsBackgroundColor;
+									EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle);
 									{
+										GUI.backgroundColor = origBackgroundColor;
+
 										if (GUILayout.Button("Edit Key", EditorStyles.toolbarButton))
 										{
 
@@ -287,25 +289,61 @@ namespace Framework
 
 								GUI.backgroundColor = origBackgroundColor;
 							}
+
+							RenderAddKey();
 						}
 						EditorGUILayout.EndVertical();
 					}
 					EditorGUILayout.EndScrollView();
 				}
 
-				private void RenderEditButtons()
+				private void RenderAddKey()
 				{
-					//Load save
-					EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+					EditorGUILayout.BeginHorizontal();
 					{
-						if (GUILayout.Button("New", EditorStyles.toolbarButton))
+						if (GUILayout.Button("Add New", EditorStyles.toolbarButton, GUILayout.Width(_keyWidth)))
 						{
-							
+							if (!Localisation.IsKeyInTable(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
+							{
+								Localisation.UpdateString(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
+							}
 						}
-
-						if (GUILayout.Button("Delete", EditorStyles.toolbarButton))
+						
+						string[] folders = Localisation.GetStringFolders();
+						int currentFolderIndex = 0;
+						string currentFolder;
+						for (int i = 0; i < folders.Length; i++)
 						{
-							DeleteSelected();
+							//To do - if the first bit of our folder exists then thats the current folder eg Roles/NewRole/Name - Roles/
+							if (folders[i] == Localisation.GetFolderName(_addNewKey))
+							{
+								currentFolderIndex = i;
+								break;
+							}
+						}
+						
+						EditorGUI.BeginChangeCheck();
+						int newFolderIndex = EditorGUILayout.Popup(currentFolderIndex, folders);
+						currentFolder = newFolderIndex == 0 ? "" : folders[newFolderIndex];
+						if (EditorGUI.EndChangeCheck())
+						{
+							if (newFolderIndex != 0)
+								_addNewKey = currentFolder + "/" + Localisation.GetKeyWithoutFolder(_addNewKey);
+							else if (currentFolderIndex != 0)
+								_addNewKey = Localisation.GetKeyWithoutFolder(_addNewKey);
+						}
+						
+						EditorGUILayout.LabelField("/", GUILayout.Width(8));
+
+						if (newFolderIndex != 0)
+						{
+							string newAddKey = EditorGUILayout.TextField(Localisation.GetKeyWithoutFolder(_addNewKey));
+							_addNewKey = currentFolder + "/" + newAddKey;
+						}
+						else
+						{
+							string newAddKey = EditorGUILayout.TextField(_addNewKey);
+							_addNewKey = newAddKey;
 						}
 
 						GUILayout.FlexibleSpace();

@@ -104,16 +104,10 @@ namespace Framework
 							//Only display if have a valid key
 							if (!string.IsNullOrEmpty(currentKey) && Localisation.IsKeyInTable(currentKey))
 							{
-								EditorGUI.BeginChangeCheck();
-								string text;
 								if (style != null)
-									text = EditorGUILayout.TextArea(Localisation.GetUnformattedString(currentKey), style);
+									EditorGUILayout.SelectableLabel(Localisation.GetUnformattedString(currentKey), style);
 								else
-									text = EditorGUILayout.TextArea(Localisation.GetUnformattedString(currentKey));
-								if (EditorGUI.EndChangeCheck())
-								{
-									Localisation.UpdateString(currentKey, Localisation.GetCurrentLanguage(), text);
-								}
+									EditorGUILayout.SelectableLabel(Localisation.GetUnformattedString(currentKey));
 							}
 						}
 
