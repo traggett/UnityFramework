@@ -132,6 +132,24 @@ namespace Framework
 					}
 				}
 
+				private static GUIStyle _readOnlyTextBoxStyle = null;
+				public static GUIStyle ReadOnlyTextBoxStyle
+				{
+					get
+					{
+						if (_readOnlyTextBoxStyle == null)
+						{
+							_readOnlyTextBoxStyle = new GUIStyle(EditorStyles.textArea);
+							_readOnlyTextBoxStyle.fontStyle = FontStyle.Italic;
+							_readOnlyTextBoxStyle.normal.textColor = new Color(0, 0, 0, 0.6f);
+							_readOnlyTextBoxStyle.active.textColor = _readOnlyTextBoxStyle.normal.textColor;
+							_readOnlyTextBoxStyle.focused.textColor = _readOnlyTextBoxStyle.normal.textColor;
+						}
+
+						return _readOnlyTextBoxStyle;
+					}
+				}
+
 				private static GUIStyle _inspectorHeaderStyle = null;
 				public static GUIStyle InspectorHeaderStyle
 				{

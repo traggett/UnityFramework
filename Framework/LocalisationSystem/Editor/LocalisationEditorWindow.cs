@@ -4,6 +4,7 @@ using System;
 
 namespace Framework
 {
+	using Serialization;
 	using Utils;
 	using Utils.Editor;
 
@@ -15,7 +16,7 @@ namespace Framework
 			{
 				private static readonly string kWindowWindowName = "Localisation";
 				private static readonly string kWindowTitle = "Localisation Editor";
-				private static readonly string kWindowTag = "Localisation";
+				private static readonly string kWindowTag = "LocalisationEditor.Settings";
 				private static readonly string kKeySizePref = "KeySize";
 				private static readonly string kFontSizePref = "FontSize";
 
@@ -34,13 +35,12 @@ namespace Framework
 
 				private static LocalisationEditorWindow _instance = null;
 
+
+				private LocalisationEditorPrefs _editorPrefs;
 				private Rect _resizerRect;
 				private bool _resizing;
 				private int _controlID;
-				private int _fontSize = kDefaultFontSize;
 				private float _resizingOffset;
-				private float _keyWidth;
-				private string _selectedKey;
 				private Vector2 _scrollPosition;
 				private bool _needsRepaint;
 				private string _addNewKey = string.Empty;
@@ -116,9 +116,25 @@ namespace Framework
 
 				private void Init()
 				{
+					string editorPrefsText = EditorPrefs.GetString(kWindowTag, "");
+					try
+					{
+						_editorPrefs = Serializer.FromString<LocalisationEditorPrefs>(editorPrefsText);
+					}
+					catch
+					{
+						_editorPrefs = null;
+					}
+
+					if (_editorPrefs == null)
+					{
+						_editorPrefs = new LocalisationEditorPrefs();
+						_editorPrefs._keyWidth = kDefaultKeysWidth;
+						_editorPrefs._fontSize = kDefaultFontSize;
+						SaveEditorPrefs();
+					}
+
 					_controlID = GUIUtility.GetControlID(FocusType.Passive);
-					_keyWidth = EditorPrefs.GetFloat(kWindowTag+"."+ kKeySizePref, kDefaultKeysWidth);
-					_fontSize = EditorPrefs.GetInt(kWindowTag + "." + kFontSizePref, kDefaultFontSize);
 				}
 
 				private void InitGUIStyles()
@@ -134,7 +150,8 @@ namespace Framework
 					{
 						_keyStyle = new GUIStyle(EditorStyles.helpBox);
 						_keyStyle.margin = new RectOffset(0, 0, 0, 0);
-						_keyStyle.fontSize = _fontSize;
+						_keyStyle.fontSize = _editorPrefs._fontSize;
+						_keyStyle.padding.left = 8;
 					}
 
 					if (_textStyle == null)
@@ -142,8 +159,21 @@ namespace Framework
 						_textStyle = new GUIStyle(EditorStyles.textArea);
 						_textStyle.margin = new RectOffset(1, 1, 1, 1);
 						_textStyle.font = _keyStyle.font;
-						_textStyle.fontSize = _fontSize;
+						_textStyle.fontSize = _editorPrefs._fontSize;
+						_textStyle.padding = new RectOffset(4, 4, 4, 4);
+
+						Font font = _editorPrefs._font.LoadAsset();
+						if (font == null)
+							_textStyle.font = _keyStyle.font;
+						else
+							_textStyle.font = font;
 					}
+				}
+
+				private void SaveEditorPrefs()
+				{
+					string prefsXml = Serializer.ToString(_editorPrefs);
+					EditorPrefs.SetString(kWindowTag, prefsXml);
 				}
 
 				private void RenderTitleBar()
@@ -179,56 +209,65 @@ namespace Framework
 
 							GUILayout.Button("Scale", EditorStyles.toolbarButton);
 
-							int fontSize = EditorGUILayout.IntSlider(_fontSize, 8, 16);
+							int fontSize = EditorGUILayout.IntSlider(_editorPrefs._fontSize, 8, 16);
 
 							if (GUILayout.Button("Reset Scale", EditorStyles.toolbarButton))
 							{
 								fontSize = kDefaultFontSize;
 							}
 
-							if (_fontSize != fontSize)
+							if (_editorPrefs._fontSize != fontSize)
 							{
-								_fontSize = fontSize;
-								_keyStyle.fontSize = _fontSize;
-								_textStyle.fontSize = _fontSize;
-								EditorPrefs.SetInt(kWindowTag + "." + kFontSizePref, _fontSize);
+								_editorPrefs._fontSize = fontSize;
+								_keyStyle.fontSize = _editorPrefs._fontSize;
+								_textStyle.fontSize = _editorPrefs._fontSize;
+								SaveEditorPrefs();
 							}
-							GUILayout.FlexibleSpace();
 
+							EditorGUILayout.Separator();
+
+							GUILayout.Button("Font", EditorStyles.toolbarButton);
+
+							Font currentFont = _editorPrefs._font.LoadAsset();
+							Font font = (Font)EditorGUILayout.ObjectField(currentFont, typeof(Font), false);
+
+							if (currentFont != font)
+							{
+								_editorPrefs._font = new AssetRef<Font>(font);
+
+								if (font == null)
+									_textStyle.font = _keyStyle.font;
+								else
+									_textStyle.font = font;
+
+								SaveEditorPrefs();
+							}
 
 							GUILayout.FlexibleSpace();
 						}
 						EditorGUILayout.EndHorizontal();
 
 						//Headers
-						EditorGUILayout.BeginHorizontal();
+						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
 							//Key
-							EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Width(_keyWidth));
+							if (GUILayout.Button("Key", EditorStyles.toolbarButton, GUILayout.Width(_editorPrefs._keyWidth - 14)))
 							{
-								if (GUILayout.Button("Key", EditorStyles.toolbarButton))
-								{
-									_sortOrder = _sortOrder == eKeySortOrder.Asc ? eKeySortOrder.Desc : eKeySortOrder.Asc;
-								}
+								_sortOrder = _sortOrder == eKeySortOrder.Asc ? eKeySortOrder.Desc : eKeySortOrder.Asc;
 							}
-							EditorGUILayout.EndHorizontal();
 
 							//Resizer
 							RenderResizer();
 
 							//Text
-							EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+							EditorGUI.BeginChangeCheck();
+							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(Localisation.GetCurrentLanguage(), EditorStyles.toolbarButton);
+							if (EditorGUI.EndChangeCheck())
 							{
-								EditorGUI.BeginChangeCheck();
-								SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(Localisation.GetCurrentLanguage(), EditorStyles.toolbarButton);
-								if (EditorGUI.EndChangeCheck())
-								{
-									Localisation.SetLanguage(language);
-								}
-
-								GUILayout.FlexibleSpace();
+								Localisation.SetLanguage(language);
 							}
-							EditorGUILayout.EndHorizontal();
+
+							GUILayout.FlexibleSpace();
 						}
 						EditorGUILayout.EndHorizontal();
 					}
@@ -237,8 +276,7 @@ namespace Framework
 
 				private void RenderResizer()
 				{
-					GUILayout.Box(string.Empty, EditorStyles.toolbar, GUILayout.Width(1.0f), GUILayout.ExpandHeight(true));
-					
+					GUILayout.Box(string.Empty, EditorStyles.toolbar, GUILayout.Width(8.0f), GUILayout.ExpandHeight(true));
 					_resizerRect = GUILayoutUtility.GetLastRect();
 					_resizerRect.x -= 8;
 					_resizerRect.width += 16;
@@ -255,7 +293,7 @@ namespace Framework
 
 							for (int i = 1; i < keys.Length; i++)
 							{
-								bool selected = keys[i] == _selectedKey;
+								bool selected = keys[i] == _editorPrefs._selectedKey;
 								string text = Localisation.GetUnformattedString(keys[i]);
 								int numLines = StringUtils.GetNumberOfLines(text);
 								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
@@ -270,7 +308,7 @@ namespace Framework
 									if (selected && _editingKeyName)
 									{
 										EditorGUI.BeginChangeCheck();
-										string key = EditorGUILayout.DelayedTextField(keys[i], _textStyle, GUILayout.Width(_keyWidth), GUILayout.ExpandHeight(true));
+										string key = EditorGUILayout.DelayedTextField(keys[i], _textStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true));
 										if (EditorGUI.EndChangeCheck())
 										{
 											_editingKeyName = false;
@@ -280,9 +318,9 @@ namespace Framework
 									}
 									else
 									{
-										if (GUILayout.Button(keys[i], _keyStyle, GUILayout.Width(_keyWidth), GUILayout.ExpandHeight(true)))
+										if (GUILayout.Button(keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true)))
 										{
-											_selectedKey = keys[i];
+											_editorPrefs._selectedKey = keys[i];
 											_editingKeyName = false;
 											EditorGUI.FocusTextInControl(string.Empty);
 										}
@@ -334,7 +372,7 @@ namespace Framework
 
 					EditorGUILayout.BeginHorizontal();
 					{
-						if (GUILayout.Button("Add New", EditorStyles.toolbarButton, GUILayout.Width(_keyWidth)))
+						if (GUILayout.Button("Add New", EditorStyles.toolbarButton, GUILayout.Width(_editorPrefs._keyWidth)))
 						{
 							if (!Localisation.IsKeyInTable(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
 							{
@@ -429,9 +467,9 @@ namespace Framework
 							{
 								if (_resizing)
 								{
-									_keyWidth += (inputEvent.mousePosition.x - _resizingOffset);
-									_keyWidth = Math.Max(_keyWidth, kMinKeysWidth);
-									EditorPrefs.SetFloat(kWindowTag + "." + kKeySizePref, _keyWidth);
+									_editorPrefs._keyWidth += (inputEvent.mousePosition.x - _resizingOffset);
+									_editorPrefs._keyWidth = Math.Max(_editorPrefs._keyWidth, kMinKeysWidth);
+									SaveEditorPrefs();
 
 									_resizingOffset = inputEvent.mousePosition.x;
 
@@ -457,17 +495,20 @@ namespace Framework
 
 				private void DeleteSelected()
 				{
-					if (!string.IsNullOrEmpty(_selectedKey))
+					if (!string.IsNullOrEmpty(_editorPrefs._selectedKey))
 					{
-						Localisation.DeleteString(_selectedKey);
-						_selectedKey = null;
+						Localisation.DeleteString(_editorPrefs._selectedKey);
+						_editorPrefs._selectedKey = null;
+						SaveEditorPrefs();
 						_needsRepaint = true;
 					}
 				}
 
 				private void SelectKey(string key)
 				{
-					_selectedKey = key;
+					_editorPrefs._selectedKey = key;
+					SaveEditorPrefs();
+
 					_needsRepaint = true;
 
 					string[] keys = GetKeys();
@@ -476,7 +517,7 @@ namespace Framework
 
 					for (int i = 1; i < keys.Length; i++)
 					{
-						if (keys[i] == _selectedKey)
+						if (keys[i] == _editorPrefs._selectedKey)
 							break;
 
 						string text = Localisation.GetUnformattedString(keys[i]);

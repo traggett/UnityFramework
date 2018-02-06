@@ -32,10 +32,10 @@ namespace Framework
 
 					Rect foldoutPosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
 
-					property.isExpanded = EditorGUI.Foldout(foldoutPosition, property.isExpanded, property.displayName + " (Localised String)");
+					property.isExpanded = !EditorGUI.Foldout(foldoutPosition, !property.isExpanded, property.displayName + " (Localised String)");
 					yPos += EditorGUIUtility.singleLineHeight;
 
-					if (property.isExpanded)
+					if (!property.isExpanded)
 					{
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -169,7 +169,7 @@ namespace Framework
 								float labelWidth = EditorUtils.GetLabelWidth();
 
 								Rect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth - editbuttonWidth, height);
-								EditorGUI.SelectableLabel(textPosition, text);
+								EditorGUI.SelectableLabel(textPosition, text, EditorUtils.ReadOnlyTextBoxStyle);
 
 								Rect editTextPosition = new Rect(textPosition.x + textPosition.width, yPos, editbuttonWidth, EditorGUIUtility.singleLineHeight);
 
@@ -191,7 +191,7 @@ namespace Framework
 
 				public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 				{
-					if (property.isExpanded)
+					if (!property.isExpanded)
 					{
 						SerializedProperty localisationkeyProperty = property.FindPropertyRelative("_localisationKey");
 						
