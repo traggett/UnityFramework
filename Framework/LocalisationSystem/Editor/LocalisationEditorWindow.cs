@@ -21,7 +21,8 @@ namespace Framework
 
 				private static readonly float kMinKeysWidth = 180.0f;
 				private static readonly float kToolBarHeight = 60.0f;
-				private static readonly int kDefaultFontSize = 10;
+				private static readonly int kDefaultFontSize = 12;
+				private static readonly float kDefaultKeysWidth = 380.0f;
 
 				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
 				private static readonly Color kSelectedButtonsBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 0.75f);
@@ -29,14 +30,16 @@ namespace Framework
 				private static readonly Color kTextLineBackgroundColorB = new Color(0.82f, 0.82f, 0.82f, 1.0f);
 				private static readonly Color kKeyBackgroundColor = new Color(0.9f, 0.9f, 0.9f, 1.0f);
 				private static readonly Color kTextBackgroundColorA = new Color(0.9f, 0.9f, 0.9f, 1.0f);
-				private static readonly Color kTextBackgroundColorB = new Color(0.98f, 0.98f, 0.98f, 1.0f); 
+				private static readonly Color kTextBackgroundColorB = new Color(0.98f, 0.98f, 0.98f, 1.0f);
+
+				private static LocalisationEditorWindow _instance = null;
 
 				private Rect _resizerRect;
 				private bool _resizing;
 				private int _controlID;
 				private int _fontSize = kDefaultFontSize;
 				private float _resizingOffset;
-				private float _keyWidth = 200.0f;
+				private float _keyWidth;
 				private string _selectedKey;
 				private Vector2 _scrollPosition;
 				private bool _needsRepaint;
@@ -56,8 +59,6 @@ namespace Framework
 				private eKeySortOrder _sortOrder;
 
 				#region Menu Stuff
-				private static LocalisationEditorWindow _instance = null;
-
 				[MenuItem("Localisation/Localisation Table")]
 				private static void CreateWindow()
 				{
@@ -65,26 +66,9 @@ namespace Framework
 					_instance = (LocalisationEditorWindow)GetWindow(typeof(LocalisationEditorWindow), false, kWindowWindowName);
 					_instance.Init();
 				}
-				
-				[MenuItem("Localisation/Reload Strings")]
-				private static void MenuReloadStrings()
-				{
-					Localisation.LoadStrings();
-				}
-
-				[MenuItem("Localisation/Save Strings")]
-				private static void MenuSaveStrings()
-				{
-					Localisation.SaveStrings();
-				}
 				#endregion		
 
 				#region EditorWindow
-				void Update()
-				{
-					
-				}
-
 				void OnGUI()
 				{
 					InitGUIStyles();
@@ -133,7 +117,7 @@ namespace Framework
 				private void Init()
 				{
 					_controlID = GUIUtility.GetControlID(FocusType.Passive);
-					_keyWidth = EditorPrefs.GetFloat(kWindowTag+"."+ kKeySizePref, kMinKeysWidth);
+					_keyWidth = EditorPrefs.GetFloat(kWindowTag+"."+ kKeySizePref, kDefaultKeysWidth);
 					_fontSize = EditorPrefs.GetInt(kWindowTag + "." + kFontSizePref, kDefaultFontSize);
 				}
 
