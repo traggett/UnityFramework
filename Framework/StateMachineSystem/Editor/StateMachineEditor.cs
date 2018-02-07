@@ -67,7 +67,7 @@ namespace Framework
 					_style = style;
 					_timelineEditorTimeFormat = timeFormat;
 
-					string editorPrefsText = EditorPrefs.GetString(_editorPrefsTag, "");
+					string editorPrefsText = ProjectEditorPrefs.GetString(_editorPrefsTag, "");
 					try
 					{
 						_editorPrefs = Serializer.FromString<StateMachineEditorPrefs>(editorPrefsText);
@@ -393,7 +393,7 @@ namespace Framework
 				private void SaveEditorPrefs()
 				{
 					string prefsXml = Serializer.ToString(_editorPrefs);
-					EditorPrefs.SetString(_editorPrefsTag, prefsXml);
+					ProjectEditorPrefs.SetString(_editorPrefsTag, prefsXml);
 				}
 
 				private StateMachine ConvertToStateMachine()

@@ -50,7 +50,7 @@ namespace Framework
 					_title = title;
 					_editorPrefsTag = editorPrefsTag;
 
-					string editorPrefsText = EditorPrefs.GetString(_editorPrefsTag, "");
+					string editorPrefsText = ProjectEditorPrefs.GetString(_editorPrefsTag, "");
 					_editorPrefs = Serializer.FromString<NodeGraphEditorPrefs>(editorPrefsText);
 
 					if (_editorPrefs == null)
@@ -460,7 +460,7 @@ namespace Framework
 				private void SaveEditorPrefs()
 				{
 					string prefsXml = Serializer.ToString(_editorPrefs);
-					EditorPrefs.SetString(_editorPrefsTag, prefsXml);
+					ProjectEditorPrefs.SetString(_editorPrefsTag, prefsXml);
 				}
 
 				private void CreateViews()

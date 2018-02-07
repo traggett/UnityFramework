@@ -127,7 +127,7 @@ namespace Framework
 
 				private void Init()
 				{
-					string editorPrefsText = EditorPrefs.GetString(kEditorPrefKey, "");
+					string editorPrefsText = ProjectEditorPrefs.GetString(kEditorPrefKey, "");
 					try
 					{
 						_editorPrefs = Serializer.FromString<LocalisationEditorPrefs>(editorPrefsText);
@@ -181,7 +181,7 @@ namespace Framework
 				private void SaveEditorPrefs()
 				{
 					string prefsXml = Serializer.ToString(_editorPrefs);
-					EditorPrefs.SetString(kEditorPrefKey, prefsXml);
+					ProjectEditorPrefs.SetString(kEditorPrefKey, prefsXml);
 				}
 
 				private void RenderTitleBar()
