@@ -71,7 +71,7 @@ namespace Framework
 				#region EditorWindow
 				void OnGUI()
 				{
-					InitGUIStyles();
+					CreateEditor();
 
 					_needsRepaint = false;
 
@@ -112,6 +112,17 @@ namespace Framework
 						CreateWindow();
 					
 					_instance.SelectKey(key);
+				}
+
+				private void CreateEditor()
+				{
+					if (_instance == null || _instance._editorPrefs == null)
+					{
+						_instance = (LocalisationEditorWindow)GetWindow(typeof(LocalisationEditorWindow), false, kWindowWindowName);
+						_instance.Init();
+					}
+
+					InitGUIStyles();
 				}
 
 				private void Init()
