@@ -71,7 +71,7 @@ namespace Framework
 				#region EditorWindow
 				void OnGUI()
 				{
-					CreateEditor();
+					InitGUIStyles();
 
 					_needsRepaint = false;
 
@@ -114,20 +114,9 @@ namespace Framework
 					_instance.SelectKey(key);
 				}
 
-				private void CreateEditor()
-				{
-					if (_instance == null || _instance._editorPrefs == null)
-					{
-						_instance = (LocalisationEditorWindow)GetWindow(typeof(LocalisationEditorWindow), false, kWindowWindowName);
-						_instance.Init();
-					}
-
-					InitGUIStyles();
-				}
-
 				private void Init()
 				{
-					string editorPrefsText = ProjectEditorPrefs.GetString(kEditorPrefKey, "");
+					string editorPrefsText = EditorPrefs.GetString(kEditorPrefKey, "");
 					try
 					{
 						_editorPrefs = Serializer.FromString<LocalisationEditorPrefs>(editorPrefsText);
@@ -158,7 +147,7 @@ namespace Framework
 					{
 						_keyStyle = new GUIStyle(EditorStyles.helpBox);
 						_keyStyle.margin = new RectOffset(0, 0, 0, 0);
-						_keyStyle.fontSize = _editorPrefs._fontSize;
+P
 						_keyStyle.padding.left = 8;
 					}
 
@@ -181,7 +170,7 @@ namespace Framework
 				private void SaveEditorPrefs()
 				{
 					string prefsXml = Serializer.ToString(_editorPrefs);
-					ProjectEditorPrefs.SetString(kEditorPrefKey, prefsXml);
+					EditorPrefs.SetString(kEditorPrefKey, prefsXml);
 				}
 
 				private void RenderTitleBar()
