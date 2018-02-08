@@ -58,6 +58,9 @@ namespace Framework
 				}
 				private eKeySortOrder _sortOrder;
 
+				//Havve key for glypths add button for each char in it at bottom which inserts them into local
+
+
 				#region Menu Stuff
 				[MenuItem("Window/Localisation Editor")]
 				private static void CreateWindow()
