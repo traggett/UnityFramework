@@ -280,10 +280,13 @@ namespace Framework
 			{
 				string folder = "";
 
-				int lastSlash = key.LastIndexOf('/');
-				if (lastSlash > 0)
+				if (!string.IsNullOrEmpty(key))
 				{
-					folder = key.Substring(0, lastSlash);
+					int lastSlash = key.LastIndexOf('/');
+					if (lastSlash > 0)
+					{
+						folder = key.Substring(0, lastSlash);
+					}
 				}
 
 				return folder;
@@ -293,10 +296,14 @@ namespace Framework
 			{
 				string keyWithoutFolder = key;
 
-				int lastSlash = key.LastIndexOf('/');
-				if (lastSlash > 0)
+				if (!string.IsNullOrEmpty(key))
 				{
-					keyWithoutFolder = key.Substring(lastSlash + 1, key.Length - lastSlash - 1);
+					int lastSlash = key.LastIndexOf('/');
+					if (lastSlash > 0)
+					{
+						keyWithoutFolder = key.Substring(lastSlash + 1, key.Length - lastSlash - 1);
+					}
+
 				}
 
 				return keyWithoutFolder;

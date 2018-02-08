@@ -140,10 +140,9 @@ namespace Framework
 						if (_readOnlyTextBoxStyle == null)
 						{
 							_readOnlyTextBoxStyle = new GUIStyle(EditorStyles.textArea);
-							_readOnlyTextBoxStyle.fontStyle = FontStyle.Italic;
-							_readOnlyTextBoxStyle.normal.textColor = new Color(0, 0, 0, 0.6f);
-							_readOnlyTextBoxStyle.active.textColor = _readOnlyTextBoxStyle.normal.textColor;
-							_readOnlyTextBoxStyle.focused.textColor = _readOnlyTextBoxStyle.normal.textColor;
+							//_readOnlyTextBoxStyle.normal.textColor = new Color(0, 0, 0, 0.6f);
+							//_readOnlyTextBoxStyle.active.textColor = _readOnlyTextBoxStyle.normal.textColor;
+							//_readOnlyTextBoxStyle.focused.textColor = _readOnlyTextBoxStyle.normal.textColor;
 						}
 
 						return _readOnlyTextBoxStyle;
@@ -348,7 +347,7 @@ namespace Framework
 
 				public static float GetLabelWidth()
 				{
-					return EditorGUIUtility.labelWidth - 4.0f - (EditorGUI.indentLevel * 13.0f);
+					return EditorGUIUtility.labelWidth - 4.0f - (EditorGUI.indentLevel * 14.0f);
 				}
 
 				private static MethodInfo _editorGUIGradient_MethodInfo;

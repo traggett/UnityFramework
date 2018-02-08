@@ -59,7 +59,7 @@ namespace Framework
 				private eKeySortOrder _sortOrder;
 
 				#region Menu Stuff
-				[MenuItem("Localisation/Localisation Table")]
+				[MenuItem("Window/Localisation Editor")]
 				private static void CreateWindow()
 				{
 					// Get existing open window or if none, make a new one:
@@ -259,13 +259,17 @@ namespace Framework
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
 							//Key
-							if (GUILayout.Button("Key", EditorStyles.toolbarButton, GUILayout.Width(_editorPrefs._keyWidth - 14)))
+							if (GUILayout.Button("Key", EditorStyles.toolbarButton, GUILayout.Width(_editorPrefs._keyWidth - 11)))
 							{
-								_sortOrder = _sortOrder == eKeySortOrder.Asc ? eKeySortOrder.Desc : eKeySortOrder.Asc;
+								_sortOrder = _sortOrder == eKeySortOrder.Desc ? eKeySortOrder.Asc : eKeySortOrder.Desc;
 							}
+
+							EditorGUILayout.Separator();
 
 							//Resizer
 							RenderResizer();
+
+							//EditorGUILayout.Separator();
 
 							//Text
 							EditorGUI.BeginChangeCheck();
@@ -284,7 +288,7 @@ namespace Framework
 
 				private void RenderResizer()
 				{
-					GUILayout.Box(string.Empty, EditorStyles.toolbar, GUILayout.Width(8.0f), GUILayout.ExpandHeight(true));
+					GUILayout.Box(string.Empty, EditorStyles.toolbar, GUILayout.Width(4.0f), GUILayout.ExpandHeight(true));
 					_resizerRect = GUILayoutUtility.GetLastRect();
 					_resizerRect.x -= 8;
 					_resizerRect.width += 16;
@@ -514,7 +518,10 @@ namespace Framework
 
 				private void SelectKey(string key)
 				{
+					Focus();
+
 					_editorPrefs._selectedKey = key;
+					EditorGUI.FocusTextInControl(string.Empty);
 					SaveEditorPrefs();
 
 					_needsRepaint = true;
@@ -537,8 +544,6 @@ namespace Framework
 
 					float scrollAreaHeight = this.position.height - kToolBarHeight - 16;
 					_scrollPosition.y = Mathf.Max(toSelected - scrollAreaHeight * 0.5f, 0.0f);
-
-					Focus();
 				}
 
 				private string[] GetKeys()

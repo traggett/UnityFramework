@@ -13,14 +13,14 @@ namespace Framework
 			[CustomPropertyDrawer(typeof(LocalisedStringRef))]
 			public class LocalisedStringRefPropertyDrawer : PropertyDrawer
 			{
-				float folderNameWidth = 160.0f;
-				float autoKeySlashFakeWidth = 12.0f;
-				float autoKeySlashWidth = 40.0f;
-				float autoKeybuttonWidth = 42.0f;
-				float editbuttonWidth = 50.0f;
-				float addButtonWidth = 38.0f;
-				float buttonSpace = 2.0f;
-				float fudge = 13.0f;
+				private static readonly float folderNameWidth = 160.0f;
+				private static readonly float autoKeySlashFakeWidth = 12.0f;
+				private static readonly float autoKeySlashWidth = 40.0f;
+				private static readonly float autoKeybuttonWidth = 42.0f;
+				private static readonly float editbuttonWidth = 50.0f;
+				private static readonly float addButtonWidth = 38.0f;
+				private static readonly float buttonSpace = 2.0f;
+				private static readonly float fudge = 13.0f;
 
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 				{
@@ -74,12 +74,8 @@ namespace Framework
 						}
 
 						//Draw button for adding new key
-						//show drop downs for where to put the key - enum list of all current folders + empty.
-						//select one to preapend 
 						if (currentKey == 0)
 						{
-							
-
 							float keyTextWidth = position.width - EditorUtils.GetLabelWidth() - (folderNameWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth);
 							float buttonWidth = autoKeySlashFakeWidth + keyTextWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth;
 
@@ -89,7 +85,6 @@ namespace Framework
 
 							string[] folders = Localisation.GetStringFolders();
 							int currentFolderIndex = 0;
-							string currentFolder;
 							for (int i = 0; i < folders.Length; i++)
 							{
 								//To do - if the first bit of our folder exists then thats the current folder eg Roles/NewRole/Name - Roles/
@@ -101,7 +96,7 @@ namespace Framework
 							}
 							EditorGUI.BeginChangeCheck();
 							int newFolderIndex = EditorGUI.Popup(folderText, "New Key", currentFolderIndex, folders);
-							currentFolder = newFolderIndex == 0 ? "" : folders[newFolderIndex];
+							string currentFolder = newFolderIndex == 0 ? "" : folders[newFolderIndex];
 							if (EditorGUI.EndChangeCheck())
 							{
 								if (newFolderIndex != 0)
@@ -168,10 +163,11 @@ namespace Framework
 								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 								float labelWidth = EditorUtils.GetLabelWidth();
 
-								Rect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth - editbuttonWidth, height);
-								EditorGUI.SelectableLabel(textPosition, text, EditorUtils.ReadOnlyTextBoxStyle);
-
-								Rect editTextPosition = new Rect(textPosition.x + textPosition.width, yPos, editbuttonWidth, EditorGUIUtility.singleLineHeight);
+								Rect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth - editbuttonWidth - buttonSpace, height);
+								EditorGUI.BeginDisabledGroup(true);
+								EditorGUI.TextArea(textPosition, text);
+								EditorGUI.EndDisabledGroup();
+								Rect editTextPosition = new Rect(textPosition.x + textPosition.width + buttonSpace, yPos, editbuttonWidth, EditorGUIUtility.singleLineHeight);
 
 								if (GUI.Button(editTextPosition, "Edit"))
 								{
