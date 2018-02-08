@@ -25,6 +25,7 @@ namespace Framework
 
 				private static readonly float kMinKeysWidth = 180.0f;
 				private static readonly float kToolBarHeight = 60.0f;
+				private static readonly float kBottomBarHeight = 16.0f;
 
 				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
 				private static readonly Color kSelectedButtonsBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 0.75f);
@@ -83,7 +84,7 @@ namespace Framework
 					{
 						RenderTitleBar();
 						RenderTable();
-						RenderAddKey();
+						RenderBottomBar();
 					}
 					EditorGUILayout.EndVertical();
 
@@ -311,12 +312,11 @@ namespace Framework
 								bool selected = keys[i] == _editorPrefs._selectedKey;
 								string text = Localisation.GetUnformattedString(keys[i]);
 								int numLines = StringUtils.GetNumberOfLines(text);
-								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
-
+								
 								Color origBackgroundColor = GUI.backgroundColor;
 								GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
 
-								EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle, GUILayout.Height(height));
+								EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle);
 								{
 									GUI.backgroundColor = kKeyBackgroundColor;
 
@@ -381,11 +381,11 @@ namespace Framework
 					EditorGUILayout.EndScrollView();
 				}
 
-				private void RenderAddKey()
+				private void RenderBottomBar()
 				{
 					EditorGUILayout.Separator();
 
-					EditorGUILayout.BeginHorizontal();
+					EditorGUILayout.BeginHorizontal(GUILayout.Height(kBottomBarHeight));
 					{
 						if (GUILayout.Button("Add New", EditorStyles.toolbarButton, GUILayout.Width(_editorPrefs._keyWidth)))
 						{
@@ -405,7 +405,7 @@ namespace Framework
 							{
 								currentFolderIndex = i;
 								break;
-							}
+							} 
 						}
 						
 						EditorGUI.BeginChangeCheck();
@@ -539,14 +539,15 @@ namespace Framework
 							break;
 
 						string text = Localisation.GetUnformattedString(keys[i]);
-						int numLines = StringUtils.GetNumberOfLines(text);
-						float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 
-						toSelected += height;
+						Vector2 textSize = _keyStyle.CalcSize(new GUIContent(text));
+						Vector2 keySize = _textStyle.CalcSize(new GUIContent(keys[i]));
+
+						toSelected += Mathf.Max(keySize.y, textSize.y);
 					}
 
-					float scrollAreaHeight = this.position.height - kToolBarHeight - 16;
-					_scrollPosition.y = Mathf.Max(toSelected - scrollAreaHeight * 0.5f, 0.0f);
+					float scrollAreaHeight = this.position.height - kToolBarHeight - kBottomBarHeight;
+					_scrollPosition.y = Mathf.Max(toSelected - scrollAreaHeight * 0.4f, 0.0f);
 				}
 
 				private string[] GetKeys()
