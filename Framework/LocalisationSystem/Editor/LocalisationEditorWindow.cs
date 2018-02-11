@@ -375,6 +375,8 @@ namespace Framework
 
 								GUI.backgroundColor = origBackgroundColor;
 							}
+
+							GUILayout.FlexibleSpace();
 						}
 						EditorGUILayout.EndVertical();
 					}
