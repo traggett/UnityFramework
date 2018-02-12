@@ -22,6 +22,7 @@ namespace Framework
 
 				public static readonly float kMaxBorderSize = 2.0f;
 				public static readonly float kStateSeperationSize = 4.0f;
+				public static readonly float kLabelBottom = 4.0f;
 				public static readonly float kLabelPadding = 8.0f;
 				public static readonly float kShadowSize = 4.0f;
 				public static readonly Color kShadowColor = new Color(0.0f, 0.0f, 0.0f, 0.35f);
@@ -143,7 +144,7 @@ namespace Framework
 					Vector2 labelDimensions = GetLabelSize(labelStyle);
 
 					float areaWidth = Mathf.Max(stateIdDimensions.x, labelDimensions.x) + kLabelPadding + kShadowSize + (kMaxBorderSize * 2.0f);
-					float areaHeight = stateIdDimensions.y + labelDimensions.y + kStateSeperationSize + kShadowSize + (kMaxBorderSize * 2.0f);
+					float areaHeight = stateIdDimensions.y + kStateSeperationSize + labelDimensions.y + kLabelBottom + kShadowSize + (kMaxBorderSize * 2.0f);
 
 					_rect.position = GetPosition();
 

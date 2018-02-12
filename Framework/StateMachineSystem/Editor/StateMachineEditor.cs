@@ -719,6 +719,7 @@ namespace Framework
 					Rect fromStateRect = GetScreenRect(fromState.GetBounds());
 					Rect toStateRect = GetScreenRect(toState.GetBounds());
 
+
 					Vector3 startPos = new Vector3(fromStateRect.x + fromStateRect.width * edgeFraction, fromStateRect.y + fromStateRect.height - StateEditorGUI.kShadowSize - 1.0f, 0);
 					Vector3 endPos = new Vector3(Mathf.Round(toStateRect.x + toStateRect.width / 2.0f) + 0.5f, Mathf.Round(toStateRect.y - kArrowHeight - 1.0f) + 0.5f, 0);
 					Vector3 startTangent = startPos + Vector3.up * 50.0f;
@@ -743,6 +744,9 @@ namespace Framework
 					GUI.backgroundColor = Color.clear;
 					GUI.Label(labelPos, description, _style._linkTextStyle);
 					GUI.backgroundColor = origColor;
+
+
+					RenderLinkIcon(startPos, kOutputLinkIconColor, 1.0f, false);
 				}
 
 				private void RenderLinksForState(StateEditorGUI state)
@@ -902,6 +906,47 @@ namespace Framework
 					SaveEditorPrefs();
 
 					_currentMode = eMode.ViewingStateMachine;
+				}
+				private static readonly Color kOutputLinkIconColor = Color.white;
+				private static readonly Color kInputLinkHighlightColor = Color.green;
+				private static readonly float kLinkIconWidth = 24.0f;
+				private static readonly float kLinkIconHeight = 4.0f;
+
+				private void RenderLinkIcon(Vector2 position, Color color, float scale, bool highlight)
+				{
+					Vector3 position3d = new Vector3(position.x, position.y, 0.0f);
+
+					Rect boxRect = new Rect(position3d.x - kLinkIconWidth * 0.5f, position3d.y + kLinkIconHeight * 0.5f, kLinkIconWidth, kLinkIconHeight);
+
+
+					//Draw shadow
+					EditorUtils.DrawColoredRoundedBox(new Rect(boxRect.x + StateEditorGUI.kShadowSize, boxRect.y + StateEditorGUI.kShadowSize, boxRect.width, boxRect.height), new Color(0.0f, 0.0f, 0.0f, 0.35f));
+
+					//Draw white background
+					EditorUtils.DrawColoredRoundedBox(boxRect, _style._linkDescriptionColor);
+
+
+					return;
+
+
+
+
+					Handles.BeginGUI();
+
+					if (highlight)
+					{
+						Handles.color = kInputLinkHighlightColor;
+						Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.65f * scale);
+					}
+
+					Handles.color = _style._linkColor;
+					Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.5f * scale);
+					Handles.color = Color.Lerp(_style._linkColor, Color.black, 0.5f);
+					Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.32f * scale);
+					Handles.color = Color.black;
+					Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.24f * scale);
+
+					Handles.EndGUI();
 				}
 
 #if DEBUG
