@@ -12,24 +12,18 @@ namespace Framework
 		[EventCategory(EventCategoryAttribute.kCoreEvent)]
 		public class EventGoToState : Event, ITimelineStateEvent
 		{
-			public enum eStateType
-			{
-				Timeline,
-				Coroutine
-			}
-
 			#region Public Data
 			public StateRef _state;
 			#endregion
 
 			#region Event
 #if UNITY_EDITOR
-			public override bool EndsTimeline()
+			public override bool GetEditorShouldBeLastEventInTimeline()
 			{
 				return true;
 			}
 
-			public override Color GetColor()
+			public override Color GetEditorColor()
 			{
 				return new Color(217.0f / 255.0f, 80.0f / 255.0f, 58.0f / 255.0f);
 			}

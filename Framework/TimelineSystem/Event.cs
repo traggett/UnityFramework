@@ -82,10 +82,10 @@ namespace Framework
 				return -1;
 			}
 
-#if UNITY_EDITOR
-			public virtual bool EndsTimeline() { return false; }
-			public abstract Color GetColor();
+#if UNITY_EDITOR			
+			public abstract Color GetEditorColor();
 			public abstract string GetEditorDescription();
+			public virtual bool GetEditorShouldBeLastEventInTimeline() { return false; }
 			public virtual string GetEditorShortDescription() { return GetEditorDescription(); }
 #endif
 			#endregion
@@ -106,10 +106,10 @@ namespace Framework
 				{
 #if UNITY_EDITOR
 					//Always order exit state events at the end
-					if (!EndsTimeline() && evnt.EndsTimeline())
+					if (!GetEditorShouldBeLastEventInTimeline() && evnt.GetEditorShouldBeLastEventInTimeline())
 						return -1;
 
-					if (EndsTimeline() && !evnt.EndsTimeline())
+					if (GetEditorShouldBeLastEventInTimeline() && !evnt.GetEditorShouldBeLastEventInTimeline())
 						return 1;
 #endif
 

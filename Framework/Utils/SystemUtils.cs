@@ -174,13 +174,13 @@ namespace Framework
 				if (type == null)
 					return null;
 				else if (type == typeof(float))
-					return "float";
+					return "Float";
 				else if (type == typeof(string))
-					return "string";
+					return "String";
 				else if (type == typeof(int))
-					return "int";
+					return "Int";
 				else if (type == typeof(bool))
-					return "bool";
+					return "Bool";
 
 				if (type.IsGenericType)
 				{

@@ -31,10 +31,11 @@ namespace Framework
 						timelineStateMachineEditor.ShowStateDetails(GetEditableObject()._stateId);
 					}
 
+					Serialization.SerializationEditorGUILayout.ObjectField(GetEditableObject(), GUIContent.none, ref dataChanged);
+
 					return dataChanged;
 				}
 				#endregion
-
 			}
 		}
 	}

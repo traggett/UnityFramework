@@ -19,7 +19,7 @@ namespace Framework
 
 			#region Event
 #if UNITY_EDITOR
-			public override Color GetColor()
+			public override Color GetEditorColor()
 			{
 				return new Color(219.0f / 255.0f, 64.0f / 255.0f, 11.0f / 255.0f);
 			}

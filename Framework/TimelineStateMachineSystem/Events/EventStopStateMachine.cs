@@ -14,12 +14,12 @@ namespace Framework
 		{
 			#region Event
 #if UNITY_EDITOR
-			public override bool EndsTimeline()
+			public override bool GetEditorShouldBeLastEventInTimeline()
 			{
 				return true;
 			}
 
-			public override Color GetColor()
+			public override Color GetEditorColor()
 			{
 				return new Color(0.9f, 0.53f, 0.45f);
 			}

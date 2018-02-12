@@ -71,7 +71,7 @@ namespace Framework
 			}
 
 #if UNITY_EDITOR
-			public override Color GetColor()
+			public override Color GetEditorColor()
 			{
 				return new Color(162f / 255f, 219f / 255f, 115f / 255f);
 			}

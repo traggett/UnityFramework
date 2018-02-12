@@ -44,7 +44,7 @@ namespace Framework
 
 				public bool EndsTimeline()
 				{
-					return GetEditableObject().EndsTimeline();
+					return GetEditableObject().GetEditorShouldBeLastEventInTimeline();
 				}
 
 				public void SetTime(float time)
@@ -110,7 +110,7 @@ namespace Framework
 
 				public Color GetColor()
 				{
-					return GetEditableObject().GetColor();
+					return GetEditableObject().GetEditorColor();
 				}
 
 				public static EventEditorGUI CreateEventEditorGUI(TimelineEditor editor, Event evnt)
