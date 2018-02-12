@@ -56,6 +56,14 @@ namespace Framework
 #endif
 				#endregion
 		
+				//Ability to drag links from one state to another
+				//time line states could just say when they are done, not have go to events?
+				//yeah.
+				//then all states that have a 'go to state' field can be dragged / dropped.
+
+				//Conditionals should have areas can drag / drop to as well
+
+
 				#region Public Interface
 				public void Init(	string title, IEditorWindow editorWindow, string editorPrefsTag,
 									Type[] allowedTypes, StateMachineEditorStyle style,
@@ -289,8 +297,7 @@ namespace Framework
 					}					
 
 					foreach (StateEditorGUI state in toRender)
-					{
-						
+					{					
 						bool selected = _selectedObjects.Contains(state);
 						float borderSize = state.GetBorderSize(selected);
 

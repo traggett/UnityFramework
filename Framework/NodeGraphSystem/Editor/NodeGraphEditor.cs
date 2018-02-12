@@ -187,7 +187,22 @@ namespace Framework
 				{
 					node._nodeId = GenerateNewNodeId();
 					if (string.IsNullOrEmpty(node._editorDescription))
-						node._editorDescription = "Node" + node._nodeId.ToString("000");
+					{
+						if (SystemUtils.IsSubclassOfRawGeneric(typeof(InputNode<>), node.GetType()))
+						{
+							Type inputType = SystemUtils.GetGenericImplementationType(typeof(InputNode<>), node.GetType());
+							node._editorDescription = SystemUtils.GetTypeName(inputType) + " Input";
+						}
+						else if (SystemUtils.IsSubclassOfRawGeneric(typeof(OutputNode<,>), node.GetType()))
+						{
+							Type outputType = SystemUtils.GetGenericImplementationType(typeof(OutputNode<,>), node.GetType(), 1);
+							node._editorDescription = SystemUtils.GetTypeName(outputType) + " Output";
+						}
+						else
+						{
+							node._editorDescription = "Node" + node._nodeId.ToString("000");
+						}
+					}					
 				}
 
 				protected override Node CreateCopyFrom(SerializedObjectEditorGUI<Node> editorGUI)
@@ -803,11 +818,13 @@ namespace Framework
 
 							if (SystemUtils.IsSubclassOfRawGeneric(typeof(OutputNode<,>), type))
 							{
-								_addOutputNodeContextMenu.Add(type, nodeName);
+								Type outputType = SystemUtils.GetGenericImplementationType(typeof(OutputNode<,>), type, 1);
+								_addOutputNodeContextMenu.Add(type, SystemUtils.GetTypeName(outputType));
 							}
 							else if (SystemUtils.IsSubclassOfRawGeneric(typeof(InputNode<>), type))
 							{
-								_addInputNodeContextMenu.Add(type, nodeName);
+								Type inputType = SystemUtils.GetGenericImplementationType(typeof(InputNode<>), type);
+								_addInputNodeContextMenu.Add(type, SystemUtils.GetTypeName(inputType));
 							}
 							else
 							{

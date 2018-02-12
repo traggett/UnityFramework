@@ -27,7 +27,7 @@ namespace Framework
 			public override StateMachineEditorLink[] GetEditorLinks()
 			{
 				StateMachineEditorLink[] links = new StateMachineEditorLink[1];
-				links[0] = new StateMachineEditorLink(this, "goToState", "Coroutine Done");
+				links[0] = new StateMachineEditorLink(this, "goToState", "Go To");
 				return links;
 			}
 

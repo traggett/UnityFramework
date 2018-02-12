@@ -16,32 +16,18 @@ namespace Framework
 		public class TimelineState : State
 		{
 			#region Public Data			
+			[HideInInspector]
 			public Timeline _timeline = new Timeline();
+			public StateRef _goToState;
 			#endregion
 
 			#region Public Interface
 #if UNITY_EDITOR
 			public override StateMachineEditorLink[] GetEditorLinks()
 			{
-				List<StateMachineEditorLink> stateLinks = new List<StateMachineEditorLink>();
-
-				if (_timeline != null)
-				{
-					foreach (ITimelineStateEvent evnt in _timeline._events)
-					{
-						if (evnt != null)
-						{
-							StateMachineEditorLink[] links = evnt.GetEditorLinks();
-
-							if (links != null)
-							{
-								stateLinks.AddRange(links);
-							}
-						}
-					}
-				}
-
-				return stateLinks.ToArray();
+				StateMachineEditorLink[] links = new StateMachineEditorLink[1];
+				links[0] = new StateMachineEditorLink(this, "goToState", "Go To");
+				return links;
 			}
 
 			public override string GetAutoDescription()
