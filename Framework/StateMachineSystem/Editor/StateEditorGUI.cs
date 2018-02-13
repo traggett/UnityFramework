@@ -16,6 +16,9 @@ namespace Framework
 		{
 			public class StateEditorGUI : SerializedObjectEditorGUI<State>
 			{
+				//need to store state links?
+				//
+
 				#region Private Data
 				private static Dictionary<Type, Type> _editorGUIConstructorMap = null;
 				protected static readonly Color _titleLabelColor = new Color(0.8f, 0.8f, 0.8f, 1.0f);

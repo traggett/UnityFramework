@@ -45,7 +45,7 @@ namespace Framework
 
 
 						EditorGUI.BeginChangeCheck();
-						eType type = (eType)EditorGUILayout.EnumPopup("Link Type", state.IsInternal() ? eType.Internal : eType.External);
+						eType type = (eType)EditorGUILayout.EnumPopup("Location", state.IsInternal() ? eType.Internal : eType.External);
 						if (EditorGUI.EndChangeCheck())
 						{
 							//If type has changed create a new ref with file set to null if internal or a blank asset ref if external.
@@ -124,7 +124,7 @@ namespace Framework
 
 						EditorGUI.BeginChangeCheck();
 
-						index = EditorGUILayout.Popup("Initial State", index, stateNames);
+						index = EditorGUILayout.Popup("State", index, stateNames);
 
 						if (EditorGUI.EndChangeCheck())
 						{

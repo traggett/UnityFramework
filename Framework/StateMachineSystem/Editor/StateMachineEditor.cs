@@ -25,6 +25,7 @@ namespace Framework
 				private static readonly float kDoubleClickTime = 0.32f;
 				private static readonly float kArrowHeight = 6.0f;
 				private static readonly float kArrowWidth = 4.0f;
+				private static readonly float kLinkIconWidth = 10.0f;
 
 				private string _title;
 				private string _editorPrefsTag;
@@ -50,19 +51,15 @@ namespace Framework
 
 				private TimelineEditor _timelineEditor;
 				private TimelineScrollArea.eTimeFormat _timelineEditorTimeFormat;
+
+				private StateEditorGUI _draggingState;
+				private StateMachineEditorLink _draggingStateLink;
+				private int _draggingStateLinkIndex;
 #if DEBUG
 				private State _playModeHighlightedState = null;
 				private bool _debugging = false;
 #endif
 				#endregion
-		
-				//Ability to drag links from one state to another
-				//time line states could just say when they are done, not have go to events?
-				//yeah.
-				//then all states that have a 'go to state' field can be dragged / dropped.
-
-				//Conditionals should have areas can drag / drop to as well
-
 
 				#region Public Interface
 				public void Init(	string title, IEditorWindow editorWindow, string editorPrefsTag,
@@ -286,7 +283,6 @@ namespace Framework
 					_style._linkTextStyle.fontSize = Mathf.RoundToInt(_style._linkTextStyleFontSize * _currentZoom);
 					_style._noteTextStyle.fontSize = Mathf.RoundToInt(_style._noteTextStyleFontSize * _currentZoom);
 
-
 					SetupExternalState();
 
 					List<StateEditorGUI> toRender = new List<StateEditorGUI>();
@@ -294,11 +290,34 @@ namespace Framework
 					{
 						if (!(editorGUI is StateMachineExternalStateEditorGUI))
 							toRender.Add(editorGUI);
-					}					
+					}
 
+					StateEditorGUI dragHighlightState = null;
+
+					//Update state bounds
+					foreach (StateEditorGUI state in toRender)
+						state.CalcBounds(_style);
+
+					//Check dragging a state link onto a state
+					if (_dragMode == eDragType.Custom)
+					{
+						Vector2 gridPos = GetEditorPosition(UnityEngine.Event.current.mousePosition);
+
+						//Check mouse is over a state
+						foreach (StateEditorGUI editorGUI in _editableObjects)
+						{
+							if (editorGUI.GetBounds().Contains(gridPos))
+							{
+								dragHighlightState = editorGUI;
+								break;
+							}
+						}
+					}
+
+					//Render each state
 					foreach (StateEditorGUI state in toRender)
 					{					
-						bool selected = _selectedObjects.Contains(state);
+						bool selected = (_dragMode != eDragType.Custom && _selectedObjects.Contains(state)) || dragHighlightState == state;
 						float borderSize = state.GetBorderSize(selected);
 
 						Color borderColor = selected ? _style._stateBackgroundSelected : _style._stateBackground;
@@ -309,7 +328,6 @@ namespace Framework
 							borderSize = 2.0f;
 						}
 #endif
-						state.CalcBounds(_style);
 						Rect renderedRect = GetScreenRect(state.GetBounds());
 
 						Color stateColor = state.GetColor(_style);
@@ -317,6 +335,16 @@ namespace Framework
 
 						RenderLinksForState(state);
 					}
+
+					//Render dragging link
+					if (_dragMode == eDragType.Custom)
+					{
+						Vector3 startPos = GetLinkStartPosition(_draggingState, _draggingStateLinkIndex);
+						Vector3 endPos = UnityEngine.Event.current.mousePosition + new Vector2(0,-5);
+
+						RenderLinkLine(startPos, endPos);
+					}
+
 
 					CleanupExternalState();
 				}
@@ -367,11 +395,41 @@ namespace Framework
 				{
 					editorGUI.GetEditableObject()._editorPosition = position;
 				}
-				
+
 				protected override void OnLeftMouseDown(UnityEngine.Event inputEvent)
 				{
+					//Dragging state links
+					for (int i = 0; i < _editableObjects.Count; i++)
+					{
+						StateEditorGUI state = (StateEditorGUI)_editableObjects[i];
+
+						StateMachineEditorLink[] links = state.GetEditableObject().GetEditorLinks();
+
+						if (links != null)
+						{
+							for (int j=0; j<links.Length; j++)
+							{
+								Vector3 startPos = GetLinkStartPosition(state, j);
+								Vector2 toField = inputEvent.mousePosition - new Vector2(startPos.x, startPos.y);
+
+								if (toField.magnitude < kLinkIconWidth * 0.5f)
+								{
+									_dragMode = eDragType.Custom;
+									_draggingState = state;
+									_draggingStateLink = links[j];
+									_draggingStateLinkIndex = j;
+									_dragPos = inputEvent.mousePosition;
+									_dragAreaRect = new Rect(-1.0f, -1.0f, 0.0f, 0.0f);
+									return;
+								}
+							}
+						}
+					}
+
+					//Normal input
 					base.OnLeftMouseDown(inputEvent);
 
+					//Double clicking
 					StateEditorGUI clickedOnState = _draggedObject as StateEditorGUI;
 
 					if (clickedOnState != null)
@@ -383,6 +441,48 @@ namespace Framework
 
 						_lastClickedState = clickedOnState;
 						_lastClickTime = EditorApplication.timeSinceStartup;
+					}
+				}
+
+				protected override void OnDragging(UnityEngine.Event inputEvent)
+				{
+					if (_dragMode == eDragType.Custom)
+					{
+						SetNeedsRepaint();
+					}
+					else
+					{
+						base.OnDragging(inputEvent);
+					}
+				}
+
+				protected override void OnStopDragging(UnityEngine.Event inputEvent)
+				{
+					if (_dragMode == eDragType.Custom)
+					{
+						Vector2 gridPos = GetEditorPosition(UnityEngine.Event.current.mousePosition);
+
+						//Check mouse is over a state
+						foreach (StateEditorGUI editorGUI in _editableObjects)
+						{
+							if (editorGUI.GetBounds().Contains(gridPos))
+							{
+								StateMachineEditorLink[] links = _draggingState.GetEditableObject().GetEditorLinks();
+								_draggingStateLink.SetStateRef(new StateRef(editorGUI.GetStateId()));
+								break;
+							}
+						}
+
+						inputEvent.Use();
+						_dragMode = eDragType.NotDragging;
+
+						_draggingState = null;
+						_draggingStateLink = new StateMachineEditorLink();
+						_draggingStateLinkIndex = 0;
+					}
+					else
+					{
+						base.OnStopDragging(inputEvent);
 					}
 				}
 
@@ -669,7 +769,7 @@ namespace Framework
 					return null;
 				}
 
-				private void RenderExternalLink(StateMachineEditorLink link, StateEditorGUI fromState, float edgeFraction)
+				private void RenderExternalLink(StateMachineEditorLink link, StateEditorGUI fromState, int linkIndex)
 				{
 					StateMachineExternalStateEditorGUI externalState = null;
 
@@ -711,27 +811,56 @@ namespace Framework
 						externalState.ExternalHasRendered = true;
 					}
 
-					RenderLink(link.GetDescription(), fromState, externalState, edgeFraction);
+					RenderLink(link.GetDescription(), fromState, externalState, linkIndex);
 				}
 
-				private void RenderLink(string description, StateEditorGUI fromState, StateEditorGUI toState, float edgeFraction)
+				private Vector3 GetLinkStartPosition(StateEditorGUI state, int linkIndex = 0)
 				{
-					Rect fromStateRect = GetScreenRect(fromState.GetBounds());
-					Rect toStateRect = GetScreenRect(toState.GetBounds());
+					float fraction = 1.0f / (state.GetEditableObject().GetEditorLinks().Length + 1.0f);
+					float edgeFraction = fraction * (1 + linkIndex);
+
+					Rect stateRect = GetScreenRect(state.GetBounds());
+					return new Vector3(Mathf.Round(stateRect.x + stateRect.width * edgeFraction), Mathf.Round(stateRect.y + stateRect.height - StateEditorGUI.kShadowSize - 1.0f), 0);
+				}
+
+				private Vector3 GetLinkEndPosition(StateEditorGUI state, int linkIndex = 0)
+				{
+					Rect stateRect = GetScreenRect(state.GetBounds());
+					return new Vector3(Mathf.Round(stateRect.x + stateRect.width / 2.0f) + 0.5f, Mathf.Round(stateRect.y - kArrowHeight - 1.0f) + 0.5f, 0);
+				}
+
+				private static readonly float kLineTangent = 50.0f;
 
 
-					Vector3 startPos = new Vector3(fromStateRect.x + fromStateRect.width * edgeFraction, fromStateRect.y + fromStateRect.height - StateEditorGUI.kShadowSize - 1.0f, 0);
-					Vector3 endPos = new Vector3(Mathf.Round(toStateRect.x + toStateRect.width / 2.0f) + 0.5f, Mathf.Round(toStateRect.y - kArrowHeight - 1.0f) + 0.5f, 0);
-					Vector3 startTangent = startPos + Vector3.up * 50.0f;
-					Vector3 endTangent = endPos - Vector3.up * 50.0f;
+				private void RenderLinkLine(Vector3 startPos, Vector3 endPos)
+				{
+					Vector3 line = endPos - startPos;
+					float lineLength = line.magnitude;
+
+					float tangent = kLineTangent;
+
+					if (lineLength < tangent * 2.0f)
+						tangent = lineLength * 0.5f;
+
+					Vector3 startTangent = startPos + Vector3.up * tangent;
+					Vector3 endTangent = endPos - Vector3.up * tangent;
 					Handles.BeginGUI();
 					Handles.color = _style._linkColor;
 					Handles.DrawBezier(startPos, endPos, startTangent, endTangent, _style._linkColor, EditorUtils.BezierAATexture, 2f);
 					Handles.DrawAAConvexPolygon(new Vector3[] { new Vector3(endPos.x, endPos.y + kArrowHeight, 0.0f), new Vector3(endPos.x + kArrowWidth, endPos.y, 0.0f), new Vector3(endPos.x - kArrowWidth, endPos.y, 0.0f) });
 					Handles.EndGUI();
+				}
+
+				private void RenderLink(string description, StateEditorGUI fromState, StateEditorGUI toState, int linkIndex)
+				{
+					Vector3 startPos = GetLinkStartPosition(fromState, linkIndex);
+					Vector3 endPos = GetLinkEndPosition(toState, linkIndex);
+
+					RenderLinkIcon(startPos);
+					RenderLinkLine(startPos, endPos);
 
 					Vector2 textSize = _style._linkTextStyle.CalcSize(new GUIContent(description));
-					float lineFraction = edgeFraction;
+					float lineFraction = 0.5f;
 					Rect labelPos = new Rect(startPos.x + ((endPos.x - startPos.x) * lineFraction) - (textSize.x * 0.5f), startPos.y + ((endPos.y - startPos.y) * lineFraction) - (textSize.y * 0.5f), textSize.x, textSize.y);
 
 					//Draw shadow
@@ -744,9 +873,24 @@ namespace Framework
 					GUI.backgroundColor = Color.clear;
 					GUI.Label(labelPos, description, _style._linkTextStyle);
 					GUI.backgroundColor = origColor;
+				}
 
+				private void RenderLinkIcon(Vector2 position)
+				{
+					Vector3 position3d = new Vector3(position.x, position.y, 0.0f);
 
-					RenderLinkIcon(startPos, kOutputLinkIconColor, 1.0f, false);
+					float scale = 1.0f;
+
+					Handles.BeginGUI();
+
+					Handles.color = _style._stateBackground;
+					Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.5f * scale);
+					Handles.color = Color.Lerp(_style._stateBackground, Color.black, 0.75f);
+					Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.34f * scale);
+					Handles.color = Color.Lerp(_style._stateBackground, Color.black, 0.5f);
+					Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.26f * scale);
+
+					Handles.EndGUI();
 				}
 
 				private void RenderLinksForState(StateEditorGUI state)
@@ -755,12 +899,9 @@ namespace Framework
 
 					if (links != null)
 					{
-						float fraction = 1.0f / (links.Length + 1.0f);
-						float current = fraction;
-
-						foreach (StateMachineEditorLink link in links)
+						for (int j = 0; j < links.Length; j++)
 						{
-							StateRef stateRef = link.GetStateRef();
+							StateRef stateRef = links[j].GetStateRef();
 
 							if (stateRef.IsInternal())
 							{
@@ -768,15 +909,13 @@ namespace Framework
 
 								if (toState != null)
 								{
-									RenderLink(link.GetDescription(), state, toState, current);
+									RenderLink(links[j].GetDescription(), state, toState, j);
 								}
 							}
 							else
 							{
-								RenderExternalLink(link, state, current);
+								RenderExternalLink(links[j], state, j);
 							}
-
-							current += fraction;
 						}
 					}				
 				}
@@ -906,47 +1045,6 @@ namespace Framework
 					SaveEditorPrefs();
 
 					_currentMode = eMode.ViewingStateMachine;
-				}
-				private static readonly Color kOutputLinkIconColor = Color.white;
-				private static readonly Color kInputLinkHighlightColor = Color.green;
-				private static readonly float kLinkIconWidth = 24.0f;
-				private static readonly float kLinkIconHeight = 4.0f;
-
-				private void RenderLinkIcon(Vector2 position, Color color, float scale, bool highlight)
-				{
-					Vector3 position3d = new Vector3(position.x, position.y, 0.0f);
-
-					Rect boxRect = new Rect(position3d.x - kLinkIconWidth * 0.5f, position3d.y + kLinkIconHeight * 0.5f, kLinkIconWidth, kLinkIconHeight);
-
-
-					//Draw shadow
-					EditorUtils.DrawColoredRoundedBox(new Rect(boxRect.x + StateEditorGUI.kShadowSize, boxRect.y + StateEditorGUI.kShadowSize, boxRect.width, boxRect.height), new Color(0.0f, 0.0f, 0.0f, 0.35f));
-
-					//Draw white background
-					EditorUtils.DrawColoredRoundedBox(boxRect, _style._linkDescriptionColor);
-
-
-					return;
-
-
-
-
-					Handles.BeginGUI();
-
-					if (highlight)
-					{
-						Handles.color = kInputLinkHighlightColor;
-						Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.65f * scale);
-					}
-
-					Handles.color = _style._linkColor;
-					Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.5f * scale);
-					Handles.color = Color.Lerp(_style._linkColor, Color.black, 0.5f);
-					Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.32f * scale);
-					Handles.color = Color.black;
-					Handles.DrawSolidDisc(position3d, -Vector3.forward, kLinkIconWidth * 0.24f * scale);
-
-					Handles.EndGUI();
 				}
 
 #if DEBUG

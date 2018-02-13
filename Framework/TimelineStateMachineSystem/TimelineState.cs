@@ -131,6 +131,8 @@ namespace Framework
 				StateMachineDebug.OnTimelineStateStoped(stateMachine);
 #endif
 
+				stateMachine.GoToState(StateMachine.Run(stateMachine, _goToState));
+
 				yield break;
 			}
 			#endregion

@@ -245,7 +245,6 @@ namespace Framework
 
 				protected override void OnDragging(Event inputEvent)
 				{
-
 					if (_dragMode == eDragType.Custom)
 					{
 						SetNeedsRepaint();
