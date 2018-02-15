@@ -562,7 +562,21 @@ namespace Framework
 				{
 					_currentFileName = fileName;
 
-					StateMachine stateMachine = Serializer.FromFile<StateMachine>(fileName);
+					StateMachine stateMachine = null;
+
+					try
+					{
+						stateMachine = Serializer.FromFile<StateMachine>(fileName);
+					}
+					catch (ObjectNotFoundException)
+					{
+						EditorUtility.DisplayDialog("StateMachine Editor", StringUtils.GetAssetPath(_currentFileName) + " does not contain a valid StateMachine.", "Ok");
+					}
+					catch (CorruptFileException e)
+					{
+						EditorUtility.DisplayDialog("StateMachine Editor", StringUtils.GetAssetPath(_currentFileName) + " is corrupt.", "Ok");
+					}
+
 
 					if (stateMachine != null)
 					{

@@ -167,7 +167,7 @@ namespace Framework
 						}
 						catch (Exception e)
 						{
-							Debug.LogError("Failed to load from xml: " + e.Message);
+							throw new CorruptFileException(e);
 						}
 
 						return FromXMLDoc<T>(xmlDoc);
@@ -189,7 +189,7 @@ namespace Framework
 						}
 						catch (Exception e)
 						{
-							Debug.LogError("Failed to load from xml: " + e.Message);
+							throw new CorruptFileException(e);
 						}
 
 						return FromXMLDoc(type, xmlDoc);
@@ -211,7 +211,7 @@ namespace Framework
 						}
 						catch (Exception e)
 						{
-							Debug.LogError("Failed to load from xml: " + e.Message);
+							throw new CorruptFileException(e);
 						}
 
 						return FromXMLDoc<T>(xmlDoc);
@@ -238,7 +238,7 @@ namespace Framework
 						XmlNode node = xmlDoc.SelectSingleNode(xmlTag);
 
 						if (node == null)
-							throw new Exception("No node of type " + typeof(T).Name + " found in XmlDocument");
+							throw new ObjectNotFoundException(typeof(T));
 
 						return FromXmlNode<T>(node);
 					}

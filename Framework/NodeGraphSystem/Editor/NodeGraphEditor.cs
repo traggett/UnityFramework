@@ -492,8 +492,20 @@ namespace Framework
 				private void LoadFile(string fileName)
 				{
 					_currentFileName = fileName;
+					NodeGraph nodeMachine = null;
 
-					NodeGraph nodeMachine = Serializer.FromFile<NodeGraph>(fileName);
+					try
+					{
+						nodeMachine = Serializer.FromFile<NodeGraph>(fileName);
+					}
+					catch (ObjectNotFoundException)
+					{
+						EditorUtility.DisplayDialog("Node Graph Editor", StringUtils.GetAssetPath(_currentFileName) + " does not contain a valid Node Graph.", "Ok");
+					}
+					catch (CorruptFileException e)
+					{
+						EditorUtility.DisplayDialog("Node Graph Editor", StringUtils.GetAssetPath(_currentFileName) + " is corrupt.", "Ok");
+					}
 
 					if (nodeMachine != null)
 					{
