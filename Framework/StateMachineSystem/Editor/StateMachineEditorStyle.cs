@@ -20,6 +20,7 @@ namespace Framework
 				public GUIStyle _noteTextStyle;
 
 				public Color _linkColor;
+				public Color _linkInactiveColor;
 				public Color _linkDescriptionColor;
 				public Color _stateBackground;
 				public Color _stateBackgroundSelected;
@@ -65,6 +66,7 @@ namespace Framework
 
 					_defaultStateColor = Color.grey;
 					_linkColor = Color.red;
+					_linkInactiveColor = new Color(0.7f, 0.0f, 0.0f, 1.0f);
 					_linkDescriptionColor = new Color(0.75f, 0.75f, 0.75f, 1.0f);
 					_stateBackground = new Color(1.0f, 1.0f, 1.0f, 0.5f);
 					_stateBackgroundSelected = new Color(1.0f, 1.0f, 1.0f, 1.0f);

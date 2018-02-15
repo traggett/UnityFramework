@@ -588,11 +588,22 @@ namespace Framework
 
 				private void RenderLinks(float scale, NodeEditorField highlightedField)
 				{
+					Vector2 mousePosition = Event.current.mousePosition;
+
 					foreach (NodeEditorGUI node in _editableObjects)
 					{
 						if (node.HasOutput())
 						{
-							RenderLinkIcon(node.GetOutputField()._position, kOutputLinkIconColor, scale, false);
+							bool highlighted = false;
+
+							if (_dragMode == eDragType.NotDragging)
+							{
+								Vector2 toField = mousePosition - node.GetOutputField()._position;
+								highlighted = toField.magnitude < kLinkIconWidth;
+								SetNeedsRepaint();
+							}
+
+							RenderLinkIcon(node.GetOutputField()._position, kOutputLinkIconColor, scale, highlighted);
 						}
 						
 						foreach (NodeEditorField nodeInputField in node.GetInputFields())
@@ -609,8 +620,17 @@ namespace Framework
 								color = kInputLinkIconColor;
 							}
 
+							bool highlighted = nodeInputField == highlightedField;
+
+							if (_dragMode == eDragType.NotDragging)
+							{
+								Vector2 toField = mousePosition - nodeInputField._position;
+								highlighted = toField.magnitude < kLinkIconWidth;
+								SetNeedsRepaint();
+							}
+
 							RenderStaticValueBox(nodeInputField, nodeInputField._position, kUnusableLinkIconColor, scale);
-							RenderLinkIcon(nodeInputField._position, color, scale, nodeInputField == highlightedField);
+							RenderLinkIcon(nodeInputField._position, color, scale, highlighted);
 						}
 					}
 
