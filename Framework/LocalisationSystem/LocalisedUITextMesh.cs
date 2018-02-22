@@ -25,7 +25,10 @@ namespace Framework
 
 			void Update()
 			{
-				_UIText.text = _text;
+				if (_UIText.text != _text)
+				{
+					_UIText.text = _text;
+				}
 			}
 			#endregion
 		}
