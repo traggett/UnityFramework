@@ -24,7 +24,10 @@ namespace Framework
 
 			void Update()
 			{
-				_textMesh.text = _text;
+				if (_textMesh.text != _text)
+				{
+					_textMesh.text = _text;
+				}
 			}
 			#endregion
 		}

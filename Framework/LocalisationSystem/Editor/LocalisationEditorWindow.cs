@@ -46,6 +46,7 @@ namespace Framework
 				private bool _needsRepaint;
 				private string _addNewKey = string.Empty;
 				private bool _editingKeyName;
+				private string _filter;
 
 				private GUIStyle _titleStyle;
 				private GUIStyle _keyStyle;
@@ -76,6 +77,7 @@ namespace Framework
 				void OnGUI()
 				{
 					CreateEditor();
+					InitGUIStyles();
 
 					_needsRepaint = false;
 
@@ -125,8 +127,6 @@ namespace Framework
 						_instance = (LocalisationEditorWindow)GetWindow(typeof(LocalisationEditorWindow), false, kWindowWindowName);
 						_instance.Init();
 					}
-
-					InitGUIStyles();
 				}
 
 				private void Init()
@@ -151,14 +151,14 @@ namespace Framework
 
 				private void InitGUIStyles()
 				{
-					if (_titleStyle == null)
+					if (_titleStyle == null && EditorStyles.label != null)
 					{
 						_titleStyle = new GUIStyle(EditorStyles.label);
 						_titleStyle.richText = true;
 						_titleStyle.alignment = TextAnchor.MiddleCenter;
 					}
 
-					if (_keyStyle == null)
+					if (_keyStyle == null && EditorStyles.helpBox != null)
 					{
 						_keyStyle = new GUIStyle(EditorStyles.helpBox);
 						_keyStyle.margin = new RectOffset(0, 0, 0, 0);
@@ -166,7 +166,7 @@ namespace Framework
 						_keyStyle.padding.left = 8;
 					}
 
-					if (_textStyle == null)
+					if (_textStyle == null && EditorStyles.textArea != null)
 					{
 						_textStyle = new GUIStyle(EditorStyles.textArea);
 						_textStyle.margin = new RectOffset(1, 1, 1, 1);
@@ -259,6 +259,22 @@ namespace Framework
 						}
 						EditorGUILayout.EndHorizontal();
 
+						//Filters
+						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+						{
+							GUILayout.Button("Filter", EditorStyles.toolbarButton);
+							_filter = EditorGUILayout.TextField(_filter);
+
+							if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
+							{
+								_filter = "";
+								EditorGUI.FocusTextInControl(string.Empty);
+							}
+
+							GUILayout.FlexibleSpace();
+						}
+						EditorGUILayout.EndHorizontal();
+
 						//Headers
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
@@ -272,9 +288,7 @@ namespace Framework
 
 							//Resizer
 							RenderResizer();
-
-							//EditorGUILayout.Separator();
-
+							
 							//Text
 							EditorGUI.BeginChangeCheck();
 							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(Localisation.GetCurrentLanguage(), EditorStyles.toolbarButton);
@@ -309,71 +323,75 @@ namespace Framework
 
 							for (int i = 1; i < keys.Length; i++)
 							{
-								bool selected = keys[i] == _editorPrefs._selectedKey;
 								string text = Localisation.GetUnformattedString(keys[i]);
-								int numLines = StringUtils.GetNumberOfLines(text);
-								
-								Color origBackgroundColor = GUI.backgroundColor;
-								GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
 
-								EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle);
+								if (MatchsFilter(keys[i]) || MatchsFilter(text))
 								{
-									GUI.backgroundColor = kKeyBackgroundColor;
+									bool selected = keys[i] == _editorPrefs._selectedKey;
+									int numLines = StringUtils.GetNumberOfLines(text);
 
-									if (selected && _editingKeyName)
-									{
-										EditorGUI.BeginChangeCheck();
-										string key = EditorGUILayout.DelayedTextField(keys[i], _textStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true));
-										if (EditorGUI.EndChangeCheck())
-										{
-											_editingKeyName = false;
-											Localisation.ChangeKey(keys[i], key);
-											_needsRepaint = true;
-										}
-									}
-									else
-									{
-										if (GUILayout.Button(keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true)))
-										{
-											_editorPrefs._selectedKey = keys[i];
-											_editingKeyName = false;
-											EditorGUI.FocusTextInControl(string.Empty);
-										}
-									}												
+									Color origBackgroundColor = GUI.backgroundColor;
+									GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
 
-									GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
-									EditorGUI.BeginChangeCheck();
-									text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-									if (EditorGUI.EndChangeCheck())
-									{
-										Localisation.UpdateString(keys[i], Localisation.GetCurrentLanguage(), text);
-									}
-								}
-								EditorGUILayout.EndHorizontal();
-
-								if (selected)
-								{
-									GUI.backgroundColor = kSelectedButtonsBackgroundColor;
 									EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle);
 									{
-										GUI.backgroundColor = origBackgroundColor;
+										GUI.backgroundColor = kKeyBackgroundColor;
 
-										if (GUILayout.Button("Edit Key", EditorStyles.toolbarButton))
+										if (selected && _editingKeyName)
 										{
-											_editingKeyName = true;
+											EditorGUI.BeginChangeCheck();
+											string key = EditorGUILayout.DelayedTextField(keys[i], _textStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true));
+											if (EditorGUI.EndChangeCheck())
+											{
+												_editingKeyName = false;
+												Localisation.ChangeKey(keys[i], key);
+												_needsRepaint = true;
+											}
+										}
+										else
+										{
+											if (GUILayout.Button(keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true)))
+											{
+												_editorPrefs._selectedKey = keys[i];
+												_editingKeyName = false;
+												EditorGUI.FocusTextInControl(string.Empty);
+											}
 										}
 
-										if (GUILayout.Button("Delete", EditorStyles.toolbarButton))
+										GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
+										EditorGUI.BeginChangeCheck();
+										text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+										if (EditorGUI.EndChangeCheck())
 										{
-											DeleteSelected();
+											Localisation.UpdateString(keys[i], Localisation.GetCurrentLanguage(), text);
 										}
-
-										GUILayout.FlexibleSpace();
 									}
 									EditorGUILayout.EndHorizontal();
-								}
 
-								GUI.backgroundColor = origBackgroundColor;
+									if (selected)
+									{
+										GUI.backgroundColor = kSelectedButtonsBackgroundColor;
+										EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle);
+										{
+											GUI.backgroundColor = origBackgroundColor;
+
+											if (GUILayout.Button("Edit Key", EditorStyles.toolbarButton))
+											{
+												_editingKeyName = true;
+											}
+
+											if (GUILayout.Button("Delete", EditorStyles.toolbarButton))
+											{
+												DeleteSelected();
+											}
+
+											GUILayout.FlexibleSpace();
+										}
+										EditorGUILayout.EndHorizontal();
+									}
+
+									GUI.backgroundColor = origBackgroundColor;
+								}
 							}
 
 							GUILayout.FlexibleSpace();
@@ -529,6 +547,7 @@ namespace Framework
 					EditorGUI.FocusTextInControl(string.Empty);
 					SaveEditorPrefs();
 
+					_filter = "";
 					_needsRepaint = true;
 
 					string[] keys = GetKeys();
@@ -568,6 +587,27 @@ namespace Framework
 					}
 
 					return keys;
+				}
+
+				private bool MatchsFilter(string text)
+				{
+					if (!string.IsNullOrEmpty(_filter))
+					{
+						string textLow = text.ToLower();
+						string[] words = _filter.Split(' ');
+
+						foreach (string word in words)
+						{
+							if (textLow.Contains(word.ToLower()))
+							{
+								return true;
+							}
+						}
+
+						return false;
+					}
+
+					return true;
 				}
 			}
 		}
