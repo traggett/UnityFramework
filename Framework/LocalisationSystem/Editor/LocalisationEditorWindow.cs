@@ -360,7 +360,7 @@ namespace Framework
 
 										GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 										EditorGUI.BeginChangeCheck();
-										text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+										text = EditorGUILayout.DelayedTextField(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 										if (EditorGUI.EndChangeCheck())
 										{
 											Localisation.UpdateString(keys[i], Localisation.GetCurrentLanguage(), text);

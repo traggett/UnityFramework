@@ -24,9 +24,11 @@ namespace Framework
 
 			void Update()
 			{
-				if (_textMesh.text != _text)
+				string text = _text.GetLocalisedString();
+
+				if (_textMesh.text != text)
 				{
-					_textMesh.text = _text;
+					_textMesh.text = text;
 				}
 			}
 			#endregion

@@ -25,9 +25,11 @@ namespace Framework
 
 			void Update()
 			{
-				if (_UIText.text != _text)
+				string text = _text.GetLocalisedString();
+
+				if (_UIText.text != text)
 				{
-					_UIText.text = _text;
+					_UIText.text = text;
 				}
 			}
 			#endregion
