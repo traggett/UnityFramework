@@ -336,66 +336,59 @@ namespace Framework
 			{
 				string fullText = "";
 				int index = 0;
-
-				if (variables.Length > 0)
+				
+				while (index < text.Length)
 				{
-					while (index < text.Length)
+					int variableStartIndex = text.IndexOf(kVariableStartChars, index);
+
+					if (variableStartIndex != -1)
 					{
-						int variableStartIndex = text.IndexOf(kVariableStartChars, index);
-
-						if (variableStartIndex != -1)
+						int variableEndIndex = text.IndexOf(kVariableEndChars, variableStartIndex);
+						if (variableEndIndex == -1)
 						{
-							int variableEndIndex = text.IndexOf(kVariableEndChars, variableStartIndex);
-							if (variableEndIndex == -1)
-							{
-								Debug.LogError("Can't find matching end bracket for variable in localised string");
-								return null;
-							}
-
-							fullText += text.Substring(index, variableStartIndex - index);
-
-							int variableKeyStartIndex = variableStartIndex + kVariableEndChars.Length + 1;
-							string variableKey = text.Substring(variableKeyStartIndex, variableEndIndex - variableKeyStartIndex);
-
-							bool foundKey = false;
-
-							//First check provided variables
-							foreach (KeyValuePair<string, string> variable in variables)
-							{
-								if (variable.Key == variableKey)
-								{
-									fullText += variable.Value;
-									foundKey = true;
-									break;
-								}
-							}
-
-							//If not found in there check global variables
-							if (!foundKey)
-							{
-								VariableInfo info;
-								if (_variables.TryGetValue(variableKey, out info))
-								{
-									fullText += info._value;
-								}
-								else if (Application.isPlaying)
-								{
-									Debug.LogError("Can't find variable to replace key '" + variableKey + "'");
-								}
-							}
-
-							index = variableEndIndex + kVariableEndChars.Length;
+							Debug.LogError("Can't find matching end bracket for variable in localised string");
+							return null;
 						}
-						else
+
+						fullText += text.Substring(index, variableStartIndex - index);
+
+						int variableKeyStartIndex = variableStartIndex + kVariableEndChars.Length + 1;
+						string variableKey = text.Substring(variableKeyStartIndex, variableEndIndex - variableKeyStartIndex);
+
+						bool foundKey = false;
+
+						//First check provided variables
+						foreach (KeyValuePair<string, string> variable in variables)
 						{
-							fullText += text.Substring(index, text.Length - index);
-							break;
+							if (variable.Key == variableKey)
+							{
+								fullText += variable.Value;
+								foundKey = true;
+								break;
+							}
 						}
+
+						//If not found in there check global variables
+						if (!foundKey)
+						{
+							VariableInfo info;
+							if (_variables.TryGetValue(variableKey, out info))
+							{
+								fullText += info._value;
+							}
+							else if (Application.isPlaying)
+							{
+								Debug.LogError("Can't find variable to replace key '" + variableKey + "'");
+							}
+						}
+
+						index = variableEndIndex + kVariableEndChars.Length;
 					}
-				}
-				else
-				{
-					fullText = text;
+					else
+					{
+						fullText += text.Substring(index, text.Length - index);
+						break;
+					}
 				}
 
 				return fullText;
