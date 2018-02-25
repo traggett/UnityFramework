@@ -156,15 +156,18 @@ namespace Framework
 
 			public static bool AreGlobalVariablesOutOfDate(params LocalisationVariableInfo[] varaiables)
 			{
-				for (int i=0; i<varaiables.Length; i++)
+				if (varaiables != null)
 				{
-					VariableInfo info;
-
-					if (_variables.TryGetValue(varaiables[i]._key, out info))
+					for (int i = 0; i < varaiables.Length; i++)
 					{
-						if (varaiables[i]._version != info._version)
+						VariableInfo info;
+
+						if (_variables.TryGetValue(varaiables[i]._key, out info))
 						{
-							return true;
+							if (varaiables[i]._version != info._version)
+							{
+								return true;
+							}
 						}
 					}
 				}
