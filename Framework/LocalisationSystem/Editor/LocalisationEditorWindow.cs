@@ -596,6 +596,11 @@ namespace Framework
 				{
 					Focus();
 
+					InitGUIStyles();
+
+					if (_keys == null)
+						_keys = GetKeys();
+
 					_editorPrefs._selectedKey = key;
 					EditorGUI.FocusTextInControl(string.Empty);
 					SaveEditorPrefs();
