@@ -23,7 +23,7 @@ namespace Framework
 				private static readonly string kEditorPrefKey = "LocalisationEditor.Settings";
 				private static readonly string kKeySizePref = "KeySize";
 				private static readonly string kFontSizePref = "FontSize";
-
+				
 				private static readonly float kMinKeysWidth = 180.0f;
 				private static readonly float kToolBarHeight = 71.0f;
 				private static readonly float kBottomBarHeight = 12.0f;
@@ -103,11 +103,6 @@ namespace Framework
 
 					if (_needsRepaint)
 						Repaint();
-				}
-
-				void Update()
-				{
-					_keys = GetKeys();
 				}
 
 				void OnDestroy()
@@ -336,11 +331,18 @@ namespace Framework
 
 				private void RenderTable()
 				{
-					_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
+					Vector2 scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
 					{
+						if (_scrollPosition != scrollPosition)
+						{
+							_scrollPosition = scrollPosition;
+							EditorGUI.FocusTextInControl(string.Empty);
+						}
+
 						//On layout, check what part of table is currently being viewed
 						if (Event.current.type == EventType.Layout)
 						{
+							_keys = GetKeys();
 							GetViewableRange(_scrollPosition.y, GetTableAreaHeight(), out _viewStartIndex, out _viewEndIndex, out _contentStart, out _contentHeight);
 						}
 						

@@ -163,10 +163,8 @@ namespace Framework
 								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 								float labelWidth = EditorUtils.GetLabelWidth();
 
-								Rect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth - editbuttonWidth - buttonSpace, height);
-								EditorGUI.BeginDisabledGroup(true);
-								EditorGUI.TextArea(textPosition, text);
-								EditorGUI.EndDisabledGroup();
+								Rect textPosition = new Rect(position.x + labelWidth + 2.0f, yPos, position.width - labelWidth - 2.0f - editbuttonWidth - buttonSpace, height);
+								EditorGUI.LabelField(textPosition, text, EditorUtils.ReadonlyTextBoxStyle);
 								Rect editTextPosition = new Rect(textPosition.x + textPosition.width + buttonSpace, yPos, editbuttonWidth, EditorGUIUtility.singleLineHeight);
 
 								if (GUI.Button(editTextPosition, "Edit"))

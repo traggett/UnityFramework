@@ -56,6 +56,24 @@ namespace Framework
 					}
 				}
 
+				private static GUIStyle _readonlyTextBoxStyle = null;
+				public static GUIStyle ReadonlyTextBoxStyle
+				{
+					get
+					{
+						if (_readonlyTextBoxStyle == null)
+						{
+							_readonlyTextBoxStyle = new GUIStyle(GUI.skin.GetStyle("TextArea"));
+							_readonlyTextBoxStyle.padding = new RectOffset(6, 6, 2, 2);
+							_readonlyTextBoxStyle.richText = true;
+							_readonlyTextBoxStyle.fontStyle = FontStyle.Italic;
+							_readonlyTextBoxStyle.normal.textColor = new Color(0.3f, 0.3f, 0.3f, 1.0f);
+						}
+
+						return _readonlyTextBoxStyle;
+					}
+				}
+
 				private static GUIStyle _textStyle = null;
 				public static GUIStyle TextStyle
 				{
