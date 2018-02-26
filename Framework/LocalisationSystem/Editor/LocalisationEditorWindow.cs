@@ -414,42 +414,31 @@ namespace Framework
 								Localisation.UpdateString(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
 							}
 						}
-						
+
 						string[] folders = Localisation.GetStringFolders();
 						int currentFolderIndex = 0;
-						string currentFolder;
-						for (int i = 0; i < folders.Length; i++)
-						{
-							//To do - if the first bit of our folder exists then thats the current folder eg Roles/NewRole/Name - Roles/
-							if (folders[i] == Localisation.GetFolderName(_addNewKey))
-							{
-								currentFolderIndex = i;
-								break;
-							} 
-						}
-						
+						string keyWithoutFolder;
+						Localisation.GetFolderIndex(_addNewKey, out currentFolderIndex, out keyWithoutFolder);
+
 						EditorGUI.BeginChangeCheck();
 						int newFolderIndex = EditorGUILayout.Popup(currentFolderIndex, folders);
-						currentFolder = newFolderIndex == 0 ? "" : folders[newFolderIndex];
+						string currentFolder = newFolderIndex == 0 ? "" : folders[newFolderIndex];
 						if (EditorGUI.EndChangeCheck())
 						{
 							if (newFolderIndex != 0)
-								_addNewKey = currentFolder + "/" + Localisation.GetKeyWithoutFolder(_addNewKey);
-							else if (currentFolderIndex != 0)
-								_addNewKey = Localisation.GetKeyWithoutFolder(_addNewKey);
+								_addNewKey = currentFolder + "/" + keyWithoutFolder;
 						}
 						
 						EditorGUILayout.LabelField("/", GUILayout.Width(8));
 
 						if (newFolderIndex != 0)
 						{
-							string newAddKey = EditorGUILayout.TextField(Localisation.GetKeyWithoutFolder(_addNewKey));
-							_addNewKey = currentFolder + "/" + newAddKey;
+							keyWithoutFolder = EditorGUILayout.TextField(keyWithoutFolder);
+							_addNewKey = currentFolder + "/" + keyWithoutFolder;
 						}
 						else
 						{
-							string newAddKey = EditorGUILayout.TextField(_addNewKey);
-							_addNewKey = newAddKey;
+							_addNewKey = EditorGUILayout.TextField(_addNewKey);
 						}
 
 						GUILayout.FlexibleSpace();

@@ -295,6 +295,36 @@ namespace Framework
 				return folder;
 			}
 
+			public static bool GetFolderIndex(string key, out int folder, out string exKey)
+			{
+				folder = 0;
+				exKey = key;
+
+				if (!string.IsNullOrEmpty(key))
+				{
+					int longestFolder = -1;
+
+					for (int i = 0; i < _editorFolders.Length; i++)
+					{
+						if (key.StartsWith(_editorFolders[i]) && (longestFolder == -1 || _editorFolders[i].Length > _editorFolders[longestFolder].Length))
+						{
+							longestFolder = i;
+						}
+					}
+
+					if (longestFolder != -1)
+					{
+						exKey = key.Substring(_editorFolders[longestFolder].Length+1);
+						folder = longestFolder;
+
+						return true;
+					}
+
+				}
+
+				return false;
+			}
+
 			public static string GetKeyWithoutFolder(string key)
 			{
 				string keyWithoutFolder = key;
