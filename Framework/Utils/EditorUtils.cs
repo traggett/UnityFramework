@@ -347,7 +347,7 @@ namespace Framework
 
 				public static float GetLabelWidth()
 				{
-					return EditorGUIUtility.labelWidth - 4.0f - (EditorGUI.indentLevel * 14.0f);
+					return EditorGUIUtility.labelWidth - 3.0f - (EditorGUI.indentLevel * 14.0f);
 				}
 
 				private static MethodInfo _editorGUIGradient_MethodInfo;

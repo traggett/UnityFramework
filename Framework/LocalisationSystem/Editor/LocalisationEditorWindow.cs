@@ -54,6 +54,13 @@ namespace Framework
 				private GUIStyle _keyStyle;
 				private GUIStyle _textStyle;
 
+				private int _viewStartIndex;
+				private int _viewEndIndex;
+				private float _contentHeight;
+				private float _contentStart;
+
+				private string[] _keys;
+
 				private enum eKeySortOrder
 				{
 					None,
@@ -96,6 +103,11 @@ namespace Framework
 
 					if (_needsRepaint)
 						Repaint();
+				}
+
+				void Update()
+				{
+					_keys = GetKeys();
 				}
 
 				void OnDestroy()
@@ -234,6 +246,7 @@ namespace Framework
 							if (GUILayout.Button("Reset Scale", EditorStyles.toolbarButton))
 							{
 								fontSize = kDefaultFontSize;
+								EditorGUI.FocusTextInControl(string.Empty);
 							}
 
 							if (_editorPrefs._fontSize != fontSize)
@@ -325,19 +338,19 @@ namespace Framework
 				{
 					_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
 					{
-						string[] keys = GetKeys();
-
-						EditorGUILayout.BeginVertical(GUILayout.Height(CalculateTableHeight(keys)));
+						//On layout, check what part of table is currently being viewed
+						if (Event.current.type == EventType.Layout)
 						{
-							int viewStartIndex, viewEndIndex;
-							float contentStart;
-							GetViewableRange(keys, _scrollPosition.y, GetTableAreaHeight(), out viewStartIndex, out viewEndIndex, out contentStart);
-
-							GUILayout.Label(GUIContent.none, GUILayout.Height(contentStart));
+							GetViewableRange(_scrollPosition.y, GetTableAreaHeight(), out _viewStartIndex, out _viewEndIndex, out _contentStart, out _contentHeight);
+						}
+						
+						EditorGUILayout.BeginVertical(GUILayout.Height(_contentHeight));
+						{
+							GUILayout.Label(GUIContent.none, GUILayout.Height(_contentStart));
 							
-							for (int i = viewStartIndex; i < viewEndIndex; i++)
+							for (int i = _viewStartIndex; i < _viewEndIndex; i++)
 							{
-								bool selected = keys[i] == _editorPrefs._selectedKey;
+								bool selected = _keys[i] == _editorPrefs._selectedKey;
 									
 								Color origBackgroundColor = GUI.backgroundColor;
 								GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
@@ -349,18 +362,18 @@ namespace Framework
 									if (selected && _editingKeyName)
 									{
 										EditorGUI.BeginChangeCheck();
-										string key = EditorGUILayout.DelayedTextField(keys[i], _textStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true));
+										string key = EditorGUILayout.DelayedTextField(_keys[i], _textStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true));
 										if (EditorGUI.EndChangeCheck())
 										{
 											_editingKeyName = false;
-											Localisation.ChangeKey(keys[i], key);
+											Localisation.ChangeKey(_keys[i], key);
 										}
 									}					
 									else
 									{
-										if (GUILayout.Button(keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true)))
+										if (GUILayout.Button(_keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true)))
 										{
-											_editorPrefs._selectedKey = keys[i];
+											_editorPrefs._selectedKey = _keys[i];
 											_editingKeyName = false;
 											EditorGUI.FocusTextInControl(string.Empty);
 										}
@@ -369,11 +382,11 @@ namespace Framework
 									GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 									EditorGUI.BeginChangeCheck();
 
-									string text = Localisation.GetUnformattedString(keys[i]);
+									string text = Localisation.GetUnformattedString(_keys[i]);
 									text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 									if (EditorGUI.EndChangeCheck())
 									{
-										Localisation.UpdateString(keys[i], Localisation.GetCurrentLanguage(), text);
+										Localisation.UpdateString(_keys[i], Localisation.GetCurrentLanguage(), text);
 									}
 								}
 								EditorGUILayout.EndHorizontal();
@@ -419,6 +432,8 @@ namespace Framework
 							if (!Localisation.IsKeyInTable(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
 							{
 								Localisation.UpdateString(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
+								SelectKey(_addNewKey);
+								_addNewKey = "";
 							}
 						}
 
@@ -514,6 +529,7 @@ namespace Framework
 								if (inputEvent.commandName == "SoftDelete")
 								{
 									DeleteSelected();
+									_needsRepaint = true;
 								}
 								else if (inputEvent.commandName == "UndoRedoPerformed")
 								{
@@ -547,45 +563,31 @@ namespace Framework
 
 					return height;
 				}	
-
-				private float CalculateTableHeight(string[] keys)
+				
+				private void GetViewableRange(float viewStart, float viewHeight, out int startIndex, out int endIndex, out float contentStart, out float contentHeight)
 				{
-					float height = 0.0f;
-
-					for (int i = 0; i < keys.Length; i++)
-					{
-						height += GetItemHeight(keys[i], Localisation.GetUnformattedString(keys[i]));
-					}
-
-					return height;
-				}
-
-				private void GetViewableRange(string[] keys, float viewStart, float viewHeight, out int startIndex, out int endIndex, out float contentStart)
-				{
-					float currentY = 0.0f;
-					
-					startIndex = keys.Length;
-					endIndex = keys.Length;
+					startIndex = _keys.Length;
+					endIndex = _keys.Length;
 					contentStart = 0.0f;
+					contentHeight = 0.0f;
 
-					for (int i = 0; i < keys.Length; i++)
+					for (int i = 0; i < _keys.Length; i++)
 					{
-						string text = Localisation.GetUnformattedString(keys[i]);
+						string text = Localisation.GetUnformattedString(_keys[i]);
 
-						float height = GetItemHeight(keys[i], text);
+						float height = GetItemHeight(_keys[i], text);
 
-						if (viewStart >= currentY && viewStart <= currentY + height)
+						if (viewStart >= contentHeight && viewStart <= contentHeight + height)
 						{
 							startIndex = i;
-							contentStart = currentY;
+							contentStart = contentHeight;
 						}
 
-						currentY += height;
+						contentHeight += height;
 
-						if (currentY > viewStart + viewHeight)
+						if (contentHeight > viewStart + viewHeight && i < endIndex)
 						{
 							endIndex = i + 1;
-							break;
 						}
 					}
 				}
@@ -600,17 +602,15 @@ namespace Framework
 
 					_filter = "";
 					_needsRepaint = true;
-
-					string[] keys = GetKeys();
-
+					
 					float toSelected = 0.0f;
 
-					for (int i = 0; i < keys.Length; i++)
+					for (int i = 0; i < _keys.Length; i++)
 					{
-						if (keys[i] == _editorPrefs._selectedKey)
+						if (_keys[i] == _editorPrefs._selectedKey)
 							break;
 
-						toSelected += GetItemHeight(keys[i], Localisation.GetUnformattedString(keys[i]));
+						toSelected += GetItemHeight(_keys[i], Localisation.GetUnformattedString(_keys[i]));
 					}
 
 					float scrollAreaHeight = GetTableAreaHeight();

@@ -65,6 +65,7 @@ namespace Framework
 			public static void LoadStrings()
 			{
 				_localisationMap = null;
+				_dirty = false;
 
 				TextAsset asset = Resources.Load(kDefaultLocalisationFilePath) as TextAsset;
 
