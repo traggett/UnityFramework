@@ -228,6 +228,7 @@ namespace Framework
 				}
 			}
 
+#if UNITY_EDITOR
 			public static void SaveStrings()
 			{
 				if (_localisationMap!= null)
@@ -249,6 +250,7 @@ namespace Framework
 
 				_dirty = false;
 			}
+#endif
 
 			public static bool HasUnsavedChanges()
 			{

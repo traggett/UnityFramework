@@ -24,8 +24,9 @@ namespace Framework
 				private static readonly string kFontSizePref = "FontSize";
 
 				private static readonly float kMinKeysWidth = 180.0f;
-				private static readonly float kToolBarHeight = 60.0f;
-				private static readonly float kBottomBarHeight = 16.0f;
+				private static readonly float kToolBarHeight = 71.0f;
+				private static readonly float kBottomBarHeight = 12.0f;
+				private static readonly float kEditKeyBarHeight = 29.0f;
 
 				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
 				private static readonly Color kSelectedButtonsBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 0.75f);
@@ -71,7 +72,7 @@ namespace Framework
 					_instance = (LocalisationEditorWindow)GetWindow(typeof(LocalisationEditorWindow), false, kWindowWindowName);
 					_instance.Init();
 				}
-				#endregion		
+				#endregion
 
 				#region EditorWindow
 				void OnGUI()
@@ -116,7 +117,7 @@ namespace Framework
 				{
 					if (_instance == null)
 						CreateWindow();
-					
+
 					_instance.SelectKey(key);
 				}
 
@@ -153,26 +154,32 @@ namespace Framework
 				{
 					if (_titleStyle == null && EditorStyles.label != null)
 					{
-						_titleStyle = new GUIStyle(EditorStyles.label);
-						_titleStyle.richText = true;
-						_titleStyle.alignment = TextAnchor.MiddleCenter;
+						_titleStyle = new GUIStyle(EditorStyles.label)
+						{
+							richText = true,
+							alignment = TextAnchor.MiddleCenter
+						};
 					}
 
 					if (_keyStyle == null && EditorStyles.helpBox != null)
 					{
-						_keyStyle = new GUIStyle(EditorStyles.helpBox);
-						_keyStyle.margin = new RectOffset(0, 0, 0, 0);
-						_keyStyle.fontSize = _editorPrefs._fontSize;
+						_keyStyle = new GUIStyle(EditorStyles.helpBox)
+						{
+							margin = new RectOffset(0, 0, 0, 0),
+							fontSize = _editorPrefs._fontSize
+						};
 						_keyStyle.padding.left = 8;
 					}
 
 					if (_textStyle == null && EditorStyles.textArea != null)
 					{
-						_textStyle = new GUIStyle(EditorStyles.textArea);
-						_textStyle.margin = new RectOffset(1, 1, 1, 1);
-						_textStyle.font = _keyStyle.font;
-						_textStyle.fontSize = _editorPrefs._fontSize;
-						_textStyle.padding = new RectOffset(4, 4, 4, 4);
+						_textStyle = new GUIStyle(EditorStyles.textArea)
+						{
+							margin = new RectOffset(1, 1, 1, 1),
+							font = _keyStyle.font,
+							fontSize = _editorPrefs._fontSize,
+							padding = new RectOffset(4, 4, 4, 4)
+						};
 
 						Font font = _editorPrefs._font.GetAsset();
 						if (font == null)
@@ -288,7 +295,7 @@ namespace Framework
 
 							//Resizer
 							RenderResizer();
-							
+
 							//Text
 							EditorGUI.BeginChangeCheck();
 							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(Localisation.GetCurrentLanguage(), EditorStyles.toolbarButton);
@@ -312,24 +319,29 @@ namespace Framework
 					_resizerRect.width += 16;
 					EditorGUIUtility.AddCursorRect(_resizerRect, MouseCursor.SplitResizeLeftRight);
 				}
-				
+
 				private void RenderTable()
 				{
 					_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
 					{
-						EditorGUILayout.BeginVertical();
+						EditorGUILayout.BeginVertical(GUILayout.Height(CalculateTableHeight()));
 						{
 							string[] keys = GetKeys();
 
-							for (int i = 1; i < keys.Length; i++)
+							int viewStartIndex, viewEndIndex;
+							float contentStart;
+							GetViewableRange(_scrollPosition.y, GetTableAreaHeight(), out viewStartIndex, out viewEndIndex, out contentStart);
+
+							GUILayout.Label(GUIContent.none, GUILayout.Height(contentStart));
+							
+							for (int i = viewStartIndex; i < viewEndIndex; i++)
 							{
 								string text = Localisation.GetUnformattedString(keys[i]);
 
 								if (MatchsFilter(keys[i]) || MatchsFilter(text))
 								{
 									bool selected = keys[i] == _editorPrefs._selectedKey;
-									int numLines = StringUtils.GetNumberOfLines(text);
-
+									
 									Color origBackgroundColor = GUI.backgroundColor;
 									GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
 
@@ -345,7 +357,7 @@ namespace Framework
 											{
 												_editingKeyName = false;
 												Localisation.ChangeKey(keys[i], key);
-												_needsRepaint = true;
+												//_needsRepaint = true;
 											}
 										}
 										else
@@ -360,7 +372,7 @@ namespace Framework
 
 										GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 										EditorGUI.BeginChangeCheck();
-										text = EditorGUILayout.DelayedTextField(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+										text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 										if (EditorGUI.EndChangeCheck())
 										{
 											Localisation.UpdateString(keys[i], Localisation.GetCurrentLanguage(), text);
@@ -428,7 +440,7 @@ namespace Framework
 							if (newFolderIndex != 0)
 								_addNewKey = currentFolder + "/" + keyWithoutFolder;
 						}
-						
+
 						EditorGUILayout.LabelField("/", GUILayout.Width(8));
 
 						if (newFolderIndex != 0)
@@ -501,7 +513,7 @@ namespace Framework
 								}
 							}
 							break;
-					
+
 						case EventType.ValidateCommand:
 							{
 								if (inputEvent.commandName == "SoftDelete")
@@ -528,6 +540,68 @@ namespace Framework
 					}
 				}
 
+
+				private float GetItemHeight(string key, string text)
+				{
+					float height = _keyStyle.CalcSize(new GUIContent(text)).y;
+					
+					if (key == _editorPrefs._selectedKey)
+					{
+						height += kEditKeyBarHeight;
+					}
+
+					return height;
+				}	
+
+				private float CalculateTableHeight()
+				{
+					float height = 0.0f;
+
+					string[] keys = GetKeys();
+
+					for (int i = 1; i < keys.Length; i++)
+					{
+						height += GetItemHeight(keys[i], Localisation.GetUnformattedString(keys[i]));
+					}
+
+					return height;
+				}
+
+				private void GetViewableRange(float viewStart, float viewHeight, out int startIndex, out int endIndex, out float contentStart)
+				{
+					float currentY = 0.0f;
+
+					string[] keys = GetKeys();
+
+					startIndex = keys.Length;
+					endIndex = keys.Length;
+					contentStart = 0.0f;
+
+					for (int i = 1; i < keys.Length; i++)
+					{
+						string text = Localisation.GetUnformattedString(keys[i]);
+
+						if (MatchsFilter(keys[i]) || MatchsFilter(text))
+						{
+							float height = GetItemHeight(keys[i], text);
+
+							if (viewStart >= currentY && viewStart <= currentY + height)
+							{
+								startIndex = i;
+								contentStart = currentY;
+							}
+
+							currentY += height;
+
+							if (currentY > viewStart + viewHeight)
+							{
+								endIndex = i + 1;
+								break;
+							}
+						}
+					}
+				}
+
 				private void SelectKey(string key)
 				{
 					Focus();
@@ -548,16 +622,16 @@ namespace Framework
 						if (keys[i] == _editorPrefs._selectedKey)
 							break;
 
-						string text = Localisation.GetUnformattedString(keys[i]);
-
-						Vector2 textSize = _keyStyle.CalcSize(new GUIContent(text));
-						Vector2 keySize = _textStyle.CalcSize(new GUIContent(keys[i]));
-
-						toSelected += Mathf.Max(keySize.y, textSize.y);
+						toSelected += GetItemHeight(keys[i], Localisation.GetUnformattedString(keys[i]));
 					}
 
-					float scrollAreaHeight = this.position.height - kToolBarHeight - kBottomBarHeight;
+					float scrollAreaHeight = GetTableAreaHeight();
 					_scrollPosition.y = Mathf.Max(toSelected - scrollAreaHeight * 0.4f, 0.0f);
+				}
+
+				private float GetTableAreaHeight()
+				{
+					return this.position.height - kToolBarHeight - kBottomBarHeight;
 				}
 
 				private string[] GetKeys()
