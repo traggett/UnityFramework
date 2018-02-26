@@ -5,6 +5,7 @@ using System;
 namespace Framework
 {
 	using Serialization;
+	using System.Collections.Generic;
 	using Utils;
 	using Utils.Editor;
 
@@ -324,89 +325,83 @@ namespace Framework
 				{
 					_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
 					{
-						EditorGUILayout.BeginVertical(GUILayout.Height(CalculateTableHeight()));
-						{
-							string[] keys = GetKeys();
+						string[] keys = GetKeys();
 
+						EditorGUILayout.BeginVertical(GUILayout.Height(CalculateTableHeight(keys)));
+						{
 							int viewStartIndex, viewEndIndex;
 							float contentStart;
-							GetViewableRange(_scrollPosition.y, GetTableAreaHeight(), out viewStartIndex, out viewEndIndex, out contentStart);
+							GetViewableRange(keys, _scrollPosition.y, GetTableAreaHeight(), out viewStartIndex, out viewEndIndex, out contentStart);
 
 							GUILayout.Label(GUIContent.none, GUILayout.Height(contentStart));
 							
 							for (int i = viewStartIndex; i < viewEndIndex; i++)
 							{
-								string text = Localisation.GetUnformattedString(keys[i]);
-
-								if (MatchsFilter(keys[i]) || MatchsFilter(text))
-								{
-									bool selected = keys[i] == _editorPrefs._selectedKey;
+								bool selected = keys[i] == _editorPrefs._selectedKey;
 									
-									Color origBackgroundColor = GUI.backgroundColor;
-									GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
+								Color origBackgroundColor = GUI.backgroundColor;
+								GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
 
-									EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle);
+								EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle);
+								{
+									GUI.backgroundColor = kKeyBackgroundColor;
+
+									if (selected && _editingKeyName)
 									{
-										GUI.backgroundColor = kKeyBackgroundColor;
-
-										if (selected && _editingKeyName)
-										{
-											EditorGUI.BeginChangeCheck();
-											string key = EditorGUILayout.DelayedTextField(keys[i], _textStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true));
-											if (EditorGUI.EndChangeCheck())
-											{
-												_editingKeyName = false;
-												Localisation.ChangeKey(keys[i], key);
-												//_needsRepaint = true;
-											}
-										}
-										else
-										{
-											if (GUILayout.Button(keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true)))
-											{
-												_editorPrefs._selectedKey = keys[i];
-												_editingKeyName = false;
-												EditorGUI.FocusTextInControl(string.Empty);
-											}
-										}
-
-										GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 										EditorGUI.BeginChangeCheck();
-										text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+										string key = EditorGUILayout.DelayedTextField(keys[i], _textStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true));
 										if (EditorGUI.EndChangeCheck())
 										{
-											Localisation.UpdateString(keys[i], Localisation.GetCurrentLanguage(), text);
+											_editingKeyName = false;
+											Localisation.ChangeKey(keys[i], key);
 										}
+									}					
+									else
+									{
+										if (GUILayout.Button(keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true)))
+										{
+											_editorPrefs._selectedKey = keys[i];
+											_editingKeyName = false;
+											EditorGUI.FocusTextInControl(string.Empty);
+										}
+									}
+
+									GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
+									EditorGUI.BeginChangeCheck();
+
+									string text = Localisation.GetUnformattedString(keys[i]);
+									text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+									if (EditorGUI.EndChangeCheck())
+									{
+										Localisation.UpdateString(keys[i], Localisation.GetCurrentLanguage(), text);
+									}
+								}
+								EditorGUILayout.EndHorizontal();
+
+								if (selected)
+								{
+									GUI.backgroundColor = kSelectedButtonsBackgroundColor;
+									EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle);
+									{
+										GUI.backgroundColor = origBackgroundColor;
+
+										if (GUILayout.Button("Edit Key", EditorStyles.toolbarButton))
+										{
+											_editingKeyName = true;
+										}
+
+										if (GUILayout.Button("Delete", EditorStyles.toolbarButton))
+										{
+											DeleteSelected();
+										}
+
+										GUILayout.FlexibleSpace();
 									}
 									EditorGUILayout.EndHorizontal();
-
-									if (selected)
-									{
-										GUI.backgroundColor = kSelectedButtonsBackgroundColor;
-										EditorGUILayout.BeginHorizontal(EditorUtils.ColoredRoundedBoxStyle);
-										{
-											GUI.backgroundColor = origBackgroundColor;
-
-											if (GUILayout.Button("Edit Key", EditorStyles.toolbarButton))
-											{
-												_editingKeyName = true;
-											}
-
-											if (GUILayout.Button("Delete", EditorStyles.toolbarButton))
-											{
-												DeleteSelected();
-											}
-
-											GUILayout.FlexibleSpace();
-										}
-										EditorGUILayout.EndHorizontal();
-									}
-
-									GUI.backgroundColor = origBackgroundColor;
 								}
-							}
 
-							GUILayout.FlexibleSpace();
+								GUI.backgroundColor = origBackgroundColor;
+							}
 						}
 						EditorGUILayout.EndVertical();
 					}
@@ -553,13 +548,11 @@ namespace Framework
 					return height;
 				}	
 
-				private float CalculateTableHeight()
+				private float CalculateTableHeight(string[] keys)
 				{
 					float height = 0.0f;
 
-					string[] keys = GetKeys();
-
-					for (int i = 1; i < keys.Length; i++)
+					for (int i = 0; i < keys.Length; i++)
 					{
 						height += GetItemHeight(keys[i], Localisation.GetUnformattedString(keys[i]));
 					}
@@ -567,37 +560,32 @@ namespace Framework
 					return height;
 				}
 
-				private void GetViewableRange(float viewStart, float viewHeight, out int startIndex, out int endIndex, out float contentStart)
+				private void GetViewableRange(string[] keys, float viewStart, float viewHeight, out int startIndex, out int endIndex, out float contentStart)
 				{
 					float currentY = 0.0f;
-
-					string[] keys = GetKeys();
-
+					
 					startIndex = keys.Length;
 					endIndex = keys.Length;
 					contentStart = 0.0f;
 
-					for (int i = 1; i < keys.Length; i++)
+					for (int i = 0; i < keys.Length; i++)
 					{
 						string text = Localisation.GetUnformattedString(keys[i]);
 
-						if (MatchsFilter(keys[i]) || MatchsFilter(text))
+						float height = GetItemHeight(keys[i], text);
+
+						if (viewStart >= currentY && viewStart <= currentY + height)
 						{
-							float height = GetItemHeight(keys[i], text);
+							startIndex = i;
+							contentStart = currentY;
+						}
 
-							if (viewStart >= currentY && viewStart <= currentY + height)
-							{
-								startIndex = i;
-								contentStart = currentY;
-							}
+						currentY += height;
 
-							currentY += height;
-
-							if (currentY > viewStart + viewHeight)
-							{
-								endIndex = i + 1;
-								break;
-							}
+						if (currentY > viewStart + viewHeight)
+						{
+							endIndex = i + 1;
+							break;
 						}
 					}
 				}
@@ -617,7 +605,7 @@ namespace Framework
 
 					float toSelected = 0.0f;
 
-					for (int i = 1; i < keys.Length; i++)
+					for (int i = 0; i < keys.Length; i++)
 					{
 						if (keys[i] == _editorPrefs._selectedKey)
 							break;
@@ -636,20 +624,29 @@ namespace Framework
 
 				private string[] GetKeys()
 				{
-					string[] keys = Localisation.GetStringKeys();
+					string[] allKeys = Localisation.GetStringKeys();
+					List<string> keys = new List<string>();
+
+					for (int i = 1; i < allKeys.Length; i++)
+					{
+						if (MatchsFilter(allKeys[i]) || MatchsFilter(Localisation.GetUnformattedString(allKeys[i])))
+						{
+							keys.Add(allKeys[i]);
+						}
+					}
 
 					switch (_sortOrder)
 					{
 						case eKeySortOrder.Asc:
-							Array.Sort(keys, StringComparer.InvariantCulture);
+							keys.Sort(StringComparer.InvariantCulture);
 							break;
 						case eKeySortOrder.Desc:
-							Array.Sort(keys, StringComparer.InvariantCulture);
-							Array.Reverse(keys);
+							keys.Sort(StringComparer.InvariantCulture);
+							keys.Reverse();
 							break;
 					}
 
-					return keys;
+					return keys.ToArray();
 				}
 
 				private bool MatchsFilter(string text)
