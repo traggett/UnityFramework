@@ -23,7 +23,8 @@ namespace Framework
 				private static readonly string kEditorPrefKey = "LocalisationEditor.Settings";
 				private static readonly string kKeySizePref = "KeySize";
 				private static readonly string kFontSizePref = "FontSize";
-				
+				private static readonly string kEditKeyId = "Localisation.EditKey";
+
 				private static readonly float kMinKeysWidth = 180.0f;
 				private static readonly float kToolBarHeight = 71.0f;
 				private static readonly float kBottomBarHeight = 12.0f;
@@ -48,10 +49,12 @@ namespace Framework
 				private bool _needsRepaint;
 				private string _addNewKey = string.Empty;
 				private bool _editingKeyName;
+				private bool _wasEditingKeyName;
 				private string _filter;
 
 				private GUIStyle _titleStyle;
 				private GUIStyle _keyStyle;
+				private GUIStyle _keyEditStyle;
 				private GUIStyle _textStyle;
 
 				private int _viewStartIndex;
@@ -160,7 +163,7 @@ namespace Framework
 
 				private void InitGUIStyles()
 				{
-					if (_titleStyle == null && EditorStyles.label != null)
+					if (_titleStyle == null)
 					{
 						_titleStyle = new GUIStyle(EditorStyles.label)
 						{
@@ -169,7 +172,7 @@ namespace Framework
 						};
 					}
 
-					if (_keyStyle == null && EditorStyles.helpBox != null)
+					if (_keyStyle == null)
 					{
 						_keyStyle = new GUIStyle(EditorStyles.helpBox)
 						{
@@ -179,7 +182,19 @@ namespace Framework
 						_keyStyle.padding.left = 8;
 					}
 
-					if (_textStyle == null && EditorStyles.textArea != null)
+					
+					if (_keyEditStyle == null)
+					{
+						_keyEditStyle = new GUIStyle(EditorStyles.textArea)
+						{
+							margin = new RectOffset(0, 0, 0, 0),
+							fontSize = _editorPrefs._fontSize
+						};
+						_keyEditStyle.padding.left = 8;
+						_keyEditStyle.padding.top = 3;
+					}
+
+					if (_textStyle == null)
 					{
 						_textStyle = new GUIStyle(EditorStyles.textArea)
 						{
@@ -364,12 +379,18 @@ namespace Framework
 									if (selected && _editingKeyName)
 									{
 										EditorGUI.BeginChangeCheck();
-										string key = EditorGUILayout.DelayedTextField(_keys[i], _textStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true));
+										GUI.SetNextControlName(kEditKeyId);
+										string key = EditorGUILayout.DelayedTextField(_keys[i], _keyEditStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.ExpandHeight(true));
 										if (EditorGUI.EndChangeCheck())
 										{
 											_editingKeyName = false;
 											Localisation.ChangeKey(_keys[i], key);
 										}
+
+										if (!_wasEditingKeyName)
+											EditorGUI.FocusTextInControl(kEditKeyId);
+
+										_wasEditingKeyName = true;
 									}					
 									else
 									{
@@ -403,11 +424,17 @@ namespace Framework
 										if (GUILayout.Button("Edit Key", EditorStyles.toolbarButton))
 										{
 											_editingKeyName = true;
+											_wasEditingKeyName = false;
 										}
 
 										if (GUILayout.Button("Delete", EditorStyles.toolbarButton))
 										{
 											DeleteSelected();
+										}
+
+										if (GUILayout.Button("Duplicate", EditorStyles.toolbarButton))
+										{
+											DuplicateSelected();
 										}
 
 										GUILayout.FlexibleSpace();
@@ -531,7 +558,10 @@ namespace Framework
 								if (inputEvent.commandName == "SoftDelete")
 								{
 									DeleteSelected();
-									_needsRepaint = true;
+								}
+								else if (inputEvent.commandName == "Duplicate")
+								{
+									DuplicateSelected();
 								}
 								else if (inputEvent.commandName == "UndoRedoPerformed")
 								{
@@ -553,6 +583,17 @@ namespace Framework
 					}
 				}
 
+				private void DuplicateSelected()
+				{
+					if (!string.IsNullOrEmpty(_editorPrefs._selectedKey))
+					{
+						string newKey = _editorPrefs._selectedKey + " (Copy)";
+						Localisation.UpdateString(newKey, Localisation.GetCurrentLanguage(), string.Empty);
+						SelectKey(newKey);
+
+						_needsRepaint = true;
+					}
+				}
 
 				private float GetItemHeight(string key, string text)
 				{
