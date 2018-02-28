@@ -56,6 +56,23 @@ namespace Framework
 					}
 				}
 
+				private static GUIStyle _readonlyTextBoxStyle = null;
+				public static GUIStyle ReadonlyTextBoxStyle
+				{
+					get
+					{
+						if (_readonlyTextBoxStyle == null)
+						{
+							_readonlyTextBoxStyle = new GUIStyle(GUI.skin.GetStyle("TextArea"));
+							_readonlyTextBoxStyle.padding = new RectOffset(6, 6, 2, 0);
+							_readonlyTextBoxStyle.richText = true;
+							_readonlyTextBoxStyle.normal.textColor = new Color(0.25f, 0.25f, 0.25f, 1.0f);
+						}
+
+						return _readonlyTextBoxStyle;
+					}
+				}
+
 				private static GUIStyle _textStyle = null;
 				public static GUIStyle TextStyle
 				{
@@ -347,7 +364,7 @@ namespace Framework
 
 				public static float GetLabelWidth()
 				{
-					return EditorGUIUtility.labelWidth - 4.0f - (EditorGUI.indentLevel * 14.0f);
+					return EditorGUIUtility.labelWidth - 3.0f - (EditorGUI.indentLevel * 14.0f);
 				}
 
 				private static MethodInfo _editorGUIGradient_MethodInfo;

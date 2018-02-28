@@ -40,9 +40,6 @@ namespace Framework
 							childNodes.Add(arrayItemXmlNode);
 						}
 
-						//Sort child nodes
-						childNodes.Sort((x, y) => x.Attributes["key"].Value.CompareTo(y.Attributes["key"].Value));
-
 						//Append child nodes in alphabetical order
 						foreach (XmlNode childNode in childNodes)
 						{

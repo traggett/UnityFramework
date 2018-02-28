@@ -65,6 +65,7 @@ namespace Framework
 			public static void LoadStrings()
 			{
 				_localisationMap = null;
+				_dirty = false;
 
 				TextAsset asset = Resources.Load(kDefaultLocalisationFilePath) as TextAsset;
 
@@ -156,15 +157,18 @@ namespace Framework
 
 			public static bool AreGlobalVariablesOutOfDate(params LocalisationVariableInfo[] varaiables)
 			{
-				for (int i=0; i<varaiables.Length; i++)
+				if (varaiables != null)
 				{
-					VariableInfo info;
-
-					if (_variables.TryGetValue(varaiables[i]._key, out info))
+					for (int i = 0; i < varaiables.Length; i++)
 					{
-						if (varaiables[i]._version != info._version)
+						VariableInfo info;
+
+						if (_variables.TryGetValue(varaiables[i]._key, out info))
 						{
-							return true;
+							if (varaiables[i]._version != info._version)
+							{
+								return true;
+							}
 						}
 					}
 				}
@@ -225,6 +229,7 @@ namespace Framework
 				}
 			}
 
+#if UNITY_EDITOR
 			public static void SaveStrings()
 			{
 				if (_localisationMap!= null)
@@ -246,6 +251,7 @@ namespace Framework
 
 				_dirty = false;
 			}
+#endif
 
 			public static bool HasUnsavedChanges()
 			{
@@ -292,6 +298,36 @@ namespace Framework
 				return folder;
 			}
 
+			public static bool GetFolderIndex(string key, out int folder, out string exKey)
+			{
+				folder = 0;
+				exKey = key;
+
+				if (!string.IsNullOrEmpty(key))
+				{
+					int longestFolder = -1;
+
+					for (int i = 0; i < _editorFolders.Length; i++)
+					{
+						if (key.StartsWith(_editorFolders[i]) && (longestFolder == -1 || _editorFolders[i].Length > _editorFolders[longestFolder].Length))
+						{
+							longestFolder = i;
+						}
+					}
+
+					if (longestFolder != -1)
+					{
+						exKey = key.Substring(_editorFolders[longestFolder].Length+1);
+						folder = longestFolder;
+
+						return true;
+					}
+
+				}
+
+				return false;
+			}
+
 			public static string GetKeyWithoutFolder(string key)
 			{
 				string keyWithoutFolder = key;
@@ -336,7 +372,7 @@ namespace Framework
 			{
 				string fullText = "";
 				int index = 0;
-
+				
 				while (index < text.Length)
 				{
 					int variableStartIndex = text.IndexOf(kVariableStartChars, index);

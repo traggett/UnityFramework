@@ -63,6 +63,11 @@ namespace Framework
 				return _cachedText;
 			}
 
+			public bool Equals(string text)
+			{
+				return GetLocalisedString() == text;
+			}
+
 #if UNITY_EDITOR
 			public string GetLocalisationKey()
 			{
