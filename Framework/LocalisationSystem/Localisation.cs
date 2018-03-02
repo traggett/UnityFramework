@@ -317,7 +317,15 @@ namespace Framework
 
 					if (longestFolder != -1)
 					{
-						exKey = key.Substring(_editorFolders[longestFolder].Length+1);
+						if (key.Length > _editorFolders[longestFolder].Length)
+						{
+							exKey = key.Substring(_editorFolders[longestFolder].Length + 1);
+						}
+						else
+						{
+							exKey = "";
+						}
+						
 						folder = longestFolder;
 
 						return true;
@@ -345,7 +353,7 @@ namespace Framework
 				return keyWithoutFolder;
 			}
 
-			public static string GetUnformattedString(string key)
+			public static string GetRawString(string key)
 			{
 				if (_localisationMap == null)
 					LoadStrings();

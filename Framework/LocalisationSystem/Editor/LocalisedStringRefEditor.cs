@@ -70,15 +70,8 @@ namespace Framework
 						{
 							string[] folders = Localisation.GetStringFolders();
 							int currentFolderIndex = 0;
-							for (int i = 0; i < folders.Length; i++)
-							{
-								//To do - if the first bit of our folder exists then thats the current folder eg Roles/NewRole/Name - Roles/
-								if (folders[i] == Localisation.GetFolderName(localisedString.GetLocalisationKey()))
-								{
-									currentFolderIndex = i;
-									break;
-								}
-							}
+							string keyWithoutFolder;
+							Localisation.GetFolderIndex(localisedString.GetLocalisationKey(), out currentFolderIndex, out keyWithoutFolder);
 
 							EditorGUILayout.BeginHorizontal();
 							{
@@ -93,13 +86,7 @@ namespace Framework
 								{
 									if (newFolderIndex != 0)
 									{
-										localisedString = new LocalisedStringRef(currentFolder + "/" + Localisation.GetKeyWithoutFolder(localisedString.GetLocalisationKey()));
-										localisedString.SetAutoNameParentName(editorParentName);
-										dataChanged = true;
-									}
-									else if (currentFolderIndex != 0)
-									{
-										localisedString = new LocalisedStringRef(Localisation.GetKeyWithoutFolder(localisedString.GetLocalisationKey()));
+										localisedString = new LocalisedStringRef(currentFolder + "/" + keyWithoutFolder);
 										localisedString.SetAutoNameParentName(editorParentName);
 										dataChanged = true;
 									}
@@ -108,17 +95,17 @@ namespace Framework
 								EditorGUILayout.LabelField(new GUIContent("/"), GUILayout.Width(44));
 
 								EditorGUI.BeginChangeCheck();
-								string newKey = EditorGUILayout.TextField(newFolderIndex != 0 ? Localisation.GetKeyWithoutFolder(localisedString.GetLocalisationKey()) : localisedString.GetLocalisationKey());
+								keyWithoutFolder = EditorGUILayout.TextField(keyWithoutFolder);
 								if (EditorGUI.EndChangeCheck())
 								{
-									localisedString = new LocalisedStringRef(newFolderIndex != 0 ? currentFolder + "/" + newKey : newKey);
+									localisedString = new LocalisedStringRef(currentFolder + "/" + keyWithoutFolder);
 									localisedString.SetAutoNameParentName(editorParentName);
 									dataChanged = true;
 								}							
 
 								if (GUILayout.Button("Auto", GUILayout.Width(36)))
 								{
-									newKey = localisedString.GetAutoKey();
+									string newKey = localisedString.GetAutoKey();
 									localisedString = new LocalisedStringRef(newKey);
 									localisedString.SetAutoNameParentName(editorParentName);
 									dataChanged = true;
@@ -147,9 +134,9 @@ namespace Framework
 								EditorGUI.BeginChangeCheck();
 								string text;
 								if (style != null)
-									text = EditorGUILayout.TextArea(Localisation.GetUnformattedString(currentKey), style);
+									text = EditorGUILayout.TextArea(Localisation.GetRawString(currentKey), style);
 								else
-									text = EditorGUILayout.TextArea(Localisation.GetUnformattedString(currentKey));
+									text = EditorGUILayout.TextArea(Localisation.GetRawString(currentKey));
 								if (EditorGUI.EndChangeCheck())
 								{
 									Localisation.UpdateString(currentKey, Localisation.GetCurrentLanguage(), text);
