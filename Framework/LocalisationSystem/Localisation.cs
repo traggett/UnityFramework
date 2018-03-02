@@ -281,23 +281,7 @@ namespace Framework
 
 				return _localisationMap.IsValidKey(key);
 			}
-
-			public static string GetFolderName(string key)
-			{
-				string folder = "";
-
-				if (!string.IsNullOrEmpty(key))
-				{
-					int lastSlash = key.LastIndexOf('/');
-					if (lastSlash > 0)
-					{
-						folder = key.Substring(0, lastSlash);
-					}
-				}
-
-				return folder;
-			}
-
+			
 			public static bool GetFolderIndex(string key, out int folder, out string exKey)
 			{
 				folder = 0;
@@ -317,7 +301,15 @@ namespace Framework
 
 					if (longestFolder != -1)
 					{
-						exKey = key.Substring(_editorFolders[longestFolder].Length+1);
+						if (key.Length > _editorFolders[longestFolder].Length)
+						{
+							exKey = key.Substring(_editorFolders[longestFolder].Length + 1);
+						}
+						else
+						{
+							exKey = "";
+						}
+						
 						folder = longestFolder;
 
 						return true;
@@ -327,25 +319,8 @@ namespace Framework
 
 				return false;
 			}
-
-			public static string GetKeyWithoutFolder(string key)
-			{
-				string keyWithoutFolder = key;
-
-				if (!string.IsNullOrEmpty(key))
-				{
-					int lastSlash = key.LastIndexOf('/');
-					if (lastSlash > 0)
-					{
-						keyWithoutFolder = key.Substring(lastSlash + 1, key.Length - lastSlash - 1);
-					}
-
-				}
-
-				return keyWithoutFolder;
-			}
-
-			public static string GetUnformattedString(string key)
+			
+			public static string GetRawString(string key)
 			{
 				if (_localisationMap == null)
 					LoadStrings();

@@ -76,33 +76,26 @@ namespace Framework
 						//Draw button for adding new key
 						if (currentKey == 0)
 						{
+							string[] folders = Localisation.GetStringFolders();
+							int currentFolderIndex = 0;
+							string keyWithoutFolder;
+							Localisation.GetFolderIndex(localisationkeyProperty.stringValue, out currentFolderIndex, out keyWithoutFolder);
+
+
 							float keyTextWidth = position.width - EditorUtils.GetLabelWidth() - (folderNameWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth);
 							float buttonWidth = autoKeySlashFakeWidth + keyTextWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth;
 
 
 							//Get list of current folder options
 							Rect folderText = new Rect(position.x, yPos, position.width - buttonWidth, EditorGUIUtility.singleLineHeight);
-
-							string[] folders = Localisation.GetStringFolders();
-							int currentFolderIndex = 0;
-							for (int i = 0; i < folders.Length; i++)
-							{
-								//To do - if the first bit of our folder exists then thats the current folder eg Roles/NewRole/Name - Roles/
-								if (folders[i] == Localisation.GetFolderName(localisationkeyProperty.stringValue))
-								{
-									currentFolderIndex = i;
-									break;
-								}
-							}
+							
 							EditorGUI.BeginChangeCheck();
 							int newFolderIndex = EditorGUI.Popup(folderText, "New Key", currentFolderIndex, folders);
 							string currentFolder = newFolderIndex == 0 ? "" : folders[newFolderIndex];
 							if (EditorGUI.EndChangeCheck())
 							{
 								if (newFolderIndex != 0)
-									localisationkeyProperty.stringValue = currentFolder + "/" + Localisation.GetKeyWithoutFolder(localisationkeyProperty.stringValue);
-								else if (currentFolderIndex != 0)
-									localisationkeyProperty.stringValue = Localisation.GetKeyWithoutFolder(localisationkeyProperty.stringValue);
+									localisationkeyProperty.stringValue = currentFolder + "/" + keyWithoutFolder;
 							}
 
 							Rect addKeySlash = new Rect(position.x + (position.width - buttonWidth) - fudge, yPos, autoKeySlashWidth, EditorGUIUtility.singleLineHeight);
@@ -111,13 +104,12 @@ namespace Framework
 							Rect addKeyText = new Rect(position.x + (position.width - buttonWidth) - fudge + autoKeySlashFakeWidth, yPos, keyTextWidth + fudge, EditorGUIUtility.singleLineHeight);
 							if (newFolderIndex != 0)
 							{
-								string newAddKey = EditorGUI.TextField(addKeyText, Localisation.GetKeyWithoutFolder(localisationkeyProperty.stringValue));
-								localisationkeyProperty.stringValue = currentFolder + "/" + newAddKey;
+								keyWithoutFolder = EditorGUI.TextField(addKeyText, keyWithoutFolder);
+								localisationkeyProperty.stringValue = currentFolder + "/" + keyWithoutFolder;
 							}
 							else
 							{
-								string newAddKey = EditorGUI.TextField(addKeyText, localisationkeyProperty.stringValue);
-								localisationkeyProperty.stringValue = newAddKey;
+								localisationkeyProperty.stringValue = EditorGUI.TextField(addKeyText, localisationkeyProperty.stringValue);
 							}
 
 							Rect autoKeyButton = new Rect(position.x + (position.width - buttonWidth) + autoKeySlashFakeWidth + buttonSpace + keyTextWidth, yPos, autoKeybuttonWidth, EditorGUIUtility.singleLineHeight);
@@ -158,9 +150,8 @@ namespace Framework
 							//Only display if have a valid key
 							if (!string.IsNullOrEmpty(localisationkeyProperty.stringValue) && Localisation.IsKeyInTable(localisationkeyProperty.stringValue))
 							{
-								string text = Localisation.GetUnformattedString(localisationkeyProperty.stringValue);
-								int numLines = StringUtils.GetNumberOfLines(text);
-								float height = (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
+								string text = StringUtils.GetFirstLine(Localisation.GetRawString(localisationkeyProperty.stringValue));
+								float height = EditorGUIUtility.singleLineHeight;
 								float labelWidth = EditorUtils.GetLabelWidth();
 
 								Rect textPosition = new Rect(position.x + labelWidth + 2.0f, yPos, position.width - labelWidth - 2.0f - editbuttonWidth - buttonSpace, height);
@@ -193,7 +184,7 @@ namespace Framework
 
 						if (Localisation.IsKeyInTable(localisationkeyProperty.stringValue))
 						{
-							string text = Localisation.GetUnformattedString(localisationkeyProperty.stringValue);
+							string text = Localisation.GetRawString(localisationkeyProperty.stringValue);
 							int numLines = StringUtils.GetNumberOfLines(text);
 							height += (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
 						}						

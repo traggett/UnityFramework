@@ -294,7 +294,13 @@ namespace Framework
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
 							GUILayout.Button("Filter", EditorStyles.toolbarButton);
+
+							EditorGUI.BeginChangeCheck();
 							_filter = EditorGUILayout.TextField(_filter);
+							if (EditorGUI.EndChangeCheck())
+							{
+								_needsRepaint = true;
+							}
 
 							if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
 							{
@@ -405,7 +411,7 @@ namespace Framework
 									GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 									EditorGUI.BeginChangeCheck();
 
-									string text = Localisation.GetUnformattedString(_keys[i]);
+									string text = Localisation.GetRawString(_keys[i]);
 									text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 									if (EditorGUI.EndChangeCheck())
 									{
@@ -616,7 +622,7 @@ namespace Framework
 
 					for (int i = 0; i < _keys.Length; i++)
 					{
-						string text = Localisation.GetUnformattedString(_keys[i]);
+						string text = Localisation.GetRawString(_keys[i]);
 
 						float height = GetItemHeight(_keys[i], text);
 
@@ -648,21 +654,30 @@ namespace Framework
 					EditorGUI.FocusTextInControl(string.Empty);
 					SaveEditorPrefs();
 
-					_filter = "";
 					_needsRepaint = true;
 					
 					float toSelected = 0.0f;
+					bool foundKey = false;
 
 					for (int i = 0; i < _keys.Length; i++)
 					{
-						if (_keys[i] == _editorPrefs._selectedKey)
+						foundKey = _keys[i] == _editorPrefs._selectedKey;
+
+						if (foundKey)
 							break;
 
-						toSelected += GetItemHeight(_keys[i], Localisation.GetUnformattedString(_keys[i]));
+						toSelected += GetItemHeight(_keys[i], Localisation.GetRawString(_keys[i]));
 					}
 
-					float scrollAreaHeight = GetTableAreaHeight();
-					_scrollPosition.y = Mathf.Max(toSelected - scrollAreaHeight * 0.4f, 0.0f);
+					if (foundKey)
+					{
+						float scrollAreaHeight = GetTableAreaHeight();
+						_scrollPosition.y = Mathf.Max(toSelected - scrollAreaHeight * 0.4f, 0.0f);
+					}
+					else
+					{
+						_scrollPosition.y = 0.0f;
+					}
 				}
 
 				private float GetTableAreaHeight()
@@ -677,7 +692,7 @@ namespace Framework
 
 					for (int i = 1; i < allKeys.Length; i++)
 					{
-						if (MatchsFilter(allKeys[i]) || MatchsFilter(Localisation.GetUnformattedString(allKeys[i])))
+						if (MatchsFilter(allKeys[i]) || MatchsFilter(Localisation.GetRawString(allKeys[i])))
 						{
 							keys.Add(allKeys[i]);
 						}
