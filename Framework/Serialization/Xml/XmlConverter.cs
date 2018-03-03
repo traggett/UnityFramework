@@ -484,15 +484,17 @@ namespace Framework
 										xmlTag = index == -1 ? name : name.Substring(0, index);
 									}
 
-									if (_tagToTypeMap.ContainsKey(xmlTag) || _typeToTagMap.ContainsKey(type))
-									{
-										Debug.LogError("Can't serialize type " + type.FullName + " as it shares a name with another class");
-									}
-									else
+									if (!_tagToTypeMap.ContainsKey(xmlTag) && !_typeToTagMap.ContainsKey(type))
 									{
 										_tagToTypeMap.Add(xmlTag, type);
 										_typeToTagMap.Add(type, xmlTag);
 									}
+#if DEBUG
+									else
+									{
+										Debug.Log("Can't serialize type " + type.FullName + " as it shares a name with another class (" + _tagToTypeMap[xmlTag].FullName + ")");
+									}
+#endif
 								}
 							}
 

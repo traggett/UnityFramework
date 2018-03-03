@@ -43,45 +43,7 @@ namespace Framework
 				return (T)ObjectField(obj, obj != null ? obj.GetType() : typeof(T), label, ref dataChanged, style, options);
 			}
 
-			public static object RenderObjectMemebers(object obj, Type objType, ref bool dataChanged, GUIStyle style = null, params GUILayoutOption[] options)
-			{
-				SerializedObjectMemberInfo[] serializedFields = SerializedObjectMemberInfo.GetSerializedFields(objType);
-
-				for (int i = 0; i < serializedFields.Length; i++)
-				{
-					if (!serializedFields[i].HideInEditor())
-					{
-						//Create GUIContent for label and optional tooltip
-						string fieldName = StringUtils.FromCamelCase(serializedFields[i].GetID());
-						TooltipAttribute fieldToolTipAtt = SystemUtils.GetAttribute<TooltipAttribute>(serializedFields[i]);
-						GUIContent labelContent = fieldToolTipAtt != null ? new GUIContent(fieldName, fieldToolTipAtt.tooltip) : new GUIContent(fieldName);
-
-						bool fieldChanged = false;
-						object nodeFieldObject = serializedFields[i].GetValue(obj);
-
-						if (serializedFields[i].GetFieldType().IsArray)
-						{
-							nodeFieldObject = ArrayField(labelContent, nodeFieldObject as Array, serializedFields[i].GetFieldType().GetElementType(), ref fieldChanged, style, options);
-						}
-						else
-						{
-							nodeFieldObject = ObjectField(nodeFieldObject, nodeFieldObject != null ? nodeFieldObject.GetType() : serializedFields[i].GetFieldType(), labelContent, ref fieldChanged, style, options);
-						}
-
-						if (fieldChanged)
-						{
-							dataChanged = true;
-							serializedFields[i].SetValue(obj, nodeFieldObject);
-						}
-					}
-				}
-
-				return obj;
-			}
-			#endregion
-
-			#region Private Functions
-			private static object ObjectField(object obj, Type objType, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
+			public static object ObjectField(object obj, Type objType, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 			{
 				//If object is an array show an editable array field
 				if (objType.IsArray)
@@ -129,7 +91,45 @@ namespace Framework
 				return RenderObjectMemebers(obj, objType, ref dataChanged, style, options);
 			}
 
-			private static Array ArrayField(GUIContent label, Array _array, Type arrayType, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
+			public static object RenderObjectMemebers(object obj, Type objType, ref bool dataChanged, GUIStyle style = null, params GUILayoutOption[] options)
+			{
+				SerializedObjectMemberInfo[] serializedFields = SerializedObjectMemberInfo.GetSerializedFields(objType);
+
+				for (int i = 0; i < serializedFields.Length; i++)
+				{
+					if (!serializedFields[i].HideInEditor())
+					{
+						//Create GUIContent for label and optional tooltip
+						string fieldName = StringUtils.FromCamelCase(serializedFields[i].GetID());
+						TooltipAttribute fieldToolTipAtt = SystemUtils.GetAttribute<TooltipAttribute>(serializedFields[i]);
+						GUIContent labelContent = fieldToolTipAtt != null ? new GUIContent(fieldName, fieldToolTipAtt.tooltip) : new GUIContent(fieldName);
+
+						bool fieldChanged = false;
+						object nodeFieldObject = serializedFields[i].GetValue(obj);
+
+						if (serializedFields[i].GetFieldType().IsArray)
+						{
+							nodeFieldObject = ArrayField(labelContent, nodeFieldObject as Array, serializedFields[i].GetFieldType().GetElementType(), ref fieldChanged, style, options);
+						}
+						else
+						{
+							nodeFieldObject = ObjectField(nodeFieldObject, nodeFieldObject != null ? nodeFieldObject.GetType() : serializedFields[i].GetFieldType(), labelContent, ref fieldChanged, style, options);
+						}
+
+						if (fieldChanged)
+						{
+							dataChanged = true;
+							serializedFields[i].SetValue(obj, nodeFieldObject);
+						}
+					}
+				}
+
+				return obj;
+			}
+			#endregion
+
+			#region Private Functions	
+			private static Array ArrayField(GUIContent label, Array array, Type arrayType, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 			{
 				label.text += " (" + SystemUtils.GetTypeName(arrayType) + ")";
 
@@ -140,7 +140,7 @@ namespace Framework
 					int origIndent = EditorGUI.indentLevel;
 					EditorGUI.indentLevel++;
 
-					int origLength = _array != null ? _array.Length : 0;
+					int origLength = array != null ? array.Length : 0;
 
 					int length = EditorGUILayout.IntField("Length", origLength);
 					length = Math.Max(length, 0);
@@ -148,8 +148,8 @@ namespace Framework
 					if (length < origLength)
 					{
 						Array newArray = Array.CreateInstance(arrayType, length);
-						Array.Copy(_array, newArray, length);
-						_array = newArray;
+						Array.Copy(array, newArray, length);
+						array = newArray;
 						dataChanged = true;
 					}
 					else if (length > origLength)
@@ -157,7 +157,7 @@ namespace Framework
 						Array newArray = Array.CreateInstance(arrayType, length);
 
 						if (origLength > 0)
-							Array.Copy(_array, newArray, origLength);
+							Array.Copy(array, newArray, origLength);
 
 						for (int i = origLength; i < length; i++)
 						{
@@ -165,21 +165,21 @@ namespace Framework
 								newArray.SetValue(Activator.CreateInstance(arrayType, true), i);
 						}
 
-						_array = newArray;
+						array = newArray;
 						dataChanged = true;
 					}
 
-					if (!dataChanged && _array != null)
+					if (!dataChanged && array != null)
 					{
-						for (int i = 0; i < _array.Length; i++)
+						for (int i = 0; i < array.Length; i++)
 						{
 							bool elementChanged = false;
-							object elementObj = _array.GetValue(i);
+							object elementObj = array.GetValue(i);
 							Type elementType = elementObj != null ? elementObj.GetType() : arrayType;
 							elementObj = ObjectField(elementObj, elementType, new GUIContent("Element " + i), ref elementChanged, style, options);
 							if (elementChanged)
 							{
-								_array.SetValue(elementObj, i);
+								array.SetValue(elementObj, i);
 								dataChanged = true;
 							}
 						}
@@ -188,7 +188,7 @@ namespace Framework
 					EditorGUI.indentLevel = origIndent;
 				}
 
-				return _array;
+				return array;
 			}
 
 			private static SerializedObjectEditorAttribute.RenderPropertiesDelegate GetEditorDelegateForObject(Type objectType)
