@@ -163,7 +163,7 @@ namespace Framework
 
 				private void InitGUIStyles()
 				{
-					if (_titleStyle == null)
+					if (_titleStyle == null || string.IsNullOrEmpty(_titleStyle.name))
 					{
 						_titleStyle = new GUIStyle(EditorStyles.label)
 						{
@@ -172,7 +172,7 @@ namespace Framework
 						};
 					}
 
-					if (_keyStyle == null)
+					if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
 					{
 						_keyStyle = new GUIStyle(EditorStyles.helpBox)
 						{
@@ -182,8 +182,7 @@ namespace Framework
 						_keyStyle.padding.left = 8;
 					}
 
-					
-					if (_keyEditStyle == null)
+					if (_keyEditStyle == null || string.IsNullOrEmpty(_keyEditStyle.name))
 					{
 						_keyEditStyle = new GUIStyle(EditorStyles.textArea)
 						{
@@ -194,7 +193,7 @@ namespace Framework
 						_keyEditStyle.padding.top = 3;
 					}
 
-					if (_textStyle == null)
+					if (_textStyle == null || string.IsNullOrEmpty(_textStyle.name))
 					{
 						_textStyle = new GUIStyle(EditorStyles.textArea)
 						{
