@@ -40,7 +40,7 @@ namespace Framework
 							childNodes.Add(arrayItemXmlNode);
 						}
 
-						//Append child nodes in alphabetical order
+						//Append child nodes
 						foreach (XmlNode childNode in childNodes)
 						{
 							XmlUtils.SafeAppendChild(node, childNode);

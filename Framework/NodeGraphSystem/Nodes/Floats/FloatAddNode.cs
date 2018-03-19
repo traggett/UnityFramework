@@ -4,6 +4,7 @@ using System;
 namespace Framework
 {
 	using DynamicValueSystem;
+	using System.Collections.Generic;
 
 	namespace NodeGraphSystem
 	{

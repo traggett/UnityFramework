@@ -26,7 +26,7 @@ namespace Framework
 				private static readonly float kLineWidth = 3.0f;
 				private static readonly float kArrowHeight = 8.0f;
 				private static readonly float kArrowWidth = 5.0f;
-				private static readonly float kLinkIconWidth = 10.0f;
+				private static readonly float kLinkIconWidth = 9.5f;
 
 				private string _title;
 				private string _editorPrefsTag;
@@ -461,33 +461,36 @@ namespace Framework
 					}
 				}
 
-				protected override void OnStopDragging(UnityEngine.Event inputEvent)
+				protected override void OnStopDragging(UnityEngine.Event inputEvent, bool cancelled)
 				{
 					if (_dragMode == eDragType.Custom)
 					{
-						Vector2 gridPos = GetEditorPosition(UnityEngine.Event.current.mousePosition);
-
-						StateEditorGUI draggedOnToState = null;
-
-						//Check mouse is over a state
-						foreach (StateEditorGUI editorGUI in _editableObjects)
+						if (!cancelled)
 						{
-							if (editorGUI.GetBounds().Contains(gridPos))
+							Vector2 gridPos = GetEditorPosition(UnityEngine.Event.current.mousePosition);
+
+							StateEditorGUI draggedOnToState = null;
+
+							//Check mouse is over a state
+							foreach (StateEditorGUI editorGUI in _editableObjects)
 							{
-								draggedOnToState = editorGUI;
+								if (editorGUI.GetBounds().Contains(gridPos))
+								{
+									draggedOnToState = editorGUI;
 
-								// Check its moved more than 
-								break;
+									// Check its moved more than 
+									break;
+								}
 							}
-						}
 
-						if (draggedOnToState != null)
-						{
-							_draggingStateLink.SetStateRef(new StateRef(draggedOnToState.GetStateId()));
-						}
-						else
-						{
-							_draggingStateLink.SetStateRef(new StateRef());
+							if (draggedOnToState != null)
+							{
+								_draggingStateLink.SetStateRef(new StateRef(draggedOnToState.GetStateId()));
+							}
+							else
+							{
+								_draggingStateLink.SetStateRef(new StateRef());
+							}
 						}
 
 						inputEvent.Use();
@@ -499,7 +502,7 @@ namespace Framework
 					}
 					else
 					{
-						base.OnStopDragging(inputEvent);
+						base.OnStopDragging(inputEvent, cancelled);
 					}
 				}
 
@@ -940,7 +943,7 @@ namespace Framework
 					Handles.color = color;
 					Handles.DrawSolidDisc(position3d, -Vector3.forward, linkRadius);
 					Handles.color = Color.Lerp(color, Color.black, 0.5f);
-					Handles.DrawSolidDisc(position3d, -Vector3.forward, linkRadius - 2.5f);
+					Handles.DrawSolidDisc(position3d, -Vector3.forward, linkRadius - 2.0f);
 
 					Handles.EndGUI();
 					}

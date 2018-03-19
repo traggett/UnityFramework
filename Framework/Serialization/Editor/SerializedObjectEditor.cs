@@ -308,7 +308,7 @@ namespace Framework
 				return editorRect;
 			}
 
-			protected virtual void OnStopDragging(Event inputEvent)
+			protected virtual void OnStopDragging(Event inputEvent, bool cancelled)
 			{
 				if (_dragMode != eDragType.NotDragging)
 				{
@@ -399,7 +399,7 @@ namespace Framework
 				
 				if (_dragMode != eDragType.NotDragging && inputEvent.rawType == EventType.MouseUp)
 				{
-					OnStopDragging(inputEvent);
+					OnStopDragging(inputEvent, false);
 					_needsRepaint = true;
 				}
 
@@ -413,14 +413,16 @@ namespace Framework
 
 					case EventType.MouseUp:
 						{
-							OnStopDragging(inputEvent);
+							OnStopDragging(inputEvent, false);
 							_needsRepaint = true;
 						}
 						break;
 
 					case EventType.ContextClick:
 						{
+							_needsRepaint = true;
 							inputEvent.Use();
+							OnStopDragging(inputEvent, false);
 							OnRightMouseDown(inputEvent);
 						}
 						break;
@@ -443,8 +445,11 @@ namespace Framework
 
 					case EventType.KeyDown:
 						{
-							#region Scrolling via Keys (To do)						
-							#endregion
+							if (inputEvent.keyCode == KeyCode.Escape)
+							{
+								OnStopDragging(inputEvent, true);
+								_needsRepaint = true;
+							}
 						}
 						break;
 

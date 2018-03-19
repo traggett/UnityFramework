@@ -190,6 +190,25 @@ namespace Framework
 
 				return type.Name;
 			}
+
+			public static Assembly[] GetUnityAssemblies()
+			{
+				List<Assembly> serializableAssemblies = new List<Assembly>();
+				Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+				foreach (Assembly assembly in assemblies)
+				{
+					if ((assembly.FullName == "Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
+						(assembly.FullName == "Assembly-CSharp-Editor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
+						(assembly.FullName == "Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
+						(assembly.FullName == "Assembly-CSharp-Editor-firstpass, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"))
+					{
+						serializableAssemblies.Add(assembly);
+					}
+				}
+
+				return serializableAssemblies.ToArray();
+			}
 		}
 	}
 }

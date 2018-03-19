@@ -463,58 +463,56 @@ namespace Framework
 						_typeToTagMap = new Dictionary<Type, string>();
 						_converterMap = new Dictionary<Type, ObjectConverter>();
 
-						Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+						Assembly[] assemblies = SystemUtils.GetUnityAssemblies();
 
 						foreach (Assembly assembly in assemblies)
 						{
 							Type[] types = assembly.GetTypes();
-							
-							if ((assembly.FullName == "Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
-								(assembly.FullName == "Assembly-CSharp-Editor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"))
+
+							//First build dictionary of types marked with [Serializable] attribute
+							foreach (Type type in types)
 							{
-								//First build dictionary of types marked with [Serializable] attribute
-								foreach (Type type in types)
+								SerializableAttribute attribute = SystemUtils.GetAttribute<SerializableAttribute>(type);
+								if (attribute != null)
 								{
-									SerializableAttribute attribute = SystemUtils.GetAttribute<SerializableAttribute>(type);
-									if (attribute != null)
+									string xmlTag = type.Name;
+
+									if (type.IsGenericType)
 									{
-										string xmlTag = type.Name;
-
-										if (type.IsGenericType)
-										{
-											string name = type.Name;
-											int index = name.IndexOf('`');
-											xmlTag = index == -1 ? name : name.Substring(0, index);
-										}
-
-										if (!_tagToTypeMap.ContainsKey(xmlTag))
-										{
-											_tagToTypeMap.Add(xmlTag, type);
-											_typeToTagMap.Add(type, xmlTag);
-										}
-										else
-										{
-										//	throw new Exception("Can't serialize type " + type.FullName + " as it shares a name with another class");
-										}
+										string name = type.Name;
+										int index = name.IndexOf('`');
+										xmlTag = index == -1 ? name : name.Substring(0, index);
 									}
+
+									if (!_tagToTypeMap.ContainsKey(xmlTag) && !_typeToTagMap.ContainsKey(type))
+									{
+										_tagToTypeMap.Add(xmlTag, type);
+										_typeToTagMap.Add(type, xmlTag);
+									}
+#if DEBUG
+									else
+									{
+										Debug.Log("Can't serialize type " + type.FullName + " as it shares a name with another class (" + _tagToTypeMap[xmlTag].FullName + ")");
+									}
+#endif
 								}
+							}
 
-								//Then find all XmlObjectConverterAttribute for those types
-								foreach (Type type in types)
+							//Then find all XmlObjectConverterAttribute for those types
+							foreach (Type type in types)
+							{
+								XmlObjectConverterAttribute converterAttribute = SystemUtils.GetAttribute<XmlObjectConverterAttribute>(type);
+
+								if (converterAttribute != null)
 								{
-									XmlObjectConverterAttribute converterAttribute = SystemUtils.GetAttribute<XmlObjectConverterAttribute>(type);
 
-									if (converterAttribute != null)
-									{
+									ObjectConverter converter = new ObjectConverter(SystemUtils.GetStaticMethodAsDelegate<OnConvertToXmlDelegate>(type, converterAttribute.OnConvertToXmlNodeMethod),
+																					SystemUtils.GetStaticMethodAsDelegate<OnConvertFromXmlDelegate>(type, converterAttribute.OnConvertFromXmlNodeMethod),
+																					SystemUtils.GetStaticMethodAsDelegate<ShouldWriteDelegate>(type, converterAttribute.ShouldWriteMethod));
 
-										ObjectConverter converter = new ObjectConverter(SystemUtils.GetStaticMethodAsDelegate<OnConvertToXmlDelegate>(type, converterAttribute.OnConvertToXmlNodeMethod),
-																						SystemUtils.GetStaticMethodAsDelegate<OnConvertFromXmlDelegate>(type, converterAttribute.OnConvertFromXmlNodeMethod),
-																						SystemUtils.GetStaticMethodAsDelegate<ShouldWriteDelegate>(type, converterAttribute.ShouldWriteMethod));
-
-										_converterMap[converterAttribute.ObjectType] = converter;
-										_tagToTypeMap[converterAttribute.XmlTag] = converterAttribute.ObjectType;
-										_typeToTagMap[converterAttribute.ObjectType] = converterAttribute.XmlTag;
-									}
+									_converterMap[converterAttribute.ObjectType] = converter;
+									_tagToTypeMap[converterAttribute.XmlTag] = converterAttribute.ObjectType;
+									_typeToTagMap[converterAttribute.ObjectType] = converterAttribute.XmlTag;
 								}
 							}
 						}

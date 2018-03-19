@@ -255,41 +255,44 @@ namespace Framework
 					}
 				}
 
-				protected override void OnStopDragging(Event inputEvent)
+				protected override void OnStopDragging(Event inputEvent, bool cancelled)
 				{
 					if (_dragMode == eDragType.Custom)
 					{
-						//if over a input node field of correct type, set link on node
-						NodeEditorField mouseOverNodeField = GetHighlightedNode(inputEvent.mousePosition);
-
-						bool linkChanged = (_draggingNodeFieldTo == null && mouseOverNodeField != null) ||
-											(_draggingNodeFieldTo != null && _draggingNodeFieldTo != mouseOverNodeField);
-
-						if (linkChanged)
+						if (!cancelled)
 						{
-							List<NodeEditorGUI> effectedNodes = new List<NodeEditorGUI>();
-							
-							if (_draggingNodeFieldTo != null)
-							{							
-								effectedNodes.Add(_draggingNodeFieldTo._nodeEditorGUI);
-								_draggingNodeFieldTo._nodeEditorGUI.CacheUndoStatePreChanges();
-								SetNodeInputFieldLinkNodeID(_draggingNodeFieldTo, -1);
-							}
+							//if over a input node field of correct type, set link on node
+							NodeEditorField mouseOverNodeField = GetHighlightedNode(inputEvent.mousePosition);
 
-							if (mouseOverNodeField != null)
-							{							
-								effectedNodes.Add(mouseOverNodeField._nodeEditorGUI);
-								mouseOverNodeField._nodeEditorGUI.CacheUndoStatePreChanges();
-								SetNodeInputFieldLinkNodeID(mouseOverNodeField, _draggingNodeFieldFrom._nodeEditorGUI.GetEditableObject()._nodeId);
-							}
+							bool linkChanged = (_draggingNodeFieldTo == null && mouseOverNodeField != null) ||
+												(_draggingNodeFieldTo != null && _draggingNodeFieldTo != mouseOverNodeField);
 
-							Undo.RecordObjects(effectedNodes.ToArray(), "Edit Node Link(s)");
-
-							foreach (NodeEditorGUI editorGUI in effectedNodes)
+							if (linkChanged)
 							{
-								editorGUI.SaveUndoStatePostChanges();
+								List<NodeEditorGUI> effectedNodes = new List<NodeEditorGUI>();
+
+								if (_draggingNodeFieldTo != null)
+								{
+									effectedNodes.Add(_draggingNodeFieldTo._nodeEditorGUI);
+									_draggingNodeFieldTo._nodeEditorGUI.CacheUndoStatePreChanges();
+									SetNodeInputFieldLinkNodeID(_draggingNodeFieldTo, -1);
+								}
+
+								if (mouseOverNodeField != null)
+								{
+									effectedNodes.Add(mouseOverNodeField._nodeEditorGUI);
+									mouseOverNodeField._nodeEditorGUI.CacheUndoStatePreChanges();
+									SetNodeInputFieldLinkNodeID(mouseOverNodeField, _draggingNodeFieldFrom._nodeEditorGUI.GetEditableObject()._nodeId);
+								}
+
+								Undo.RecordObjects(effectedNodes.ToArray(), "Edit Node Link(s)");
+
+								foreach (NodeEditorGUI editorGUI in effectedNodes)
+								{
+									editorGUI.SaveUndoStatePostChanges();
+								}
 							}
-						}
+						}				
 
 						inputEvent.Use();
 						_dragMode = eDragType.NotDragging;
@@ -298,7 +301,7 @@ namespace Framework
 					}
 					else
 					{
-						base.OnStopDragging(inputEvent);
+						base.OnStopDragging(inputEvent, cancelled);
 					}
 				}
 
