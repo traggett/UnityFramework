@@ -1,11 +1,12 @@
 ﻿using UnityEditor;
 using UnityEngine;
+
 using System;
+using System.Collections.Generic;
 
 namespace Framework
 {
 	using Serialization;
-	using System.Collections.Generic;
 	using Utils;
 	using Utils.Editor;
 
@@ -129,6 +130,7 @@ namespace Framework
 					if (_instance == null)
 						CreateWindow();
 
+					_instance._filter = null;
 					_instance.SelectKey(key);
 				}
 
@@ -466,6 +468,7 @@ namespace Framework
 							if (!Localisation.IsKeyInTable(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
 							{
 								Localisation.UpdateString(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
+								_keys = GetKeys();
 								SelectKey(_addNewKey);
 								_addNewKey = "";
 							}
@@ -594,6 +597,7 @@ namespace Framework
 					{
 						string newKey = _editorPrefs._selectedKey + " (Copy)";
 						Localisation.UpdateString(newKey, Localisation.GetCurrentLanguage(), string.Empty);
+						_keys = GetKeys();
 						SelectKey(newKey);
 
 						_needsRepaint = true;
