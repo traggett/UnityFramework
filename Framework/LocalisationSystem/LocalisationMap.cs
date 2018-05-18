@@ -24,7 +24,7 @@ namespace Framework
 			{
 				string text;
 				Dictionary<string, string> localisedString;
-
+				
 				if (!string.IsNullOrEmpty(key) && _strings.TryGetValue(key, out localisedString))
 				{
 					if (localisedString.TryGetValue(LanguageCodes.GetLanguageCode(language), out text))
@@ -35,7 +35,7 @@ namespace Framework
 					{
 						if (Application.isPlaying)
 							Debug.Log("Can't find localised version of string " + key + " for " + language);
-#if _DEBUG
+#if DEBUG
 						if (fallBackLanguage != SystemLanguage.Unknown && fallBackLanguage != language && 
 							localisedString.TryGetValue(LanguageCodes.GetLanguageCode(fallBackLanguage), out text))
 						{
@@ -44,12 +44,18 @@ namespace Framework
 						else
 						{
 							Debug.Log("Can't find localised version of string " + key);
+
+							return key + " NOT FOUND";
 						}
 #endif
 					}
 				}
 
+#if DEBUG
+				return "EMPTY KEY";
+#else
 				return string.Empty;
+#endif
 			}
 
 			public void RemoveString(string key)
