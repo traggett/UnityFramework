@@ -9,16 +9,17 @@ namespace Framework
 	{
 		[NodeCategory("Quaternions")]
 		[Serializable]
-		public class QuaternionEulerNode : Node, IValueSource<Quaternion>
+		public class QuaternionLookRotationNode : Node, IValueSource<Quaternion>
 		{
 			#region Public Data	
-			public NodeInputField<Vector3> _euler = Vector3.zero;
+			public NodeInputField<Vector3> _forward = Vector3.forward;
+			public NodeInputField<Vector3> _up = Vector3.up;
 			#endregion
 
 			#region IValueSource<Quaternion>
 			public Quaternion GetValue()
 			{
-				return Quaternion.Euler(_euler);
+				return Quaternion.LookRotation(_forward, _up);
 			}
 
 #if UNITY_EDITOR
