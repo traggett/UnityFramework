@@ -1,11 +1,12 @@
 ﻿using UnityEditor;
 using UnityEngine;
+
 using System;
+using System.Collections.Generic;
 
 namespace Framework
 {
 	using Serialization;
-	using System.Collections.Generic;
 	using Utils;
 	using Utils.Editor;
 
@@ -129,6 +130,7 @@ namespace Framework
 					if (_instance == null)
 						CreateWindow();
 
+					_instance._filter = null;
 					_instance.SelectKey(key);
 				}
 
@@ -163,7 +165,7 @@ namespace Framework
 
 				private void InitGUIStyles()
 				{
-					if (_titleStyle == null)
+					if (_titleStyle == null || string.IsNullOrEmpty(_titleStyle.name))
 					{
 						_titleStyle = new GUIStyle(EditorStyles.label)
 						{
@@ -172,7 +174,7 @@ namespace Framework
 						};
 					}
 
-					if (_keyStyle == null)
+					if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
 					{
 						_keyStyle = new GUIStyle(EditorStyles.helpBox)
 						{
@@ -182,8 +184,7 @@ namespace Framework
 						_keyStyle.padding.left = 8;
 					}
 
-					
-					if (_keyEditStyle == null)
+					if (_keyEditStyle == null || string.IsNullOrEmpty(_keyEditStyle.name))
 					{
 						_keyEditStyle = new GUIStyle(EditorStyles.textArea)
 						{
@@ -194,7 +195,7 @@ namespace Framework
 						_keyEditStyle.padding.top = 3;
 					}
 
-					if (_textStyle == null)
+					if (_textStyle == null || string.IsNullOrEmpty(_textStyle.name))
 					{
 						_textStyle = new GUIStyle(EditorStyles.textArea)
 						{
@@ -467,6 +468,7 @@ namespace Framework
 							if (!Localisation.IsKeyInTable(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
 							{
 								Localisation.UpdateString(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
+								_keys = GetKeys();
 								SelectKey(_addNewKey);
 								_addNewKey = "";
 							}
@@ -595,6 +597,7 @@ namespace Framework
 					{
 						string newKey = _editorPrefs._selectedKey + " (Copy)";
 						Localisation.UpdateString(newKey, Localisation.GetCurrentLanguage(), string.Empty);
+						_keys = GetKeys();
 						SelectKey(newKey);
 
 						_needsRepaint = true;

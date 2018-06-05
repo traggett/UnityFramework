@@ -27,6 +27,7 @@ namespace Framework
 					EditorGUI.BeginProperty(position, label, property);
 
 					SerializedProperty localisationkeyProperty = property.FindPropertyRelative("_localisationKey");
+					string localisationkey = localisationkeyProperty.stringValue;
 
 					float yPos = position.y;
 
@@ -47,7 +48,7 @@ namespace Framework
 							
 							for (int i=0;i<keys.Length; i++)
 							{
-								if (keys[i] == localisationkeyProperty.stringValue)
+								if (keys[i] == localisationkey)
 								{
 									currentKey = i;
 									break;
@@ -64,11 +65,11 @@ namespace Framework
 							{
 								if (currentKey == 0)
 								{
-									localisationkeyProperty.stringValue = null;
+									localisationkey = UpdateNewLocalisedStringRef(property, null);
 								}
 								else
 								{
-									localisationkeyProperty.stringValue = keys[currentKey];
+									localisationkey = UpdateNewLocalisedStringRef(property, keys[currentKey]);
 								}	
 							}
 						}
@@ -79,7 +80,7 @@ namespace Framework
 							string[] folders = Localisation.GetStringFolders();
 							int currentFolderIndex = 0;
 							string keyWithoutFolder;
-							Localisation.GetFolderIndex(localisationkeyProperty.stringValue, out currentFolderIndex, out keyWithoutFolder);
+							Localisation.GetFolderIndex(localisationkey, out currentFolderIndex, out keyWithoutFolder);
 
 
 							float keyTextWidth = position.width - EditorUtils.GetLabelWidth() - (folderNameWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth);
@@ -95,7 +96,7 @@ namespace Framework
 							if (EditorGUI.EndChangeCheck())
 							{
 								if (newFolderIndex != 0)
-									localisationkeyProperty.stringValue = currentFolder + "/" + keyWithoutFolder;
+									localisationkey = UpdateNewLocalisedStringRef(property, currentFolder + "/" + keyWithoutFolder);
 							}
 
 							Rect addKeySlash = new Rect(position.x + (position.width - buttonWidth) - fudge, yPos, autoKeySlashWidth, EditorGUIUtility.singleLineHeight);
@@ -105,11 +106,12 @@ namespace Framework
 							if (newFolderIndex != 0)
 							{
 								keyWithoutFolder = EditorGUI.TextField(addKeyText, keyWithoutFolder);
-								localisationkeyProperty.stringValue = currentFolder + "/" + keyWithoutFolder;
+								localisationkey = UpdateNewLocalisedStringRef(property, currentFolder + "/" + keyWithoutFolder);
 							}
 							else
 							{
-								localisationkeyProperty.stringValue = EditorGUI.TextField(addKeyText, localisationkeyProperty.stringValue);
+								localisationkey = EditorGUI.TextField(addKeyText, localisationkey);
+								UpdateNewLocalisedStringRef(property, localisationkey);
 							}
 
 							Rect autoKeyButton = new Rect(position.x + (position.width - buttonWidth) + autoKeySlashFakeWidth + buttonSpace + keyTextWidth, yPos, autoKeybuttonWidth, EditorGUIUtility.singleLineHeight);
@@ -132,15 +134,15 @@ namespace Framework
 									localisedStringRef.SetAutoNameParentName(parentName);
 								}
 
-								localisationkeyProperty.stringValue = localisedStringRef.GetAutoKey();
+								localisationkey = UpdateNewLocalisedStringRef(property, localisedStringRef.GetAutoKey());
 							}
 
-							if (GUI.Button(addKeyButton, "Add") && !string.IsNullOrEmpty(localisationkeyProperty.stringValue))
+							if (GUI.Button(addKeyButton, "Add") && !string.IsNullOrEmpty(localisationkey))
 							{
-								if (!Localisation.IsKeyInTable(localisationkeyProperty.stringValue))
+								if (!Localisation.IsKeyInTable(localisationkey))
 								{
-									Localisation.UpdateString(localisationkeyProperty.stringValue, Localisation.GetCurrentLanguage(), string.Empty);
-									LocalisationEditorWindow.EditString(localisationkeyProperty.stringValue);
+									Localisation.UpdateString(localisationkey, Localisation.GetCurrentLanguage(), string.Empty);
+									LocalisationEditorWindow.EditString(localisationkey);
 								}
 							}
 						}
@@ -148,9 +150,9 @@ namespace Framework
 						//Draw displayed text (can be edited to update localization file)
 						{
 							//Only display if have a valid key
-							if (!string.IsNullOrEmpty(localisationkeyProperty.stringValue) && Localisation.IsKeyInTable(localisationkeyProperty.stringValue))
+							if (!string.IsNullOrEmpty(localisationkey) && Localisation.IsKeyInTable(localisationkey))
 							{
-								string text = StringUtils.GetFirstLine(Localisation.GetRawString(localisationkeyProperty.stringValue));
+								string text = StringUtils.GetFirstLine(Localisation.GetRawString(localisationkey));
 								float height = EditorGUIUtility.singleLineHeight;
 								float labelWidth = EditorUtils.GetLabelWidth();
 
@@ -160,7 +162,7 @@ namespace Framework
 
 								if (GUI.Button(editTextPosition, "Edit"))
 								{
-									LocalisationEditorWindow.EditString(localisationkeyProperty.stringValue);
+									LocalisationEditorWindow.EditString(localisationkey);
 								}
 
 								yPos += height;
@@ -193,6 +195,12 @@ namespace Framework
 					}
 
 					return EditorGUIUtility.singleLineHeight;
+				}
+
+				private string UpdateNewLocalisedStringRef(SerializedProperty property, string key)
+				{
+					fieldInfo.SetValue(property.serializedObject.targetObject, new LocalisedStringRef(key));
+					return key;
 				}
 			}
 		}
