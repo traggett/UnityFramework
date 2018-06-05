@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-
 using UnityEngine;
 
 namespace Framework
@@ -18,7 +16,7 @@ namespace Framework
 			#region Private Data
 			private string _cachedText;
 			private SystemLanguage _cachedLanguage;
-			private LocalisationVariableInfo[] _cachedVariables;
+			private LocalisationGlobalVariable[] _cachedVariables;
 			#endregion
 
 			#region Editor Data
@@ -51,13 +49,13 @@ namespace Framework
 				return new LocalisedStringRef(key);
 			}
 			
-			public string GetLocalisedString(params KeyValuePair<string, string>[] variables)
+			public string GetLocalisedString(params LocalisationLocalVariable[] variables)
 			{
 				if (variables.Length > 0 || _cachedLanguage != Localisation.GetCurrentLanguage() || Localisation.AreGlobalVariablesOutOfDate(_cachedVariables))
 				{
 					_cachedLanguage = Localisation.GetCurrentLanguage();
-					_cachedText = Localisation.GetString(_localisationKey, variables);
-					_cachedVariables = Localisation.GetGlobalVariableKeys(_cachedText);
+					_cachedText = Localisation.Get(_localisationKey, variables);
+					_cachedVariables = Localisation.GetGlobalVariables(_cachedText);
 				}
 
 				return _cachedText;
@@ -107,7 +105,7 @@ namespace Framework
 
 					//Find first free key
 					int index = 0;
-					while (Localisation.IsKeyInTable(autoKey = autoNameParent + "/" + index.ToString("000")))
+					while (Localisation.Exists(autoKey = autoNameParent + "/" + index.ToString("000")))
 					{
 						index++;
 					}

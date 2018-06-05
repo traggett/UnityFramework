@@ -58,15 +58,7 @@ namespace Framework
 #endif
 			}
 
-			public void RemoveString(string key)
-			{
-				if (!string.IsNullOrEmpty(key))
-				{
-					_strings.Remove(key);
-				}
-			}
-
-			public void UpdateString(string key, SystemLanguage language, string text)
+			public void SetString(string key, SystemLanguage language, string text)
 			{
 				if (!string.IsNullOrEmpty(key))
 				{
@@ -81,6 +73,14 @@ namespace Framework
 						_strings.Add(key, new Dictionary<string, string>());
 						_strings[key].Add(LanguageCodes.GetLanguageCode(language), text);
 					}
+				}
+			}
+
+			public void RemoveString(string key)
+			{
+				if (!string.IsNullOrEmpty(key))
+				{
+					_strings.Remove(key);
 				}
 			}
 

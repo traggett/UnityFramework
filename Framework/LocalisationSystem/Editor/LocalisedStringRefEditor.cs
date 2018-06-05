@@ -113,9 +113,9 @@ namespace Framework
 
 								if (GUILayout.Button("Add", GUILayout.Width(32)) && !string.IsNullOrEmpty(localisedString.GetLocalisationKey()))
 								{
-									if (!Localisation.IsKeyInTable(localisedString.GetLocalisationKey()))
+									if (!Localisation.Exists(localisedString.GetLocalisationKey()))
 									{
-										Localisation.UpdateString(localisedString.GetLocalisationKey(), Localisation.GetCurrentLanguage(), string.Empty);
+										Localisation.Set(localisedString.GetLocalisationKey(), Localisation.GetCurrentLanguage(), string.Empty);
 										LocalisationEditorWindow.EditString(localisedString.GetLocalisationKey());
 									}
 									dataChanged = true;
@@ -129,7 +129,7 @@ namespace Framework
 							string currentKey = localisedString.GetLocalisationKey();
 
 							//Only display if have a valid key
-							if (!string.IsNullOrEmpty(currentKey) && Localisation.IsKeyInTable(currentKey))
+							if (!string.IsNullOrEmpty(currentKey) && Localisation.Exists(currentKey))
 							{
 								EditorGUI.BeginChangeCheck();
 								string text;
@@ -139,7 +139,7 @@ namespace Framework
 									text = EditorGUILayout.TextArea(Localisation.GetRawString(currentKey));
 								if (EditorGUI.EndChangeCheck())
 								{
-									Localisation.UpdateString(currentKey, Localisation.GetCurrentLanguage(), text);
+									Localisation.Set(currentKey, Localisation.GetCurrentLanguage(), text);
 								}
 							}
 						}

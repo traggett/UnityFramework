@@ -149,8 +149,6 @@ namespace Framework
 							Save();
 						}
 					}
-
-					Localisation.WarnIfDirty();
 				}
 
 				public void Load(string fileName)
