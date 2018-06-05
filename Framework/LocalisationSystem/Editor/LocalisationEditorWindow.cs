@@ -416,7 +416,7 @@ namespace Framework
 									text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 									if (EditorGUI.EndChangeCheck())
 									{
-										Localisation.UpdateString(_keys[i], Localisation.GetCurrentLanguage(), text);
+										Localisation.Set(_keys[i], Localisation.GetCurrentLanguage(), text);
 									}
 								}
 								EditorGUILayout.EndHorizontal();
@@ -465,9 +465,9 @@ namespace Framework
 					{
 						if (GUILayout.Button("Add New", EditorStyles.toolbarButton, GUILayout.Width(_editorPrefs._keyWidth)))
 						{
-							if (!Localisation.IsKeyInTable(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
+							if (!Localisation.Exists(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
 							{
-								Localisation.UpdateString(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
+								Localisation.Set(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
 								_keys = GetKeys();
 								SelectKey(_addNewKey);
 								_addNewKey = "";
@@ -584,7 +584,7 @@ namespace Framework
 				{
 					if (!string.IsNullOrEmpty(_editorPrefs._selectedKey))
 					{
-						Localisation.DeleteString(_editorPrefs._selectedKey);
+						Localisation.Remove(_editorPrefs._selectedKey);
 						_editorPrefs._selectedKey = null;
 						SaveEditorPrefs();
 						_needsRepaint = true;
@@ -596,7 +596,7 @@ namespace Framework
 					if (!string.IsNullOrEmpty(_editorPrefs._selectedKey))
 					{
 						string newKey = _editorPrefs._selectedKey + " (Copy)";
-						Localisation.UpdateString(newKey, Localisation.GetCurrentLanguage(), string.Empty);
+						Localisation.Set(newKey, Localisation.GetCurrentLanguage(), string.Empty);
 						_keys = GetKeys();
 						SelectKey(newKey);
 

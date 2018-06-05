@@ -20,12 +20,6 @@ namespace Framework
 		}
 #endif
 
-		public struct LocalisationVariableInfo
-		{
-			public string _key;
-			public int _version;
-		}
-
 		public static class Localisation
 		{
 			#region Public Data
@@ -44,7 +38,7 @@ namespace Framework
 				public string _value;
 				public int _version;
 			}
-			private static Dictionary<string, VariableInfo> _variables = new Dictionary<string, VariableInfo>();
+			private static Dictionary<string, VariableInfo> _globalVariables = new Dictionary<string, VariableInfo>();
 			private static bool _dirty;
 #if UNITY_EDITOR
 			private static string[] _editorKeys;
@@ -54,7 +48,7 @@ namespace Framework
 			{
 				private static string[] OnWillSaveAssets(string[] paths)
 				{
-					WarnIfDirty();
+					EditorWarnIfDirty();
 					return paths;
 				}
 			}
@@ -81,15 +75,23 @@ namespace Framework
 				RefreshEditorKeys();
 #endif
 			}
-			
-			public static KeyValuePair<string, string> VariablePair(string key, string value)
+
+			public static bool Exists(string key)
 			{
-				return new KeyValuePair<string, string>(key, value);
+				if (_localisationMap == null)
+					LoadStrings();
+
+				return _localisationMap.IsValidKey(key);
 			}
 
-			public static string GetString(string key, params KeyValuePair<string, string>[] variables)
+			public static LocalisationLocalVariable Variable(string key, string value)
 			{
-				return GetString(key, _currentLanguage, variables);
+				return new LocalisationLocalVariable(key, value);
+			}
+
+			public static string Get(string key, params LocalisationLocalVariable[] localVariables)
+			{
+				return Get(key, _currentLanguage, localVariables);
 			}
 
 			public static SystemLanguage GetCurrentLanguage()
@@ -102,30 +104,30 @@ namespace Framework
 				_currentLanguage = language;
 			}
 
-			public static void SetVaraiable(string key, string value)
+			public static void SetGlobalVaraiable(string key, string value)
 			{
 				VariableInfo info;
 
-				if (_variables.TryGetValue(key, out info))
+				if (_globalVariables.TryGetValue(key, out info))
 				{
 					info._version++;
 				}
 
 				info._value = value;
 
-				_variables[key] = info;
+				_globalVariables[key] = info;
 			}
 
-			public static void ClearVaraiable(string key)
+			public static void ClearGlobalVaraiable(string key)
 			{
-				_variables.Remove(key);
+				_globalVariables.Remove(key);
 			}
 
-			public static LocalisationVariableInfo[] GetGlobalVariableKeys(string text)
+			public static LocalisationGlobalVariable[] GetGlobalVariables(string text)
 			{
 				int index = 0;
 
-				List<LocalisationVariableInfo> keys = new List<LocalisationVariableInfo>();
+				List<LocalisationGlobalVariable> keys = new List<LocalisationGlobalVariable>();
 
 				while (index < text.Length)
 				{
@@ -141,8 +143,8 @@ namespace Framework
 						string variableKey = text.Substring(variableKeyStartIndex, variableEndIndex - variableKeyStartIndex);
 
 						VariableInfo info;
-						_variables.TryGetValue(variableKey, out info);
-						keys.Add(new LocalisationVariableInfo { _key = variableKey, _version = info._version } );
+						_globalVariables.TryGetValue(variableKey, out info);
+						keys.Add(new LocalisationGlobalVariable { _key = variableKey, _version = info._version } );
 
 						index = variableEndIndex + kVariableEndChars.Length;
 					}
@@ -155,7 +157,7 @@ namespace Framework
 				return keys.ToArray();
 			}
 
-			public static bool AreGlobalVariablesOutOfDate(params LocalisationVariableInfo[] varaiables)
+			public static bool AreGlobalVariablesOutOfDate(params LocalisationGlobalVariable[] varaiables)
 			{
 				if (varaiables != null)
 				{
@@ -163,7 +165,7 @@ namespace Framework
 					{
 						VariableInfo info;
 
-						if (_variables.TryGetValue(varaiables[i]._key, out info))
+						if (_globalVariables.TryGetValue(varaiables[i]._key, out info))
 						{
 							if (varaiables[i]._version != info._version)
 							{
@@ -175,18 +177,20 @@ namespace Framework
 
 				return false;
 			}
+			#endregion
 
+			#region Public Editor Interface
 #if UNITY_EDITOR
-			public static void UpdateString(string key, SystemLanguage language, string text)
+			public static void Set(string key, SystemLanguage language, string text)
 			{
 				OnPreEditorChange();
 
-				_localisationMap.UpdateString(key, language, text);
+				_localisationMap.SetString(key, language, text);
 
 				OnPostEditorChange();
 			}
 
-			public static void DeleteString(string key)
+			public static void Remove(string key)
 			{
 				OnPreEditorChange();
 
@@ -204,32 +208,6 @@ namespace Framework
 				OnPostEditorChange();
 			}
 
-			public static void WarnIfDirty()
-			{
-				if (HasUnsavedChanges())
-				{
-					int option = EditorUtility.DisplayDialogComplex("Localization strings have Been Modified",
-																   "Do you want to save the changes you made to the localization table?",
-																   "Save",
-																   "Save",
-																   "Revert");
-
-					switch (option)
-					{
-						case 0:
-						case 1:
-							SaveStrings(); break;
-						case 2:
-							{
-								_dirty = false;
-								LoadStrings();
-							}
-							break;
-					}
-				}
-			}
-
-#if UNITY_EDITOR
 			public static void SaveStrings()
 			{
 				if (_localisationMap!= null)
@@ -251,7 +229,6 @@ namespace Framework
 
 				_dirty = false;
 			}
-#endif
 
 			public static bool HasUnsavedChanges()
 			{
@@ -272,14 +249,6 @@ namespace Framework
 					LoadStrings();
 
 				return _editorFolders;
-			}
-
-			public static bool IsKeyInTable(string key)
-			{
-				if (_localisationMap == null)
-					LoadStrings();
-
-				return _localisationMap.IsValidKey(key);
 			}
 			
 			public static bool GetFolderIndex(string key, out int folder, out string exKey)
@@ -331,19 +300,18 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private static string GetString(string key, SystemLanguage language, params KeyValuePair<string, string>[] variables)
+			private static string Get(string key, SystemLanguage language, params LocalisationLocalVariable[] localVariables)
 			{
 				if (_localisationMap == null)
 					LoadStrings();
 
 				string text = _localisationMap.GetString(key, language, _fallBackLanguage);
-				text = ReplaceVariables(text, variables);
+				text = ReplaceVariables(text, localVariables);
 
 				return text;
 			}
-
-			//As well as passed in variables store a table of stored variables
-			private static string ReplaceVariables(string text, params KeyValuePair<string, string>[] variables)
+			
+			private static string ReplaceVariables(string text, params LocalisationLocalVariable[] localVariables)
 			{
 				string fullText = "";
 				int index = 0;
@@ -368,12 +336,12 @@ namespace Framework
 
 						bool foundKey = false;
 
-						//First check provided variables
-						foreach (KeyValuePair<string, string> variable in variables)
+						//First check provided local variables
+						for (int i=0; i<localVariables.Length; i++)
 						{
-							if (variable.Key == variableKey)
+							if (localVariables[i]._key == variableKey)
 							{
-								fullText += variable.Value;
+								fullText += localVariables[i]._value;
 								foundKey = true;
 								break;
 							}
@@ -383,7 +351,7 @@ namespace Framework
 						if (!foundKey)
 						{
 							VariableInfo info;
-							if (_variables.TryGetValue(variableKey, out info))
+							if (_globalVariables.TryGetValue(variableKey, out info))
 							{
 								fullText += info._value;
 							}
@@ -397,15 +365,46 @@ namespace Framework
 					}
 					else
 					{
-						fullText += text.Substring(index, text.Length - index);
+						if (index == 0)
+							fullText = text;
+						else
+							fullText += text.Substring(index, text.Length - index);
+
 						break;
 					}
 				}
 
 				return fullText;
 			}
+			#endregion
 
+			#region Private Editor Functions
 #if UNITY_EDITOR
+			private static void EditorWarnIfDirty()
+			{
+				if (HasUnsavedChanges())
+				{
+					int option = EditorUtility.DisplayDialogComplex("Localization strings have Been Modified",
+																   "Do you want to save the changes you made to the localization table?",
+																   "Save",
+																   "Save",
+																   "Revert");
+
+					switch (option)
+					{
+						case 0:
+						case 1:
+							SaveStrings(); break;
+						case 2:
+							{
+								_dirty = false;
+								LoadStrings();
+							}
+							break;
+					}
+				}
+			}
+
 			private static void RefreshEditorKeys()
 			{
 				_editorKeys = _localisationMap.GetStringKeys();
@@ -439,9 +438,6 @@ namespace Framework
 				_editorFolders = folders.ToArray();
 			}
 
-#endif
-
-#if UNITY_EDITOR
 			private static void UndoRedoCallback()
 			{
 				if (_undoObject != null && !string.IsNullOrEmpty(_undoObject._serialisedLocalisationMap))
