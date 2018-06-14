@@ -30,11 +30,10 @@ namespace Framework
 				private const string kEditorPrefsKey = "UnityPlayModeSaver.";
 				private const string kEditorPrefsObjectCountKey = kEditorPrefsKey + "SavedObjects";
 				private const string kEditorPrefsObjectScene = ".Scene";
-				private const string kEditorPrefsObjectId = ".Id";
+				private const string kEditorPrefsObjectSceneId = ".SceneId";
 				private const string kEditorPrefsRuntimeObjectId = ".RuntimeId";
-				private const string kEditorPrefsRuntimeObjectSceneParentId = ".RuntimeSceneParentId";
-				private const string kEditorPrefsRuntimeObjectParentId = ".RuntimeParentId";
 				private const string kEditorPrefsRuntimeObjectType = ".RuntimeType";
+				private const string kEditorPrefsRuntimeObjectParentId = ".RuntimeParentId";
 				private const string kEditorPrefsObjectJson = ".Json";
 				private const string kEditorPrefsObjectRefs = ".ObjRefs";
 				private const string kEditorPrefsObjectMaterialRefs = ".Materials";
@@ -47,6 +46,9 @@ namespace Framework
 				#region Helper Structs
 				private struct RestoredObjectData
 				{
+					public Object _object;
+					public Type _createdObjectType;
+					public Object _parentObject;
 					public string _json;
 					public string _scenePath;
 					public string _missingObjectRefs;
@@ -80,9 +82,7 @@ namespace Framework
 					Component component = command.context as Component;
 
 					if (Application.isPlaying && component != null)
-					{
-						SaveComponent(component);
-					}
+						RegisterObject(component, component.gameObject.scene.path);
 				}
 
 				[MenuItem(kSaveComponentMenuString, true)]
@@ -91,9 +91,7 @@ namespace Framework
 					Component component = command.context as Component;
 
 					if (Application.isPlaying && component != null)
-					{
-						return true;
-					}
+						return !IsObjectRegistered(component, component.gameObject.scene.path);
 
 					return false;
 				}
@@ -104,9 +102,7 @@ namespace Framework
 					Component component = command.context as Component;
 
 					if (Application.isPlaying && component != null)
-					{
-						RevertComponent(component);
-					}
+						UnregisterObject(component, component.gameObject.scene.path);
 				}
 
 				[MenuItem(kRevertComponentMenuString, true)]
@@ -115,23 +111,7 @@ namespace Framework
 					Component component = command.context as Component;
 
 					if (Application.isPlaying && component != null)
-					{
-						int identifier = GetSceneIdentifier(component);
-						string scenePath = component.gameObject.scene.path;
-
-						if (identifier != -1)
-						{
-							if (GetSavedSceneObjectIndex(identifier, scenePath) != -1)
-								return true;
-						}
-						else
-						{
-							int instanceId = GetInstanceId(component);
-
-							if (GetSavedRuntimeObjectIndex(instanceId, scenePath) != -1)
-								return true;
-						}
-					}
+						return IsObjectRegistered(component, component.gameObject.scene.path);
 
 					return false;
 				}
@@ -142,9 +122,7 @@ namespace Framework
 					GameObject gameObject = command.context as GameObject;
 
 					if (Application.isPlaying && gameObject != null)
-					{
-						SaveGameObject(gameObject);
-					}
+						RegisterObject(gameObject, gameObject.scene.path);
 				}
 
 				[MenuItem(kSaveGameObjectMenuString, true)]
@@ -153,9 +131,7 @@ namespace Framework
 					GameObject gameObject = command.context as GameObject;
 					
 					if (Application.isPlaying && gameObject != null)
-					{
-						return true;
-					}
+						return !IsObjectRegistered(gameObject, gameObject.scene.path);
 
 					return false;
 				}
@@ -167,7 +143,7 @@ namespace Framework
 
 					if (Application.isPlaying && gameObject != null)
 					{
-						RevertGameObject(gameObject);
+						UnregisterObject(gameObject, gameObject.scene.path);
 					}
 				}
 
@@ -178,79 +154,14 @@ namespace Framework
 
 					if (Application.isPlaying && gameObject != null)
 					{
-						int identifier = GetSceneIdentifier(gameObject);
-						string scenePath = gameObject.scene.path;
-
-						if (identifier != -1)
-						{
-							if (GetSavedSceneObjectIndex(identifier, scenePath) != -1)
-								return true;
-						}
-						else
-						{
-							int instanceId = GetInstanceId(gameObject);
-							
-							if (GetSavedRuntimeObjectIndex(instanceId, scenePath) != -1)
-								return true;
-						}
+						return IsObjectRegistered(gameObject, gameObject.scene.path);
 					}
 
 					return false;
 				}
 				#endregion
-
-				#region Component Functions
-				private static void SaveComponent(Component component)
-				{
-					SaveObject(component, component.gameObject.scene.path);
-				}
-
-				private static void RevertComponent(Component component)
-				{
-					RevertObject(component, component.gameObject.scene.path);
-				}
-				#endregion
-
-				#region GameObjects Functions
-				private static void SaveGameObject(GameObject gameObject)
-				{
-					SaveObject(gameObject, gameObject.scene.path);
-				}
-
-				private static void RevertGameObject(GameObject gameObject)
-				{
-					RevertObject(gameObject, gameObject.scene.path);
-				}
-
-				private static void AddGameObjectChildObjectValues(GameObject gameObject)
-				{
-					Component[] components = gameObject.GetComponents<Component>();
-
-					for (int i = 0; i < components.Length; i++)
-					{
-						int identifier = GetSceneIdentifier(components[i]);
-
-						if (identifier != -1)
-						{
-							SaveSceneObject(gameObject.scene.path, identifier);
-							SaveObjectValues(components[i], identifier);
-						}
-					}
-
-					foreach (Transform child in gameObject.transform)
-					{
-						int identifier = GetSceneIdentifier(child.transform);
-
-						if (identifier != -1)
-						{
-							SaveSceneObject(gameObject.scene.path, identifier);
-							SaveObjectValues(child.gameObject, identifier);
-						}
-					}
-				}
-				#endregion
-
-				#region Private Functions
+				
+				#region Editor Functions
 				private static void OnModeChanged(PlayModeStateChange state)
 				{
 					switch (state)
@@ -270,37 +181,83 @@ namespace Framework
 					}
 				}
 
-				private static void SaveObject(Object obj, string scenePath)
+				private static void RepaintEditorWindows()
+				{
+					SceneView.RepaintAll();
+
+					Type inspectorWindowType = Type.GetType("UnityEditor.InspectorWindow, UnityEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
+					if (inspectorWindowType != null)
+					{
+						EditorWindow.GetWindow(inspectorWindowType).Repaint();
+					}
+
+					Type gameViewType = Type.GetType("UnityEditor.GameView, UnityEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
+
+					if (gameViewType != null)
+					{
+						BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
+						MethodInfo methodInfo = gameViewType.GetMethod("RepaintAll", bindingFlags, null, new System.Type[] { }, null);
+
+						if (methodInfo != null)
+						{
+							methodInfo.Invoke(null, null);
+						}
+					}
+				}
+				#endregion
+
+				#region Object Registering
+				private static bool IsObjectRegistered(Object obj, string scenePath)
 				{
 					int identifier = GetSceneIdentifier(obj);
 
 					if (identifier != -1)
 					{
-						SaveSceneObject(scenePath, identifier);
+						if (GetSavedSceneObjectIndex(identifier, scenePath) != -1)
+							return true;
 					}
 					else
 					{
 						int instanceId = GetInstanceId(obj);
-						SaveRuntimeObject(scenePath, instanceId);
+
+						if (GetSavedRuntimeObjectIndex(instanceId, scenePath) != -1)
+							return true;
 					}
+
+					return false;
 				}
 
-				private static void SaveSceneObject(string scenePath, int identifier)
+				private static void RegisterObject(Object obj, string scenePath)
 				{
-					int saveObjIndex = GetSavedSceneObjectIndex(identifier, scenePath);
-					
-					if (saveObjIndex == -1)
+					int identifier = GetSceneIdentifier(obj);
+
+					if (identifier != -1)
 					{
-						saveObjIndex = AddSavedObject(); 
+						RegisterSceneObject(scenePath, identifier);
 					}
-
-					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
-
-					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
-					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectId, Convert.ToString(identifier));
+					else
+					{
+						int instanceId = GetInstanceId(obj);
+						RegisterRuntimeObject(scenePath, instanceId);
+					}
 				}
 
-				private static int AddSavedObject()
+				private static void UnregisterObject(Object obj, string scenePath)
+				{
+					int identifier = GetSceneIdentifier(obj);
+
+					if (identifier != -1)
+					{
+						UnregisterSceneObject(scenePath, identifier);
+					}
+					else
+					{
+						int instanceId = GetInstanceId(obj);
+						UnregisterRuntimeObject(scenePath, instanceId);
+					}
+				}
+
+				private static int RegisterObject()
 				{
 					int objectCount = EditorPrefs.GetInt(kEditorPrefsObjectCountKey);
 					int saveObjIndex = objectCount;
@@ -309,127 +266,25 @@ namespace Framework
 					return saveObjIndex;
 				}
 
-				private static void SaveRuntimeObject(string scenePath, int instanceId)
+				#region Scene Objects
+				private static string RegisterSceneObject(string scenePath, int identifier)
 				{
-					int saveObjIndex = GetSavedRuntimeObjectIndex(instanceId, scenePath);
+					int saveObjIndex = GetSavedSceneObjectIndex(identifier, scenePath);
 
 					if (saveObjIndex == -1)
 					{
-						saveObjIndex = AddSavedObject();
+						saveObjIndex = RegisterObject();
 					}
-					
+
 					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
 
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
-					EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectId, Convert.ToString(instanceId));
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectSceneId, Convert.ToString(identifier));
+
+					return editorPrefKey;
 				}
 
-				private static void SaveObjectValues(int saveObjIndex)
-				{
-					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
-
-					if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectScene))
-					{
-						string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
-
-						//Scene object
-						if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectId))
-						{
-							string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectId);
-
-							Object obj = FindSceneObject(sceneStr, SafeConvertToInt(identifierStr));
-							SaveObjectValues(obj, saveObjIndex);
-						}
-						//Runtime object
-						else if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsRuntimeObjectId))
-						{
-							string instanceIdStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectId);
-
-							Object obj = FindRuntimeObject(sceneStr, SafeConvertToInt(instanceIdStr));
-
-							GameObject sceneParent = null;
-
-							if (obj is Component)
-							{
-								Component component = (Component)obj;
-
-								sceneParent = FindParentInScene(component.gameObject);
-							}
-							else if (obj is GameObject)
-							{
-								GameObject gameObject = (GameObject)obj;
-								sceneParent = FindParentInScene(gameObject);
-							}
-
-							//Save all objects in parent down, these need a path or something? some way of going one component should be created on that gameobject, which is also created at runtime.
-							//parent could either be a scene object or a runtimeobject... runtime uses instancce id, scene use scene id
-							
-							//First parent that is part of scene and then save the whole hieracy from that parent down.
-							//EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectType, type.FullName);
-							//EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectParentId, Convert.ToString(parentSceneId));
-
-							//Yep so start saving object values from this object own
-						}
-					}
-				}
-
-				private static GameObject FindParentInScene(GameObject gameObject)
-				{
-					if (GetSceneIdentifier(gameObject) != -1 || gameObject.transform.parent == null)
-					{
-						return gameObject;
-					}
-					else
-					{
-						return FindParentInScene(gameObject.transform.parent.gameObject);
-					}
-				}
-
-				private static void SaveObjectValues(Object obj, int saveObjIndex)
-				{
-					RestoredObjectData data = GetObjectData(obj);
-
-					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
-
-					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectJson, data._json);
-					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectRefs, data._missingObjectRefs);
-					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectMaterialRefs, data._missingMaterials);
-
-					if (obj is GameObject)
-					{
-						AddGameObjectChildObjectValues((GameObject)obj);
-					}
-				}
-
-				private static void SaveObjectValues()
-				{
-					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
-
-					for (int i = 0; i < numSavedObjects; i++)
-					{
-						SaveObjectValues(i);
-
-						//Saving object values can result in more objects being added to list so re-grab the count.
-						numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
-					}
-				}
-
-				private static void RevertObject(Object obj, string scenePath)
-				{
-					int identifier = GetSceneIdentifier(obj);
-
-					if (identifier != -1)
-					{
-						RevertSceneObject(scenePath, identifier);
-					}
-					else
-					{
-						int instanceId = GetInstanceId(obj);
-						RevertRuntimeObject(scenePath, instanceId);
-					}
-				}
-
-				private static void RevertSceneObject(string scenePath, int identifier)
+				private static void UnregisterSceneObject(string scenePath, int identifier)
 				{
 					int saveObjIndex = GetSavedSceneObjectIndex(identifier, scenePath);
 
@@ -438,14 +293,53 @@ namespace Framework
 						string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
 
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectScene);
-						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectId);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectSceneId);
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectJson);
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectRefs);
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectMaterialRefs);
 					}
 				}
 
-				private static void RevertRuntimeObject(string scenePath, int instanceId)
+				private static int GetSavedSceneObjectIndex(int localIdentifier, string scenePath)
+				{
+					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
+
+					for (int i = 0; i < numSavedObjects; i++)
+					{
+						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
+
+						string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
+						string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectSceneId);
+
+						if (sceneStr == scenePath && localIdentifier == SafeConvertToInt(identifierStr))
+						{
+							return i;
+						}
+					}
+
+					return -1;
+				}
+				#endregion
+
+				#region Runtime Objects
+				private static string RegisterRuntimeObject(string scenePath, int instanceId)
+				{
+					int saveObjIndex = GetSavedRuntimeObjectIndex(instanceId, scenePath);
+
+					if (saveObjIndex == -1)
+					{
+						saveObjIndex = RegisterObject();
+					}
+
+					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
+
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectId, Convert.ToString(instanceId));
+
+					return editorPrefKey;
+				}
+
+				private static void UnregisterRuntimeObject(string scenePath, int instanceId)
 				{
 					int saveObjIndex = GetSavedRuntimeObjectIndex(instanceId, scenePath);
 
@@ -459,84 +353,6 @@ namespace Framework
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectRefs);
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectMaterialRefs);
 					}
-				}
-
-				private static void RestoreSavedObjects()
-				{
-					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
-
-					List<Object> restoredObjects = new List<Object>();
-					List<RestoredObjectData> restoredObjectsData = new List<RestoredObjectData>();
-
-					for (int i = 0; i < numSavedObjects; i++)
-					{
-						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
-
-						if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectScene))
-						{
-							string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
-							string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectId);
-
-							Object obj = FindSceneObject(sceneStr, SafeConvertToInt(identifierStr));
-
-							if (obj != null)
-							{
-								string jsonStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson);
-								string objectRefStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs);
-								string materialStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs);
-
-								restoredObjects.Add(obj);
-
-								RestoredObjectData data = new RestoredObjectData
-								{
-									_json = jsonStr,
-									_scenePath = sceneStr,
-									_missingObjectRefs = objectRefStr,
-									_missingMaterials = materialStr
-								};
-
-								restoredObjectsData.Add(data);
-							}
-						}	
-
-						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectScene);
-						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectId);
-						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectJson);
-						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectRefs);
-						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectMaterialRefs);
-					}
-
-					if (restoredObjects.Count > 0)
-					{
-						Undo.RecordObjects(restoredObjects.ToArray(), kUndoText);
-
-						for (int i = 0; i < restoredObjects.Count; i++)
-						{
-							RestoreObjectFromData(restoredObjects[i], restoredObjectsData[i]);
-						}
-					}
-
-					EditorPrefs.DeleteKey(kEditorPrefsObjectCountKey);
-				}
-
-				private static int GetSavedSceneObjectIndex(int localIdentifier, string scenePath)
-				{
-					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
-
-					for (int i = 0; i < numSavedObjects; i++)
-					{
-						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
-
-						string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
-						string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectId);
-
-						if (sceneStr == scenePath && localIdentifier == SafeConvertToInt(identifierStr))
-						{
-							return i;
-						}
-					}
-
-					return -1;
 				}
 
 				private static int GetSavedRuntimeObjectIndex(int instanceId, string scenePath)
@@ -558,26 +374,109 @@ namespace Framework
 
 					return -1;
 				}
+				#endregion
 
-				private static void RestoreObjectFromData(Object obj, RestoredObjectData data)
+				#endregion
+
+				#region Object Saving
+				private static void SaveObjectValues()
 				{
-					bool unityType = ShouldUseEditorSerialiser(obj);
+					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 
-					//Find any lost material refs
-					List<MaterialRef> materialRefs = FindOriginalMaterials(obj, data._missingMaterials);
-
-					if (unityType)
+					for (int i = 0; i < numSavedObjects; i++)
 					{
-						EditorJsonUtility.FromJsonOverwrite(data._json, obj);
-						ApplyObjectRefs(obj, data._scenePath, data._missingObjectRefs);
-					}
-					else
-					{
-						JsonUtility.FromJsonOverwrite(data._json, obj);
-					}
+						SaveObjectValues(i);
 
-					//Revert any lost material refs
-					ApplyMaterialsRefs(obj, materialRefs);
+						//Saving object values can result in more objects being added to list so re-grab the count.
+						numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
+					}
+				}
+
+				private static void SaveObjectValues(int saveObjIndex)
+				{
+					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
+					string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
+
+					//Scene object
+					if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectSceneId))
+					{
+						string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectSceneId);
+
+						Object obj = FindSceneObject(sceneStr, SafeConvertToInt(identifierStr));
+
+						if (obj != null)
+						{
+							SaveObjectValues(editorPrefKey, obj);
+
+							//If its a GameObject then add its components and child GameObjects (some of which might be runtime)
+							GameObject gameObject = obj as GameObject;
+
+							if (gameObject != null)
+								AddSceneGameObjectChildObjectValues(gameObject);
+						}
+					}
+					//Runtime object
+					else if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsRuntimeObjectId))
+					{
+						string instanceIdStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectId);
+
+						Object obj = FindRuntimeObject(sceneStr, SafeConvertToInt(instanceIdStr));
+
+						if (obj != null)
+						{
+							GameObject sceneParent = null;
+							GameObject topOfHieracy = null;
+
+							if (obj is Component)
+							{
+								Component component = (Component)obj;
+
+								topOfHieracy = component.gameObject;
+								FindParentInScene(component.gameObject, out sceneParent, ref topOfHieracy);
+
+								if (component.gameObject == sceneParent)
+								{
+									SaveRuntimeComponent(editorPrefKey, component, sceneParent);
+								}
+								else
+								{
+									SaveRuntimeGameObject(editorPrefKey, topOfHieracy, sceneParent);
+								}
+							}
+							else if (obj is GameObject)
+							{
+								GameObject gameObject = (GameObject)obj;
+
+								topOfHieracy = gameObject;
+								FindParentInScene(gameObject, out sceneParent, ref topOfHieracy);
+
+								if (topOfHieracy != gameObject)
+								{
+									int instanceId = GetInstanceId(topOfHieracy);
+									EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectId, Convert.ToString(instanceId));
+								}
+
+								SaveRuntimeGameObject(editorPrefKey, topOfHieracy, sceneParent);
+							}
+						}
+					}
+				}
+
+				private static void SaveObjectValues(string editorPrefKey, Object obj)
+				{
+					RestoredObjectData data = GetObjectData(obj);
+
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectJson, data._json);
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectRefs, data._missingObjectRefs);
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectMaterialRefs, data._missingMaterials);
+				}
+
+				private static bool ShouldUseEditorSerialiser(Object obj)
+				{
+					if ((obj is Component && !(obj is MonoBehaviour)) || (obj is GameObject))
+						return true;
+
+					return false;
 				}
 
 				private static RestoredObjectData GetObjectData(Object obj)
@@ -645,7 +544,7 @@ namespace Framework
 						{
 							//Only store the object if the reference is within the same scene 
 							Scene objScne = GetObjectScene(obj);
-							
+
 							if (objScne.IsValid() && objScne == GetObjectScene(propertry.objectReferenceValue))
 							{
 								int objId = GetSceneIdentifier(propertry.objectReferenceValue);
@@ -662,6 +561,438 @@ namespace Framework
 							}
 						}
 					}
+				}
+
+				#region Scene Objects
+				private static Object FindSceneObject(string scenePath, int localIdentifier)
+				{
+					Scene scene;
+
+					if (GetActiveScene(scenePath, out scene))
+					{
+						foreach (GameObject rootObject in scene.GetRootGameObjects())
+						{
+							Object obj = FindSceneObject(rootObject, localIdentifier);
+
+							if (obj != null)
+							{
+								return obj;
+							}
+						}
+					}
+
+					return null;
+				}
+
+				private static Object FindSceneObject(GameObject gameObject, int localIdentifier)
+				{
+					//Check game object
+					if (GetSceneIdentifier(gameObject) == localIdentifier)
+						return gameObject;
+
+					//Check components
+					Component[] components = gameObject.GetComponents<Component>();
+
+					foreach (Component component in components)
+					{
+						if (GetSceneIdentifier(component) == localIdentifier)
+							return component;
+					}
+
+					//Check children
+					foreach (Transform child in gameObject.transform)
+					{
+						Object obj = FindSceneObject(child.gameObject, localIdentifier);
+
+						if (obj != null)
+							return obj;
+					}
+
+					return null;
+				}
+
+				private static void AddSceneGameObjectChildObjectValues(GameObject gameObject)
+				{
+					Component[] components = gameObject.GetComponents<Component>();
+
+					for (int i = 0; i < components.Length; i++)
+					{
+						int identifier = GetSceneIdentifier(components[i]);
+
+						if (identifier != -1)
+						{
+							string editorPrefKey = RegisterSceneObject(gameObject.scene.path, identifier);
+							SaveObjectValues(editorPrefKey, components[i]);
+						}
+						else
+						{
+							int instanceId = GetInstanceId(components[i]);
+							string scenePath = gameObject.scene.path;
+							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
+							SaveRuntimeComponent(editorPrefKey, components[i], gameObject);
+						}
+					}
+
+					foreach (Transform child in gameObject.transform)
+					{
+						int identifier = GetSceneIdentifier(child.gameObject);
+
+						if (identifier != -1)
+						{
+							string editorPrefKey = RegisterSceneObject(gameObject.scene.path, identifier);
+							SaveObjectValues(editorPrefKey, child.gameObject);
+							AddSceneGameObjectChildObjectValues(child.gameObject);
+						}
+						else
+						{
+							int instanceId = GetInstanceId(child.gameObject);
+							string scenePath = gameObject.scene.path;
+							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
+							SaveRuntimeGameObject(editorPrefKey, child.gameObject, gameObject);
+						}
+					}
+				}
+				#endregion
+
+				#region Runtime Objects
+				private static Object FindRuntimeObject(string scenePath, int instanceId)
+				{
+					Scene scene;
+
+					if (GetActiveScene(scenePath, out scene))
+					{
+						foreach (GameObject rootObject in scene.GetRootGameObjects())
+						{
+							Object obj = FindRuntimeObject(rootObject, instanceId);
+
+							if (obj != null)
+							{
+								return obj;
+							}
+						}
+					}
+
+					return null;
+				}
+
+				private static Object FindRuntimeObject(GameObject gameObject, int instanceId)
+				{
+					//Check game object
+					if (GetInstanceId(gameObject) == instanceId)
+						return gameObject;
+
+					//Check components
+					Component[] components = gameObject.GetComponents<Component>();
+
+					foreach (Component component in components)
+					{
+						if (GetInstanceId(component) == instanceId)
+							return component;
+					}
+
+					//Check children
+					foreach (Transform child in gameObject.transform)
+					{
+						Object obj = FindRuntimeObject(child.gameObject, instanceId);
+
+						if (obj != null)
+							return obj;
+					}
+
+					return null;
+				}
+				
+				private static void SaveRuntimeGameObject(string editorPrefKey, GameObject gameObject, GameObject parentSceneObject)
+				{
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectType, GetTypeString(gameObject.GetType()));
+					SaveObjectValues(editorPrefKey, gameObject);
+
+					if (parentSceneObject != null)
+					{
+						int identifier = GetSceneIdentifier(parentSceneObject);
+
+						if (identifier != -1)
+						{
+							EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectParentId, Convert.ToString(identifier));
+						}
+					}
+
+					//Save all components and child GameObjects
+					int childObjectIndex = 0;
+
+					Component[] components = gameObject.GetComponents<Component>();
+
+					for (int i = 0; i < components.Length; i++)
+					{
+						SaveRuntimeComponent(editorPrefKey + "." + Convert.ToString(childObjectIndex++), components[i], null);
+					}
+
+					foreach (Transform child in gameObject.transform)
+					{
+						SaveRuntimeGameObject(editorPrefKey + "." + Convert.ToString(childObjectIndex++), child.gameObject, null);
+					}
+				}
+
+				private static void SaveRuntimeComponent(string editorPrefKey, Component component, GameObject parentSceneObject)
+				{
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectType, GetTypeString(component.GetType()));
+					SaveObjectValues(editorPrefKey, component);
+
+					if (parentSceneObject != null)
+					{
+						int identifier = GetSceneIdentifier(parentSceneObject);
+
+						if (identifier != -1)
+						{
+							EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectParentId, Convert.ToString(identifier));
+						}
+					}
+				}
+
+				private static void FindParentInScene(GameObject gameObject, out GameObject sceneParent, ref GameObject lastChild)
+				{
+					if (GetSceneIdentifier(gameObject) != -1 || gameObject.transform.parent == null)
+					{
+						sceneParent = gameObject;
+					}
+					else
+					{
+						lastChild = gameObject;
+						FindParentInScene(gameObject.transform.parent.gameObject, out sceneParent, ref lastChild);
+					}
+				}
+				#endregion
+
+				#endregion
+
+				#region Object Restoring
+				private static void RestoreRuntimeGameObject(GameObject gameObject, string editorPrefKey, string sceneStr)
+				{
+					int childIndex = 0;
+					string childeditorPrefKey;
+
+					while (EditorPrefs.HasKey((childeditorPrefKey = editorPrefKey + "." + Convert.ToString(childIndex)) + kEditorPrefsRuntimeObjectType))
+					{
+						string typeStr = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsRuntimeObjectType);
+						Type objType = GetType(typeStr);
+
+						Object obj = null;
+
+						if (objType == typeof(GameObject))
+						{
+							GameObject childGameObject = new GameObject();
+							childGameObject.transform.parent = gameObject.transform;
+							obj = childGameObject;
+
+							RestoreRuntimeGameObject(childGameObject, childeditorPrefKey, sceneStr);
+						}
+						else if (objType == typeof(Transform))
+						{
+							obj = gameObject.transform;
+						}
+						else if (typeof(Component).IsAssignableFrom(objType))
+						{
+							obj = gameObject.AddComponent(objType);
+						}
+
+						string jsonStr = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectJson);
+						string objectRefStr = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectRefs);
+						string materialStr = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectMaterialRefs);
+
+						RestoredObjectData data = new RestoredObjectData
+						{
+							_object = obj,
+							_json = jsonStr,
+							_scenePath = sceneStr,
+							_missingObjectRefs = objectRefStr,
+							_missingMaterials = materialStr
+						};
+
+						RestoreObjectFromData(data);
+
+						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsRuntimeObjectType);
+						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectJson);
+						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectRefs);
+						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectMaterialRefs);
+
+						childIndex++;
+					}
+				}
+
+				private static void RestoreSavedObjects()
+				{
+					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
+
+					List<Object> restoredObjects = new List<Object>();
+					List<RestoredObjectData> restoredObjectsData = new List<RestoredObjectData>();
+					
+					for (int i = 0; i < numSavedObjects; i++)
+					{
+						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
+
+						if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectScene))
+						{
+							string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
+
+							//Scene object
+							if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectSceneId))
+							{
+								string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectSceneId);
+
+								Object obj = FindSceneObject(sceneStr, SafeConvertToInt(identifierStr));
+
+								if (obj != null)
+								{
+									restoredObjects.Add(obj);
+
+									string jsonStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson);
+									string objectRefStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs);
+									string materialStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs);
+
+									RestoredObjectData data = new RestoredObjectData
+									{
+										_object = obj,
+										_json = jsonStr,
+										_scenePath = sceneStr,
+										_missingObjectRefs = objectRefStr,
+										_missingMaterials = materialStr
+									};
+
+									restoredObjectsData.Add(data);
+								}
+							}
+							//Runtime Object
+							else
+							{
+								string typeStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectType);
+								string parentIdStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectParentId);
+
+								Type objType = GetType(typeStr);
+								GameObject parentObj = FindSceneObject(sceneStr, SafeConvertToInt(parentIdStr)) as GameObject;
+
+								if (objType == typeof(GameObject))
+								{
+									GameObject gameObject = new GameObject();
+
+									if (parentObj != null)
+										gameObject.transform.parent = parentObj.transform;
+
+									RestoreRuntimeGameObject(gameObject, editorPrefKey, sceneStr);
+
+									Undo.RegisterCreatedObjectUndo(gameObject, "Create GameObject");
+								}
+								else if (typeof(Component).IsAssignableFrom(objType))
+								{
+									if (parentObj != null)
+									{
+										string jsonStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson);
+										string objectRefStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs);
+										string materialStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs);
+
+										RestoredObjectData data = new RestoredObjectData
+										{
+											_object = null,
+											_createdObjectType = objType,
+											_parentObject = parentObj,
+											_json = jsonStr,
+											_scenePath = sceneStr,
+											_missingObjectRefs = objectRefStr,
+											_missingMaterials = materialStr
+										};
+
+										restoredObjectsData.Add(data);
+									}
+								}
+							}
+						}
+
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectScene);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectSceneId);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectId);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectParentId);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectType);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectJson);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectRefs);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectMaterialRefs);
+					}
+
+					if (restoredObjectsData.Count > 0)
+					{
+						Undo.RecordObjects(restoredObjects.ToArray(), kUndoText);
+
+						for (int i = 0; i < restoredObjectsData.Count; i++)
+						{
+							RestoreObjectFromData(restoredObjectsData[i]);
+						}
+					}
+
+					SafeDeleteEditorPref(kEditorPrefsObjectCountKey);
+				}
+
+				private static void RestoreObjectFromData(RestoredObjectData data)
+				{
+					if (data._object == null)
+					{
+						GameObject parent = data._parentObject as GameObject;
+
+						if (data._createdObjectType == typeof(GameObject))
+						{
+							GameObject gameObject = new GameObject();
+							gameObject.transform.parent = parent.transform;
+							data._object = gameObject;
+						}
+						else if (typeof(Component).IsAssignableFrom(data._createdObjectType) && parent != null)
+						{
+							data._object = Undo.AddComponent(parent, data._createdObjectType);
+						}
+					}
+
+					if (data._object != null)
+					{
+						bool unityType = ShouldUseEditorSerialiser(data._object);
+
+						//Find any lost material refs
+						List<MaterialRef> materialRefs = FindOriginalMaterials(data._object, data._missingMaterials);
+
+						if (unityType)
+						{
+							EditorJsonUtility.FromJsonOverwrite(data._json, data._object);
+							ApplyObjectRefs(data._object, data._scenePath, data._missingObjectRefs);
+						}
+						else
+						{
+							JsonUtility.FromJsonOverwrite(data._json, data._object);
+						}
+
+						//Revert any lost material refs
+						ApplyMaterialsRefs(data._object, materialRefs);
+					}
+				}
+
+				private static List<MaterialRef> FindOriginalMaterials(Object obj, string materialStr)
+				{
+					List<MaterialRef> materialRefs = new List<MaterialRef>();
+
+					SerializedObject serializedObject = new SerializedObject(obj);
+					string[] materials = materialStr.Split(kItemSplitChar);
+
+					foreach (string material in materials)
+					{
+						SerializedProperty materialProp = serializedObject.FindProperty(material);
+
+						if (materialProp != null)
+						{
+							MaterialRef materialRef = new MaterialRef
+							{
+								_material = materialProp.objectReferenceValue as Material,
+								_propertyPath = material
+
+							};
+							materialRefs.Add(materialRef);
+						}
+					}
+
+					return materialRefs;
 				}
 
 				private static void ApplyObjectRefs(Object obj, string sceneStr, string objectRefStr)
@@ -710,33 +1041,9 @@ namespace Framework
 
 					serializedObject.ApplyModifiedPropertiesWithoutUndo();
 				}
+				#endregion
 
-				private static List<MaterialRef> FindOriginalMaterials(Object obj, string materialStr)
-				{
-					List<MaterialRef> materialRefs = new List<MaterialRef>();
-
-					SerializedObject serializedObject = new SerializedObject(obj);
-					string[] materials = materialStr.Split(kItemSplitChar);
-
-					foreach (string material in materials)
-					{
-						SerializedProperty materialProp = serializedObject.FindProperty(material);
-
-						if (materialProp != null)
-						{
-							MaterialRef materialRef = new MaterialRef
-							{
-								_material = materialProp.objectReferenceValue as Material,
-								_propertyPath = material
-
-							};
-							materialRefs.Add(materialRef);
-						}
-					}
-
-					return materialRefs;
-				}
-
+				#region Helper Functions
 				private static int GetSceneIdentifier(Object obj)
 				{
 					if (obj != null)
@@ -757,101 +1064,10 @@ namespace Framework
 
 				private static int GetInstanceId(Object obj)
 				{
-					return obj.GetInstanceID();
-				}
+					if (obj != null)
+						return obj.GetInstanceID();
 
-				private static Object FindRuntimeObject(string scenePath, int instanceId)
-				{
-					Scene scene;
-
-					if (GetActiveScene(scenePath, out scene))
-					{
-						foreach (GameObject rootObject in scene.GetRootGameObjects())
-						{
-							Object obj = FindRuntimebject(rootObject, instanceId);
-
-							if (obj != null)
-							{
-								return obj;
-							}
-						}
-					}			
-
-					return null;
-				}
-
-				private static Object FindRuntimebject(GameObject gameObject, int instanceId)
-				{
-					//Check game object
-					if (GetInstanceId(gameObject) == instanceId)
-						return gameObject;
-
-					//Check components
-					Component[] components = gameObject.GetComponents<Component>();
-
-					foreach (Component component in components)
-					{
-						if (GetInstanceId(component) == instanceId)
-							return component;
-					}
-
-					//Check children
-					foreach (Transform child in gameObject.transform)
-					{
-						Object obj = FindRuntimebject(child.gameObject, instanceId);
-
-						if (obj != null)
-							return obj;
-					}
-
-					return null;
-				}
-
-				private static Object FindSceneObject(string scenePath, int localIdentifier)
-				{
-					Scene scene;
-
-					if (GetActiveScene(scenePath, out scene))
-					{
-						foreach (GameObject rootObject in scene.GetRootGameObjects())
-						{
-							Object obj = FindSceneObject(rootObject, localIdentifier);
-
-							if (obj != null)
-							{
-								return obj;
-							}
-						}
-					}
-
-					return null;
-				}
-
-				private static Object FindSceneObject(GameObject gameObject, int localIdentifier)
-				{
-					//Check game object
-					if (GetSceneIdentifier(gameObject) == localIdentifier)
-						return gameObject;
-
-					//Check components
-					Component[] components = gameObject.GetComponents<Component>();
-
-					foreach (Component component in components)
-					{
-						if (GetSceneIdentifier(component) == localIdentifier)
-							return component;
-					}
-
-					//Check children
-					foreach (Transform child in gameObject.transform)
-					{
-						Object obj = FindSceneObject(child.gameObject, localIdentifier);
-
-						if (obj != null)
-							return obj;
-					}
-
-					return null;
+					return 0;
 				}
 
 				private static bool GetActiveScene(string scenePath, out Scene scene)
@@ -894,38 +1110,6 @@ namespace Framework
 					return new Scene();
 				}
 
-				private static bool ShouldUseEditorSerialiser(Object obj)
-				{
-					if ((obj is Component && !(obj is MonoBehaviour)) || (obj is GameObject))
-						return true;
-
-					return false;
-				}
-
-				private static void RepaintEditorWindows()
-				{
-					SceneView.RepaintAll();
-					
-					System.Type inspectorWindowType = System.Type.GetType("UnityEditor.InspectorWindow, UnityEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
-					if (inspectorWindowType != null)
-					{
-						EditorWindow.GetWindow(inspectorWindowType).Repaint();
-					}
-
-					System.Type gameViewType = System.Type.GetType("UnityEditor.GameView, UnityEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
-
-					if (gameViewType != null)
-					{
-						BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
-						MethodInfo methodInfo = gameViewType.GetMethod("RepaintAll", bindingFlags, null, new System.Type[] { }, null);
-
-						if (methodInfo != null)
-						{
-							methodInfo.Invoke(null, null);
-						}
-					}
-				}
-
 				private static int SafeConvertToInt(string str)
 				{
 					int value;
@@ -946,6 +1130,30 @@ namespace Framework
 				{
 					if (EditorPrefs.HasKey(key))
 						EditorPrefs.DeleteKey(key);
+				}
+
+				private static string GetTypeString(Type type)
+				{
+					if (type == typeof(GameObject))
+					{
+						return "GameObject";
+					}
+					else
+					{
+						return type.AssemblyQualifiedName;
+					}
+				}
+
+				private static Type GetType(string typeStr)
+				{
+					if (typeStr == "GameObject")
+					{
+						return typeof(GameObject);
+					}
+					else
+					{
+						return Type.GetType(typeStr);
+					}
 				}
 				#endregion
 			}
