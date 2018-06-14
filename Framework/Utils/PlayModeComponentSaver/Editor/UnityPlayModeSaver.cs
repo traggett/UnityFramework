@@ -766,59 +766,6 @@ namespace Framework
 				#endregion
 
 				#region Object Restoring
-				private static void RestoreRuntimeGameObject(GameObject gameObject, string editorPrefKey, string sceneStr)
-				{
-					int childIndex = 0;
-					string childeditorPrefKey;
-
-					while (EditorPrefs.HasKey((childeditorPrefKey = editorPrefKey + "." + Convert.ToString(childIndex)) + kEditorPrefsRuntimeObjectType))
-					{
-						string typeStr = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsRuntimeObjectType);
-						Type objType = GetType(typeStr);
-
-						Object obj = null;
-
-						if (objType == typeof(GameObject))
-						{
-							GameObject childGameObject = new GameObject();
-							childGameObject.transform.parent = gameObject.transform;
-							obj = childGameObject;
-
-							RestoreRuntimeGameObject(childGameObject, childeditorPrefKey, sceneStr);
-						}
-						else if (objType == typeof(Transform))
-						{
-							obj = gameObject.transform;
-						}
-						else if (typeof(Component).IsAssignableFrom(objType))
-						{
-							obj = gameObject.AddComponent(objType);
-						}
-
-						string jsonStr = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectJson);
-						string objectRefStr = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectRefs);
-						string materialStr = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectMaterialRefs);
-
-						RestoredObjectData data = new RestoredObjectData
-						{
-							_object = obj,
-							_json = jsonStr,
-							_scenePath = sceneStr,
-							_missingObjectRefs = objectRefStr,
-							_missingMaterials = materialStr
-						};
-
-						RestoreObjectFromData(data);
-
-						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsRuntimeObjectType);
-						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectJson);
-						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectRefs);
-						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectMaterialRefs);
-
-						childIndex++;
-					}
-				}
-
 				private static void RestoreSavedObjects()
 				{
 					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
@@ -844,20 +791,15 @@ namespace Framework
 								if (obj != null)
 								{
 									restoredObjects.Add(obj);
-
-									string jsonStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson);
-									string objectRefStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs);
-									string materialStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs);
-
+									
 									RestoredObjectData data = new RestoredObjectData
 									{
 										_object = obj,
-										_json = jsonStr,
+										_json = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson),
 										_scenePath = sceneStr,
-										_missingObjectRefs = objectRefStr,
-										_missingMaterials = materialStr
+										_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
+										_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs)
 									};
-
 									restoredObjectsData.Add(data);
 								}
 							}
@@ -873,9 +815,27 @@ namespace Framework
 								if (objType == typeof(GameObject))
 								{
 									GameObject gameObject = new GameObject();
+									Scene scene;
 
 									if (parentObj != null)
+									{
 										gameObject.transform.parent = parentObj.transform;
+									}
+									else if (GetActiveScene(sceneStr, out scene))
+									{
+										SceneManager.MoveGameObjectToScene(gameObject, scene);
+									}
+
+									RestoredObjectData data = new RestoredObjectData
+									{
+										_object = gameObject,
+										_json = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson),
+										_scenePath = sceneStr,
+										_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
+										_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs)
+									};
+
+									RestoreObjectFromData(data);
 
 									RestoreRuntimeGameObject(gameObject, editorPrefKey, sceneStr);
 
@@ -885,19 +845,15 @@ namespace Framework
 								{
 									if (parentObj != null)
 									{
-										string jsonStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson);
-										string objectRefStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs);
-										string materialStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs);
-
 										RestoredObjectData data = new RestoredObjectData
 										{
 											_object = null,
 											_createdObjectType = objType,
 											_parentObject = parentObj,
-											_json = jsonStr,
+											_json = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson),
 											_scenePath = sceneStr,
-											_missingObjectRefs = objectRefStr,
-											_missingMaterials = materialStr
+											_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
+											_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs)
 										};
 
 										restoredObjectsData.Add(data);
@@ -1041,6 +997,58 @@ namespace Framework
 
 					serializedObject.ApplyModifiedPropertiesWithoutUndo();
 				}
+
+				#region Runtime Objects
+				private static void RestoreRuntimeGameObject(GameObject gameObject, string editorPrefKey, string sceneStr)
+				{
+					int childIndex = 0;
+					string childeditorPrefKey;
+
+					while (EditorPrefs.HasKey((childeditorPrefKey = editorPrefKey + "." + Convert.ToString(childIndex)) + kEditorPrefsRuntimeObjectType))
+					{
+						string typeStr = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsRuntimeObjectType);
+						Type objType = GetType(typeStr);
+
+						Object obj = null;
+
+						if (objType == typeof(GameObject))
+						{
+							GameObject childGameObject = new GameObject();
+							childGameObject.transform.parent = gameObject.transform;
+							obj = childGameObject;
+
+							RestoreRuntimeGameObject(childGameObject, childeditorPrefKey, sceneStr);
+						}
+						else if (objType == typeof(Transform))
+						{
+							obj = gameObject.transform;
+						}
+						else if (typeof(Component).IsAssignableFrom(objType))
+						{
+							obj = gameObject.AddComponent(objType);
+						}
+						
+						RestoredObjectData data = new RestoredObjectData
+						{
+							_object = obj,
+							_json = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectJson),
+							_scenePath = sceneStr,
+							_missingObjectRefs = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectRefs),
+							_missingMaterials = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectMaterialRefs)
+						};
+
+						RestoreObjectFromData(data);
+
+						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsRuntimeObjectType);
+						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectJson);
+						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectRefs);
+						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectMaterialRefs);
+
+						childIndex++;
+					}
+				}
+				#endregion
+
 				#endregion
 
 				#region Helper Functions
