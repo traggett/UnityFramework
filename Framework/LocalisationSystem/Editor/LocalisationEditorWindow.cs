@@ -594,9 +594,9 @@ namespace Framework
 				private void DuplicateSelected()
 				{
 					if (!string.IsNullOrEmpty(_editorPrefs._selectedKey))
-					{
+					{ 
 						string newKey = _editorPrefs._selectedKey + " (Copy)";
-						Localisation.Set(newKey, Localisation.GetCurrentLanguage(), string.Empty);
+						Localisation.Set(newKey, Localisation.GetCurrentLanguage(), Localisation.GetRawString(_editorPrefs._selectedKey));
 						_keys = GetKeys();
 						SelectKey(newKey);
 
