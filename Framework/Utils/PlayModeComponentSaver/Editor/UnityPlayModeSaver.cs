@@ -1,3 +1,5 @@
+#if UNITY_EDITOR
+
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -26,7 +28,7 @@ namespace Framework
 				private const string kSaveGameObjectMenuString = "GameObject/" + kSaveMenuString;
 				private const string kRevertGameObjectMenuString = "GameObject/" + kRevertMenuString;
 
-				private const string kUndoText = "Set Play Mode Values";
+				private const string kUndoText = "Play Mode Changes";
 				private const string kEditorPrefsKey = "UnityPlayModeSaver.";
 				private const string kEditorPrefsObjectCountKey = kEditorPrefsKey + "SavedObjects";
 				private const string kEditorPrefsObjectScene = ".Scene";
@@ -839,7 +841,7 @@ namespace Framework
 
 									RestoreRuntimeGameObject(gameObject, editorPrefKey, sceneStr);
 
-									Undo.RegisterCreatedObjectUndo(gameObject, "Create GameObject");
+									Undo.RegisterCreatedObjectUndo(gameObject, kUndoText);
 								}
 								else if (typeof(Component).IsAssignableFrom(objType))
 								{
@@ -1168,3 +1170,5 @@ namespace Framework
 		}
 	}
 }
+
+#endif
