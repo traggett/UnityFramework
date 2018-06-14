@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Framework
@@ -85,11 +86,21 @@ namespace Framework
 				float lerp = Interpolation.Interpolate(type, 0.0f, 1.0f, t);
 				return Lerp(from, to, lerp);
 			}
+
+			public static float Damp(float a, float b, float lambda, float dt)
+			{
+				return Interpolation.InterpolateLinear(a, b, 1 - Mathf.Exp(-lambda * dt));
+			}
+
+			public static double Damp(double a, double b, double lambda, double dt)
+			{
+				return Interpolation.InterpolateLinear(a, b, 1 - Math.Exp(-lambda * dt));
+			}
 			#endregion
 
 			public static int RandomSign()
 			{
-				return Random.Range(0, 1) == 0 ? 1 : -1;
+				return UnityEngine.Random.Range(0, 1) == 0 ? 1 : -1;
 			}
 
 			public static bool FloatRangeIntersects(float range1start, float range1end, float range2start, float range2end)
