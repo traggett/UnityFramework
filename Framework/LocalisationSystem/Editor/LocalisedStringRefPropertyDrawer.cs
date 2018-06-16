@@ -121,7 +121,7 @@ namespace Framework
 
 							if (GUI.Button(autoKeyButton, "Auto"))
 							{
-								LocalisedStringRef localisedStringRef = (LocalisedStringRef)EditorUtils.GetTargetObjectOfProperty(property);
+								LocalisedStringRef localisedStringRef = SerializedPropertyUtils.GetSerializedPropertyValue<LocalisedStringRef>(property);
 
 								Component component =  property.serializedObject.targetObject as Component;
 								if (component != null)
@@ -199,7 +199,7 @@ namespace Framework
 
 				private string UpdateNewLocalisedStringRef(SerializedProperty property, string key)
 				{
-					fieldInfo.SetValue(property.serializedObject.targetObject, new LocalisedStringRef(key));
+					SerializedPropertyUtils.SetSerializedPropertyValue(property, new LocalisedStringRef(key));
 					return key;
 				}
 			}
