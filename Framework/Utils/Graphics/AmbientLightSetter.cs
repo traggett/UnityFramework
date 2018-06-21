@@ -9,11 +9,11 @@ namespace Framework
 		{
 			public AmbientMode _ambientMode = AmbientMode.Flat;
 
-			[ColorUsage(false, true, 0.0f, 1.0f, 0.0f, 1.0f)]
+			[ColorUsage(false, true)]
 			public Color _ambientLight = Color.grey;
-			[ColorUsage(false, true, 0.0f, 1.0f, 0.0f, 1.0f)]
+			[ColorUsage(false, true)]
 			public Color _ambientEquatorColor = Color.grey;
-			[ColorUsage(false, true, 0.0f, 1.0f, 0.0f, 1.0f)]
+			[ColorUsage(false, true)]
 			public Color _ambientGroundColor = Color.grey;
 
 			public Material _skyBox;
