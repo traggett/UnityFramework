@@ -380,6 +380,13 @@ namespace Framework
 							SerializedPropertyUtils.SetSerializedPropertyValue(valueProp, materialRef);
 						}
 					}
+					//Default GameObject nodes to this GameObject
+					else if (nodeInputType == typeof(NodeGraphComponent.GameObjectInput))
+					{
+						DynamicGameObjectRef gameObjectRef = nodeGraphComponent.gameObject;
+						SerializedProperty valueProp = serializedInput.FindPropertyRelative("_valueSource");
+						SerializedPropertyUtils.SetSerializedPropertyValue(valueProp, gameObjectRef);
+					}
 				}
 			}
 		}
