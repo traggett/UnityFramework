@@ -1,6 +1,10 @@
 # UnityFramework
-Framework for Unity that includes support for NodeGraphs and Statemachines together with editors for both.
-It also has a system for easy localisation, a flexible save game system, loads of helpful math functions and more!
+Framework for Unity that includes
+
+- Lots of useful utility classes.
+- Simple but powerful Event based Statemachine system with editor.
+- Localisation system
+- Fast and powerful NodeGraph system with editor.
 
 # Features
 
@@ -29,3 +33,10 @@ This means for example the same node graph that idly oscillates an object (eg a 
 
 Node graphs can also have output nodes which allow them to be chained - one Node Graphs output can be hooked up to the input of another.
 This allows controlling a load of nodegraphs from one single one, eg controlling a scenes lighting and post effects based on a parent nodegraph that outputs the suns position in the sky.
+
+### Localisation Editor
+
+![Alt text](ReadmeAssets/Localisation.png?raw=true "The localisation editor.")
+
+The Localisation system allows you to use localised strings as properties, or on Text or TextMesh components, or directly and edit them using a simple fast editor.
+It supports variable replacement either per string or globally (any global variables will automatically get replaced in all strings).
