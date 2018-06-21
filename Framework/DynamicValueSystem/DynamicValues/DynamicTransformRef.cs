@@ -11,7 +11,7 @@ namespace Framework
 			public static implicit operator DynamicTransformRef(Transform value)
 			{
 				DynamicTransformRef dynamicValue = new DynamicTransformRef();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

@@ -10,7 +10,7 @@ namespace Framework
 			public static implicit operator DynamicString(string value)
 			{
 				DynamicString dynamicValue = new DynamicString();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

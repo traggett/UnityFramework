@@ -26,7 +26,6 @@ namespace Framework
 							XmlNode keyFrameXmlNode = XmlUtils.CreateXmlNode(node.OwnerDocument, "KeyFrame");
 							XmlConverter.AppendFieldObject(keyFrameXmlNode, keyFrame.inTangent, "inTangent");
 							XmlConverter.AppendFieldObject(keyFrameXmlNode, keyFrame.outTangent, "outTangent");
-							XmlConverter.AppendFieldObject(keyFrameXmlNode, keyFrame.tangentMode, "tangentMode");
 							XmlConverter.AppendFieldObject(keyFrameXmlNode, keyFrame.time, "time");
 							XmlConverter.AppendFieldObject(keyFrameXmlNode, keyFrame.value, "value");
 							XmlUtils.SafeAppendChild(keyframesXmlNode, keyFrameXmlNode);
@@ -52,7 +51,6 @@ namespace Framework
 							Keyframe keyFrame = new Keyframe();
 							keyFrame.inTangent = XmlConverter.FieldObjectFromXmlNode<float>(child, "inTangent");
 							keyFrame.outTangent = XmlConverter.FieldObjectFromXmlNode<float>(child, "outTangent");
-							keyFrame.tangentMode = XmlConverter.FieldObjectFromXmlNode<int>(child, "tangentMode");
 							keyFrame.time = XmlConverter.FieldObjectFromXmlNode<float>(child, "time");
 							keyFrame.value = XmlConverter.FieldObjectFromXmlNode<float>(child, "value");
 							keyFrames.Add(keyFrame);

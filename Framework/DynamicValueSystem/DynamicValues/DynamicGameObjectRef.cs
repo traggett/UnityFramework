@@ -11,7 +11,7 @@ namespace Framework
 			public static implicit operator DynamicGameObjectRef(GameObject value)
 			{
 				DynamicGameObjectRef dynamicValue = new DynamicGameObjectRef();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

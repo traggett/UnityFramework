@@ -11,7 +11,7 @@ namespace Framework
 			public static implicit operator DynamicVector3(Vector3 value)
 			{
 				DynamicVector3 dynamicValue = new DynamicVector3();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

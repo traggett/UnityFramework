@@ -12,7 +12,7 @@ namespace Framework
 			public static implicit operator DynamicIntRange(IntRange value)
 			{
 				DynamicIntRange dynamicValue = new DynamicIntRange();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

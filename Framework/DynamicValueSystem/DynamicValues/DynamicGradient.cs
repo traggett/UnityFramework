@@ -11,7 +11,7 @@ namespace Framework
 			public static implicit operator DynamicGradient(Gradient value)
 			{
 				DynamicGradient dynamicValue = new DynamicGradient();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

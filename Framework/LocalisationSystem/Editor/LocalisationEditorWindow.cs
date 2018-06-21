@@ -22,8 +22,6 @@ namespace Framework
 				private static readonly string kWindowWindowName = "Localisation";
 				private static readonly string kWindowTitle = "Localisation Editor";
 				private static readonly string kEditorPrefKey = "LocalisationEditor.Settings";
-				private static readonly string kKeySizePref = "KeySize";
-				private static readonly string kFontSizePref = "FontSize";
 				private static readonly string kEditKeyId = "Localisation.EditKey";
 
 				private static readonly float kMinKeysWidth = 180.0f;

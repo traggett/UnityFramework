@@ -13,6 +13,34 @@ namespace Framework
 		{
 			public static class SerializedPropertyUtils
 			{
+				public static Type GetSerializedPropertyType(SerializedProperty prop)
+				{
+					string path = prop.propertyPath.Replace(".Array.data[", "[");
+					object obj = prop.serializedObject.targetObject;
+					Type propertyType = null;
+
+					if (obj != null)
+					{
+						string[] elements = path.Split('.');
+						propertyType = obj.GetType();
+
+						for (int i = 0; i < elements.Length; i++)
+						{
+							if (elements[i].Contains("["))
+							{
+								string elementName = elements[i].Substring(0, elements[i].IndexOf("["));
+								propertyType = GetType(propertyType, elementName).GetElementType();
+							}
+							else
+							{
+								propertyType = GetType(propertyType, elements[i]);
+							}
+						}
+					}
+
+					return propertyType;
+				}
+
 				public static T GetSerializedPropertyValue<T>(SerializedProperty prop)
 				{
 					string path = prop.propertyPath.Replace(".Array.data[", "[");
@@ -45,26 +73,22 @@ namespace Framework
 					{
 						for (int i = elements.Length - 2; i >= 0; i--)
 						{
-							object elementObj = GetValue(obj, elements[i]);
-
 							if (elements[i].Contains("["))
 							{
 								string elementName = elements[i].Substring(0, elements[i].IndexOf("["));
 								int index = Convert.ToInt32(elements[i].Substring(elements[i].IndexOf("[")).Replace("[", "").Replace("]", ""));
+								object elementObj = GetValue(obj, elementName, index);
 
-								Array elementArray = (Array)elementObj;
-								elementArray.SetValue(value, index);
-
-								value = SetValue(elementObj, elements[i + 1], elementArray);
+								value = SetValue(elementObj, elements[i + 1], value);
 							}
 							else
 							{
+								object elementObj = GetValue(obj, elements[i]);
 								value = SetValue(elementObj, elements[i + 1], value);
 							}
 						}
 					}
-
-					Type type = obj.GetType();
+					
 					SetValue(obj, elements[0], value);
 				}
 
@@ -106,6 +130,24 @@ namespace Framework
 					{
 						Undo.RecordObject(property.serializedObject.targetObjects[i], info);
 					}
+				}
+
+				private static Type GetType(Type type, string name)
+				{
+					while (type != null)
+					{
+						FieldInfo f = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+						if (f != null)
+							return f.FieldType;
+
+						PropertyInfo p = type.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+						if (p != null)
+							return p.PropertyType;
+
+						type = type.BaseType;
+					}
+
+					return null;
 				}
 
 				private static object GetValue(object source, string name)

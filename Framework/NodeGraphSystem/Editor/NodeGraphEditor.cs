@@ -505,7 +505,7 @@ namespace Framework
 					{
 						EditorUtility.DisplayDialog("Node Graph Editor", StringUtils.GetAssetPath(_currentFileName) + " does not contain a valid Node Graph.", "Ok");
 					}
-					catch (CorruptFileException e)
+					catch (CorruptFileException)
 					{
 						EditorUtility.DisplayDialog("Node Graph Editor", StringUtils.GetAssetPath(_currentFileName) + " is corrupt.", "Ok");
 					}

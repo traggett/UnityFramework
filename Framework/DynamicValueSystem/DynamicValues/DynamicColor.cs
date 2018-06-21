@@ -11,7 +11,7 @@ namespace Framework
 			public static implicit operator DynamicColor(Color value)
 			{
 				DynamicColor dynamicValue = new DynamicColor();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

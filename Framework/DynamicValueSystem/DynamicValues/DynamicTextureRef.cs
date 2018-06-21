@@ -11,7 +11,7 @@ namespace Framework
 			public static implicit operator DynamicTextureRef(Texture value)
 			{
 				DynamicTextureRef dynamicValue = new DynamicTextureRef();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

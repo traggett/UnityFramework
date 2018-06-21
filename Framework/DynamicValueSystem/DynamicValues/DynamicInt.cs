@@ -10,7 +10,7 @@ namespace Framework
 			public static implicit operator DynamicInt(int value)
 			{
 				DynamicInt dynamicValue = new DynamicInt();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

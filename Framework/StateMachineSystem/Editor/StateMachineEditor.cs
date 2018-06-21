@@ -573,7 +573,7 @@ namespace Framework
 					{
 						EditorUtility.DisplayDialog("StateMachine Editor", StringUtils.GetAssetPath(_currentFileName) + " does not contain a valid StateMachine.", "Ok");
 					}
-					catch (CorruptFileException e)
+					catch (CorruptFileException)
 					{
 						EditorUtility.DisplayDialog("StateMachine Editor", StringUtils.GetAssetPath(_currentFileName) + " is corrupt.", "Ok");
 					}

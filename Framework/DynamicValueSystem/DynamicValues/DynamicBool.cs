@@ -10,7 +10,7 @@ namespace Framework
 			public static implicit operator DynamicBool(bool value)
 			{
 				DynamicBool dynamicValue = new DynamicBool();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

@@ -11,7 +11,7 @@ namespace Framework
 			public static implicit operator DynamicQuaternion(Quaternion value)
 			{
 				DynamicQuaternion dynamicValue = new DynamicQuaternion();
-				dynamicValue = value;
+				dynamicValue._value = value;
 				return dynamicValue;
 			}
 		}

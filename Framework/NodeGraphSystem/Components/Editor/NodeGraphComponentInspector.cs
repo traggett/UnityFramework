@@ -9,6 +9,7 @@ namespace Framework
 	using Maths;
 	using Utils;
 	using Utils.Editor;
+	using Framework.DynamicValueSystem;
 
 	namespace NodeGraphSystem
 	{
@@ -304,11 +305,9 @@ namespace Framework
 					SerializedProperty serializedInput = inputArrayProperty.GetArrayElementAtIndex(inputArrayProperty.arraySize - 1);
 					SerializedProperty nodeIdProp = serializedInput.FindPropertyRelative("_nodeId");
 					nodeIdProp.intValue = node._nodeId;
+					serializedObject.ApplyModifiedProperties();
 
-					//TO DO
-					//Default some input values to components on this game object? Eg transform could be this transform, renderer this renderer?
-					SerializedProperty valueProp = serializedInput.FindPropertyRelative("_valueSource");
-					
+					SetDefaultValue(serializedInput);
 				}
 
 				private void RemoveOldInputNodes(Node[] inputNodes, SerializedProperty inputArrayProperty)
@@ -354,6 +353,32 @@ namespace Framework
 						GUI.enabled = false;
 						SerializationEditorGUILayout.ObjectField(value, new GUIContent(node._editorDescription + " (" + SystemUtils.GetTypeName(outputNodeType) + ")"));
 						GUI.enabled = guiEnabled;
+					}
+				}
+
+				private void SetDefaultValue(SerializedProperty serializedInput)
+				{
+					Type nodeInputType = SerializedPropertyUtils.GetSerializedPropertyType(serializedInput);
+					NodeGraphComponent nodeGraphComponent = (NodeGraphComponent)target;
+
+					//Default Transform nodes to this GameObject's Transform
+					if (nodeInputType == typeof(NodeGraphComponent.TransformInput))
+					{
+						DynamicTransformRef transformRef = nodeGraphComponent.transform;
+						SerializedProperty valueProp = serializedInput.FindPropertyRelative("_valueSource");
+						SerializedPropertyUtils.SetSerializedPropertyValue(valueProp, transformRef);
+					}
+					//Default Material nodes to this GameObject's Renderer's material
+					else if (nodeInputType == typeof(NodeGraphComponent.MaterialInput))
+					{
+						Renderer renderer = nodeGraphComponent.GetComponent<Renderer>();
+
+						if (renderer != null)
+						{
+							DynamicMaterialRef materialRef = DynamicMaterialRef.InstancedMaterialRef(renderer); 
+							SerializedProperty valueProp = serializedInput.FindPropertyRelative("_valueSource");
+							SerializedPropertyUtils.SetSerializedPropertyValue(valueProp, materialRef);
+						}
 					}
 				}
 			}

@@ -22,8 +22,6 @@ namespace Framework
 
 					if (listType != null)
 					{
-						//Create and append all child nodes
-						List<XmlNode> childNodes = new List<XmlNode>();
 						for (int i=0; i<list.Count; i++)
 						{
 							XmlNode arrayItemXmlNode = XmlConverter.ToXmlNode(list[i], node.OwnerDocument);
