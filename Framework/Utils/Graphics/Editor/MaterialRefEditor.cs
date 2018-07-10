@@ -1,6 +1,6 @@
-
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Framework
 {
@@ -15,8 +15,9 @@ namespace Framework
 			{
 				private enum eEdtiorType
 				{
-					Instanced,
-					Shared,
+					RendererMaterialInstance,
+					UIGraphicMaterialInstance,
+					SharedMaterial,
 				}
 
 				#region SerializedObjectEditor
@@ -42,9 +43,13 @@ namespace Framework
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
 
-						eEdtiorType editorType = materialRef.GetMaterialIndex() == -1 ? eEdtiorType.Shared : eEdtiorType.Instanced;
+						eEdtiorType editorType = eEdtiorType.RendererMaterialInstance;
 
-
+						if (materialRef.GetMaterialIndex() == -1)
+							editorType = eEdtiorType.SharedMaterial;
+						else if (materialRef.GetMaterialIndex() == MaterialRef.kGraphicMaterialIndex)
+							editorType = eEdtiorType.UIGraphicMaterialInstance;
+					
 						//Draw type dropdown
 						{
 							EditorGUI.BeginChangeCheck();
@@ -53,12 +58,20 @@ namespace Framework
 							if (EditorGUI.EndChangeCheck())
 							{
 								dataChanged = true;
-								materialRef = new MaterialRef(editorType == eEdtiorType.Shared ? -1 : 0);
+
+								int materialIndex = -1;
+
+								if (editorType == eEdtiorType.RendererMaterialInstance)
+									materialIndex = 0;
+								else if (editorType == eEdtiorType.UIGraphicMaterialInstance)
+									materialIndex = MaterialRef.kGraphicMaterialIndex;
+
+								materialRef = new MaterialRef(materialIndex);
 							}
 						}
 
 						//Draw renderer field
-						if (editorType == eEdtiorType.Instanced)
+						if (editorType == eEdtiorType.RendererMaterialInstance)
 						{
 							bool renderChanged = false;
 							ComponentRef<Renderer> rendererComponentRef = SerializationEditorGUILayout.ObjectField(materialRef.GetRenderer(), new GUIContent("Renderer"), ref renderChanged);
@@ -78,7 +91,10 @@ namespace Framework
 
 								for (int i = 0; i < materialNames.Length; i++)
 								{
-									materialNames[i] = renderer.sharedMaterials[i].name;
+									if (renderer.sharedMaterials[i] != null)
+										materialNames[i] = renderer.sharedMaterials[i].name;
+									else
+										materialNames[i] = "(None)";
 								}
 
 								EditorGUI.BeginChangeCheck();
@@ -90,6 +106,19 @@ namespace Framework
 								}
 							}
 						}
+						//Graphic
+						else if (editorType == eEdtiorType.UIGraphicMaterialInstance)
+						{
+							bool graphicChanged = false;
+							ComponentRef<Graphic> graphicComponentRef = SerializationEditorGUILayout.ObjectField(materialRef.GetGraphic(), new GUIContent("Graphic"), ref graphicChanged);
+
+							if (graphicChanged)
+							{
+								dataChanged = true;
+								materialRef = new MaterialRef(graphicComponentRef);
+							}
+						}
+						//Shader material
 						else
 						{
 							bool assetChanged = false;

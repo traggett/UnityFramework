@@ -89,12 +89,12 @@ namespace Framework
 
 			public static float Damp(float a, float b, float lambda, float dt)
 			{
-				return Interpolation.InterpolateLinear(a, b, 1 - Mathf.Exp(-lambda * dt));
+				return Interpolation.InterpolateLinear(a, b, 1.0f - Mathf.Exp(-lambda * dt));
 			}
 
 			public static double Damp(double a, double b, double lambda, double dt)
 			{
-				return Interpolation.InterpolateLinear(a, b, 1 - Math.Exp(-lambda * dt));
+				return Interpolation.InterpolateLinear(a, b, 1.0d - Math.Exp(-lambda * dt));
 			}
 			#endregion
 

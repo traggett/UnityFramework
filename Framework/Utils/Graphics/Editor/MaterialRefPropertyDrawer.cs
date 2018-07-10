@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEditor;
-using System;
+using UnityEngine.UI;
 
 namespace Framework
 {
@@ -13,8 +13,9 @@ namespace Framework
 			{
 				private enum eEdtiorType
 				{
-					Instanced,
-					Shared,
+					RendererMaterialInstance,
+					UIGraphicMaterialInstance,
+					SharedMaterial,
 				}
 
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
@@ -24,6 +25,7 @@ namespace Framework
 					SerializedProperty materialProperty = property.FindPropertyRelative("_material");
 					SerializedProperty materialIndexProp = property.FindPropertyRelative("_materialIndex");
 					SerializedProperty rendererProp = property.FindPropertyRelative("_renderer");
+					SerializedProperty graphicProp = property.FindPropertyRelative("_graphic");
 
 					float yPos = position.y;
 					Rect foldoutPosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
@@ -33,7 +35,12 @@ namespace Framework
 
 					if (property.isExpanded)
 					{
-						eEdtiorType editorType = materialIndexProp.intValue != -1 ? eEdtiorType.Instanced : eEdtiorType.Shared;
+						eEdtiorType editorType = eEdtiorType.RendererMaterialInstance;
+
+						if (materialIndexProp.intValue == -1)
+							editorType = eEdtiorType.SharedMaterial;
+						else if (materialIndexProp.intValue == MaterialRef.kGraphicMaterialIndex)
+							editorType = eEdtiorType.UIGraphicMaterialInstance;
 
 						int origIndent = EditorGUI.indentLevel;
 						EditorGUI.indentLevel++;
@@ -50,20 +57,32 @@ namespace Framework
 							{
 								switch (editorType)
 								{
-									case eEdtiorType.Instanced:
+									case eEdtiorType.RendererMaterialInstance:
 										{
 											materialProperty.objectReferenceValue = null;
 											materialIndexProp.intValue = 0;
 											//Try to default to renderer component on this object.
 											Component component = property.serializedObject.targetObject as Component;
 											rendererProp.objectReferenceValue = component != null ? component.GetComponent<Renderer>() : null;
+											graphicProp.objectReferenceValue = null;
 										}
 										break;
-									case eEdtiorType.Shared:
+									case eEdtiorType.UIGraphicMaterialInstance:
+										{
+											materialProperty.objectReferenceValue = null;
+											materialIndexProp.intValue = MaterialRef.kGraphicMaterialIndex;
+											rendererProp.objectReferenceValue = null;
+											//Try to default to graphic component on this object.
+											Component component = property.serializedObject.targetObject as Component;
+											graphicProp.objectReferenceValue = component != null ? component.GetComponent<Graphic>() : null;
+										}
+										break;
+									case eEdtiorType.SharedMaterial:
 										{
 											materialProperty.objectReferenceValue = null;
 											materialIndexProp.intValue = -1;
 											rendererProp.objectReferenceValue = null;
+											graphicProp.objectReferenceValue = null;
 										}
 										break;
 								}
@@ -72,7 +91,7 @@ namespace Framework
 
 
 						//Draw renderer field
-						if (editorType == eEdtiorType.Instanced)
+						if (editorType == eEdtiorType.RendererMaterialInstance)
 						{
 							Rect rendererPosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
 
@@ -83,6 +102,7 @@ namespace Framework
 							{
 								materialProperty.objectReferenceValue = null;
 								materialIndexProp.intValue = 0;
+								graphicProp.objectReferenceValue = null;
 							}
 
 							//Show drop down for materials
@@ -95,11 +115,29 @@ namespace Framework
 
 								for (int i=0; i<materialNames.Length; i++)
 								{
-									materialNames[i] = renderer.sharedMaterials[i].name;
+									if (renderer.sharedMaterials[i] != null)
+										materialNames[i] = renderer.sharedMaterials[i].name;
+									else
+										materialNames[i] = "(None)";
 								}
 								
 								materialIndexProp.intValue = EditorGUI.Popup(valuePosition, "Material", materialIndexProp.intValue, materialNames);
 								yPos += EditorGUIUtility.singleLineHeight;
+							}
+						}
+						//Draw graphic field
+						else if(editorType == eEdtiorType.UIGraphicMaterialInstance)
+						{
+							Rect rendererPosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
+
+							EditorGUI.BeginChangeCheck();
+							EditorGUI.PropertyField(rendererPosition, graphicProp, new GUIContent("Graphic"));
+							yPos += EditorGUIUtility.singleLineHeight;
+							if (EditorGUI.EndChangeCheck())
+							{
+								materialProperty.objectReferenceValue = null;
+								materialIndexProp.intValue = MaterialRef.kGraphicMaterialIndex;
+								rendererProp.objectReferenceValue = null;
 							}
 						}
 						else
@@ -120,9 +158,14 @@ namespace Framework
 					if (property.isExpanded)
 					{
 						SerializedProperty materialIndexProp = property.FindPropertyRelative("_materialIndex");
-						eEdtiorType editorType = materialIndexProp.intValue != -1 ? eEdtiorType.Instanced : eEdtiorType.Shared;
+						eEdtiorType editorType = eEdtiorType.RendererMaterialInstance;
 
-						if (editorType == eEdtiorType.Instanced)
+						if (materialIndexProp.intValue == -1)
+							editorType = eEdtiorType.SharedMaterial;
+						else if (materialIndexProp.intValue == MaterialRef.kGraphicMaterialIndex)
+							editorType = eEdtiorType.UIGraphicMaterialInstance;
+
+						if (editorType == eEdtiorType.RendererMaterialInstance)
 						{
 							SerializedProperty rendererProp = property.FindPropertyRelative("_renderer");
 
@@ -130,6 +173,10 @@ namespace Framework
 								return EditorGUIUtility.singleLineHeight * 4;
 							else
 								return EditorGUIUtility.singleLineHeight * 3;
+						}
+						else if (editorType == eEdtiorType.RendererMaterialInstance)
+						{
+							return EditorGUIUtility.singleLineHeight * 3;
 						}
 						else
 						{

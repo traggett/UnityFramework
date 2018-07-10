@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Framework
 {
@@ -15,13 +16,16 @@ namespace Framework
 			private int _materialIndex;
 			[SerializeField]
 			private Renderer _renderer;
+			[SerializeField]
+			private Graphic _graphic;	
 			#endregion
 
-			public MaterialRefProperty(Material material = null, int materialIndex=0, Renderer renderer=null)
+			public MaterialRefProperty(Material material = null, int materialIndex=0, Renderer renderer=null, Graphic graphic=null)
 			{
 				_material = material;
 				_materialIndex = materialIndex;
 				_renderer = renderer;
+				_graphic = graphic;
 			}
 
 			public static implicit operator Material(MaterialRefProperty property)
@@ -39,10 +43,18 @@ namespace Framework
 				//If material is null...
 				if (_material == null)
 				{
-					//..get from renderer / index
-					if (_materialIndex != -1 && _renderer != null)
+					//...get from UI graphic
+					if (_materialIndex == MaterialRef.kGraphicMaterialIndex)
 					{
-						if (0 <= _materialIndex && _materialIndex < _renderer.sharedMaterials.Length)
+						if (_graphic != null)
+						{
+							_material = _graphic.material;
+						}
+					}
+					//...get from renderer / index
+					else if (_materialIndex != -1 )
+					{
+						if (_renderer != null && 0 <= _materialIndex && _materialIndex < _renderer.sharedMaterials.Length)
 						{
 							_material = _renderer.materials[_materialIndex];
 						}
