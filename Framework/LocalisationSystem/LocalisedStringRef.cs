@@ -61,6 +61,11 @@ namespace Framework
 				return _cachedText;
 			}
 
+			public bool IsValid()
+			{
+				return !String.IsNullOrEmpty(_localisationKey);
+			}
+
 			public bool Equals(string text)
 			{
 				return GetLocalisedString() == text;

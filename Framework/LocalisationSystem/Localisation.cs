@@ -408,7 +408,7 @@ namespace Framework
 			private static void RefreshEditorKeys()
 			{
 				_editorKeys = _localisationMap.GetStringKeys();
-				ArrayUtils.Insert(ref _editorKeys, "(Add New Key)", 0);
+				ArrayUtils.Insert(ref _editorKeys, "(None)", 0);
 
 				List<string> folders = new List<string>();
 
