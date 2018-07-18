@@ -63,7 +63,7 @@ namespace Framework
 
 			public bool IsValid()
 			{
-				return !String.IsNullOrEmpty(_localisationKey);
+				return _localisationKey != null && _localisationKey.Length > 0;
 			}
 
 			public bool Equals(string text)

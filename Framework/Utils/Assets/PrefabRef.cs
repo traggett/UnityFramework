@@ -13,7 +13,7 @@ namespace Framework
 			[SerializeField]
 			private string _fileGUID;
 
-			public GameObject LoadAndInstantiatePrefab()
+			public GameObject LoadAndInstantiatePrefab(Transform parent = null)
 			{
 				GameObject prefab = null;
 
@@ -22,7 +22,7 @@ namespace Framework
 
 				if (prefabSourceObject != null)
 				{
-					prefab = GameObjectUtils.SafeInstantiate(prefabSourceObject);
+					prefab = GameObjectUtils.SafeInstantiate(prefabSourceObject, parent);
 					prefab.name = prefabSourceObject.name;
 				}
 

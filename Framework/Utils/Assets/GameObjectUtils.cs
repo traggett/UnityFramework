@@ -28,7 +28,7 @@ namespace Framework
                 return prefab;
             }
 
-            public static T SafeInstantiate<T>(GameObject original, Vector3 position, Quaternion rotation) where T : Component
+            public static T SafeInstantiate<T>(GameObject original, Vector3 position, Quaternion rotation, Transform parent = null) where T : Component
             {
                 GameObject obj = SafeInstantiate(original, position, rotation);
 
@@ -40,12 +40,19 @@ namespace Framework
                 return null;
             }
 
-            public static T SafeInstantiate<T>(GameObject original) where T : Component
-            {
-                return SafeInstantiate<T>(original, Vector3.zero, Quaternion.identity);
-            }
+			public static T SafeInstantiate<T>(GameObject original, Transform parent = null) where T : Component
+			{
+				GameObject obj = SafeInstantiate(original, parent);
 
-            public static GameObject SafeInstantiate(GameObject original, Vector3 position, Quaternion rotation)
+				if (obj != null)
+				{
+					return obj.GetComponent<T>();
+				}
+
+				return null;
+			}
+
+            public static GameObject SafeInstantiate(GameObject original, Vector3 position, Quaternion rotation, Transform parent = null)
             {
                 if (_isShuttingDown)
                     return null;
@@ -53,15 +60,15 @@ namespace Framework
                     return GameObject.Instantiate(original, position, rotation) as GameObject;
             }
 
-            public static GameObject SafeInstantiate(GameObject original)
-            {
-                if (_isShuttingDown)
-                    return null;
-                else
-                    return GameObject.Instantiate(original) as GameObject;
-            }
+			public static GameObject SafeInstantiate(GameObject original, Transform parent = null)
+			{
+				if (_isShuttingDown)
+					return null;
+				else
+					return GameObject.Instantiate(original, parent) as GameObject;
+			}
 
-            public static void DeleteChildren(Transform transform, bool immediate = false)
+			public static void DeleteChildren(Transform transform, bool immediate = false)
             {
                 for (int i = transform.childCount - 1; i >= 0; --i)
                 {
