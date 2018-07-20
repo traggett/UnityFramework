@@ -8,13 +8,13 @@ namespace Framework
 	{
 		public static class SceneUtils
 		{
-			public static T FindInScene<T>(Scene scene) where T : Component
+			public static T FindInScene<T>(Scene scene, bool includeInactive = false) where T : Component
 			{
 				T component = null;
 				
 				foreach (GameObject rootObject in scene.GetRootGameObjects())
 				{
-					component = rootObject.GetComponentInChildren<T>();
+					component = rootObject.GetComponentInChildren<T>(includeInactive);
 
 					if (component != null)
 					{
@@ -65,7 +65,7 @@ namespace Framework
 				return component;
 			}
 
-			public static T[] FindAllInScene<T>(Scene scene) where T : Component
+			public static T[] FindAllInScene<T>(Scene scene, bool includeInactive = false) where T : Component
 			{
 				List<T> components = new List<T>();
 
@@ -73,7 +73,7 @@ namespace Framework
 				{
 					foreach (GameObject rootObject in scene.GetRootGameObjects())
 					{
-						components.AddRange(rootObject.GetComponentsInChildren<T>());
+						components.AddRange(rootObject.GetComponentsInChildren<T>(includeInactive));
 					}
 				}			
 
