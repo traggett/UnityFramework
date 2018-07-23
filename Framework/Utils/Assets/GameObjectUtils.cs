@@ -10,7 +10,20 @@ namespace Framework
         {
             public static bool _isShuttingDown = false;
 
-            public static GameObject CreatePrefab(string resourceName)
+			public static GameObject Create(string name, Transform parent = null)
+			{
+				if (_isShuttingDown)
+					return null;
+
+				GameObject gameObject = new GameObject(name);
+				gameObject.transform.parent = parent;
+				gameObject.transform.localPosition = Vector3.zero;
+				gameObject.transform.localRotation = Quaternion.identity;
+				gameObject.transform.localScale = Vector3.one;
+				return gameObject;
+			}
+
+			public static GameObject CreatePrefab(string resourceName)
             {
                 GameObject prefabResource = Resources.Load(resourceName) as GameObject;
                 Object.DontDestroyOnLoad(prefabResource);
