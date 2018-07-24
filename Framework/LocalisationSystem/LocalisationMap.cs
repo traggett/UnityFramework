@@ -45,17 +45,13 @@ namespace Framework
 						{
 							Debug.Log("Can't find localised version of string " + key);
 
-							return key + " NOT FOUND";
+							return "<'" + key + "' NOT FOUND>";
 						}
 #endif
 					}
 				}
 
-#if DEBUG
-				return "EMPTY KEY";
-#else
 				return string.Empty;
-#endif
 			}
 
 			public void SetString(string key, SystemLanguage language, string text)
