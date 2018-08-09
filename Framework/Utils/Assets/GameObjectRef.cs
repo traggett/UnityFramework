@@ -154,7 +154,7 @@ namespace Framework
 				{
 					case eSourceType.Prefab:
 						{
-							GameObject prefabAsset = (GameObject)PrefabUtility.GetPrefabParent(gameObject);
+							GameObject prefabAsset = (GameObject)PrefabUtility.GetCorrespondingObjectFromSource(gameObject);
 
 							if (prefabAsset != null)
 								gameObject = prefabAsset;
