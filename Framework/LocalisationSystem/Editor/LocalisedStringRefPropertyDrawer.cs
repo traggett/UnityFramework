@@ -105,13 +105,19 @@ namespace Framework
 							Rect addKeyText = new Rect(position.x + (position.width - buttonWidth) - fudge + autoKeySlashFakeWidth, yPos, keyTextWidth + fudge, EditorGUIUtility.singleLineHeight);
 							if (newFolderIndex != 0)
 							{
-								keyWithoutFolder = EditorGUI.TextField(addKeyText, keyWithoutFolder);
-								localisationkey = UpdateNewLocalisedStringRef(property, currentFolder + "/" + keyWithoutFolder);
+                                EditorGUI.BeginChangeCheck();
+                                keyWithoutFolder = EditorGUI.TextField(addKeyText, keyWithoutFolder);
+                                
+                                if (EditorGUI.EndChangeCheck())
+                                    localisationkey = UpdateNewLocalisedStringRef(property, currentFolder + "/" + keyWithoutFolder);
 							}
 							else
 							{
-								localisationkey = EditorGUI.TextField(addKeyText, localisationkey);
-								UpdateNewLocalisedStringRef(property, localisationkey);
+                                EditorGUI.BeginChangeCheck();
+                                localisationkey = EditorGUI.TextField(addKeyText, localisationkey);
+
+                                if (EditorGUI.EndChangeCheck())
+								    UpdateNewLocalisedStringRef(property, localisationkey);
 							}
 
 							Rect autoKeyButton = new Rect(position.x + (position.width - buttonWidth) + autoKeySlashFakeWidth + buttonSpace + keyTextWidth, yPos, autoKeybuttonWidth, EditorGUIUtility.singleLineHeight);
@@ -180,19 +186,8 @@ namespace Framework
 				{
 					if (!property.isExpanded)
 					{
-						SerializedProperty localisationkeyProperty = property.FindPropertyRelative("_localisationKey");
-						
-						float height = EditorGUIUtility.singleLineHeight * 3;
-
-						if (Localisation.Exists(localisationkeyProperty.stringValue))
-						{
-							string text = Localisation.GetRawString(localisationkeyProperty.stringValue);
-							int numLines = StringUtils.GetNumberOfLines(text);
-							height += (EditorGUIUtility.singleLineHeight - 2.0f) * numLines + 4.0f;
-						}						
-
-						return height;
-					}
+                        return EditorGUIUtility.singleLineHeight * 3;
+                    }
 
 					return EditorGUIUtility.singleLineHeight;
 				}

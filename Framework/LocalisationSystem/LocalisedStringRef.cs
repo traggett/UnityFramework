@@ -71,13 +71,13 @@ namespace Framework
 				return GetLocalisedString() == text;
 			}
 
-#if UNITY_EDITOR
-			public string GetLocalisationKey()
-			{
-				return _localisationKey;
-			}
+            public string GetLocalisationKey()
+            {
+                return _localisationKey;
+            }
 
-			public SystemLanguage GetDebugLanguage()
+#if UNITY_EDITOR
+            public SystemLanguage GetDebugLanguage()
 			{
 				return _cachedLanguage;
 			}

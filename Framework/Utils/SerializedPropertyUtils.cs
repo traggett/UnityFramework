@@ -62,8 +62,8 @@ namespace Framework
 					}
 					return (T)obj;
 				}
-
-				public static void SetSerializedPropertyValue(SerializedProperty prop, object value)
+                
+                public static void SetSerializedPropertyValue(SerializedProperty prop, object value)
 				{
 					string path = prop.propertyPath.Replace(".Array.data[", "[");
 					object obj = prop.serializedObject.targetObject;
@@ -77,10 +77,12 @@ namespace Framework
 							{
 								string elementName = elements[i].Substring(0, elements[i].IndexOf("["));
 								int index = Convert.ToInt32(elements[i].Substring(elements[i].IndexOf("[")).Replace("[", "").Replace("]", ""));
-								object elementObj = GetValue(obj, elementName, index);
+                                Array array = GetValue(obj, elementName) as Array;
 
-								value = SetValue(elementObj, elements[i + 1], value);
-							}
+                                object elementObj = array.GetValue(index);
+                                value = SetValue(elementObj, elements[i + 1], value);
+                                array.SetValue(value, index);
+                            }
 							else
 							{
 								object elementObj = GetValue(obj, elements[i]);
@@ -88,8 +90,10 @@ namespace Framework
 							}
 						}
 					}
-					
-					SetValue(obj, elements[0], value);
+                    else
+                    {
+                        SetValue(obj, elements[0], value);
+                    }
 				}
 
 				public static T GetPropertyDrawerTargetObject<T>(PropertyDrawer propertyDrawer, SerializedProperty property)
