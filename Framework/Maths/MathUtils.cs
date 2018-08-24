@@ -87,14 +87,26 @@ namespace Framework
 				return Lerp(from, to, lerp);
 			}
 
-			public static float Damp(float a, float b, float lambda, float dt)
+			public static float Damp(float a, float b, float lambda, float deltaTime, eInterpolation type = eInterpolation.Linear)
 			{
-				return Interpolation.InterpolateLinear(a, b, 1.0f - Mathf.Exp(-lambda * dt));
+				return Interpolation.Interpolate(type, a, b, 1.0f - Mathf.Exp(-lambda * deltaTime));
 			}
 
-			public static double Damp(double a, double b, double lambda, double dt)
+			public static double Damp(double a, double b, double lambda, double deltaTime, eInterpolation type = eInterpolation.Linear)
 			{
-				return Interpolation.InterpolateLinear(a, b, 1.0d - Math.Exp(-lambda * dt));
+				return Interpolation.Interpolate(type, a, b, 1.0d - Math.Exp(-lambda * deltaTime));
+			}
+
+			public static Vector2 Damp(Vector2 a, Vector2 b, float lambda, float deltaTime, eInterpolation type = eInterpolation.Linear)
+			{
+				float lerp = Damp(0.0f, 1.0f, lambda, deltaTime, type);
+				return Vector2.Lerp(a, b, lerp);
+			}
+
+			public static Vector3 Damp(Vector3 a, Vector3 b, float lambda, float deltaTime, eInterpolation type = eInterpolation.Linear)
+			{
+				float lerp = Damp(0.0f, 1.0f, lambda, deltaTime, type);
+				return Vector3.Lerp(a, b, lerp);
 			}
 			#endregion
 
