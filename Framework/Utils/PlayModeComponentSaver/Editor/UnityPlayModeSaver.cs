@@ -434,7 +434,7 @@ namespace Framework
 								Component component = (Component)obj;
 
 								topOfHieracy = component.gameObject;
-								FindParentInScene(component.gameObject, out sceneParent, ref topOfHieracy);
+								FindRuntimeObjectParent(component.gameObject, out sceneParent, ref topOfHieracy);
 
 								if (component.gameObject == sceneParent)
 								{
@@ -450,7 +450,7 @@ namespace Framework
 								GameObject gameObject = (GameObject)obj;
 
 								topOfHieracy = gameObject;
-								FindParentInScene(gameObject, out sceneParent, ref topOfHieracy);
+								FindRuntimeObjectParent(gameObject, out sceneParent, ref topOfHieracy);
 
 								if (topOfHieracy != gameObject)
 								{
@@ -751,16 +751,20 @@ namespace Framework
 					}
 				}
 
-				private static void FindParentInScene(GameObject gameObject, out GameObject sceneParent, ref GameObject lastChild)
+				private static void FindRuntimeObjectParent(GameObject gameObject, out GameObject sceneParent, ref GameObject topOfHieracy)
 				{
-					if (GetSceneIdentifier(gameObject) != -1 || gameObject.transform.parent == null)
+					if (GetSceneIdentifier(gameObject) != -1)
 					{
 						sceneParent = gameObject;
 					}
+					else if (gameObject.transform.parent == null)
+					{
+						sceneParent = null;
+					}
 					else
 					{
-						lastChild = gameObject;
-						FindParentInScene(gameObject.transform.parent.gameObject, out sceneParent, ref lastChild);
+						topOfHieracy = gameObject;
+						FindRuntimeObjectParent(gameObject.transform.parent.gameObject, out sceneParent, ref topOfHieracy);
 					}
 				}
 				#endregion
