@@ -36,6 +36,8 @@ namespace Framework
 				private const string kEditorPrefsRuntimeObjectId = ".RuntimeId";
 				private const string kEditorPrefsRuntimeObjectType = ".RuntimeType";
 				private const string kEditorPrefsRuntimeObjectParentId = ".RuntimeParentId";
+				private const string kEditorPrefsRuntimeObjectPrefab = ".Prefab";
+				private const string kEditorPrefsRuntimeObjectPrefabObjIndex = ".PrefabObjIndex";
 				private const string kEditorPrefsObjectJson = ".Json";
 				private const string kEditorPrefsObjectRefs = ".ObjRefs";
 				private const string kEditorPrefsObjectMaterialRefs = ".Materials";
@@ -436,13 +438,15 @@ namespace Framework
 								topOfHieracy = component.gameObject;
 								FindRuntimeObjectParent(component.gameObject, out sceneParent, ref topOfHieracy);
 
+								//If the new component belongs to a scene object, just save the new component
 								if (component.gameObject == sceneParent)
 								{
 									SaveRuntimeComponent(editorPrefKey, component, sceneParent);
 								}
+								//Otherwise need to save the whole new gameobject hierarchy
 								else
 								{
-									SaveRuntimeGameObject(editorPrefKey, topOfHieracy, sceneParent);
+									SaveRuntimeGameObject(editorPrefKey, topOfHieracy, sceneParent, false);
 								}
 							}
 							else if (obj is GameObject)
@@ -458,7 +462,7 @@ namespace Framework
 									EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectId, Convert.ToString(instanceId));
 								}
 
-								SaveRuntimeGameObject(editorPrefKey, topOfHieracy, sceneParent);
+								SaveRuntimeGameObject(editorPrefKey, topOfHieracy, sceneParent, false);
 							}
 						}
 					}
@@ -650,7 +654,7 @@ namespace Framework
 							int instanceId = GetInstanceId(child.gameObject);
 							string scenePath = gameObject.scene.path;
 							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
-							SaveRuntimeGameObject(editorPrefKey, child.gameObject, gameObject);
+							SaveRuntimeGameObject(editorPrefKey, child.gameObject, gameObject, false);
 						}
 					}
 				}
@@ -704,7 +708,7 @@ namespace Framework
 					return null;
 				}
 				
-				private static void SaveRuntimeGameObject(string editorPrefKey, GameObject gameObject, GameObject parentSceneObject)
+				private static void SaveRuntimeGameObject(string editorPrefKey, GameObject gameObject, GameObject parentSceneObject, bool isPrefab)
 				{
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectType, GetTypeString(gameObject.GetType()));
 					SaveObjectValues(editorPrefKey, gameObject);
@@ -719,6 +723,15 @@ namespace Framework
 						}
 					}
 
+					//Check if the object is a prefab
+					if (PrefabUtility.GetPrefabType(gameObject) != PrefabType.None)
+					{
+						Object parentObject = PrefabUtility.GetCorrespondingObjectFromSource(gameObject);
+						string prefabPath = AssetDatabase.GetAssetPath(parentObject);
+						EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectPrefab, prefabPath);
+						isPrefab = true;
+					}
+
 					//Save all components and child GameObjects
 					int childObjectIndex = 0;
 
@@ -726,12 +739,32 @@ namespace Framework
 
 					for (int i = 0; i < components.Length; i++)
 					{
-						SaveRuntimeComponent(editorPrefKey + "." + Convert.ToString(childObjectIndex++), components[i], null);
-					}
+						SaveRuntimeComponent(editorPrefKey + "." + Convert.ToString(childObjectIndex), components[i], null);
 
+						if (isPrefab)
+						{
+							if (PrefabUtility.GetPrefabObject(components[i]) != null)
+							{
+								EditorPrefs.SetInt(editorPrefKey + "." + Convert.ToString(childObjectIndex) + kEditorPrefsRuntimeObjectPrefabObjIndex, GetPrefabComponentIndex(components[i]));
+							}
+						}
+
+						childObjectIndex++;
+					}
+					
 					foreach (Transform child in gameObject.transform)
 					{
-						SaveRuntimeGameObject(editorPrefKey + "." + Convert.ToString(childObjectIndex++), child.gameObject, null);
+						SaveRuntimeGameObject(editorPrefKey + "." + Convert.ToString(childObjectIndex), child.gameObject, null, isPrefab);
+
+						if (isPrefab)
+						{
+							if (PrefabUtility.GetPrefabObject(child.gameObject) != null)
+							{
+								EditorPrefs.SetInt(editorPrefKey + "." + Convert.ToString(childObjectIndex) + kEditorPrefsRuntimeObjectPrefabObjIndex, GetPrefabChildIndex(child.gameObject));
+							}
+						}
+
+						childObjectIndex++;
 					}
 				}
 
@@ -820,18 +853,41 @@ namespace Framework
 
 								if (objType == typeof(GameObject))
 								{
-									GameObject gameObject = new GameObject();
+									GameObject gameObject = null;
 									Scene scene;
+									bool isPrefab = false;
 
+									//If the object is a prefab, instantiate it
+									if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsRuntimeObjectPrefab))
+									{
+										string prefabPath = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectPrefab);
+										GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+
+										if (prefab != null)
+										{
+											gameObject = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+											isPrefab = gameObject != null;
+										}
+									}
+
+									//Otherwise create blank game object
+									if (!isPrefab)
+									{
+										gameObject = new GameObject();
+									}
+
+									//If we have a parent scene object, move it to become a child
 									if (parentObj != null)
 									{
 										gameObject.transform.parent = parentObj.transform;
 									}
+									//otherwise make sure its in the correct scene
 									else if (GetActiveScene(sceneStr, out scene))
 									{
 										SceneManager.MoveGameObjectToScene(gameObject, scene);
 									}
 
+									//Restore the game objects data
 									RestoredObjectData data = new RestoredObjectData
 									{
 										_object = gameObject,
@@ -840,10 +896,10 @@ namespace Framework
 										_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
 										_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs)
 									};
-
 									RestoreObjectFromData(data);
 
-									RestoreRuntimeGameObject(gameObject, editorPrefKey, sceneStr);
+									//Then restore all its children
+									gameObject = RestoreRuntimeGameObject(gameObject, editorPrefKey, sceneStr, isPrefab);
 
 									Undo.RegisterCreatedObjectUndo(gameObject, kUndoText);
 								}
@@ -873,6 +929,8 @@ namespace Framework
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectId);
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectParentId);
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectType);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectPrefab);
+						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectPrefabObjIndex);
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectJson);
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectRefs);
 						SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectMaterialRefs);
@@ -1003,9 +1061,9 @@ namespace Framework
 
 					serializedObject.ApplyModifiedPropertiesWithoutUndo();
 				}
-
+				
 				#region Runtime Objects
-				private static void RestoreRuntimeGameObject(GameObject gameObject, string editorPrefKey, string sceneStr)
+				private static GameObject RestoreRuntimeGameObject(GameObject gameObject, string editorPrefKey, string sceneStr, bool isPrefab)
 				{
 					int childIndex = 0;
 					string childeditorPrefKey;
@@ -1017,23 +1075,43 @@ namespace Framework
 
 						Object obj = null;
 
-						if (objType == typeof(GameObject))
-						{
-							GameObject childGameObject = new GameObject();
-							childGameObject.transform.parent = gameObject.transform;
-							obj = childGameObject;
-
-							RestoreRuntimeGameObject(childGameObject, childeditorPrefKey, sceneStr);
-						}
-						else if (objType == typeof(Transform))
+						if (objType == typeof(Transform))
 						{
 							obj = gameObject.transform;
 						}
 						else if (typeof(Component).IsAssignableFrom(objType))
 						{
-							obj = gameObject.AddComponent(objType);
+							if (isPrefab)
+							{
+								int componentIndex = EditorPrefs.GetInt(childeditorPrefKey + kEditorPrefsRuntimeObjectPrefabObjIndex, -1);
+								obj = GetPrefabComponent(gameObject, objType, componentIndex);
+							}
+
+							if (obj == null)
+							{
+								obj = gameObject.AddComponent(objType);
+							}
 						}
-						
+						else if(objType == typeof(GameObject))
+						{
+							GameObject childGameObject = null;
+
+							if (isPrefab)
+							{
+								int childGameObjectIndex = EditorPrefs.GetInt(childeditorPrefKey + kEditorPrefsRuntimeObjectPrefabObjIndex, -1);
+								childGameObject = GetPrefabChild(gameObject, childGameObjectIndex);
+							}
+
+							if (childGameObject == null)
+							{
+								childGameObject = new GameObject();
+								childGameObject.transform.parent = gameObject.transform;
+							}
+
+							obj = childGameObject;
+							RestoreRuntimeGameObject(childGameObject, childeditorPrefKey, sceneStr, false);
+						}
+
 						RestoredObjectData data = new RestoredObjectData
 						{
 							_object = obj,
@@ -1049,9 +1127,13 @@ namespace Framework
 						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectJson);
 						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectRefs);
 						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsObjectMaterialRefs);
+						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsRuntimeObjectPrefab);
+						SafeDeleteEditorPref(childeditorPrefKey + kEditorPrefsRuntimeObjectPrefabObjIndex);
 
 						childIndex++;
 					}
+
+					return gameObject;
 				}
 				#endregion
 
@@ -1168,6 +1250,92 @@ namespace Framework
 					{
 						return Type.GetType(typeStr);
 					}
+				}
+
+				//TO DO, these indexes should only refer to objcets that exist as part of the prefab, not runtime created ones.
+				private static int GetPrefabChildIndex(GameObject gameObject)
+				{
+					int index = 0;
+
+					foreach (Transform child in gameObject.transform.parent)
+					{
+						if (child == gameObject)
+						{
+							return index;
+						}
+
+						index++;
+					}
+
+					return index;
+				}
+
+				private static int GetPrefabComponentIndex(Component component)
+				{
+					Component[] components = component.gameObject.GetComponents<Component>();
+
+					int index = 0;
+
+					for (int i = 0; i < components.Length; i++)
+					{
+						if (components[i] == component)
+						{
+							return index;
+						}
+
+						if (components[i].GetType() == component.GetType())
+						{
+							index++;
+						}
+					}
+
+					return index;
+
+				}
+
+				private static Component GetPrefabComponent(GameObject gameObject, Type type, int index)
+				{
+					if (index != -1)
+					{
+						Component[] components = gameObject.GetComponents<Component>();
+
+						int count = 0;
+
+						for (int i = 0; i < components.Length; i++)
+						{
+							if (components[i].GetType() == type)
+							{
+								if (count == index)
+								{
+									return components[i];
+								}
+
+								count++;
+							}
+						}
+					}
+
+					return null;
+				}
+
+				private static GameObject GetPrefabChild(GameObject gameObject, int index)
+				{
+					if (index != -1)
+					{
+						int count = 0;
+
+						foreach (Transform child in gameObject.transform)
+						{
+							if (count == index)
+							{
+								return child.gameObject;
+							}
+
+							count++;
+						}
+					}
+					
+					return null;
 				}
 				#endregion
 			}
