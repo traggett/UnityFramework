@@ -1251,8 +1251,7 @@ namespace Framework
 						return Type.GetType(typeStr);
 					}
 				}
-
-				//TO DO, these indexes should only refer to objcets that exist as part of the prefab, not runtime created ones.
+				
 				private static int GetPrefabChildIndex(GameObject gameObject)
 				{
 					int index = 0;
@@ -1264,7 +1263,10 @@ namespace Framework
 							return index;
 						}
 
-						index++;
+						if (PrefabUtility.GetPrefabObject(child) != null)
+						{
+							index++;
+						}
 					}
 
 					return index;
@@ -1283,7 +1285,7 @@ namespace Framework
 							return index;
 						}
 
-						if (components[i].GetType() == component.GetType())
+						if (components[i].GetType() == component.GetType() && PrefabUtility.GetPrefabObject(components[i]) != null)
 						{
 							index++;
 						}
@@ -1303,7 +1305,7 @@ namespace Framework
 
 						for (int i = 0; i < components.Length; i++)
 						{
-							if (components[i].GetType() == type)
+							if (PrefabUtility.GetPrefabObject(components[i]) && components[i].GetType() == type)
 							{
 								if (count == index)
 								{
@@ -1326,12 +1328,15 @@ namespace Framework
 
 						foreach (Transform child in gameObject.transform)
 						{
-							if (count == index)
+							if (PrefabUtility.GetPrefabObject(child) != null)
 							{
-								return child.gameObject;
-							}
+								if (count == index)
+								{
+									return child.gameObject;
+								}
 
-							count++;
+								count++;
+							}				
 						}
 					}
 					
