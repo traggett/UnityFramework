@@ -117,7 +117,7 @@ namespace Framework
 						}
 						else
 						{
-							Localisation.LoadStrings();
+							Localisation.ReloadStrings();
 						}
 					}
 				}
@@ -243,7 +243,7 @@ namespace Framework
 
 							if (GUILayout.Button("Reload", EditorStyles.toolbarButton))
 							{
-								Localisation.LoadStrings();
+								Localisation.ReloadStrings();
 							}
 
 							EditorGUILayout.Separator();
@@ -407,6 +407,8 @@ namespace Framework
 										}
 									}
 
+									SystemLanguage language = Localisation.GetCurrentLanguage();
+
 									GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 									EditorGUI.BeginChangeCheck();
 
@@ -414,7 +416,7 @@ namespace Framework
 									text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 									if (EditorGUI.EndChangeCheck())
 									{
-										Localisation.Set(_keys[i], text);
+										Localisation.Set(_keys[i], language, text);
 									}
 								}
 								EditorGUILayout.EndHorizontal();
@@ -465,7 +467,7 @@ namespace Framework
 						{
 							if (!Localisation.Exists(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
 							{
-								Localisation.Set(_addNewKey, string.Empty);
+								Localisation.Set(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
 								_keys = GetKeys();
 								SelectKey(_addNewKey);
 								_addNewKey = "";
@@ -594,7 +596,9 @@ namespace Framework
 					if (!string.IsNullOrEmpty(_editorPrefs._selectedKey))
 					{ 
 						string newKey = _editorPrefs._selectedKey + " (Copy)";
-						Localisation.Set(newKey, Localisation.GetRawString(_editorPrefs._selectedKey));
+
+						//To do! Set text for all loaded languages?
+						Localisation.Set(newKey, Localisation.GetCurrentLanguage(), Localisation.GetRawString(_editorPrefs._selectedKey));
 						_keys = GetKeys();
 						SelectKey(newKey);
 

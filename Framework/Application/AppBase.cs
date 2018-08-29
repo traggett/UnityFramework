@@ -5,6 +5,7 @@ namespace Framework
 	using StateMachineSystem;
 	using MidiSystem;
 	using Utils;
+	using Framework.LocalisationSystem;
 
 	public abstract class AppBase : MonoBehaviour
 	{

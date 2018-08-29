@@ -16,7 +16,7 @@ namespace Framework
 #if UNITY_EDITOR
 		public class LocalisationUndoState : ScriptableObject
 		{
-			public string _serialisedLocalisationMap;
+			public string _serialisedLocalisationMaps;
 		}
 #endif
 
@@ -30,7 +30,7 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private static LocalisationMap _localisationMap;
+			private static Dictionary<SystemLanguage, LocalisationMap> _localisationMaps = new Dictionary<SystemLanguage, LocalisationMap>();
 			private static SystemLanguage _currentLanguage = SystemLanguage.Unknown;
 
 			private struct VariableInfo
@@ -56,41 +56,53 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			public static void LoadStrings()
+			static Localisation()
 			{
-				if (_currentLanguage == SystemLanguage.Unknown)
-					_currentLanguage = Application.systemLanguage;
+				SetLanguage(Application.systemLanguage);
+			}
+
+			public static void ReloadStrings()
+			{
+				_localisationMaps = new Dictionary<SystemLanguage, LocalisationMap>();
 
 				LoadStrings(_currentLanguage);
 			}
 
 			public static void LoadStrings(SystemLanguage language)
 			{
-				_localisationMap = null;
-				_dirty = false;
-				_currentLanguage = language;
-				
 				string resourcePath = GetLocalisationMapResourcePath(language);
 				TextAsset asset = Resources.Load(resourcePath) as TextAsset;
+				LocalisationMap localisationMap;
 
 				if (asset != null)
 				{
-					_localisationMap = Serializer.FromTextAsset<LocalisationMap>(asset);
+					localisationMap = Serializer.FromTextAsset<LocalisationMap>(asset);
 				}				
 				else
 				{
-					_localisationMap = new LocalisationMap();
+					localisationMap = new LocalisationMap();
 				}
+
+				_localisationMaps[language] = localisationMap;
+
 #if UNITY_EDITOR
 				RefreshEditorKeys();
 #endif
+			}
+
+			public static void UnloadStrings(SystemLanguage language)
+			{
+				if (_localisationMaps.ContainsKey(language))
+				{
+					_localisationMaps.Remove(language);
+				}
 			}
 
 			public static bool Exists(string key)
 			{
 				MakeSureStringsAreLoaded();
 
-				return _localisationMap.IsValidKey(key);
+				return _localisationMaps[_currentLanguage].IsValidKey(key);
 			}
 
 			public static LocalisationLocalVariable Variable(string key, string value)
@@ -100,12 +112,7 @@ namespace Framework
 
 			public static string Get(string key, params LocalisationLocalVariable[] localVariables)
 			{
-				MakeSureStringsAreLoaded();
-
-				string text = _localisationMap.GetString(key);
-				text = ReplaceVariables(text, localVariables);
-
-				return text;
+				return Get(key, _currentLanguage, localVariables);
 			}
 
 			public static SystemLanguage GetCurrentLanguage()
@@ -115,6 +122,9 @@ namespace Framework
 
 			public static void SetLanguage(SystemLanguage language)
 			{
+				UnloadStrings(_currentLanguage);
+				
+				_currentLanguage = language;
 				LoadStrings(language);
 			}
 
@@ -195,11 +205,11 @@ namespace Framework
 
 			#region Public Editor Interface
 #if UNITY_EDITOR
-			public static void Set(string key, string text)
+			public static void Set(string key, SystemLanguage language, string text)
 			{
 				OnPreEditorChange();
 
-				_localisationMap.SetString(key, text);
+				_localisationMaps[language].SetString(key, text);
 
 				OnPostEditorChange();
 			}
@@ -208,7 +218,10 @@ namespace Framework
 			{
 				OnPreEditorChange();
 
-				_localisationMap.RemoveString(key);
+				foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in _localisationMaps)
+				{
+					languagePair.Value.RemoveString(key);
+				}
 
 				OnPostEditorChange();
 			}
@@ -217,16 +230,19 @@ namespace Framework
 			{
 				OnPreEditorChange();
 
-				_localisationMap.ChangeKey(key, newKey);
-
+				foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in _localisationMaps)
+				{
+					languagePair.Value.ChangeKey(key, newKey);
+				}
+				
 				OnPostEditorChange();
 			}
 
 			public static void SaveStrings()
 			{
-				if (_localisationMap!= null)
+				foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in _localisationMaps)
 				{
-					string resourcePath = GetLocalisationMapResourcePath(_currentLanguage);
+					string resourcePath = GetLocalisationMapResourcePath(languagePair.Key);
 					string path;
 
 					TextAsset asset = Resources.Load(resourcePath) as TextAsset;
@@ -239,7 +255,7 @@ namespace Framework
 						path = Application.dataPath + "/Resources/" + resourcePath + ".xml";
 					}
 
-					Serializer.ToFile(_localisationMap, path);
+					Serializer.ToFile(languagePair.Value, path);
 				}
 
 				_dirty = false;
@@ -306,12 +322,22 @@ namespace Framework
 			{
 				MakeSureStringsAreLoaded();
 
-				return _localisationMap.GetString(key);
+				return _localisationMaps[_currentLanguage].GetString(key);
 			}
 #endif
 			#endregion
 
 			#region Private Functions
+			public static string Get(string key, SystemLanguage language, params LocalisationLocalVariable[] localVariables)
+			{
+				MakeSureStringsAreLoaded(language);
+
+				string text = _localisationMaps[language].GetString(key);
+				text = ReplaceVariables(text, localVariables);
+
+				return text;
+			}
+
 			private static string GetLocalisationMapResourcePath(SystemLanguage language)
 			{
 				string filename = kDefaultLocalisationFileName + "_" + LanguageCodes.GetLanguageCode(language).ToUpper();
@@ -320,8 +346,16 @@ namespace Framework
 
 			private static void MakeSureStringsAreLoaded()
 			{
-				if (_localisationMap == null)
-					LoadStrings();
+				if (_currentLanguage == SystemLanguage.Unknown)
+					_currentLanguage = Application.systemLanguage;
+
+				MakeSureStringsAreLoaded(_currentLanguage);
+			}
+
+			private static void MakeSureStringsAreLoaded(SystemLanguage language)
+			{
+				if (!_localisationMaps.ContainsKey(language))
+					LoadStrings(language);
 			}
 
 			private static string ReplaceVariables(string text, params LocalisationLocalVariable[] localVariables)
@@ -411,7 +445,7 @@ namespace Framework
 						case 2:
 							{
 								_dirty = false;
-								LoadStrings();
+								ReloadStrings();
 							}
 							break;
 					}
@@ -420,7 +454,15 @@ namespace Framework
 
 			private static void RefreshEditorKeys()
 			{
-				_editorKeys = _localisationMap.GetStringKeys();
+				HashSet<string> allKeys = new HashSet<string>();
+				foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in _localisationMaps)
+				{
+					allKeys.UnionWith(languagePair.Value.GetStringKeys());
+				}
+
+				_editorKeys = new string[allKeys.Count];
+				allKeys.CopyTo(_editorKeys);
+
 				ArrayUtils.Insert(ref _editorKeys, "(None)", 0);
 
 				List<string> folders = new List<string>();
@@ -451,15 +493,16 @@ namespace Framework
 				_editorFolders = folders.ToArray();
 			}
 
+			//Need to save all loaded strings tables!
 			private static void UndoRedoCallback()
 			{
-				if (_undoObject != null && !string.IsNullOrEmpty(_undoObject._serialisedLocalisationMap))
+				if (_undoObject != null && !string.IsNullOrEmpty(_undoObject._serialisedLocalisationMaps))
 				{
-					_localisationMap = (LocalisationMap)Serializer.FromString(typeof(LocalisationMap), _undoObject._serialisedLocalisationMap);
-					if (_localisationMap == null)
+					_localisationMaps = (Dictionary<SystemLanguage, LocalisationMap>)Serializer.FromString(typeof(Dictionary<SystemLanguage, LocalisationMap>), _undoObject._serialisedLocalisationMaps);
+					if (_localisationMaps == null)
 						throw new Exception();
 
-					_undoObject._serialisedLocalisationMap = null;
+					_undoObject._serialisedLocalisationMaps = null;
 					_dirty = true;
 				}
 			}
@@ -474,7 +517,7 @@ namespace Framework
 					_undoObject.name = "LocalisationUndoState";
 					Undo.undoRedoPerformed += UndoRedoCallback;
 				}
-				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+				_undoObject._serialisedLocalisationMaps = Serializer.ToString(_localisationMaps);
 			}
 
 			private static void OnPostEditorChange()
@@ -484,7 +527,7 @@ namespace Framework
 				RefreshEditorKeys();
 
 				Undo.RegisterCompleteObjectUndo(_undoObject, "Localisation strings changed");
-				_undoObject._serialisedLocalisationMap = Serializer.ToString(_localisationMap);
+				_undoObject._serialisedLocalisationMaps = Serializer.ToString(_localisationMaps);
 			}
 #endif
 			#endregion
