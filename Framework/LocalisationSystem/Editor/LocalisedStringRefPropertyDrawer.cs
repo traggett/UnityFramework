@@ -158,7 +158,7 @@ namespace Framework
 							//Only display if have a valid key
 							if (!string.IsNullOrEmpty(localisationkey) && Localisation.Exists(localisationkey))
 							{
-								string text = StringUtils.GetFirstLine(Localisation.GetRawString(localisationkey));
+								string text = StringUtils.GetFirstLine(Localisation.GetRawString(localisationkey, Localisation.GetCurrentLanguage()));
 								float height = EditorGUIUtility.singleLineHeight;
 								float labelWidth = EditorUtils.GetLabelWidth();
 

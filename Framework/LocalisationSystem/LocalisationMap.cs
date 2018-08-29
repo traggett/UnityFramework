@@ -16,7 +16,7 @@ namespace Framework
 			public Dictionary<string, string> _strings = new Dictionary<string, string>();
 			#endregion
 			
-			public string GetString(string key)
+			public string GetString(string key, bool silent = false)
 			{
 				string text;
 				
@@ -26,7 +26,7 @@ namespace Framework
 					{
 						return text;
 					}
-					else
+					else if (!silent)
 					{
 						Debug.Log("Can't find localised version of string " + key);
 						return "<'" + key + "' NOT FOUND>";

@@ -13,6 +13,8 @@ namespace Framework
 			public sealed class LocalisationEditorPrefs
 			{
 				public float _keyWidth = LocalisationEditorWindow.kDefaultKeysWidth;
+				public float _firstLanguageWidth = LocalisationEditorWindow.kDefaultFirstLangagueWidth;
+				public SystemLanguage _secondLanguage = SystemLanguage.Russian;
 				public int _fontSize = LocalisationEditorWindow.kDefaultFontSize;
 				public EditorAssetRef<Font> _font;
 				public string _selectedKey;

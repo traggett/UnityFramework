@@ -18,6 +18,7 @@ namespace Framework
 			{
 				public static readonly int kDefaultFontSize = 12;
 				public static readonly float kDefaultKeysWidth = 380.0f;
+				public static readonly float kDefaultFirstLangagueWidth = 580.0f;
 
 				private static readonly string kWindowWindowName = "Localisation";
 				private static readonly string kWindowTitle = "Localisation Editor";
@@ -40,8 +41,17 @@ namespace Framework
 				private static LocalisationEditorWindow _instance = null;
 				
 				private LocalisationEditorPrefs _editorPrefs;
-				private Rect _resizerRect;
-				private bool _resizing;
+				private Rect _keysResizerRect;
+				private Rect _languageResizerRect;
+
+				private enum eResizing
+				{
+					NotResizing,
+					ResizingKeys,
+					ResizingLangauge,
+				}
+
+				private eResizing _resizing;
 				private int _controlID;
 				private float _resizingOffset;
 				private Vector2 _scrollPosition;
@@ -322,15 +332,31 @@ namespace Framework
 
 							EditorGUILayout.Separator();
 
-							//Resizer
-							RenderResizer();
+							//Keys Resizer
+							RenderResizer(ref _keysResizerRect);
 
 							//Text
+
+							//First Language
+							EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Width(_editorPrefs._firstLanguageWidth));
+							{
+								EditorGUILayout.TextField(Localisation.GetCurrentLanguage().ToString(), EditorStyles.toolbarButton, GUILayout.Width(_editorPrefs._firstLanguageWidth - 16));
+							}
+							EditorGUILayout.EndHorizontal();
+
+							//Language Resizer
+							RenderResizer(ref _languageResizerRect);
+
+							//Second Language
 							EditorGUI.BeginChangeCheck();
-							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(Localisation.GetCurrentLanguage(), EditorStyles.toolbarButton);
+							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_editorPrefs._secondLanguage, EditorStyles.toolbarButton, GUILayout.ExpandWidth(true));
 							if (EditorGUI.EndChangeCheck())
 							{
-								Localisation.SetLanguage(language);
+								if (_editorPrefs._secondLanguage != Localisation.GetCurrentLanguage())
+									Localisation.UnloadStrings(_editorPrefs._secondLanguage);
+
+								Localisation.LoadStrings(language);
+								_editorPrefs._secondLanguage = language;
 							}
 
 							GUILayout.FlexibleSpace();
@@ -340,13 +366,13 @@ namespace Framework
 					EditorGUILayout.EndVertical();
 				}
 
-				private void RenderResizer()
+				private void RenderResizer(ref Rect rect)
 				{
 					GUILayout.Box(string.Empty, EditorStyles.toolbar, GUILayout.Width(4.0f), GUILayout.ExpandHeight(true));
-					_resizerRect = GUILayoutUtility.GetLastRect();
-					_resizerRect.x -= 8;
-					_resizerRect.width += 16;
-					EditorGUIUtility.AddCursorRect(_resizerRect, MouseCursor.SplitResizeLeftRight);
+					rect = GUILayoutUtility.GetLastRect();
+					rect.x -= 8;
+					rect.width += 16;
+					EditorGUIUtility.AddCursorRect(rect, MouseCursor.SplitResizeLeftRight);
 				}
 
 				private void RenderTable()
@@ -381,6 +407,7 @@ namespace Framework
 								{
 									GUI.backgroundColor = kKeyBackgroundColor;
 
+									//Render Key
 									if (selected && _editingKeyName)
 									{
 										EditorGUI.BeginChangeCheck();
@@ -407,16 +434,31 @@ namespace Framework
 										}
 									}
 
-									SystemLanguage language = Localisation.GetCurrentLanguage();
-
+									//Render Text
 									GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
-									EditorGUI.BeginChangeCheck();
 
-									string text = Localisation.GetRawString(_keys[i]);
-									text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-									if (EditorGUI.EndChangeCheck())
+									//Render First Language
 									{
-										Localisation.Set(_keys[i], language, text);
+										SystemLanguage language = Localisation.GetCurrentLanguage();
+
+										EditorGUI.BeginChangeCheck();
+										string text = Localisation.GetRawString(_keys[i], language);
+										text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.Width(_editorPrefs._firstLanguageWidth), GUILayout.ExpandHeight(true));
+										if (EditorGUI.EndChangeCheck())
+										{
+											Localisation.Set(_keys[i], language, text);
+										}
+									}
+
+									//Render Second Language
+									{
+										EditorGUI.BeginChangeCheck();
+										string text = Localisation.GetRawString(_keys[i], _editorPrefs._secondLanguage);
+										text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+										if (EditorGUI.EndChangeCheck())
+										{
+											Localisation.Set(_keys[i], _editorPrefs._secondLanguage, text);
+										}
 									}
 								}
 								EditorGUILayout.EndHorizontal();
@@ -516,9 +558,9 @@ namespace Framework
 
 					EventType controlEventType = inputEvent.GetTypeForControl(_controlID);
 
-					if (_resizing && inputEvent.rawType == EventType.MouseUp)
+					if (_resizing != eResizing.NotResizing && inputEvent.rawType == EventType.MouseUp)
 					{
-						_resizing = false;
+						_resizing = eResizing.NotResizing;
 						_needsRepaint = true;
 					}
 
@@ -526,36 +568,58 @@ namespace Framework
 					{
 						case EventType.MouseDown:
 							{
-								if (inputEvent.button == 0 && _resizerRect.Contains(inputEvent.mousePosition))
+								if (inputEvent.button == 0)
 								{
-									inputEvent.Use();
+									if (_keysResizerRect.Contains(inputEvent.mousePosition))
+									{
+										_resizing = eResizing.ResizingKeys;
+									}
+									else if(_languageResizerRect.Contains(inputEvent.mousePosition))
+									{
+										_resizing = eResizing.ResizingLangauge;
+									}
+									else
+									{
+										_resizing = eResizing.NotResizing;
+									}
 
-									_resizing = true;
-									_resizingOffset = inputEvent.mousePosition.x;
+									if (_resizing != eResizing.NotResizing)
+									{
+										inputEvent.Use();
+										_resizingOffset = inputEvent.mousePosition.x;
+									}
 								}
 							}
 							break;
 
 						case EventType.MouseUp:
 							{
-								if (_resizing)
+								if (_resizing != eResizing.NotResizing)
 								{
 									inputEvent.Use();
-									_resizing = false;
+									_resizing = eResizing.NotResizing;
 								}
 							}
 							break;
 
 						case EventType.MouseDrag:
 							{
-								if (_resizing)
+								if (_resizing != eResizing.NotResizing)
 								{
-									_editorPrefs._keyWidth += (inputEvent.mousePosition.x - _resizingOffset);
-									_editorPrefs._keyWidth = Math.Max(_editorPrefs._keyWidth, kMinKeysWidth);
+									if (_resizing == eResizing.ResizingKeys)
+									{
+										_editorPrefs._keyWidth += (inputEvent.mousePosition.x - _resizingOffset);
+										_editorPrefs._keyWidth = Math.Max(_editorPrefs._keyWidth, kMinKeysWidth);
+									}
+									else if (_resizing == eResizing.ResizingLangauge)
+									{
+										_editorPrefs._firstLanguageWidth += (inputEvent.mousePosition.x - _resizingOffset);
+										_editorPrefs._firstLanguageWidth = Math.Max(_editorPrefs._firstLanguageWidth, kMinKeysWidth);
+									}
+
+
 									SaveEditorPrefs();
-
 									_resizingOffset = inputEvent.mousePosition.x;
-
 									_needsRepaint = true;
 								}
 							}
@@ -598,7 +662,7 @@ namespace Framework
 						string newKey = _editorPrefs._selectedKey + " (Copy)";
 
 						//To do! Set text for all loaded languages?
-						Localisation.Set(newKey, Localisation.GetCurrentLanguage(), Localisation.GetRawString(_editorPrefs._selectedKey));
+						Localisation.Set(newKey, Localisation.GetCurrentLanguage(), Localisation.GetRawString(_editorPrefs._selectedKey, Localisation.GetCurrentLanguage()));
 						_keys = GetKeys();
 						SelectKey(newKey);
 
@@ -627,7 +691,7 @@ namespace Framework
 
 					for (int i = 0; i < _keys.Length; i++)
 					{
-						string text = Localisation.GetRawString(_keys[i]);
+						string text = Localisation.GetRawString(_keys[i], Localisation.GetCurrentLanguage());
 
 						float height = GetItemHeight(_keys[i], text);
 
@@ -671,7 +735,7 @@ namespace Framework
 						if (foundKey)
 							break;
 
-						toSelected += GetItemHeight(_keys[i], Localisation.GetRawString(_keys[i]));
+						toSelected += GetItemHeight(_keys[i], Localisation.GetRawString(_keys[i], Localisation.GetCurrentLanguage()));
 					}
 
 					if (foundKey)
@@ -697,7 +761,7 @@ namespace Framework
 
 					for (int i = 1; i < allKeys.Length; i++)
 					{
-						if (MatchsFilter(allKeys[i]) || MatchsFilter(Localisation.GetRawString(allKeys[i])))
+						if (MatchsFilter(allKeys[i]) || MatchsFilter(Localisation.GetRawString(allKeys[i], Localisation.GetCurrentLanguage())))
 						{
 							keys.Add(allKeys[i]);
 						}

@@ -134,9 +134,9 @@ namespace Framework
 								EditorGUI.BeginChangeCheck();
 								string text;
 								if (style != null)
-									text = EditorGUILayout.TextArea(Localisation.GetRawString(currentKey), style);
+									text = EditorGUILayout.TextArea(Localisation.GetRawString(currentKey, Localisation.GetCurrentLanguage()), style);
 								else
-									text = EditorGUILayout.TextArea(Localisation.GetRawString(currentKey));
+									text = EditorGUILayout.TextArea(Localisation.GetRawString(currentKey, Localisation.GetCurrentLanguage()));
 								if (EditorGUI.EndChangeCheck())
 								{
 									Localisation.Set(currentKey, Localisation.GetCurrentLanguage(), text);

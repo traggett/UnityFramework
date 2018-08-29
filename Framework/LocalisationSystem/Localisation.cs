@@ -318,11 +318,11 @@ namespace Framework
 				return false;
 			}
 			
-			public static string GetRawString(string key)
+			public static string GetRawString(string key, SystemLanguage language)
 			{
-				MakeSureStringsAreLoaded();
+				MakeSureStringsAreLoaded(language);
 
-				return _localisationMaps[_currentLanguage].GetString(key);
+				return _localisationMaps[language].GetString(key, true);
 			}
 #endif
 			#endregion
