@@ -12,62 +12,41 @@ namespace Framework
 		public sealed class LocalisationMap
 		{
 			#region Public Data
-			public Dictionary<string, Dictionary<string, string>> _strings = new Dictionary<string, Dictionary<string, string>>();
+			public string _language;
+			public Dictionary<string, string> _strings = new Dictionary<string, string>();
 			#endregion
-
-			public string GetString(string key, SystemLanguage language)
-			{
-				return GetString(key, language, SystemLanguage.Unknown);
-			}
-
-			public string GetString(string key, SystemLanguage language, SystemLanguage fallBackLanguage)
+			
+			public string GetString(string key)
 			{
 				string text;
-				Dictionary<string, string> localisedString;
 				
-				if (!string.IsNullOrEmpty(key) && _strings.TryGetValue(key, out localisedString))
+				if (!string.IsNullOrEmpty(key))
 				{
-					if (localisedString.TryGetValue(LanguageCodes.GetLanguageCode(language), out text))
+					if (_strings.TryGetValue(key, out text))
 					{
 						return text;
 					}
 					else
 					{
-						if (Application.isPlaying)
-							Debug.Log("Can't find localised version of string " + key + " for " + language);
-#if DEBUG
-						if (fallBackLanguage != SystemLanguage.Unknown && fallBackLanguage != language && 
-							localisedString.TryGetValue(LanguageCodes.GetLanguageCode(fallBackLanguage), out text))
-						{
-							return text;
-						}
-						else
-						{
-							Debug.Log("Can't find localised version of string " + key);
-
-							return "<'" + key + "' NOT FOUND>";
-						}
-#endif
+						Debug.Log("Can't find localised version of string " + key);
+						return "<'" + key + "' NOT FOUND>";
 					}
 				}
 
 				return string.Empty;
 			}
 
-			public void SetString(string key, SystemLanguage language, string text)
+			public void SetString(string key, string text)
 			{
 				if (!string.IsNullOrEmpty(key))
 				{
-					Dictionary<string, string> localisedString;
-
-					if (_strings.TryGetValue(key, out localisedString))
+					if (_strings.ContainsKey(key))
 					{
-						localisedString[LanguageCodes.GetLanguageCode(language)] = text;
+						_strings[key] = text;
 					}
 					else
 					{
-						_strings.Add(key, new Dictionary<string, string>());
-						_strings[key].Add(LanguageCodes.GetLanguageCode(language), text);
+						_strings.Add(key, text);
 					}
 				}
 			}
@@ -82,7 +61,7 @@ namespace Framework
 
 			public void ChangeKey(string key, string newKey)
 			{
-				Dictionary<string, string> value;
+				string value;
 
 				if (_strings.TryGetValue(key, out value))
 				{
@@ -100,6 +79,9 @@ namespace Framework
 			{
 				return _strings.Keys.ToArray();
 			}
+
+
+
 		}
 	}
 }

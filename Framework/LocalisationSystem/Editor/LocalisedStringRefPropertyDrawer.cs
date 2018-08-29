@@ -147,7 +147,7 @@ namespace Framework
 							{
 								if (!Localisation.Exists(localisationkey))
 								{
-									Localisation.Set(localisationkey, Localisation.GetCurrentLanguage(), string.Empty);
+									Localisation.Set(localisationkey, string.Empty);
 									LocalisationEditorWindow.EditString(localisationkey);
 								}
 							}

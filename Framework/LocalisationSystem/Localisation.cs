@@ -23,15 +23,15 @@ namespace Framework
 		public static class Localisation
 		{
 			#region Public Data
-			public static readonly string kDefaultLocalisationFilePath = "Localisation/Localisation";
+			public static readonly string kDefaultLocalisationFilePath = "Localisation";
+			public static readonly string kDefaultLocalisationFileName = "LocalisedStrings";
 			public static readonly string kVariableStartChars = "${";
 			public static readonly string kVariableEndChars = "}";
 			#endregion
 
 			#region Private Data
 			private static LocalisationMap _localisationMap;
-			private static SystemLanguage _currentLanguage = SystemLanguage.English;
-			private static SystemLanguage _fallBackLanguage = SystemLanguage.English;
+			private static SystemLanguage _currentLanguage = SystemLanguage.Unknown;
 
 			private struct VariableInfo
 			{
@@ -58,10 +58,20 @@ namespace Framework
 			#region Public Interface
 			public static void LoadStrings()
 			{
+				if (_currentLanguage == SystemLanguage.Unknown)
+					_currentLanguage = Application.systemLanguage;
+
+				LoadStrings(_currentLanguage);
+			}
+
+			public static void LoadStrings(SystemLanguage language)
+			{
 				_localisationMap = null;
 				_dirty = false;
-
-				TextAsset asset = Resources.Load(kDefaultLocalisationFilePath) as TextAsset;
+				_currentLanguage = language;
+				
+				string resourcePath = GetLocalisationMapResourcePath(language);
+				TextAsset asset = Resources.Load(resourcePath) as TextAsset;
 
 				if (asset != null)
 				{
@@ -78,8 +88,7 @@ namespace Framework
 
 			public static bool Exists(string key)
 			{
-				if (_localisationMap == null)
-					LoadStrings();
+				MakeSureStringsAreLoaded();
 
 				return _localisationMap.IsValidKey(key);
 			}
@@ -91,7 +100,12 @@ namespace Framework
 
 			public static string Get(string key, params LocalisationLocalVariable[] localVariables)
 			{
-				return Get(key, _currentLanguage, localVariables);
+				MakeSureStringsAreLoaded();
+
+				string text = _localisationMap.GetString(key);
+				text = ReplaceVariables(text, localVariables);
+
+				return text;
 			}
 
 			public static SystemLanguage GetCurrentLanguage()
@@ -101,7 +115,7 @@ namespace Framework
 
 			public static void SetLanguage(SystemLanguage language)
 			{
-				_currentLanguage = language;
+				LoadStrings(language);
 			}
 
 			public static void SetGlobalVaraiable(string key, string value)
@@ -181,11 +195,11 @@ namespace Framework
 
 			#region Public Editor Interface
 #if UNITY_EDITOR
-			public static void Set(string key, SystemLanguage language, string text)
+			public static void Set(string key, string text)
 			{
 				OnPreEditorChange();
 
-				_localisationMap.SetString(key, language, text);
+				_localisationMap.SetString(key, text);
 
 				OnPostEditorChange();
 			}
@@ -212,16 +226,17 @@ namespace Framework
 			{
 				if (_localisationMap!= null)
 				{
+					string resourcePath = GetLocalisationMapResourcePath(_currentLanguage);
 					string path;
 
-					TextAsset asset = Resources.Load(kDefaultLocalisationFilePath) as TextAsset;
+					TextAsset asset = Resources.Load(resourcePath) as TextAsset;
 					if (asset != null)
 					{
 						path = AssetDatabase.GetAssetPath(asset);
 					}
 					else
 					{
-						path = Application.dataPath + "/Resources/" + kDefaultLocalisationFilePath + ".xml";
+						path = Application.dataPath + "/Resources/" + resourcePath + ".xml";
 					}
 
 					Serializer.ToFile(_localisationMap, path);
@@ -237,16 +252,14 @@ namespace Framework
 
 			public static string[] GetStringKeys()
 			{
-				if (_localisationMap == null)
-					LoadStrings();
-						
+				MakeSureStringsAreLoaded();
+
 				return _editorKeys;
 			}
 
 			public static string[] GetStringFolders()
 			{
-				if (_localisationMap == null)
-					LoadStrings();
+				MakeSureStringsAreLoaded();
 
 				return _editorFolders;
 			}
@@ -291,26 +304,26 @@ namespace Framework
 			
 			public static string GetRawString(string key)
 			{
-				if (_localisationMap == null)
-					LoadStrings();
+				MakeSureStringsAreLoaded();
 
-				return _localisationMap.GetString(key, _currentLanguage, _fallBackLanguage);
+				return _localisationMap.GetString(key);
 			}
 #endif
 			#endregion
 
 			#region Private Functions
-			private static string Get(string key, SystemLanguage language, params LocalisationLocalVariable[] localVariables)
+			private static string GetLocalisationMapResourcePath(SystemLanguage language)
+			{
+				string filename = kDefaultLocalisationFileName + "_" + LanguageCodes.GetLanguageCode(language).ToUpper();
+				return kDefaultLocalisationFilePath + "/" + filename;
+			}
+
+			private static void MakeSureStringsAreLoaded()
 			{
 				if (_localisationMap == null)
 					LoadStrings();
-
-				string text = _localisationMap.GetString(key, language, _fallBackLanguage);
-				text = ReplaceVariables(text, localVariables);
-
-				return text;
 			}
-			
+
 			private static string ReplaceVariables(string text, params LocalisationLocalVariable[] localVariables)
 			{
 				string fullText = "";
@@ -453,8 +466,7 @@ namespace Framework
 
 			private static void OnPreEditorChange()
 			{
-				if (_localisationMap == null)
-					LoadStrings();
+				MakeSureStringsAreLoaded();
 
 				if (_undoObject == null)
 				{

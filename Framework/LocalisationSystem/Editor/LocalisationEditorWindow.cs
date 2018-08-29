@@ -38,7 +38,7 @@ namespace Framework
 				private static readonly Color kTextBackgroundColorB = new Color(0.98f, 0.98f, 0.98f, 1.0f);
 
 				private static LocalisationEditorWindow _instance = null;
-
+				
 				private LocalisationEditorPrefs _editorPrefs;
 				private Rect _resizerRect;
 				private bool _resizing;
@@ -414,7 +414,7 @@ namespace Framework
 									text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
 									if (EditorGUI.EndChangeCheck())
 									{
-										Localisation.Set(_keys[i], Localisation.GetCurrentLanguage(), text);
+										Localisation.Set(_keys[i], text);
 									}
 								}
 								EditorGUILayout.EndHorizontal();
@@ -465,7 +465,7 @@ namespace Framework
 						{
 							if (!Localisation.Exists(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
 							{
-								Localisation.Set(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
+								Localisation.Set(_addNewKey, string.Empty);
 								_keys = GetKeys();
 								SelectKey(_addNewKey);
 								_addNewKey = "";
@@ -594,7 +594,7 @@ namespace Framework
 					if (!string.IsNullOrEmpty(_editorPrefs._selectedKey))
 					{ 
 						string newKey = _editorPrefs._selectedKey + " (Copy)";
-						Localisation.Set(newKey, Localisation.GetCurrentLanguage(), Localisation.GetRawString(_editorPrefs._selectedKey));
+						Localisation.Set(newKey, Localisation.GetRawString(_editorPrefs._selectedKey));
 						_keys = GetKeys();
 						SelectKey(newKey);
 

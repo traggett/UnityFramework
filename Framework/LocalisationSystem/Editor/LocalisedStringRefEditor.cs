@@ -115,7 +115,7 @@ namespace Framework
 								{
 									if (!Localisation.Exists(localisedString.GetLocalisationKey()))
 									{
-										Localisation.Set(localisedString.GetLocalisationKey(), Localisation.GetCurrentLanguage(), string.Empty);
+										Localisation.Set(localisedString.GetLocalisationKey(), string.Empty);
 										LocalisationEditorWindow.EditString(localisedString.GetLocalisationKey());
 									}
 									dataChanged = true;
@@ -139,7 +139,7 @@ namespace Framework
 									text = EditorGUILayout.TextArea(Localisation.GetRawString(currentKey));
 								if (EditorGUI.EndChangeCheck())
 								{
-									Localisation.Set(currentKey, Localisation.GetCurrentLanguage(), text);
+									Localisation.Set(currentKey, text);
 								}
 							}
 						}
