@@ -6,7 +6,7 @@ namespace Framework
 		public class LocalisationProjectSettings : CustomProjectSettings<LocalisationProjectSettings>
 		{
 			#region Public Data
-			public string _localisationFolder = "Assets/Game/Resources/Localisation";
+			public string _localisationFolder;
 			#endregion
 		}
 	}

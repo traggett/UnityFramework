@@ -71,6 +71,7 @@ namespace Framework
 				else
 				{
 					localisationMap = new LocalisationMap();
+					localisationMap._language = language;
 				}
 
 				_localisationMaps[language] = localisationMap;
@@ -258,6 +259,9 @@ namespace Framework
 						filePath += assetsPath + "/" + resourceName + ".xml";
 					}
 
+					languagePair.Value._language = languagePair.Key;
+					languagePair.Value.SortStrings();
+
 					Serializer.ToFile(languagePair.Value, filePath);
 				}
 
@@ -342,7 +346,7 @@ namespace Framework
 			{
 				MakeSureStringsAreLoaded(language);
 
-				return _localisationMaps[language].GetString(key, true);
+				return _localisationMaps[language].Get(key, true);
 			}
 #endif
 			#endregion
@@ -352,7 +356,7 @@ namespace Framework
 			{
 				MakeSureStringsAreLoaded(language);
 
-				string text = _localisationMaps[language].GetString(key);
+				string text = _localisationMaps[language].Get(key);
 				text = ReplaceVariables(text, localVariables);
 
 				return text;

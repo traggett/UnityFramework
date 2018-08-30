@@ -12,11 +12,11 @@ namespace Framework
 		public sealed class LocalisationMap
 		{
 			#region Public Data
-			public string _language;
+			public SystemLanguage _language;
 			public Dictionary<string, string> _strings = new Dictionary<string, string>();
 			#endregion
 			
-			public string GetString(string key, bool silent = false)
+			public string Get(string key, bool silent = false)
 			{
 				string text;
 				
@@ -36,6 +36,12 @@ namespace Framework
 				return string.Empty;
 			}
 
+			public bool IsValidKey(string key)
+			{
+				return _strings.ContainsKey(key);
+			}
+			
+#if UNITY_EDITOR
 			public void SetString(string key, string text)
 			{
 				if (!string.IsNullOrEmpty(key))
@@ -70,18 +76,16 @@ namespace Framework
 				}
 			}
 
-			public bool IsValidKey(string key)
-			{
-				return _strings.ContainsKey(key);
-			}
-
 			public string[] GetStringKeys()
 			{
 				return _strings.Keys.ToArray();
 			}
 
-
-
+			public void SortStrings()
+			{
+				_strings = _strings.Keys.OrderBy(k => k).ToDictionary(k => k, k => _strings[k]);
+			}
+#endif
 		}
 	}
 }

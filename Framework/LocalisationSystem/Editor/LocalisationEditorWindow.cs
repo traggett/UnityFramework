@@ -24,8 +24,6 @@ namespace Framework
 				private static readonly string kWindowTitle = "Localisation Editor";
 				private static readonly string kEditorPrefKey = "LocalisationEditor.Settings";
 				private static readonly string kEditKeyId = "Localisation.EditKey";
-				
-
 
 				private static readonly float kMinKeysWidth = 180.0f;
 				private static readonly float kToolBarHeight = 71.0f;
@@ -333,6 +331,7 @@ namespace Framework
 								string folder = LocalisationProjectSettings.Get()._localisationFolder;
 								folder = EditorUtility.OpenFolderPanel("Choose Localisation Folder", folder, "");
 								LocalisationProjectSettings.Get()._localisationFolder = AssetUtils.GetAssetPath(folder);
+								AssetDatabase.SaveAssets();
 								Localisation.ReloadStrings(true);
 								_needsRepaint = true;
 							}
