@@ -7,41 +7,46 @@ namespace Framework
 {
 	namespace Utils
 	{
-		public abstract class CustomProjectSettings : ScriptableObject
+		public abstract class CustomProjectSettings<T> : ScriptableObject where T : CustomProjectSettings<T>
 		{
-			public static string GetUniqueName<T>() where T : CustomProjectSettings
+			private static T _settings;
+
+			public static string GetUniqueName()
 			{
 				return typeof(T).Name.Replace("ProjectSettings", "");
 			}
 
-			public static T Get<T>() where T : CustomProjectSettings
+			public static T Get()
 			{
-				//If the settings don't exist, create new one for default values
-				T asset = Resources.Load<T>("ProjectSettings/" + GetUniqueName<T>());
-
-				if (asset == null)
+				if (_settings == null)
 				{
-					asset = ScriptableObject.CreateInstance<T>();
+					//If the settings don't exist, create new one for default values
+					_settings = Resources.Load<T>("ProjectSettings/" + GetUniqueName());
+
+					if (_settings == null)
+					{
+						_settings = CreateInstance<T>();
 
 #if UNITY_EDITOR
-					//If in editor also save this asset
-					if (!Application.isPlaying)
-					{
-						if (!Directory.Exists(Application.dataPath + "/Resources/ProjectSettings"))
+						//If in editor also save this asset
+						if (!Application.isPlaying && !File.Exists(Application.dataPath + "/Resources/ProjectSettings/" + GetUniqueName() + ".asset"))
 						{
-							Directory.CreateDirectory(Application.dataPath + "/Resources/ProjectSettings");
+							if (!Directory.Exists(Application.dataPath + "/Resources/ProjectSettings"))
+							{
+								Directory.CreateDirectory(Application.dataPath + "/Resources/ProjectSettings");
+							}
+
+							string assetPathAndName = "Assets/Resources/ProjectSettings/" + GetUniqueName() + ".asset";
+							AssetDatabase.CreateAsset(_settings, assetPathAndName);
+
+							AssetDatabase.SaveAssets();
+							AssetDatabase.Refresh();
 						}
-
-						string assetPathAndName = "Assets/Resources/ProjectSettings/" + GetUniqueName<T>() + ".asset";
-						AssetDatabase.CreateAsset(asset, assetPathAndName);
-
-						AssetDatabase.SaveAssets();
-						AssetDatabase.Refresh();
-					}
 #endif
+					}
 				}
 
-				return asset;
+				return _settings;
 			}
 		}
 	}

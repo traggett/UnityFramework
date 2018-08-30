@@ -330,9 +330,9 @@ namespace Framework
 
 							if (GUILayout.Button("Choose Localisation Folder", EditorStyles.toolbarButton))
 							{
-								string folder = CustomProjectSettings.Get<LocalisationProjectSettings>()._localisationFolder;
+								string folder = LocalisationProjectSettings.Get()._localisationFolder;
 								folder = EditorUtility.OpenFolderPanel("Choose Localisation Folder", folder, "");
-								CustomProjectSettings.Get<LocalisationProjectSettings>()._localisationFolder = AssetUtils.GetAssetPath(folder);
+								LocalisationProjectSettings.Get()._localisationFolder = AssetUtils.GetAssetPath(folder);
 								Localisation.ReloadStrings(true);
 								_needsRepaint = true;
 							}

@@ -59,7 +59,7 @@ namespace Framework
 			public static void LoadStrings(SystemLanguage language)
 			{
 				string resourceName = GetLocalisationMapName(language);
-				string resourcePath = AssetUtils.GetResourcePath(CustomProjectSettings.Get<LocalisationProjectSettings>()._localisationFolder) + "/" + resourceName;
+				string resourcePath = AssetUtils.GetResourcePath(LocalisationProjectSettings.Get()._localisationFolder) + "/" + resourceName;
 
 				TextAsset asset = Resources.Load(resourcePath) as TextAsset;
 				LocalisationMap localisationMap;
@@ -110,6 +110,9 @@ namespace Framework
 
 			public static SystemLanguage GetCurrentLanguage()
 			{
+				if (_currentLanguage == SystemLanguage.Unknown)
+					_currentLanguage = Application.systemLanguage;
+
 				return _currentLanguage;
 			}
 
@@ -241,7 +244,7 @@ namespace Framework
 				foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in _localisationMaps)
 				{
 					string resourceName = GetLocalisationMapName(languagePair.Key);
-					string assetsPath = CustomProjectSettings.Get<LocalisationProjectSettings>()._localisationFolder;
+					string assetsPath = LocalisationProjectSettings.Get()._localisationFolder;
 					string resourcePath = AssetUtils.GetResourcePath(assetsPath) + "/" + resourceName;
 					string filePath = AssetUtils.GetAppllicationPath();
 
@@ -362,10 +365,7 @@ namespace Framework
 
 			private static void MakeSureStringsAreLoaded()
 			{
-				if (_currentLanguage == SystemLanguage.Unknown)
-					_currentLanguage = Application.systemLanguage;
-
-				MakeSureStringsAreLoaded(_currentLanguage);
+				MakeSureStringsAreLoaded(GetCurrentLanguage());
 			}
 
 			private static void MakeSureStringsAreLoaded(SystemLanguage language)
