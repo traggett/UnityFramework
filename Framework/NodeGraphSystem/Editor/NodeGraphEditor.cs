@@ -68,7 +68,7 @@ namespace Framework
 				{
 					if (HasChanges())
 					{
-						if (EditorUtility.DisplayDialog("Node Machine Has Been Modified", "Do you want to save the changes you made to the node machine:\n\n" + StringUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
+						if (EditorUtility.DisplayDialog("Node Machine Has Been Modified", "Do you want to save the changes you made to the node machine:\n\n" + AssetUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
 						{
 							Save();
 						}
@@ -503,11 +503,11 @@ namespace Framework
 					}
 					catch (ObjectNotFoundException)
 					{
-						EditorUtility.DisplayDialog("Node Graph Editor", StringUtils.GetAssetPath(_currentFileName) + " does not contain a valid Node Graph.", "Ok");
+						EditorUtility.DisplayDialog("Node Graph Editor", AssetUtils.GetAssetPath(_currentFileName) + " does not contain a valid Node Graph.", "Ok");
 					}
 					catch (CorruptFileException)
 					{
-						EditorUtility.DisplayDialog("Node Graph Editor", StringUtils.GetAssetPath(_currentFileName) + " is corrupt.", "Ok");
+						EditorUtility.DisplayDialog("Node Graph Editor", AssetUtils.GetAssetPath(_currentFileName) + " is corrupt.", "Ok");
 					}
 
 					if (nodeMachine != null)
@@ -533,7 +533,7 @@ namespace Framework
 				{
 					if (HasChanges())
 					{
-						int option = EditorUtility.DisplayDialogComplex("Node Machine Has Been Modified", "Do you want to save the changes you made to the node machine:\n\n" + StringUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save", "Cancel");
+						int option = EditorUtility.DisplayDialogComplex("Node Machine Has Been Modified", "Do you want to save the changes you made to the node machine:\n\n" + AssetUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save", "Cancel");
 
 						switch (option)
 						{

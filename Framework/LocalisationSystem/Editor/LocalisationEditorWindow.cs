@@ -24,6 +24,8 @@ namespace Framework
 				private static readonly string kWindowTitle = "Localisation Editor";
 				private static readonly string kEditorPrefKey = "LocalisationEditor.Settings";
 				private static readonly string kEditKeyId = "Localisation.EditKey";
+				
+
 
 				private static readonly float kMinKeysWidth = 180.0f;
 				private static readonly float kToolBarHeight = 71.0f;
@@ -61,6 +63,7 @@ namespace Framework
 				private bool _wasEditingKeyName;
 				private string _filter;
 
+				private GUIStyle _toolbarStyle;
 				private GUIStyle _titleStyle;
 				private GUIStyle _keyStyle;
 				private GUIStyle _keyEditStyle;
@@ -173,6 +176,14 @@ namespace Framework
 
 				private void InitGUIStyles()
 				{
+					//if (_toolbarStyle == null || string.IsNullOrEmpty(_toolbarStyle.name))
+					{
+						_toolbarStyle = new GUIStyle(EditorStyles.toolbar)
+						{
+							padding = new RectOffset(4, 4, 0, 0),
+						};
+					}
+
 					if (_titleStyle == null || string.IsNullOrEmpty(_titleStyle.name))
 					{
 						_titleStyle = new GUIStyle(EditorStyles.label)
@@ -232,7 +243,7 @@ namespace Framework
 					EditorGUILayout.BeginVertical(GUILayout.Height(kToolBarHeight));
 					{
 						//Title
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+						EditorGUILayout.BeginHorizontal(_toolbarStyle);
 						{
 							string titleText = kWindowTitle + " - <b>Localisation.xml</b>";
 
@@ -244,7 +255,7 @@ namespace Framework
 						EditorGUILayout.EndHorizontal();
 
 						//Load save
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+						EditorGUILayout.BeginHorizontal(_toolbarStyle);
 						{
 							if (GUILayout.Button("Save", EditorStyles.toolbarButton))
 							{
@@ -300,7 +311,7 @@ namespace Framework
 						EditorGUILayout.EndHorizontal();
 
 						//Filters
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+						EditorGUILayout.BeginHorizontal(_toolbarStyle);
 						{
 							GUILayout.Button("Filter", EditorStyles.toolbarButton);
 
@@ -317,30 +328,40 @@ namespace Framework
 								EditorGUI.FocusTextInControl(string.Empty);
 							}
 
+							if (GUILayout.Button("Choose Localisation Folder", EditorStyles.toolbarButton))
+							{
+								string folder = CustomProjectSettings.Get<LocalisationProjectSettings>()._localisationFolder;
+								folder = EditorUtility.OpenFolderPanel("Choose Localisation Folder", folder, "");
+								CustomProjectSettings.Get<LocalisationProjectSettings>()._localisationFolder = AssetUtils.GetAssetPath(folder);
+								Localisation.ReloadStrings(true);
+								_needsRepaint = true;
+							}
+
 							GUILayout.FlexibleSpace();
 						}
 						EditorGUILayout.EndHorizontal();
 
 						//Headers
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+						EditorGUILayout.BeginHorizontal();
 						{
 							//Key
-							if (GUILayout.Button("Key", EditorStyles.toolbarButton, GUILayout.Width(_editorPrefs._keyWidth - 11)))
+							EditorGUILayout.BeginHorizontal(_toolbarStyle, GUILayout.Width(_editorPrefs._keyWidth - 3));
 							{
-								_sortOrder = _sortOrder == eKeySortOrder.Desc ? eKeySortOrder.Asc : eKeySortOrder.Desc;
+								if (GUILayout.Button("Key", EditorStyles.toolbarButton, GUILayout.ExpandWidth(true)))
+								{
+									_sortOrder = _sortOrder == eKeySortOrder.Desc ? eKeySortOrder.Asc : eKeySortOrder.Desc;
+								}
 							}
-
-							EditorGUILayout.Separator();
+							EditorGUILayout.EndHorizontal();
 
 							//Keys Resizer
 							RenderResizer(ref _keysResizerRect);
 
 							//Text
-
-							//First Language
-							EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Width(_editorPrefs._firstLanguageWidth));
+							EditorGUILayout.BeginHorizontal(_toolbarStyle, GUILayout.Width(_editorPrefs._firstLanguageWidth - 3));
 							{
-								EditorGUILayout.TextField(Localisation.GetCurrentLanguage().ToString(), EditorStyles.toolbarButton, GUILayout.Width(_editorPrefs._firstLanguageWidth - 16));
+								//First Language
+								GUILayout.Button(Localisation.GetCurrentLanguage().ToString(), EditorStyles.toolbarButton, GUILayout.ExpandWidth(true));
 							}
 							EditorGUILayout.EndHorizontal();
 
@@ -348,18 +369,21 @@ namespace Framework
 							RenderResizer(ref _languageResizerRect);
 
 							//Second Language
-							EditorGUI.BeginChangeCheck();
-							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_editorPrefs._secondLanguage, EditorStyles.toolbarButton, GUILayout.ExpandWidth(true));
-							if (EditorGUI.EndChangeCheck())
+							float secondLangWidth = position.width - _editorPrefs._keyWidth - _editorPrefs._firstLanguageWidth;
+
+							EditorGUILayout.BeginHorizontal(_toolbarStyle, GUILayout.Width(secondLangWidth));
 							{
-								if (_editorPrefs._secondLanguage != Localisation.GetCurrentLanguage())
-									Localisation.UnloadStrings(_editorPrefs._secondLanguage);
+								EditorGUI.BeginChangeCheck();
+								SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_editorPrefs._secondLanguage, EditorStyles.toolbarButton);
+								if (EditorGUI.EndChangeCheck())
+								{
+									if (_editorPrefs._secondLanguage != Localisation.GetCurrentLanguage())
+										Localisation.UnloadStrings(_editorPrefs._secondLanguage);
 
-								Localisation.LoadStrings(language);
-								_editorPrefs._secondLanguage = language;
+									_editorPrefs._secondLanguage = language;
+								}
 							}
-
-							GUILayout.FlexibleSpace();
+							EditorGUILayout.EndHorizontal();
 						}
 						EditorGUILayout.EndHorizontal();
 					}
@@ -368,7 +392,7 @@ namespace Framework
 
 				private void RenderResizer(ref Rect rect)
 				{
-					GUILayout.Box(string.Empty, EditorStyles.toolbar, GUILayout.Width(4.0f), GUILayout.ExpandHeight(true));
+					GUILayout.Box(string.Empty, _toolbarStyle, GUILayout.Width(4.0f), GUILayout.ExpandHeight(true));
 					rect = GUILayoutUtility.GetLastRect();
 					rect.x -= 8;
 					rect.width += 16;

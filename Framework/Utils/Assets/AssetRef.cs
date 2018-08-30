@@ -78,17 +78,17 @@ namespace Framework
 
 			public string GetResouceFilePath()
 			{
-				return StringUtils.GetResourcePath(_filePath);
+				return AssetUtils.GetResourcePath(_filePath);
 			}
 
 			public string GetStreamingAssetFilePath()
 			{
-				return StringUtils.GetStreamingAssetPath(_filePath);
+				return AssetUtils.GetStreamingAssetPath(_filePath);
 			}
 
 			public string GetAssetFilePath()
 			{
-				return StringUtils.GetAssetPath(_filePath);
+				return AssetUtils.GetAssetPath(_filePath);
 			}
 
 			public string GetAssetName()

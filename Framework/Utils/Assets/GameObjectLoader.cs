@@ -37,7 +37,7 @@ namespace Framework
 
 			public void Load()
 			{
-				string resourcePath = StringUtils.GetResourcePath(_filePath);
+				string resourcePath = AssetUtils.GetResourcePath(_filePath);
 				_prefab = Resources.Load<GameObject>(resourcePath) as GameObject;
 
 				if (_prefab != null)

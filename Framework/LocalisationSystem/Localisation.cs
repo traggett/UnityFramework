@@ -56,21 +56,11 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			static Localisation()
-			{
-				SetLanguage(Application.systemLanguage);
-			}
-
-			public static void ReloadStrings()
-			{
-				_localisationMaps = new Dictionary<SystemLanguage, LocalisationMap>();
-
-				LoadStrings(_currentLanguage);
-			}
-
 			public static void LoadStrings(SystemLanguage language)
 			{
-				string resourcePath = GetLocalisationMapResourcePath(language);
+				string resourceName = GetLocalisationMapName(language);
+				string resourcePath = AssetUtils.GetResourcePath(CustomProjectSettings.Get<LocalisationProjectSettings>()._localisationFolder) + "/" + resourceName;
+
 				TextAsset asset = Resources.Load(resourcePath) as TextAsset;
 				LocalisationMap localisationMap;
 
@@ -94,6 +84,9 @@ namespace Framework
 			{
 				if (_localisationMaps.ContainsKey(language))
 				{
+#if UNITY_EDITOR
+					EditorWarnIfDirty();
+#endif
 					_localisationMaps.Remove(language);
 				}
 			}
@@ -238,24 +231,48 @@ namespace Framework
 				OnPostEditorChange();
 			}
 
+			public static string GetDefaultLocalisationFolder()
+			{
+				return Application.dataPath + "/Resources";
+			}
+
 			public static void SaveStrings()
 			{
 				foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in _localisationMaps)
 				{
-					string resourcePath = GetLocalisationMapResourcePath(languagePair.Key);
-					string path;
+					string resourceName = GetLocalisationMapName(languagePair.Key);
+					string assetsPath = CustomProjectSettings.Get<LocalisationProjectSettings>()._localisationFolder;
+					string resourcePath = AssetUtils.GetResourcePath(assetsPath) + "/" + resourceName;
+					string filePath = AssetUtils.GetAppllicationPath();
 
 					TextAsset asset = Resources.Load(resourcePath) as TextAsset;
 					if (asset != null)
 					{
-						path = AssetDatabase.GetAssetPath(asset);
+						filePath += AssetDatabase.GetAssetPath(asset);
 					}
 					else
 					{
-						path = Application.dataPath + "/Resources/" + resourcePath + ".xml";
+						filePath += assetsPath + "/" + resourceName + ".xml";
 					}
 
-					Serializer.ToFile(languagePair.Value, path);
+					Serializer.ToFile(languagePair.Value, filePath);
+				}
+
+				_dirty = false;
+			}
+
+
+			public static void ReloadStrings(bool warnIfDirty = false)
+			{
+				if (warnIfDirty)
+					EditorWarnIfDirty();
+
+				SystemLanguage[] languages = new SystemLanguage[_localisationMaps.Keys.Count];
+				_localisationMaps.Keys.CopyTo(languages, 0);
+
+				foreach (SystemLanguage language in languages)
+				{
+					LoadStrings(language);
 				}
 
 				_dirty = false;
@@ -338,10 +355,9 @@ namespace Framework
 				return text;
 			}
 
-			private static string GetLocalisationMapResourcePath(SystemLanguage language)
+			private static string GetLocalisationMapName(SystemLanguage language)
 			{
-				string filename = kDefaultLocalisationFileName + "_" + LanguageCodes.GetLanguageCode(language).ToUpper();
-				return kDefaultLocalisationFilePath + "/" + filename;
+				return kDefaultLocalisationFileName + "_" + LanguageCodes.GetLanguageCode(language).ToUpper();
 			}
 
 			private static void MakeSureStringsAreLoaded()
@@ -431,23 +447,18 @@ namespace Framework
 			{
 				if (HasUnsavedChanges())
 				{
-					int option = EditorUtility.DisplayDialogComplex("Localization strings have Been Modified",
+					bool save = EditorUtility.DisplayDialog("Localization strings have Been Modified",
 																   "Do you want to save the changes you made to the localization table?",
 																   "Save",
-																   "Save",
-																   "Revert");
+																   "Discard");
 
-					switch (option)
+					if (save)
 					{
-						case 0:
-						case 1:
-							SaveStrings(); break;
-						case 2:
-							{
-								_dirty = false;
-								ReloadStrings();
-							}
-							break;
+						SaveStrings();
+					}
+					else
+					{
+						ReloadStrings();
 					}
 				}
 			}

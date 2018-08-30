@@ -144,7 +144,7 @@ namespace Framework
 				{
 					if (HasChanges() || _timelineEditor.HasChanges())
 					{
-						if (EditorUtility.DisplayDialog("State Machine Has Been Modified", "Do you want to save the changes you made to the state machine:\n\n" + StringUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
+						if (EditorUtility.DisplayDialog("State Machine Has Been Modified", "Do you want to save the changes you made to the state machine:\n\n" + AssetUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
 						{
 							Save();
 						}
@@ -571,11 +571,11 @@ namespace Framework
 					}
 					catch (ObjectNotFoundException)
 					{
-						EditorUtility.DisplayDialog("StateMachine Editor", StringUtils.GetAssetPath(_currentFileName) + " does not contain a valid StateMachine.", "Ok");
+						EditorUtility.DisplayDialog("StateMachine Editor", AssetUtils.GetAssetPath(_currentFileName) + " does not contain a valid StateMachine.", "Ok");
 					}
 					catch (CorruptFileException)
 					{
-						EditorUtility.DisplayDialog("StateMachine Editor", StringUtils.GetAssetPath(_currentFileName) + " is corrupt.", "Ok");
+						EditorUtility.DisplayDialog("StateMachine Editor", AssetUtils.GetAssetPath(_currentFileName) + " is corrupt.", "Ok");
 					}
 
 
@@ -614,7 +614,7 @@ namespace Framework
 				{
 					if (HasChanges() || _timelineEditor.HasChanges())
 					{
-						int option = EditorUtility.DisplayDialogComplex("State Machine Has Been Modified", "Do you want to save the changes you made to the state machine:\n\n" + StringUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save", "Cancel");
+						int option = EditorUtility.DisplayDialogComplex("State Machine Has Been Modified", "Do you want to save the changes you made to the state machine:\n\n" + AssetUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save", "Cancel");
 
 						switch (option)
 						{
