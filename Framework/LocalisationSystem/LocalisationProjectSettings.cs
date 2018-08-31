@@ -1,6 +1,7 @@
-using Framework.Utils;
 namespace Framework
 {
+	using Utils;
+
 	namespace LocalisationSystem
 	{
 		public class LocalisationProjectSettings : CustomProjectSettings<LocalisationProjectSettings>

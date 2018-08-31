@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,23 +19,27 @@ namespace Framework
 			{
 				if (_settings == null)
 				{
+					string assetName = GetUniqueName();
+
 					//If the settings don't exist, create new one for default values
-					_settings = Resources.Load<T>("ProjectSettings/" + GetUniqueName());
+					_settings = Resources.Load<T>("ProjectSettings/" + assetName);
 
 					if (_settings == null)
 					{
 						_settings = CreateInstance<T>();
 
 #if UNITY_EDITOR
+						string fileFolder = Application.dataPath + "/Resources/ProjectSettings";
+
 						//If in editor also save this asset
-						if (!Application.isPlaying && !File.Exists(Application.dataPath + "/Resources/ProjectSettings/" + GetUniqueName() + ".asset"))
+						if (!Application.isPlaying && !File.Exists(fileFolder + "/ " + assetName + ".asset"))
 						{
-							if (!Directory.Exists(Application.dataPath + "/Resources/ProjectSettings"))
+							if (!Directory.Exists(fileFolder))
 							{
-								Directory.CreateDirectory(Application.dataPath + "/Resources/ProjectSettings");
+								Directory.CreateDirectory(fileFolder);
 							}
 
-							string assetPathAndName = "Assets/Resources/ProjectSettings/" + GetUniqueName() + ".asset";
+							string assetPathAndName = "Assets/Resources/ProjectSettings/" + assetName + ".asset";
 							AssetDatabase.CreateAsset(_settings, assetPathAndName);
 
 							AssetDatabase.SaveAssets();

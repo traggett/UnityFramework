@@ -10,6 +10,7 @@ namespace Framework
 	using TimelineSystem;
 	using TimelineSystem.Editor;
 	using TimelineStateMachineSystem;
+	using TimelineStateMachineSystem.Editor;
 	using LocalisationSystem;
 	using Utils;
 	using Utils.Editor;
@@ -43,13 +44,14 @@ namespace Framework
 				private string _currentFileName;
 				private eMode _currentMode;			
 
-				private StateEditorGUI _editedState;
+				
 				private StateEditorGUI _lastClickedState;
 				private double _lastClickTime;
 
 				private bool _requestSwitchViews;
 				private int _requestSwitchViewsStateId;
 
+				private TimeLineStateEditorGUI _editedTimelineState;
 				private TimelineEditor _timelineEditor;
 				private TimelineScrollArea.eTimeFormat _timelineEditorTimeFormat;
 
@@ -166,7 +168,7 @@ namespace Framework
 						//If we're in state view first need to apply state changes to state machine view
 						if (_currentMode == eMode.ViewingTimelineState)
 						{
-							((TimelineState)_editedState.GetEditableObject())._timeline = _timelineEditor.ConvertToTimeline();
+							((TimelineState)_editedTimelineState.GetEditableObject())._timeline = _timelineEditor.ConvertToTimeline();
 						}
 
 						//Update state machine name to reflect filename
@@ -717,7 +719,7 @@ namespace Framework
 								{
 									EditorGUILayout.Space();
 
-									string stateText = "state" + ((int)(_editedState.GetStateId())).ToString("000") + " - <b>" + StringUtils.GetFirstLine(_editedState.GetStateDescription()) + "</b>";
+									string stateText = "state" + ((int)(_editedTimelineState.GetStateId())).ToString("000") + " - <b>" + StringUtils.GetFirstLine(_editedTimelineState.GetStateDescription()) + "</b>";
 									GUILayout.Toggle(true, stateText, _style._toolbarStyle);
 
 									GUILayout.FlexibleSpace();
@@ -758,6 +760,7 @@ namespace Framework
 				private void SetStateMachine(StateMachine stateMachine)
 				{
 					ClearObjects();
+					
 #if DEBUG
 					_playModeHighlightedState = null;
 #endif
@@ -773,6 +776,8 @@ namespace Framework
 					}
 
 					CenterCamera();
+
+					SetViewToStatemachine();
 				}
 
 				private StateEditorGUI GetStateGUI(int stateId)
@@ -1047,12 +1052,12 @@ namespace Framework
 
 							if (state != null)
 							{
-								if (state.GetEditableObject() is TimelineState)
+								if (state is TimeLineStateEditorGUI)
 								{
 									TimelineState timelineState = (TimelineState)state.GetEditableObject();
 
 									_currentMode = eMode.ViewingTimelineState;
-									_editedState = state;
+									_editedTimelineState = (TimeLineStateEditorGUI)state;
 									_timelineEditor.SetTimeline(timelineState._timeline);
 
 									_editorPrefs._stateId = _requestSwitchViewsStateId;
@@ -1083,11 +1088,11 @@ namespace Framework
 
 				private void SetViewToStatemachine()
 				{
-					if (_editedState != null)
+					if (_editedTimelineState != null)
 					{
-						((TimelineState)_editedState.GetEditableObject())._timeline = _timelineEditor.ConvertToTimeline();
+						((TimelineState)_editedTimelineState.GetEditableObject())._timeline = _timelineEditor.ConvertToTimeline();
 						_timelineEditor.SetTimeline(new Timeline());
-						_editedState = null;
+						_editedTimelineState = null;
 					}
 
 					_editorPrefs._stateId = -1;
@@ -1132,10 +1137,11 @@ namespace Framework
 									break;
 								case eMode.ViewingTimelineState:
 									{
-										if (stateInfo._state._stateId != _editedState.GetStateId())
+										if (stateInfo._state._stateId != _editedTimelineState.GetStateId())
 										{
-											_editedState = GetStateGUI(stateInfo._state._stateId);
-											if (stateInfo._state is TimelineState)
+											_editedTimelineState = GetStateGUI(stateInfo._state._stateId) as TimeLineStateEditorGUI;
+
+											if (_editedTimelineState != null)
 											{
 												_timelineEditor.SetTimeline(((TimelineState)stateInfo._state)._timeline);
 											}
