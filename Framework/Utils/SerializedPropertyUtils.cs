@@ -29,11 +29,11 @@ namespace Framework
 							if (elements[i].Contains("["))
 							{
 								string elementName = elements[i].Substring(0, elements[i].IndexOf("["));
-								propertyType = GetType(propertyType, elementName).GetElementType();
+								propertyType = GetPropertyElementType(propertyType, elementName).GetElementType();
 							}
 							else
 							{
-								propertyType = GetType(propertyType, elements[i]);
+								propertyType = GetPropertyElementType(propertyType, elements[i]);
 							}
 						}
 					}
@@ -136,15 +136,15 @@ namespace Framework
 					}
 				}
 
-				private static Type GetType(Type type, string name)
+				private static Type GetPropertyElementType(Type type, string elementName)
 				{
 					while (type != null)
 					{
-						FieldInfo f = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+						FieldInfo f = type.GetField(elementName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 						if (f != null)
 							return f.FieldType;
 
-						PropertyInfo p = type.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+						PropertyInfo p = type.GetProperty(elementName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
 						if (p != null)
 							return p.PropertyType;
 
@@ -154,7 +154,7 @@ namespace Framework
 					return null;
 				}
 
-				private static object GetValue(object source, string name)
+				private static object GetValue(object source, string elementName)
 				{
 					if (source == null)
 						return null;
@@ -162,11 +162,11 @@ namespace Framework
 
 					while (type != null)
 					{
-						FieldInfo f = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+						FieldInfo f = type.GetField(elementName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 						if (f != null)
 							return f.GetValue(source);
 
-						PropertyInfo p = type.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+						PropertyInfo p = type.GetProperty(elementName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
 						if (p != null)
 							return p.GetValue(source, null);
 
@@ -175,9 +175,9 @@ namespace Framework
 					return null;
 				}
 
-				private static object GetValue(object source, string name, int index)
+				private static object GetValue(object source, string elementName, int index)
 				{
-					IEnumerable enumerable = GetValue(source, name) as IEnumerable;
+					IEnumerable enumerable = GetValue(source, elementName) as IEnumerable;
 					if (enumerable == null) return null;
 					IEnumerator enm = enumerable.GetEnumerator();
 
@@ -190,7 +190,7 @@ namespace Framework
 					return enm.Current;
 				}
 
-				private static object SetValue(object obj, string name, object value)
+				private static object SetValue(object obj, string elementName, object value)
 				{
 					if (obj == null)
 						return obj;
@@ -199,14 +199,14 @@ namespace Framework
 
 					while (type != null)
 					{
-						FieldInfo f = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+						FieldInfo f = type.GetField(elementName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 						if (f != null)
 						{
 							f.SetValue(obj, value);
 							return obj;
 						}
 
-						PropertyInfo p = type.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
+						PropertyInfo p = type.GetProperty(elementName, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase);
 						if (p != null)
 						{
 							p.SetValue(obj, value, null);

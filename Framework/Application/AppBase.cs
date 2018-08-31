@@ -3,10 +3,8 @@ using UnityEngine;
 namespace Framework
 {
 	using StateMachineSystem;
-	using MidiSystem;
 	using Utils;
-	using Framework.LocalisationSystem;
-
+	
 	public abstract class AppBase : MonoBehaviour
 	{
 		#region MonoBehaviour Calls
@@ -34,12 +32,12 @@ namespace Framework
 
 		protected void InitApp()
 		{
-			MidiSequencer.Init();
+			
 		}
 
 		protected void UpdateApp()
 		{
-			MidiSequencer.Update();
+			
 		}
 
 		protected void LateUpdateApp()
