@@ -30,7 +30,7 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private static Dictionary<SystemLanguage, LocalisationMap> _localisationMaps = new Dictionary<SystemLanguage, LocalisationMap>();
+			private static Dictionary<string, LocalisationMap> _localisationMaps = new Dictionary<string, LocalisationMap>();
 			private static SystemLanguage _currentLanguage = SystemLanguage.Unknown;
 
 			private struct VariableInfo
@@ -74,7 +74,7 @@ namespace Framework
 					localisationMap._language = language;
 				}
 
-				_localisationMaps[language] = localisationMap;
+				_localisationMaps[LanguageCodes.GetLanguageCode(language)] = localisationMap;
 
 #if UNITY_EDITOR
 				RefreshEditorKeys();
@@ -83,12 +83,12 @@ namespace Framework
 
 			public static void UnloadStrings(SystemLanguage language)
 			{
-				if (_localisationMaps.ContainsKey(language))
+				if (_localisationMaps.ContainsKey(LanguageCodes.GetLanguageCode(language)))
 				{
 #if UNITY_EDITOR
 					EditorWarnIfDirty();
 #endif
-					_localisationMaps.Remove(language);
+					_localisationMaps.Remove(LanguageCodes.GetLanguageCode(language));
 				}
 			}
 
@@ -96,7 +96,7 @@ namespace Framework
 			{
 				MakeSureStringsAreLoaded();
 
-				return _localisationMaps[_currentLanguage].IsValidKey(key);
+				return _localisationMaps[LanguageCodes.GetLanguageCode(_currentLanguage)].IsValidKey(key);
 			}
 
 			public static LocalisationLocalVariable Variable(string key, string value)
@@ -206,7 +206,7 @@ namespace Framework
 			{
 				OnPreEditorChange();
 
-				_localisationMaps[language].SetString(key, text);
+				_localisationMaps[LanguageCodes.GetLanguageCode(language)].SetString(key, text);
 
 				OnPostEditorChange();
 			}
@@ -215,7 +215,7 @@ namespace Framework
 			{
 				OnPreEditorChange();
 
-				foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in _localisationMaps)
+				foreach (KeyValuePair<string, LocalisationMap> languagePair in _localisationMaps)
 				{
 					languagePair.Value.RemoveString(key);
 				}
@@ -227,7 +227,7 @@ namespace Framework
 			{
 				OnPreEditorChange();
 
-				foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in _localisationMaps)
+				foreach (KeyValuePair<string, LocalisationMap> languagePair in _localisationMaps)
 				{
 					languagePair.Value.ChangeKey(key, newKey);
 				}
@@ -242,9 +242,9 @@ namespace Framework
 
 			public static void SaveStrings()
 			{
-				foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in _localisationMaps)
+				foreach (KeyValuePair<string, LocalisationMap> languagePair in _localisationMaps)
 				{
-					string resourceName = GetLocalisationMapName(languagePair.Key);
+					string resourceName = GetLocalisationMapName(LanguageCodes.GetLanguageFromCode(languagePair.Key));
 					string assetsPath = LocalisationProjectSettings.Get()._localisationFolder;
 					string resourcePath = AssetUtils.GetResourcePath(assetsPath) + "/" + resourceName;
 					string filePath = AssetUtils.GetAppllicationPath();
@@ -259,10 +259,12 @@ namespace Framework
 						filePath += assetsPath + "/" + resourceName + ".xml";
 					}
 
-					languagePair.Value._language = languagePair.Key;
+					languagePair.Value._language = LanguageCodes.GetLanguageFromCode(languagePair.Key);
 					languagePair.Value.SortStrings();
 
 					Serializer.ToFile(languagePair.Value, filePath);
+
+					AssetUtils.RefreshAsset(filePath);
 				}
 
 				_dirty = false;
@@ -274,11 +276,12 @@ namespace Framework
 				if (warnIfDirty)
 					EditorWarnIfDirty();
 
-				SystemLanguage[] languages = new SystemLanguage[_localisationMaps.Keys.Count];
-				_localisationMaps.Keys.CopyTo(languages, 0);
+				string[] languageCodes = new string[_localisationMaps.Keys.Count];
+				_localisationMaps.Keys.CopyTo(languageCodes, 0);
 
-				foreach (SystemLanguage language in languages)
+				foreach (string languageCode in languageCodes)
 				{
+					SystemLanguage language = LanguageCodes.GetLanguageFromCode(languageCode);
 					LoadStrings(language);
 				}
 
@@ -346,7 +349,7 @@ namespace Framework
 			{
 				MakeSureStringsAreLoaded(language);
 
-				return _localisationMaps[language].Get(key, true);
+				return _localisationMaps[LanguageCodes.GetLanguageCode(language)].Get(key, true);
 			}
 #endif
 			#endregion
@@ -356,7 +359,7 @@ namespace Framework
 			{
 				MakeSureStringsAreLoaded(language);
 
-				string text = _localisationMaps[language].Get(key);
+				string text = _localisationMaps[LanguageCodes.GetLanguageCode(language)].Get(key);
 				text = ReplaceVariables(text, localVariables);
 
 				return text;
@@ -374,7 +377,7 @@ namespace Framework
 
 			private static void MakeSureStringsAreLoaded(SystemLanguage language)
 			{
-				if (!_localisationMaps.ContainsKey(language))
+				if (!_localisationMaps.ContainsKey(LanguageCodes.GetLanguageCode(language)))
 					LoadStrings(language);
 			}
 
@@ -470,7 +473,7 @@ namespace Framework
 			private static void RefreshEditorKeys()
 			{
 				HashSet<string> allKeys = new HashSet<string>();
-				foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in _localisationMaps)
+				foreach (KeyValuePair<string, LocalisationMap> languagePair in _localisationMaps)
 				{
 					allKeys.UnionWith(languagePair.Value.GetStringKeys());
 				}
@@ -513,7 +516,7 @@ namespace Framework
 			{
 				if (_undoObject != null && !string.IsNullOrEmpty(_undoObject._serialisedLocalisationMaps))
 				{
-					_localisationMaps = (Dictionary<SystemLanguage, LocalisationMap>)Serializer.FromString(typeof(Dictionary<SystemLanguage, LocalisationMap>), _undoObject._serialisedLocalisationMaps);
+					_localisationMaps = (Dictionary<string, LocalisationMap>)Serializer.FromString(typeof(Dictionary<string, LocalisationMap>), _undoObject._serialisedLocalisationMaps);
 					if (_localisationMaps == null)
 						throw new Exception();
 

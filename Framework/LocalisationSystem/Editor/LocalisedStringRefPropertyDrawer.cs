@@ -26,6 +26,8 @@ namespace Framework
 				{
 					EditorGUI.BeginProperty(position, label, property);
 
+					bool hasChanges = false;
+
 					SerializedProperty localisationkeyProperty = property.FindPropertyRelative("_localisationKey");
 					string localisationkey = localisationkeyProperty.stringValue;
 
@@ -66,10 +68,12 @@ namespace Framework
 								if (currentKey == 0)
 								{
 									localisationkey = UpdateNewLocalisedStringRef(property, null);
+									hasChanges = true;
 								}
 								else
 								{
 									localisationkey = UpdateNewLocalisedStringRef(property, keys[currentKey]);
+									hasChanges = true;
 								}	
 							}
 						}
@@ -82,10 +86,8 @@ namespace Framework
 							string keyWithoutFolder;
 							Localisation.GetFolderIndex(localisationkey, out currentFolderIndex, out keyWithoutFolder);
 
-
 							float keyTextWidth = position.width - EditorUtils.GetLabelWidth() - (folderNameWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth);
 							float buttonWidth = autoKeySlashFakeWidth + keyTextWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth;
-
 
 							//Get list of current folder options
 							Rect folderText = new Rect(position.x, yPos, position.width - buttonWidth, EditorGUIUtility.singleLineHeight);
@@ -96,7 +98,10 @@ namespace Framework
 							if (EditorGUI.EndChangeCheck())
 							{
 								if (newFolderIndex != 0)
+								{
 									localisationkey = UpdateNewLocalisedStringRef(property, currentFolder + "/" + keyWithoutFolder);
+									hasChanges = true;
+								}
 							}
 
 							Rect addKeySlash = new Rect(position.x + (position.width - buttonWidth) - fudge, yPos, autoKeySlashWidth, EditorGUIUtility.singleLineHeight);
@@ -109,15 +114,21 @@ namespace Framework
                                 keyWithoutFolder = EditorGUI.TextField(addKeyText, keyWithoutFolder);
                                 
                                 if (EditorGUI.EndChangeCheck())
-                                    localisationkey = UpdateNewLocalisedStringRef(property, currentFolder + "/" + keyWithoutFolder);
+								{
+									localisationkey = UpdateNewLocalisedStringRef(property, currentFolder + "/" + keyWithoutFolder);
+									hasChanges = true;
+								}
 							}
 							else
 							{
                                 EditorGUI.BeginChangeCheck();
                                 localisationkey = EditorGUI.TextField(addKeyText, localisationkey);
 
-                                if (EditorGUI.EndChangeCheck())
-								    UpdateNewLocalisedStringRef(property, localisationkey);
+								if (EditorGUI.EndChangeCheck())
+								{
+									UpdateNewLocalisedStringRef(property, localisationkey);
+									hasChanges = true;
+								}
 							}
 
 							Rect autoKeyButton = new Rect(position.x + (position.width - buttonWidth) + autoKeySlashFakeWidth + buttonSpace + keyTextWidth, yPos, autoKeybuttonWidth, EditorGUIUtility.singleLineHeight);
@@ -141,6 +152,7 @@ namespace Framework
 								}
 
 								localisationkey = UpdateNewLocalisedStringRef(property, localisedStringRef.GetAutoKey());
+								hasChanges = true;
 							}
 
 							if (GUI.Button(addKeyButton, "Add") && !string.IsNullOrEmpty(localisationkey))
@@ -149,6 +161,7 @@ namespace Framework
 								{
 									Localisation.Set(localisationkey, Localisation.GetCurrentLanguage(), string.Empty);
 									LocalisationEditorWindow.EditString(localisationkey);
+									hasChanges = true;
 								}
 							}
 						}
@@ -178,8 +191,14 @@ namespace Framework
 
 						EditorGUI.indentLevel = origIndent;
 					}
-					
+
 					EditorGUI.EndProperty();
+
+					if (hasChanges)
+					{
+						property.serializedObject.ApplyModifiedProperties();
+						property.serializedObject.Update();
+					}
 				}
 
 				public override float GetPropertyHeight(SerializedProperty property, GUIContent label)

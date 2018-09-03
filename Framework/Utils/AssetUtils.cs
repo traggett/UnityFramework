@@ -1,5 +1,9 @@
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace Framework
 {
 	namespace Utils
@@ -17,7 +21,7 @@ namespace Framework
 
 				if (!string.IsNullOrEmpty(assetPath))
 				{
-					//Remove path before Resources folder
+					//Remove path before Assets folder
 					string assets = "Assets/";
 					int index = assetPath.IndexOf(assets);
 					if (index != -1)
@@ -78,6 +82,13 @@ namespace Framework
 
 				return runtimePath;
 			}
+
+#if UNITY_EDITOR
+			public static void RefreshAsset(string filePath)
+			{
+				AssetDatabase.ImportAsset(GetAssetPath(filePath));
+			}
+#endif
 		}
 	}
 }

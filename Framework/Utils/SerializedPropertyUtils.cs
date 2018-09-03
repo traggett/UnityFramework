@@ -90,10 +90,8 @@ namespace Framework
 							}
 						}
 					}
-                    else
-                    {
-                        SetValue(obj, elements[0], value);
-                    }
+
+                    SetValue(obj, elements[0], value);
 				}
 
 				public static T GetPropertyDrawerTargetObject<T>(PropertyDrawer propertyDrawer, SerializedProperty property)
