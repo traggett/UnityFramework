@@ -572,17 +572,20 @@ namespace Framework
 				#region Scene Objects
 				private static Object FindSceneObject(string scenePath, int localIdentifier)
 				{
-					Scene scene;
-
-					if (GetActiveScene(scenePath, out scene))
+					if (localIdentifier != -1)
 					{
-						foreach (GameObject rootObject in scene.GetRootGameObjects())
-						{
-							Object obj = FindSceneObject(rootObject, localIdentifier);
+						Scene scene;
 
-							if (obj != null)
+						if (GetActiveScene(scenePath, out scene))
+						{
+							foreach (GameObject rootObject in scene.GetRootGameObjects())
 							{
-								return obj;
+								Object obj = FindSceneObject(rootObject, localIdentifier);
+
+								if (obj != null)
+								{
+									return obj;
+								}
 							}
 						}
 					}
@@ -592,26 +595,29 @@ namespace Framework
 
 				private static Object FindSceneObject(GameObject gameObject, int localIdentifier)
 				{
-					//Check game object
-					if (GetSceneIdentifier(gameObject) == localIdentifier)
-						return gameObject;
-
-					//Check components
-					Component[] components = gameObject.GetComponents<Component>();
-
-					foreach (Component component in components)
+					if (localIdentifier != -1)
 					{
-						if (GetSceneIdentifier(component) == localIdentifier)
-							return component;
-					}
+						//Check game object
+						if (GetSceneIdentifier(gameObject) == localIdentifier)
+							return gameObject;
 
-					//Check children
-					foreach (Transform child in gameObject.transform)
-					{
-						Object obj = FindSceneObject(child.gameObject, localIdentifier);
+						//Check components
+						Component[] components = gameObject.GetComponents<Component>();
 
-						if (obj != null)
-							return obj;
+						foreach (Component component in components)
+						{
+							if (GetSceneIdentifier(component) == localIdentifier)
+								return component;
+						}
+
+						//Check children
+						foreach (Transform child in gameObject.transform)
+						{
+							Object obj = FindSceneObject(child.gameObject, localIdentifier);
+
+							if (obj != null)
+								return obj;
+						}
 					}
 
 					return null;
