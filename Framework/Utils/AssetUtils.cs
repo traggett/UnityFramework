@@ -89,7 +89,6 @@ namespace Framework
 			{
 				AssetDatabase.ImportAsset(GetAssetPath(filePath));
 			}
-#endif
 
 			public static void CreateScriptableObjectAsset<T>() where T : ScriptableObject
 			{
@@ -114,6 +113,7 @@ namespace Framework
 				EditorUtility.FocusProjectWindow();
 				Selection.activeObject = asset;
 			}
+#endif
 		}
 
 	}
