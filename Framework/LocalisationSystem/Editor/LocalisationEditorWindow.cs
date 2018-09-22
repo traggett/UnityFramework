@@ -195,7 +195,7 @@ namespace Framework
 					{
 						_keyStyle = new GUIStyle(EditorStyles.helpBox)
 						{
-							margin = new RectOffset(2, 0, 2, 0),
+							margin = new RectOffset(2, 0, 0, 0),
 							fontSize = _editorPrefs._fontSize
 						};
 						_keyStyle.padding.left = 8;
@@ -216,7 +216,7 @@ namespace Framework
 					{
 						_textStyle = new GUIStyle(EditorStyles.textArea)
 						{
-							margin = new RectOffset(1, 1, 1, 1),
+							margin = new RectOffset(0, 1, 0, 1),
 							font = _keyStyle.font,
 							fontSize = _editorPrefs._fontSize,
 							padding = new RectOffset(4, 4, 4, 4)

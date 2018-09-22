@@ -62,15 +62,18 @@ namespace Framework
 					}
 					return (T)obj;
 				}
-                
+				
                 public static void SetSerializedPropertyValue(SerializedProperty prop, object value)
 				{
 					string path = prop.propertyPath.Replace(".Array.data[", "[");
 					object obj = prop.serializedObject.targetObject;
 					string[] elements = path.Split('.');
 
+					//First build complete updated object for the top most property
+					//If the target property is not a top level member then need to set value on each level of member to build an updated object
 					if (elements.Length > 1)
 					{
+						//In reverse order, starting with one before last, set the value on each object, then its parent, that thats parent etc
 						for (int i = elements.Length - 2; i >= 0; i--)
 						{
 							if (elements[i].Contains("["))
@@ -91,7 +94,21 @@ namespace Framework
 						}
 					}
 
-                    SetValue(obj, elements[0], value);
+					//Once got a up to date top level member property, set it
+
+					//If its an array
+					if (path.Contains("["))
+					{
+						string elementName = path.Substring(0, path.IndexOf("["));
+						int index = Convert.ToInt32(path.Substring(path.IndexOf("[")).Replace("[", "").Replace("]", ""));
+						Array array = GetValue(obj, elementName) as Array;
+						array.SetValue(value, index);
+						SetValue(obj, elementName, array);
+					}
+					else
+					{
+						SetValue(obj, elements[0], value);
+					}
 				}
 
 				public static T GetPropertyDrawerTargetObject<T>(PropertyDrawer propertyDrawer, SerializedProperty property)
