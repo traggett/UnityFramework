@@ -104,6 +104,16 @@ namespace Framework
 				return new LocalisationLocalVariable(key, value);
 			}
 
+			public static LocalisationLocalVariable Variable(string key, int value)
+			{
+				return new LocalisationLocalVariable(key, Convert.ToString(value));
+			}
+
+			public static LocalisationLocalVariable Variable(string key, float value)
+			{
+				return new LocalisationLocalVariable(key, Convert.ToString(value));
+			}
+
 			public static string Get(string key, params LocalisationLocalVariable[] localVariables)
 			{
 				return Get(key, _currentLanguage, localVariables);
