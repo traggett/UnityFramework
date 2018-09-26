@@ -19,7 +19,7 @@ namespace Framework
 					case SystemLanguage.Spanish:
 						return "es";
 					default:
-						return "??";
+						return "Unknown";
 				}
 			}
 

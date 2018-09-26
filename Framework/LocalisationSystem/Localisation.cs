@@ -254,27 +254,32 @@ namespace Framework
 			{
 				foreach (KeyValuePair<string, LocalisationMap> languagePair in _localisationMaps)
 				{
-					string resourceName = GetLocalisationMapName(LanguageCodes.GetLanguageFromCode(languagePair.Key));
-					string assetsPath = LocalisationProjectSettings.Get()._localisationFolder;
-					string resourcePath = AssetUtils.GetResourcePath(assetsPath) + "/" + resourceName;
-					string filePath = AssetUtils.GetAppllicationPath();
+					SystemLanguage languageCode = LanguageCodes.GetLanguageFromCode(languagePair.Key);
 
-					TextAsset asset = Resources.Load(resourcePath) as TextAsset;
-					if (asset != null)
+					if (languageCode != SystemLanguage.Unknown)
 					{
-						filePath += AssetDatabase.GetAssetPath(asset);
+						string resourceName = GetLocalisationMapName(languageCode);
+						string assetsPath = LocalisationProjectSettings.Get()._localisationFolder;
+						string resourcePath = AssetUtils.GetResourcePath(assetsPath) + "/" + resourceName;
+						string filePath = AssetUtils.GetAppllicationPath();
+
+						TextAsset asset = Resources.Load(resourcePath) as TextAsset;
+						if (asset != null)
+						{
+							filePath += AssetDatabase.GetAssetPath(asset);
+						}
+						else
+						{
+							filePath += assetsPath + "/" + resourceName + ".xml";
+						}
+
+						languagePair.Value._language = LanguageCodes.GetLanguageFromCode(languagePair.Key);
+						languagePair.Value.SortStrings();
+
+						Serializer.ToFile(languagePair.Value, filePath);
+
+						AssetUtils.RefreshAsset(filePath);
 					}
-					else
-					{
-						filePath += assetsPath + "/" + resourceName + ".xml";
-					}
-
-					languagePair.Value._language = LanguageCodes.GetLanguageFromCode(languagePair.Key);
-					languagePair.Value.SortStrings();
-
-					Serializer.ToFile(languagePair.Value, filePath);
-
-					AssetUtils.RefreshAsset(filePath);
 				}
 
 				_dirty = false;
