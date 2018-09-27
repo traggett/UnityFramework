@@ -33,7 +33,6 @@ namespace Framework
 						}
 						
 						//Create and append child nodes
-						List<XmlNode> childNodes = new List<XmlNode>();
 						foreach (object value in values)
 						{
 							XmlNode childNode = XmlConverter.ToXmlNode(value, node.OwnerDocument);
