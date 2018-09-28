@@ -371,7 +371,7 @@ namespace Framework
 						xmlDoc.Save(fileName);
 #if UNITY_EDITOR
 						//Refresh the saved asset
-						AssetDatabase.ImportAsset(fileName);
+						AssetUtils.RefreshAsset(fileName);
 #endif
 						return true;
 					}
