@@ -56,6 +56,36 @@ namespace Framework
 					}
 				}
 
+
+				private static GUIStyle _toggleButton = null;
+				public static GUIStyle ToggleButtonStyle
+				{
+					get
+					{
+						if (_toggleButton == null)
+						{
+							_toggleButton = new GUIStyle(GUI.skin.GetStyle("Button"));
+						}
+
+						return _toggleButton;
+					}
+				}
+
+				private static GUIStyle _toggleButtonToggled = null;
+				public static GUIStyle ToggleButtonToggledStyle
+				{
+					get
+					{
+						if (_toggleButtonToggled == null)
+						{
+							_toggleButtonToggled = new GUIStyle(ToggleButtonStyle);
+							_toggleButtonToggled.normal.background = ToggleButtonStyle.active.background;
+						}
+
+						return _toggleButtonToggled;
+					}
+				}
+
 				private static GUIStyle _readonlyTextBoxStyle = null;
 				public static GUIStyle ReadonlyTextBoxStyle
 				{

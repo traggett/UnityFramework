@@ -29,25 +29,28 @@ namespace Framework
 			private Camera _camera;
 			#endregion
 
-			#region MonoBehaviour Calls
-			void Awake()
+			public Camera GetCamera()
 			{
-				_camera = GetComponent<Camera>();
+				if (_camera == null)
+					_camera = GetComponent<Camera>();
+
+				return _camera;
 			}
 
+			#region MonoBehaviour Calls
 			public void OnPreCull()
 			{
-				_onPreCull(this, new CameraEvent(_camera));
+				_onPreCull(this, new CameraEvent(GetCamera()));
 			}
 
 			public void OnPreRender()
 			{
-				_onPreRender(this, new CameraEvent(_camera));
+				_onPreRender(this, new CameraEvent(GetCamera()));
 			}
 
 			public void OnPostRender()
 			{
-				_onPostRender(this, new CameraEvent(_camera));
+				_onPostRender(this, new CameraEvent(GetCamera()));
 			}
 			#endregion
 		}
