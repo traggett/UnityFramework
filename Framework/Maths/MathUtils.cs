@@ -66,7 +66,7 @@ namespace Framework
 			public static Quaternion Interpolate(eInterpolation type, Quaternion from, Quaternion to, float t)
 			{
 				float lerp = Interpolation.Interpolate(type, 0.0f, 1.0f, t);
-				return Quaternion.Lerp(from, to, lerp);
+				return Quaternion.Slerp(from, to, lerp);
 			}
 
 			public static Color Interpolate(eInterpolation type, Color from, Color to, float t)

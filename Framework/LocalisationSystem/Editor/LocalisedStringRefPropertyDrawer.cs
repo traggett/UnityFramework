@@ -176,7 +176,7 @@ namespace Framework
 								float labelWidth = EditorUtils.GetLabelWidth();
 
 								Rect textPosition = new Rect(position.x + labelWidth + 2.0f, yPos, position.width - labelWidth - 2.0f - editbuttonWidth - buttonSpace, height);
-								EditorGUI.LabelField(textPosition, text, EditorUtils.ReadonlyTextBoxStyle);
+								EditorGUI.LabelField(textPosition, text, EditorUtils.ReadOnlyTextBoxStyle);
 								Rect editTextPosition = new Rect(textPosition.x + textPosition.width + buttonSpace, yPos, editbuttonWidth, EditorGUIUtility.singleLineHeight);
 
 								if (GUI.Button(editTextPosition, "Edit"))

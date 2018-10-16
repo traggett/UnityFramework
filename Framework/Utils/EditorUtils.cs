@@ -86,23 +86,6 @@ namespace Framework
 					}
 				}
 
-				private static GUIStyle _readonlyTextBoxStyle = null;
-				public static GUIStyle ReadonlyTextBoxStyle
-				{
-					get
-					{
-						if (_readonlyTextBoxStyle == null)
-						{
-							_readonlyTextBoxStyle = new GUIStyle(GUI.skin.GetStyle("TextArea"));
-							_readonlyTextBoxStyle.padding = new RectOffset(6, 6, 2, 0);
-							_readonlyTextBoxStyle.richText = true;
-							_readonlyTextBoxStyle.normal.textColor = new Color(0.25f, 0.25f, 0.25f, 1.0f);
-						}
-
-						return _readonlyTextBoxStyle;
-					}
-				}
-
 				private static GUIStyle _textStyle = null;
 				public static GUIStyle TextStyle
 				{
@@ -178,23 +161,24 @@ namespace Framework
 						return _titleStyle;
 					}
 				}
-
-				private static GUIStyle _readOnlyTextBoxStyle = null;
+				
+				private static GUIStyle _readonlyTextBoxStyle = null;
 				public static GUIStyle ReadOnlyTextBoxStyle
 				{
 					get
 					{
-						if (_readOnlyTextBoxStyle == null)
+						if (_readonlyTextBoxStyle == null)
 						{
-							_readOnlyTextBoxStyle = new GUIStyle(EditorStyles.textArea);
-							//_readOnlyTextBoxStyle.normal.textColor = new Color(0, 0, 0, 0.6f);
-							//_readOnlyTextBoxStyle.active.textColor = _readOnlyTextBoxStyle.normal.textColor;
-							//_readOnlyTextBoxStyle.focused.textColor = _readOnlyTextBoxStyle.normal.textColor;
+							_readonlyTextBoxStyle = new GUIStyle(GUI.skin.GetStyle("TextArea"));
+							_readonlyTextBoxStyle.padding = new RectOffset(6, 6, 2, 0);
+							_readonlyTextBoxStyle.richText = true;
+							_readonlyTextBoxStyle.normal.textColor = new Color(0.25f, 0.25f, 0.25f, 1.0f);
 						}
 
-						return _readOnlyTextBoxStyle;
+						return _readonlyTextBoxStyle;
 					}
 				}
+
 
 				private static GUIStyle _inspectorHeaderStyle = null;
 				public static GUIStyle InspectorHeaderStyle
