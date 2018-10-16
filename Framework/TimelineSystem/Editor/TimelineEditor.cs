@@ -8,7 +8,8 @@ namespace Framework
 {
 	using Utils;
 	using Serialization;
-	
+	using Editor;
+
 	namespace TimelineSystem
 	{
 		namespace Editor
@@ -27,7 +28,6 @@ namespace Framework
 				{
 
 				}
-
 
 				#region Private Data
 				private TimelineScrollArea _timelineArea;

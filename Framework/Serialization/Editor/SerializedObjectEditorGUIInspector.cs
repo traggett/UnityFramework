@@ -7,7 +7,7 @@ namespace Framework
 
 	namespace Serialization
 	{
-		public abstract class SerializedObjectEditorGUIInspector<T> : Editor where T : class
+		public abstract class SerializedObjectEditorGUIInspector<T> : UnityEditor.Editor where T : class
 		{
 			protected override void OnHeaderGUI()
 			{
