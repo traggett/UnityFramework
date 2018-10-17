@@ -140,27 +140,6 @@ namespace Framework
 						return _textStyleSmall;
 					}
 				}
-
-				private static GUIStyle _titleStyle = null;
-				public static GUIStyle TextTitleStyle
-				{
-					get
-					{
-						if (_titleStyle == null)
-						{
-							_titleStyle = new GUIStyle(GUI.skin.GetStyle("In BigTitle"));
-							_titleStyle.richText = true;
-							_titleStyle.font = EditorStyles.label.font;
-							_titleStyle.fontSize = EditorStyles.label.fontSize;
-							_titleStyle.fontStyle = FontStyle.Normal;
-							_titleStyle.alignment = TextAnchor.UpperLeft;
-							_titleStyle.stretchWidth = true;
-							_titleStyle.stretchHeight = false;
-						}
-
-						return _titleStyle;
-					}
-				}
 				
 				private static GUIStyle _readonlyTextBoxStyle = null;
 				public static GUIStyle ReadOnlyTextBoxStyle
@@ -188,11 +167,32 @@ namespace Framework
 						if (_inspectorHeaderStyle == null)
 						{
 							_inspectorHeaderStyle = new GUIStyle(GUI.skin.GetStyle("In BigTitle"));
-							_inspectorHeaderStyle.padding = new RectOffset(0, 0, 3, 0);
 							_inspectorHeaderStyle.fontStyle = FontStyle.Bold;
 						}
 
 						return _inspectorHeaderStyle;
+					}
+				}
+
+				private static GUIStyle _inspectorSubHeaderStyle = null;
+				public static GUIStyle InspectorSubHeaderStyle
+				{
+					get
+					{
+						if (_inspectorSubHeaderStyle == null)
+						{
+							_inspectorSubHeaderStyle = new GUIStyle(GUI.skin.GetStyle("In BigTitle"));
+							_inspectorSubHeaderStyle.richText = true;
+							_inspectorSubHeaderStyle.font = EditorStyles.label.font;
+							_inspectorSubHeaderStyle.fontSize = EditorStyles.label.fontSize;
+							_inspectorSubHeaderStyle.fontStyle = FontStyle.Normal;
+							_inspectorSubHeaderStyle.alignment = TextAnchor.UpperLeft;
+							_inspectorSubHeaderStyle.stretchWidth = true;
+							_inspectorSubHeaderStyle.stretchHeight = false;
+							_inspectorSubHeaderStyle.padding = new RectOffset(8, 8, 3, 0);
+						}
+
+						return _inspectorSubHeaderStyle;
 					}
 				}
 

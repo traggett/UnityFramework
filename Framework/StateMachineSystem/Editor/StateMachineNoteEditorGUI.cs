@@ -22,7 +22,7 @@ namespace Framework
 
 					Color orig = GUI.backgroundColor;
 					GUI.backgroundColor = _titleLabelColor;
-					EditorGUILayout.LabelField("<b>Note:</b>", EditorUtils.TextTitleStyle, GUILayout.Height(24.0f));
+					EditorGUILayout.LabelField("<b>Note:</b>", EditorUtils.InspectorSubHeaderStyle, GUILayout.Height(24.0f));
 					GUI.backgroundColor = orig;
 
 					EditorGUILayout.Separator();

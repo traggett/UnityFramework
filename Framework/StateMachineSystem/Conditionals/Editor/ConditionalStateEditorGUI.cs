@@ -51,7 +51,7 @@ namespace Framework
 						for (int i = 0; i < conditionalState._branches.Length; i++)
 						{
 							GUI.backgroundColor = _titleLabelColor;
-							EditorGUILayout.LabelField(GetConditionLabel(conditionalState._branches[i], i == 0), EditorUtils.TextTitleStyle, GUILayout.Height(24.0f));
+							EditorGUILayout.LabelField(GetConditionLabel(conditionalState._branches[i], i == 0), EditorUtils.InspectorSubHeaderStyle, GUILayout.Height(24.0f));
 							GUI.backgroundColor = orig;
 
 							//Draw condition properties
@@ -82,7 +82,7 @@ namespace Framework
 							ConditionalStateBackgroundLogic backgroundLogic = conditionalState._backgroundLogic[i];
 
 							GUI.backgroundColor = _titleLabelColor;
-							EditorGUILayout.LabelField(backgroundLogic.GetDescription(), EditorUtils.TextTitleStyle, GUILayout.Height(24.0f));
+							EditorGUILayout.LabelField(backgroundLogic.GetDescription(), EditorUtils.InspectorSubHeaderStyle, GUILayout.Height(24.0f));
 							GUI.backgroundColor = orig;
 
 							//Draw backgroundLogic properties
