@@ -188,6 +188,8 @@ namespace Framework
 						if (_inspectorHeaderStyle == null)
 						{
 							_inspectorHeaderStyle = new GUIStyle(GUI.skin.GetStyle("In BigTitle"));
+							_inspectorHeaderStyle.padding = new RectOffset(0, 0, 3, 0);
+							_inspectorHeaderStyle.fontStyle = FontStyle.Bold;
 						}
 
 						return _inspectorHeaderStyle;
@@ -429,6 +431,56 @@ namespace Framework
 
 							return validComponents[selectedIndex];
 						}
+					}
+				}
+
+				public enum eEditorAxis
+				{
+					Forward,
+					Up,
+					Right,
+					Custom,
+				}
+
+
+				public static void AxisPropertyField(SerializedProperty property, GUIContent label)
+				{
+					Vector3 axis = property.vector3Value;
+
+					eEditorAxis axisType = eEditorAxis.Custom;
+
+					if (axis == Vector3.up)
+						axisType = eEditorAxis.Up;
+					else if (axis == Vector3.forward)
+						axisType = eEditorAxis.Forward;
+					else if (axis == Vector3.right)
+						axisType = eEditorAxis.Right;
+
+					EditorGUI.BeginChangeCheck();
+					axisType = (eEditorAxis)EditorGUILayout.EnumPopup(label, axisType);
+
+					if (EditorGUI.EndChangeCheck())
+					{
+						switch (axisType)
+						{
+							case eEditorAxis.Forward: property.vector3Value = Vector3.forward; break;
+							case eEditorAxis.Up: property.vector3Value = Vector3.up; break;
+							case eEditorAxis.Right: property.vector3Value = Vector3.right; break;
+							case eEditorAxis.Custom: property.vector3Value = new Vector3(45f, 45f, 45f); break;
+						}
+					}
+
+					if (axisType == eEditorAxis.Custom)
+					{
+						Quaternion rotation = Quaternion.identity;
+
+						if (property.vector3Value.sqrMagnitude > 0.0f)
+							rotation = Quaternion.FromToRotation(Vector3.forward, property.vector3Value);
+
+						Vector3 eulerAngles = EditorGUILayout.Vector3Field(" ", rotation.eulerAngles);
+						rotation = Quaternion.Euler(eulerAngles);
+
+						property.vector3Value = rotation * Vector3.forward;
 					}
 				}
 
