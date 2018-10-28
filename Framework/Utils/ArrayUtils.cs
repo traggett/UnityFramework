@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Framework
 {
@@ -97,6 +98,17 @@ namespace Framework
 				}
 			}
 
+			public static int GetCount<T>(IEnumerable<T> enumerable)
+			{
+				int count = 0;
+
+				foreach (T t in enumerable)
+				{
+					count++;
+				}
+
+				return count;
+			}
 		}
 	}
 }
