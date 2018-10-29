@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Reflection;
 using UnityEditor;
+using UnityEngine;
 
 namespace Framework
 {
@@ -13,6 +14,7 @@ namespace Framework
 		{
 			public static class SerializedPropertyUtils
 			{
+				#region Public Interface
 				public static Type GetSerializedPropertyType(SerializedProperty prop)
 				{
 					string path = prop.propertyPath.Replace(".Array.data[", "[");
@@ -150,6 +152,13 @@ namespace Framework
 						Undo.RecordObject(property.serializedObject.targetObjects[i], info);
 					}
 				}
+
+				public static void FlagsField(SerializedProperty property, params GUILayoutOption[] options)
+				{
+					if (property != null)
+						property.intValue = EditorGUILayout.MaskField(new GUIContent(property.displayName), property.intValue, property.enumDisplayNames, options);
+				}
+				#endregion
 
 				private static Type GetPropertyElementType(Type type, string elementName)
 				{
