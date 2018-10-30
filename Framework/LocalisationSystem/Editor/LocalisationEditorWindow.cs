@@ -26,9 +26,9 @@ namespace Framework
 				private static readonly string kEditKeyId = "Localisation.EditKey";
 
 				private static readonly float kMinKeysWidth = 180.0f;
-				private static readonly float kToolBarHeight = 71.0f;
-				private static readonly float kBottomBarHeight = 12.0f;
-				private static readonly float kEditKeyBarHeight = 12.0f;
+				private static readonly float kToolBarHeight = EditorGUIUtility.singleLineHeight * 3;
+				private static readonly float kBottomBarHeight = EditorGUIUtility.singleLineHeight;
+				private static readonly float kEditKeyBarHeight = EditorGUIUtility.singleLineHeight;
 
 				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
 				private static readonly Color kSelectedButtonsBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 0.75f);
@@ -713,7 +713,7 @@ namespace Framework
 				
 				private float GetItemHeight(string key)
 				{
-					float keyHeight = _keyStyle.CalcSize(new GUIContent(key)).y;
+					float keyHeight = _keyStyle.fontSize;
 
 					if (key == _editorPrefs._selectedKey)
 					{
@@ -725,7 +725,6 @@ namespace Framework
 
 					string textB = Localisation.GetRawString(key, _editorPrefs._secondLanguage);
 					float textBHeight = _textStyle.CalcSize(new GUIContent(textB)).y ;
-
 
 					return Mathf.Max(keyHeight, textAHeight, textBHeight);
 				}	
