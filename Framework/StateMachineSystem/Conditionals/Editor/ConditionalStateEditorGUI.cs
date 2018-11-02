@@ -120,20 +120,20 @@ namespace Framework
 						if (GUILayout.Button("\u25b2") && index > 0)
 						{
 							ConditionalStateBranch condition = conditionalState._branches[index];
-							ArrayUtils.Remove(ref conditionalState._branches, index);
+							ArrayUtils.RemoveAt(ref conditionalState._branches, index);
 							ArrayUtils.Insert(ref conditionalState._branches, condition, index - 1);
 							changedArray = true;
 						}
 						else if (GUILayout.Button("\u25bc") && index < conditionalState._branches.Length - 1)
 						{
 							ConditionalStateBranch condition = conditionalState._branches[index];
-							ArrayUtils.Remove(ref conditionalState._branches, index);
+							ArrayUtils.RemoveAt(ref conditionalState._branches, index);
 							ArrayUtils.Insert(ref conditionalState._branches, condition, index + 1);
 							changedArray = true;
 						}
 						else if (GUILayout.Button("Remove"))
 						{
-							ArrayUtils.Remove(ref conditionalState._branches, index);
+							ArrayUtils.RemoveAt(ref conditionalState._branches, index);
 							changedArray = true;
 						}
 					}
@@ -153,7 +153,7 @@ namespace Framework
 					{
 						if (GUILayout.Button("Remove"))
 						{
-							ArrayUtils.Remove(ref conditionalState._backgroundLogic, index);
+							ArrayUtils.RemoveAt(ref conditionalState._backgroundLogic, index);
 							changedArray = true;
 						}
 					}

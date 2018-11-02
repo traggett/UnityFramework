@@ -21,9 +21,17 @@ namespace Framework
 			void Awake()
 			{
 				_UIText = GetComponent<Text>();
+				RefreshText();
 			}
 
 			void Update()
+			{
+				RefreshText();
+			}
+			#endregion
+
+			#region Private Methods
+			public void RefreshText()
 			{
 				string text = _text.GetLocalisedString();
 

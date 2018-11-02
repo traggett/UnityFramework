@@ -51,7 +51,11 @@ namespace Framework
 			
 			public string GetLocalisedString(params LocalisationLocalVariable[] variables)
 			{
-				if (variables.Length > 0 || _cachedLanguage != Localisation.GetCurrentLanguage() || Localisation.AreGlobalVariablesOutOfDate(_cachedVariables))
+				if (variables.Length > 0 || _cachedLanguage != Localisation.GetCurrentLanguage() || Localisation.AreGlobalVariablesOutOfDate(_cachedVariables)
+#if UNITY_EDITOR
+					|| !Application.isPlaying
+#endif
+					)
 				{
 					_cachedLanguage = Localisation.GetCurrentLanguage();
 					_cachedText = Localisation.Get(_localisationKey, variables);
@@ -63,7 +67,7 @@ namespace Framework
 
 			public bool IsValid()
 			{
-				return _localisationKey != null && _localisationKey.Length > 0;
+				return !string.IsNullOrEmpty(_localisationKey);
 			}
 
 			public bool Equals(string text)

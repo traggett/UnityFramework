@@ -59,10 +59,11 @@ namespace Framework
 
 							Rect typePosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
 							yPos += EditorGUIUtility.singleLineHeight;
+							
+							EditorUtils.SetBoldDefaultFont(localisationkeyProperty.prefabOverride);
 
 							EditorGUI.BeginChangeCheck();
 							currentKey = EditorGUI.Popup(typePosition, "Localisation Key", currentKey, keys);
-							
 							if (EditorGUI.EndChangeCheck())
 							{
 								if (currentKey == 0)
@@ -76,6 +77,8 @@ namespace Framework
 									hasChanges = true;
 								}	
 							}
+
+							EditorUtils.SetBoldDefaultFont(false);
 						}
 
 						//Draw button for adding new key

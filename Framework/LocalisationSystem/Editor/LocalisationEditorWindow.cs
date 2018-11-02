@@ -323,7 +323,7 @@ namespace Framework
 							if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
 							{
 								_filter = "";
-								EditorGUI.FocusTextInControl(string.Empty);
+								SelectKey(_editorPrefs._selectedKey);
 							}
 
 							if (GUILayout.Button("Choose Localisation Folder", EditorStyles.toolbarButton))
@@ -761,8 +761,7 @@ namespace Framework
 
 					InitGUIStyles();
 
-					if (_keys == null)
-						_keys = GetKeys();
+					_keys = GetKeys();
 
 					_editorPrefs._selectedKey = key;
 					EditorGUI.FocusTextInControl(string.Empty);

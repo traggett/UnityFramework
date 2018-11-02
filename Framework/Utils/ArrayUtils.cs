@@ -66,10 +66,10 @@ namespace Framework
 			{
 				int index = Array.IndexOf<T>(array, item);
 				if (index != -1)
-					Remove<T>(ref array, index);
+					RemoveAt<T>(ref array, index);
 			}
 
-			public static void Remove<T>(ref T[] array, int index)
+			public static void RemoveAt<T>(ref T[] array, int index)
 			{
 				T[] newArray = new T[array.Length - 1];
 

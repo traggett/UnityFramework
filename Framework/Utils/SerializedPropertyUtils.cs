@@ -64,52 +64,58 @@ namespace Framework
 					}
 					return (T)obj;
 				}
-				
-                public static void SetSerializedPropertyValue(SerializedProperty prop, object value)
+
+				public static void SetSerializedPropertyValue(SerializedProperty prop, object value)
 				{
-					string path = prop.propertyPath.Replace(".Array.data[", "[");
-					object obj = prop.serializedObject.targetObject;
-					string[] elements = path.Split('.');
+					Undo.RecordObjects(prop.serializedObject.targetObjects, "Change " + prop.name);
 
-					//First build complete updated object for the top most property
-					//If the target property is not a top level member then need to set value on each level of member to build an updated object
-					if (elements.Length > 1)
+					foreach (UnityEngine.Object obj in prop.serializedObject.targetObjects)
 					{
-						//In reverse order, starting with one before last, set the value on each object, then its parent, that thats parent etc
-						for (int i = elements.Length - 2; i >= 0; i--)
-						{
-							if (elements[i].Contains("["))
-							{
-								string elementName = elements[i].Substring(0, elements[i].IndexOf("["));
-								int index = Convert.ToInt32(elements[i].Substring(elements[i].IndexOf("[")).Replace("[", "").Replace("]", ""));
-                                Array array = GetValue(obj, elementName) as Array;
+						string path = prop.propertyPath.Replace(".Array.data[", "[");
+						string[] elements = path.Split('.');
 
-                                object elementObj = array.GetValue(index);
-                                value = SetValue(elementObj, elements[i + 1], value);
-                                array.SetValue(value, index);
-                            }
-							else
+						//First build complete updated object for the top most property
+						//If the target property is not a top level member then need to set value on each level of member to build an updated object
+						if (elements.Length > 1)
+						{
+							//In reverse order, starting with one before last, set the value on each object, then its parent, that thats parent etc
+							for (int i = elements.Length - 2; i >= 0; i--)
 							{
-								object elementObj = GetValue(obj, elements[i]);
-								value = SetValue(elementObj, elements[i + 1], value);
+								if (elements[i].Contains("["))
+								{
+									string elementName = elements[i].Substring(0, elements[i].IndexOf("["));
+									int index = Convert.ToInt32(elements[i].Substring(elements[i].IndexOf("[")).Replace("[", "").Replace("]", ""));
+									Array array = GetValue(obj, elementName) as Array;
+
+									object elementObj = array.GetValue(index);
+									value = SetValue(elementObj, elements[i + 1], value);
+									array.SetValue(value, index);
+								}
+								else
+								{
+									object elementObj = GetValue(obj, elements[i]);
+									value = SetValue(elementObj, elements[i + 1], value);
+								}
 							}
 						}
-					}
 
-					//Once got a up to date top level member property, set it
+						//Once got a up to date top level member property, set it
 
-					//If its an array
-					if (path.Contains("["))
-					{
-						string elementName = path.Substring(0, path.IndexOf("["));
-						int index = Convert.ToInt32(path.Substring(path.IndexOf("[")).Replace("[", "").Replace("]", ""));
-						Array array = GetValue(obj, elementName) as Array;
-						array.SetValue(value, index);
-						SetValue(obj, elementName, array);
-					}
-					else
-					{
-						SetValue(obj, elements[0], value);
+						//If its an array
+						if (path.Contains("["))
+						{
+							string elementName = path.Substring(0, path.IndexOf("["));
+							int index = Convert.ToInt32(path.Substring(path.IndexOf("[")).Replace("[", "").Replace("]", ""));
+							Array array = GetValue(obj, elementName) as Array;
+							array.SetValue(value, index);
+							SetValue(obj, elementName, array);
+						}
+						else
+						{
+							SetValue(obj, elements[0], value);
+						}
+
+						EditorUtility.SetDirty(obj);
 					}
 				}
 
