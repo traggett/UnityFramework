@@ -469,9 +469,10 @@ namespace Framework
 							//First build dictionary of types marked with [Serializable] attribute
 							foreach (Type type in types)
 							{
-								SerializableAttribute attribute = SystemUtils.GetAttribute<SerializableAttribute>(type);
-								if (attribute != null)
+								if (Attribute.IsDefined(type, typeof(SerializableAttribute), false))
 								{
+									SerializableAttribute attribute = SystemUtils.GetAttribute<SerializableAttribute>(type);
+
 									string xmlTag = type.Name;
 
 									if (type.IsGenericType)

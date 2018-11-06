@@ -28,7 +28,6 @@ namespace Framework
 					}
 					else if (!silent)
 					{
-						Debug.Log("Can't find localised version of string " + key);
 						return "<'" + key + "' NOT FOUND>";
 					}
 				}
