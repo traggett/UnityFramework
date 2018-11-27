@@ -334,17 +334,17 @@ namespace Framework
 			public static bool Is2DPointInsideConvexPoly(Vector2[] polyPoints, Vector2 point)
 			{
 				if (polyPoints.Length < 3)
-				{
 					return false;
-				}
 
 				float lastLineSign = 0.0f;
 
-				for (int i = 0; i < polyPoints.Length - 1; i++)
+				for (int i = 0; i < polyPoints.Length; i++)
 				{
 					//Work out which side of the line the point is, right (positive) or left (negative)
 					// (y - y0) (x1 - x0) - (x - x0) (y1 - y0)
-					float lineSide = ((point.y - polyPoints[i].y) * (polyPoints[i + 1].x - polyPoints[i].x)) - ((point.x - polyPoints[i].x) * (polyPoints[i + 1].y - polyPoints[i].y));
+					int j = (i + 1) % polyPoints.Length;
+
+					float lineSide = ((point.y - polyPoints[i].y) * (polyPoints[j].x - polyPoints[i].x)) - ((point.x - polyPoints[i].x) * (polyPoints[j].y - polyPoints[i].y));
 					
 					//if on a different side to previous lines, not in poly
 					if (i > 0 && ((lastLineSign <= 0.0f && lineSide > 0.0f) || (lastLineSign >= 0.0f && lineSide < 0.0f)))
