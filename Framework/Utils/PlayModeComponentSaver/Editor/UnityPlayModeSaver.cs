@@ -120,7 +120,7 @@ namespace Framework
 					return false;
 				}
 
-				[MenuItem(kSaveGameObjectMenuString, false, -1)]
+				[MenuItem(kSaveGameObjectMenuString, false, -100)]
 				private static void SaveGameObject(MenuCommand command)
 				{
 					GameObject gameObject = command.context as GameObject;
@@ -140,7 +140,7 @@ namespace Framework
 					return false;
 				}
 
-				[MenuItem(kRevertGameObjectMenuString, false, -1)]
+				[MenuItem(kRevertGameObjectMenuString, false, -100)]
 				private static void RevertGameObject(MenuCommand command)
 				{
 					GameObject gameObject = command.context as GameObject;

@@ -70,7 +70,8 @@ namespace Framework
 						ConstructorInfo constructor = objType.GetConstructor(Type.EmptyTypes);
 						if (constructor != null)
 							obj = constructor.Invoke(null);
-						throw new Exception("Classes that implement ICustomEditorInspector need a parameterless constructor");
+						else
+							throw new Exception("Classes that implement ICustomEditorInspector need a parameterless constructor");
 					}
 
 					if (obj != null)
