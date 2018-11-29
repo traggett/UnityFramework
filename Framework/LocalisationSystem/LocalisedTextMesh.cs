@@ -20,9 +20,17 @@ namespace Framework
 			void Awake()
 			{
 				_textMesh = GetComponent<TextMesh>();
+				RefreshText();
 			}
 
 			void Update()
+			{
+				RefreshText();
+			}
+			#endregion
+
+			#region Private Methods
+			public void RefreshText()
 			{
 				string text = _text.GetLocalisedString();
 

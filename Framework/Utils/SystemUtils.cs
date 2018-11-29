@@ -140,15 +140,20 @@ namespace Framework
 
 			public static T GetAttribute<T>(Type type) where T : Attribute
 			{
-				T attribute = null;
+				Attribute[] attributes = Attribute.GetCustomAttributes(type);
 
-				object[] customAttributes = type.GetCustomAttributes(typeof(T), false);
-				if (customAttributes.Length == 1 && customAttributes[0] is T)
+				// Displaying output.  
+				foreach (Attribute attr in attributes)
 				{
-					attribute = (T)customAttributes[0];
-				}
+					T attribute = attr as T;
 
-				return attribute;
+					if (attribute != null)
+					{
+						return attribute;
+					}
+				}
+				
+				return null;
 			}
 
 			public static T GetStaticMethodAsDelegate<T>(Type type, string name) where T : class

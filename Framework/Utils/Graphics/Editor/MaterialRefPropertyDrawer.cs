@@ -17,7 +17,7 @@ namespace Framework
 					UIGraphicMaterialInstance,
 					SharedMaterial,
 				}
-
+				
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 				{
 					EditorGUI.BeginProperty(position, label, property);
@@ -155,8 +155,12 @@ namespace Framework
 
 				public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 				{
+					float height = EditorGUIUtility.singleLineHeight;
+
 					if (property.isExpanded)
 					{
+						height += EditorGUIUtility.singleLineHeight;
+
 						SerializedProperty materialIndexProp = property.FindPropertyRelative("_materialIndex");
 						eEdtiorType editorType = eEdtiorType.RendererMaterialInstance;
 
@@ -170,21 +174,17 @@ namespace Framework
 							SerializedProperty rendererProp = property.FindPropertyRelative("_renderer");
 
 							if (rendererProp.objectReferenceValue as Renderer != null)
-								return EditorGUIUtility.singleLineHeight * 4;
+								height += EditorGUIUtility.singleLineHeight * 2;
 							else
-								return EditorGUIUtility.singleLineHeight * 3;
-						}
-						else if (editorType == eEdtiorType.RendererMaterialInstance)
-						{
-							return EditorGUIUtility.singleLineHeight * 3;
+								height += EditorGUIUtility.singleLineHeight;
 						}
 						else
 						{
-							return EditorGUIUtility.singleLineHeight * 3;
+							height += EditorGUIUtility.singleLineHeight * 3;
 						}
 					}
 
-					return EditorGUIUtility.singleLineHeight;
+					return height;
 				}
 			}
 		}

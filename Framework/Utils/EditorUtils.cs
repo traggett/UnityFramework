@@ -505,6 +505,12 @@ namespace Framework
 
 					return height;
 				}
+
+				public static void SetBoldDefaultFont(bool value)
+				{
+					MethodInfo boldFontMethodInfo = typeof(EditorGUIUtility).GetMethod("SetBoldDefaultFont", BindingFlags.Static | BindingFlags.NonPublic);
+					boldFontMethodInfo.Invoke(null, new[] { value as object });
+				}
 			}
 		}
 	}

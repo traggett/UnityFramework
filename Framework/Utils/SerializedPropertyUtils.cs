@@ -65,51 +65,16 @@ namespace Framework
 					return (T)obj;
 				}
 				
-                public static void SetSerializedPropertyValue(SerializedProperty prop, object value)
+				public static void SetSerializedPropertyValue(SerializedProperty prop, object value)
 				{
+					Undo.RecordObjects(prop.serializedObject.targetObjects, "Change " + prop.name);
+
 					string path = prop.propertyPath.Replace(".Array.data[", "[");
-					object obj = prop.serializedObject.targetObject;
-					string[] elements = path.Split('.');
 
-					//First build complete updated object for the top most property
-					//If the target property is not a top level member then need to set value on each level of member to build an updated object
-					if (elements.Length > 1)
+					foreach (UnityEngine.Object obj in prop.serializedObject.targetObjects)
 					{
-						//In reverse order, starting with one before last, set the value on each object, then its parent, that thats parent etc
-						for (int i = elements.Length - 2; i >= 0; i--)
-						{
-							if (elements[i].Contains("["))
-							{
-								string elementName = elements[i].Substring(0, elements[i].IndexOf("["));
-								int index = Convert.ToInt32(elements[i].Substring(elements[i].IndexOf("[")).Replace("[", "").Replace("]", ""));
-                                Array array = GetValue(obj, elementName) as Array;
-
-                                object elementObj = array.GetValue(index);
-                                value = SetValue(elementObj, elements[i + 1], value);
-                                array.SetValue(value, index);
-                            }
-							else
-							{
-								object elementObj = GetValue(obj, elements[i]);
-								value = SetValue(elementObj, elements[i + 1], value);
-							}
-						}
-					}
-
-					//Once got a up to date top level member property, set it
-
-					//If its an array
-					if (path.Contains("["))
-					{
-						string elementName = path.Substring(0, path.IndexOf("["));
-						int index = Convert.ToInt32(path.Substring(path.IndexOf("[")).Replace("[", "").Replace("]", ""));
-						Array array = GetValue(obj, elementName) as Array;
-						array.SetValue(value, index);
-						SetValue(obj, elementName, array);
-					}
-					else
-					{
-						SetValue(obj, elements[0], value);
+						SetSerializedPropertyValue(obj, path, value);
+						EditorUtility.SetDirty(obj);
 					}
 				}
 
@@ -241,6 +206,59 @@ namespace Framework
 					}
 
 					return obj;
+				}
+
+				private static object SetSerializedPropertyValue(object sourceObj, string propertyPath, object value)
+				{
+					string[] elements = propertyPath.Split('.');
+					string propertyName = elements[0];
+
+					//If value is a child, get child and set value on it 
+					if (elements.Length > 1)
+					{
+						//Find new source object
+						object obj;
+
+						//If this property is an array need to set values on actual element
+						if (propertyName.Contains("["))
+						{
+							//First get array
+							string arrayPropertyName = propertyName.Substring(0, propertyName.IndexOf("["));
+							Array array = GetValue(sourceObj, arrayPropertyName) as Array;
+							//Then find index of object
+							int index = Convert.ToInt32(propertyName.Substring(propertyName.IndexOf("[")).Replace("[", "").Replace("]", ""));
+							//Then update the array element
+							obj = array.GetValue(index);
+						}
+						else
+						{
+							obj = GetValue(sourceObj, propertyName);
+						}
+
+						string path = "";
+						for (int i = 1; i < elements.Length; i++)
+							path += elements[i];
+
+						value = SetSerializedPropertyValue(obj, path, value);
+					}
+
+					//If this element is an array, the value is the entire array not just the element
+					if (propertyName.Contains("["))
+					{
+						//First get array
+						string arrayPropertyName = propertyName.Substring(0, propertyName.IndexOf("["));
+						Array array = GetValue(sourceObj, arrayPropertyName) as Array;
+						//Then find index of object
+						int index = Convert.ToInt32(propertyName.Substring(propertyName.IndexOf("[")).Replace("[", "").Replace("]", ""));
+						//Then update the array element
+						array.SetValue(value, index);
+						//Value is now this array
+						return SetValue(sourceObj, arrayPropertyName, array);
+					}
+					else
+					{
+						return SetValue(sourceObj, propertyName, value);
+					}
 				}
 			}
 		}

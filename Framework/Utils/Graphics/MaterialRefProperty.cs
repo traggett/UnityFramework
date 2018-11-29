@@ -56,6 +56,13 @@ namespace Framework
 					{
 						if (_renderer != null && 0 <= _materialIndex && _materialIndex < _renderer.sharedMaterials.Length)
 						{
+#if UNITY_EDITOR
+							if (!Application.isPlaying)
+							{
+								Debug.LogError("Trying to instantiate a material in the editor, if you want to modify a material in editor use a shared material instead.");
+								return null;
+							}
+#endif
 							_material = _renderer.materials[_materialIndex];
 						}
 					}
