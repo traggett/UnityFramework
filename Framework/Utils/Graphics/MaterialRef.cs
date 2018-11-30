@@ -93,8 +93,10 @@ namespace Framework
 						{
 							Graphic graphic = _graphic.GetComponent();
 
-							if (graphic != null)
+							if (graphic != null && graphic != null)
 							{
+								graphic.material = new Material(graphic.material);
+								graphic.material.name = graphic.material.name + " (Instance)";
 								_material = graphic.material;
 							}
 						}
