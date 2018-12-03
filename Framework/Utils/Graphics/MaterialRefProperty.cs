@@ -46,8 +46,19 @@ namespace Framework
 					//...get from UI graphic
 					if (_materialIndex == MaterialRef.kGraphicMaterialIndex)
 					{
-						if (_graphic != null)
+						if (_graphic != null && _graphic.material != null)
 						{
+							
+#if UNITY_EDITOR
+							if (!Application.isPlaying)
+							{
+								Debug.LogError("Trying to instantiate a material in the editor, if you want to modify a material in editor use a shared material instead.");
+								return null;
+							}
+#endif
+							//Make instance of this material
+							_graphic.material = new Material(_graphic.material);
+							_graphic.material.name = _graphic.material.name + " (Instance)";
 							_material = _graphic.material;
 						}
 					}
