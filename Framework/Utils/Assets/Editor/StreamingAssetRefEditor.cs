@@ -12,17 +12,17 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			[SerializedObjectEditor(typeof(AssetRef<>), "PropertyField")]
-			public static class AssetRefEditor
+			[SerializedObjectEditor(typeof(StreamingAssetRef<>), "PropertyField")]
+			public static class StreamingAssetRefEditor
 			{
 				#region SerializedObjectEditor
 				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 				{
-					Type assetType = SystemUtils.GetGenericImplementationType(typeof(AssetRef<>), obj.GetType());
+					Type assetType = SystemUtils.GetGenericImplementationType(typeof(StreamingAssetRef<>), obj.GetType());
 
 					if (assetType != null)
 					{
-						MethodInfo genericFieldMethod = typeof(AssetRefEditor).GetMethod("AssetRefField", BindingFlags.Static | BindingFlags.NonPublic);
+						MethodInfo genericFieldMethod = typeof(StreamingAssetRefEditor).GetMethod("StreamingAssetRefField", BindingFlags.Static | BindingFlags.NonPublic);
 						MethodInfo typedFieldMethod = genericFieldMethod.MakeGenericMethod(assetType);
 
 						if (typedFieldMethod != null)
@@ -39,7 +39,7 @@ namespace Framework
 				}
 				#endregion
 
-				private static AssetRef<T> AssetRefField<T>(AssetRef<T> assetRef, GUIContent label, ref bool dataChanged) where T : UnityEngine.Object
+				private static StreamingAssetRef<T> StreamingAssetRefField<T>(StreamingAssetRef<T> assetRef, GUIContent label, ref bool dataChanged) where T : UnityEngine.Object
 				{
 					if (label == null)
 						label = new GUIContent();
@@ -64,13 +64,13 @@ namespace Framework
 						//If asset changed update GUIDS
 						if (assetRef._editorAsset != asset || assetRef.GetFilePath() != AssetDatabase.GetAssetPath(asset))
 						{
-							if (asset != null && !AssetUtils.IsAssetInResources(asset))
+							if (asset != null && !AssetUtils.IsStreamingAsset(asset))
 							{
 								asset = null;
-								Debug.LogError("Asset needs to be in Resources folder.");
+								Debug.LogError("Asset needs to be in Streaming Assets folder.");
 							}
 
-							assetRef = new AssetRef<T>(asset);
+							assetRef = new StreamingAssetRef<T>(asset);
 							dataChanged = true;
 						}
 

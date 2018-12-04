@@ -11,6 +11,10 @@ namespace Framework
 	{
 		public static class AssetUtils
 		{
+			public static readonly string kStreamingAssets = "StreamingAssets/";
+			public static readonly string kResouces = "Resources/";
+			public static readonly string kAssets = "Assets/";
+
 			public static string GetAppllicationPath()
 			{
 				return Application.dataPath.Substring(0, Application.dataPath.Length - "Assets".Length);
@@ -23,11 +27,10 @@ namespace Framework
 				if (!string.IsNullOrEmpty(assetPath))
 				{
 					//Remove path before Assets folder
-					string assets = "Assets/";
-					int index = assetPath.IndexOf(assets);
+					int index = assetPath.IndexOf(kAssets);
 					if (index != -1)
 					{
-						assetPath = assetPath.Substring(index, assetPath.Length - index);
+						assetPath = assetPath.Substring(index, kAssets.Length - index);
 					}
 				}
 
@@ -41,11 +44,10 @@ namespace Framework
 				if (!string.IsNullOrEmpty(runtimePath))
 				{
 					//Remove path before StreamingAssets folder
-					string streamingAssets = "StreamingAssets/";
-					int index = runtimePath.IndexOf(streamingAssets);
+					int index = runtimePath.IndexOf(kStreamingAssets);
 					if (index != -1)
 					{
-						index += streamingAssets.Length;
+						index += kStreamingAssets.Length;
 						runtimePath = runtimePath.Substring(index, runtimePath.Length - index);
 					}
 				}
@@ -60,11 +62,10 @@ namespace Framework
 				if (!string.IsNullOrEmpty(runtimePath))
 				{
 					//Remove path before Resources folder
-					string resouces = "Resources/";
-					int index = runtimePath.IndexOf(resouces);
+					int index = runtimePath.IndexOf(kResouces);
 					if (index != -1)
 					{
-						index += resouces.Length;
+						index += kResouces.Length;
 						runtimePath = runtimePath.Substring(index, runtimePath.Length - index);
 
 						//Remove file extension
@@ -82,6 +83,30 @@ namespace Framework
 				}
 
 				return runtimePath;
+			}
+
+			public static bool IsStreamingAsset(Object asset)
+			{
+				if (asset != null)
+				{
+					string path = AssetDatabase.GetAssetPath(asset);
+					int index = path.IndexOf(kStreamingAssets);
+					return index != -1;
+				}
+
+				return true;
+			}
+
+			public static bool IsAssetInResources(Object asset)
+			{
+				if (asset != null)
+				{
+					string path = AssetDatabase.GetAssetPath(asset);
+					int index = path.IndexOf(kResouces);
+					return index != -1;
+				}
+
+				return true;
 			}
 
 #if UNITY_EDITOR

@@ -11,7 +11,7 @@ namespace Framework
 	namespace Utils
 	{
 		[Serializable]
-		public struct AssetRef<T> : ISerializationCallbackReceiver where T : UnityEngine.Object
+		public struct StreamingAssetRef<T> : ISerializationCallbackReceiver where T : UnityEngine.Object
 		{
 			#region Public Data
 			[SerializeField]
@@ -21,7 +21,6 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private T _asset;
 #if UNITY_EDITOR
 			[NonSerialized]
 			public T _editorAsset;
@@ -31,19 +30,14 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			public static implicit operator T(AssetRef<T> property)
-			{
-				return property.LoadAsset();
-			}
-
 #if UNITY_EDITOR
-			public static implicit operator AssetRef<T>(T asset)
+			public static implicit operator StreamingAssetRef<T>(T asset)
 			{
-				return new AssetRef<T>(asset);
+				return new StreamingAssetRef<T>(asset);
 			}
 #endif
 
-			public static implicit operator string(AssetRef<T> property)
+			public static implicit operator string(StreamingAssetRef<T> property)
 			{
 				if (property.IsValid())
 					return Path.GetFileNameWithoutExtension(property._filePath);
@@ -55,25 +49,10 @@ namespace Framework
 			{
 				return !string.IsNullOrEmpty(_filePath);
 			}
-
-			public T LoadAsset()
+			
+			public string GetStreamingPath()
 			{
-				if (_asset == null)
-				{
-					string resourcePath = AssetUtils.GetResourcePath(_filePath);
-					_asset = Resources.Load<T>(resourcePath) as T;
-				}
-				
-				return _asset;
-			}
-
-			public void UnloadAsset()
-			{
-				if (_asset != null)
-				{
-					Resources.UnloadAsset(_asset);
-					_asset = null;
-				}
+				return AssetUtils.GetStreamingAssetPath(_filePath);
 			}
 
 			public string GetAssetName()
@@ -96,13 +75,12 @@ namespace Framework
 			}
 
 #if UNITY_EDITOR
-			public AssetRef(T asset)
+			public StreamingAssetRef(T asset)
 			{
-				_asset = null;
 				_editorAsset = asset;
 				_editorCollapsed = false;
-				
-				if (asset != null && AssetUtils.IsAssetInResources(asset))
+
+				if (asset != null && AssetUtils.IsStreamingAsset(asset))
 				{
 					_filePath = AssetDatabase.GetAssetPath(asset);
 					_fileGUID = AssetDatabase.AssetPathToGUID(_filePath);
@@ -114,9 +92,8 @@ namespace Framework
 				}
 			}
 
-			public AssetRef(string assetPath)
+			public StreamingAssetRef(string assetPath)
 			{
-				_asset = null;
 				_editorAsset = null;
 				_editorCollapsed = false;
 
