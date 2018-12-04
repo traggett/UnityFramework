@@ -30,7 +30,7 @@ namespace Framework
 					int index = assetPath.IndexOf(kAssets);
 					if (index != -1)
 					{
-						assetPath = assetPath.Substring(index, kAssets.Length - index);
+						assetPath = assetPath.Substring(index, assetPath.Length - index);
 					}
 				}
 
