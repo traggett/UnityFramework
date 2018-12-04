@@ -177,15 +177,11 @@ namespace Framework
 
 						//Save to file
 						Serializer.ToFile(stateMachine, _currentFileName);
-						AssetUtils.RefreshAsset(_currentFileName);
-
+						
 						ClearDirtyFlag();
 						_timelineEditor.ClearDirtyFlag();
 
 						GetEditorWindow().DoRepaint();
-
-						//Hack, save string on save scene
-						Localisation.SaveStrings();
 					}
 					else
 					{
