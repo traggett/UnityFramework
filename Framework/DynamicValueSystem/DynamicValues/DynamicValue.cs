@@ -2,7 +2,6 @@ using UnityEngine;
 
 using System.Reflection;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace Framework
 {
@@ -32,15 +31,11 @@ namespace Framework
 			[SerializeField]
 			private eSourceType _sourceType = eSourceType.Static;
 
-			//Runtime non serialized cached data (in union struct)
-			[StructLayout(LayoutKind.Explicit)]
+			//Runtime non serialized cached data (ideally this would be a union)
 			private struct SourceObject
 			{
-				[FieldOffset(0)]
 				public FieldInfo _fieldInfo;
-				[FieldOffset(0)]
 				public IValueSource<T> _valueSource;
-				[FieldOffset(0)]
 				public IValueSourceContainer _dynamicValueSource;
 			}
 			private SourceObject _sourceObjectData;
