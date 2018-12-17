@@ -160,7 +160,7 @@ namespace Framework
 								gameObject = prefabAsset;
 
 							//Then find its root
-							GameObject prefabRoot = PrefabUtility.FindPrefabRoot(gameObject);
+							GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(gameObject);
 
 							if (prefabRoot != null)
 							{
