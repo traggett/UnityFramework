@@ -730,7 +730,7 @@ namespace Framework
 					}
 
 					//Check if the object is a prefab
-					if (PrefabUtility.GetPrefabType(gameObject) != PrefabType.None)
+					if (PrefabUtility.GetPrefabInstanceHandle(gameObject) != null)
 					{
 						Object parentObject = PrefabUtility.GetCorrespondingObjectFromSource(gameObject);
 						string prefabPath = AssetDatabase.GetAssetPath(parentObject);
@@ -749,7 +749,7 @@ namespace Framework
 
 						if (isPrefab)
 						{
-							if (PrefabUtility.GetPrefabObject(components[i]) != null)
+							if (PrefabUtility.GetPrefabInstanceHandle(components[i]) != null)
 							{
 								EditorPrefs.SetInt(editorPrefKey + "." + Convert.ToString(childObjectIndex) + kEditorPrefsRuntimeObjectPrefabObjIndex, GetPrefabComponentIndex(components[i]));
 							}
@@ -764,7 +764,7 @@ namespace Framework
 
 						if (isPrefab)
 						{
-							if (PrefabUtility.GetPrefabObject(child.gameObject) != null)
+							if (PrefabUtility.GetPrefabInstanceHandle(child.gameObject) != null)
 							{
 								EditorPrefs.SetInt(editorPrefKey + "." + Convert.ToString(childObjectIndex) + kEditorPrefsRuntimeObjectPrefabObjIndex, GetPrefabChildIndex(child.gameObject));
 							}
@@ -1269,7 +1269,7 @@ namespace Framework
 							return index;
 						}
 
-						if (PrefabUtility.GetPrefabObject(child) != null)
+						if (PrefabUtility.GetPrefabInstanceHandle(child) != null)
 						{
 							index++;
 						}
@@ -1291,7 +1291,7 @@ namespace Framework
 							return index;
 						}
 
-						if (components[i].GetType() == component.GetType() && PrefabUtility.GetPrefabObject(components[i]) != null)
+						if (components[i].GetType() == component.GetType() && PrefabUtility.GetPrefabInstanceHandle(components[i]) != null)
 						{
 							index++;
 						}
@@ -1311,7 +1311,7 @@ namespace Framework
 
 						for (int i = 0; i < components.Length; i++)
 						{
-							if (PrefabUtility.GetPrefabObject(components[i]) && components[i].GetType() == type)
+							if (PrefabUtility.GetPrefabInstanceHandle(components[i]) && components[i].GetType() == type)
 							{
 								if (count == index)
 								{
@@ -1334,7 +1334,7 @@ namespace Framework
 
 						foreach (Transform child in gameObject.transform)
 						{
-							if (PrefabUtility.GetPrefabObject(child) != null)
+							if (PrefabUtility.GetPrefabInstanceHandle(child) != null)
 							{
 								if (count == index)
 								{

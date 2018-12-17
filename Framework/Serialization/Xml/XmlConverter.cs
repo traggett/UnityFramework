@@ -471,8 +471,6 @@ namespace Framework
 							{
 								if (Attribute.IsDefined(type, typeof(SerializableAttribute), false))
 								{
-									SerializableAttribute attribute = SystemUtils.GetAttribute<SerializableAttribute>(type);
-
 									string xmlTag = type.Name;
 
 									if (type.IsGenericType)
