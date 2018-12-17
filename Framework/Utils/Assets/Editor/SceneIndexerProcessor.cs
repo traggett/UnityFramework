@@ -6,8 +6,6 @@ using UnityEditor.SceneManagement;
 
 namespace Framework
 {
-	using LocalisationSystem;
-
 	namespace Utils
 	{
 		namespace Editor
@@ -49,14 +47,11 @@ namespace Framework
 					if (indexer == null)
 					{
 						GameObject newObj = new GameObject("SceneIndexer");
-						EditorSceneManager.MoveGameObjectToScene(newObj, scene);
+						SceneManager.MoveGameObjectToScene(newObj, scene);
 						indexer = newObj.AddComponent<SceneIndexer>();
 					}
 
 					indexer.CacheSceneObjects();
-
-					//Hack, save string on save scene
-					Localisation.SaveStrings();
 				}
 			}
 		}

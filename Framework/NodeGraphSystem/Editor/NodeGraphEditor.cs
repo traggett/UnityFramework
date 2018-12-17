@@ -100,7 +100,6 @@ namespace Framework
 						//Save to file
 						NodeGraph nodeGraph = ConvertToNodeGraph();
 						Serializer.ToFile(nodeGraph, _currentFileName);
-						AssetUtils.RefreshAsset(_currentFileName);
 
 						ClearDirtyFlag();
 

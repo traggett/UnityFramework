@@ -277,8 +277,6 @@ namespace Framework
 						languagePair.Value.SortStrings();
 
 						Serializer.ToFile(languagePair.Value, filePath);
-
-						AssetUtils.RefreshAsset(filePath);
 					}
 				}
 
