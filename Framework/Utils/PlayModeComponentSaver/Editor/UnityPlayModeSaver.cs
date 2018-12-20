@@ -3,13 +3,13 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 
 using System.Reflection;
 using System.Collections.Generic;
 using System;
 
 using Object = UnityEngine.Object;
-using UnityEditor.SceneManagement;
 
 namespace Framework
 {
@@ -197,6 +197,11 @@ namespace Framework
 					}
 				}
 
+				private static void OnSceneSaved(Scene scene, string path)
+				{
+					PrefabIndexer.CleanUpPrefabIndexer(scene);
+				}
+
 				private static void RepaintEditorWindows()
 				{
 					SceneView.RepaintAll();
@@ -305,7 +310,7 @@ namespace Framework
 						string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
 
 						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
-						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectSceneId, Convert.ToString(identifier));
+						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
 
 						return editorPrefKey;
 					}
@@ -331,9 +336,9 @@ namespace Framework
 						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
 
 						string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
-						string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectSceneId);
+						int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsObjectSceneId, -1);
 
-						if (sceneStr == scenePath && localIdentifier == SafeConvertToInt(identifierStr))
+						if (sceneStr == scenePath && localIdentifier == identifier)
 						{
 							return i;
 						}
@@ -350,7 +355,7 @@ namespace Framework
 
 					if (GetActiveScene(scenePath, out scene))
 					{
-						return PrefabIndexer.IsAScenePrefabInstance(obj, scene, out prefab, out prefabSceneId);
+						return PrefabIndexer.IsScenePrefabInstance(obj, scene, out prefab, out prefabSceneId);
 					}
 
 					prefab = null;
@@ -372,9 +377,9 @@ namespace Framework
 					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
 
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
-					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectSceneId, Convert.ToString(identifier));
+					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath, prefabObjPath);
-					EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceId, Convert.ToString(prefabSceneId));
+					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, prefabSceneId);
 
 					return editorPrefKey;
 				}
@@ -388,11 +393,11 @@ namespace Framework
 						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
 
 						string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
-						string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectSceneId);
+						int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsObjectSceneId, -1);
 						string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
-						string prefabObjIdStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceId);
+						int prefabObjId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
 
-						if (sceneStr == scenePath && localIdentifier == SafeConvertToInt(identifierStr) && prefabObjPathStr == prefabPath && prefabId == SafeConvertToInt(prefabObjIdStr))
+						if (sceneStr == scenePath && localIdentifier == identifier && prefabObjPathStr == prefabPath && prefabId == prefabObjId)
 						{
 							return i;
 						}
@@ -415,7 +420,7 @@ namespace Framework
 					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
 
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
-					EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectId, Convert.ToString(instanceId));
+					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, instanceId);
 
 					return editorPrefKey;
 				}
@@ -440,9 +445,9 @@ namespace Framework
 						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
 
 						string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
-						string instanceStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectId);
+						int instance = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, -1);
 
-						if (sceneStr == scenePath && instanceId == SafeConvertToInt(instanceStr))
+						if (sceneStr == scenePath && instanceId == instance)
 						{
 							return i;
 						}
@@ -476,9 +481,9 @@ namespace Framework
 					//Scene object
 					if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectSceneId))
 					{
-						string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectSceneId);
+						int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsObjectSceneId, -1);
 
-						Object obj = FindSceneObject(sceneStr, SafeConvertToInt(identifierStr));
+						Object obj = FindSceneObject(sceneStr, identifier);
 
 						if (obj != null)
 						{
@@ -494,9 +499,9 @@ namespace Framework
 					//Runtime object
 					else if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsRuntimeObjectId))
 					{
-						string instanceIdStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectId);
+						int instanceId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, -1);
 
-						Object obj = FindRuntimeObject(sceneStr, SafeConvertToInt(instanceIdStr));
+						Object obj = FindRuntimeObject(sceneStr, instanceId);
 
 						if (obj != null)
 						{
@@ -530,8 +535,7 @@ namespace Framework
 
 								if (topOfHieracy != gameObject)
 								{
-									int instanceId = GetInstanceId(topOfHieracy);
-									EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectId, Convert.ToString(instanceId));
+									EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, GetInstanceId(topOfHieracy));
 								}
 
 								SaveRuntimeGameObject(editorPrefKey, topOfHieracy, sceneParent, null);
@@ -747,7 +751,7 @@ namespace Framework
 
 					if (GetActiveScene(scenePath, out scene))
 					{
-						GameObject prefabInstance = PrefabIndexer.GetScenePrefab(scene, instanceId);
+						GameObject prefabInstance = PrefabIndexer.GetScenePrefabInstance(scene, instanceId);
 
 						if (prefabInstance != null)
 						{
@@ -806,11 +810,6 @@ namespace Framework
 
 					return null;
 				}
-
-				//Ok so want to store kEditorPrefsRuntimeObjectPrefabObjIndex for componetns and gameobjects that are children for that prefab
-
-				//SO ene
-
 
 				private static void SaveRuntimeGameObject(string editorPrefKey, GameObject gameObject, GameObject parentSceneObject, GameObject parentPrefab)
 				{
@@ -878,20 +877,20 @@ namespace Framework
 							GameObject prefabInstance;
 							int prefabSceneId;
 
-							if (PrefabIndexer.IsAScenePrefabInstance(parentSceneObject, parentSceneObject.scene, out prefabInstance, out prefabSceneId))
+							if (PrefabIndexer.IsScenePrefabInstance(parentSceneObject, parentSceneObject.scene, out prefabInstance, out prefabSceneId))
 							{
 								string prefabPath = GetScenePrefabChildObjectPath(prefabInstance, parentSceneObject);
 
-								EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceId, Convert.ToString(prefabSceneId));
+								EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, prefabSceneId);
 								EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath, prefabPath);
 							}
 
-							EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectParentId, Convert.ToString(identifier));
+							EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectParentId, identifier);
 						}
 					}
 					else
 					{
-						EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectSceneRootIndex, Convert.ToString(gameObject.transform.GetSiblingIndex()));
+						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectSceneRootIndex, gameObject.transform.GetSiblingIndex());
 					}
 				}
 
@@ -918,17 +917,17 @@ namespace Framework
 					if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabInstanceId))
 					{
 						//Get prefab from scene
-						string prefabIdStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceId);
+						int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
 						string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
 
-						Object obj = FindScenePrefabObject(sceneStr, SafeConvertToInt(prefabIdStr), prefabObjPathStr);
+						Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr);
 						return obj as GameObject;
 					}
 					//Parent is Scene object
 					else
 					{
-						string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectParentId);
-						Object obj = FindSceneObject(sceneStr, SafeConvertToInt(identifierStr));
+						int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsRuntimeObjectParentId, -1);
+						Object obj = FindSceneObject(sceneStr, identifier);
 						return obj as GameObject;
 					}
 				}
@@ -959,10 +958,10 @@ namespace Framework
 								if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabInstanceId))
 								{
 									//Get prefab from scene
-									string prefabIdStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceId);
+									int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
 									string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
 
-									Object obj = FindScenePrefabObject(sceneStr, SafeConvertToInt(prefabIdStr), prefabObjPathStr);
+									Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr);
 
 									if (obj != null)
 									{
@@ -982,9 +981,9 @@ namespace Framework
 								//Normal Scene object
 								else
 								{
-									string identifierStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectSceneId);
+									int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsObjectSceneId, -1);
 
-									Object obj = FindSceneObject(sceneStr, SafeConvertToInt(identifierStr));
+									Object obj = FindSceneObject(sceneStr, identifier);
 
 									if (obj != null)
 									{
@@ -1044,8 +1043,8 @@ namespace Framework
 									else if (GetActiveScene(sceneStr, out scene))
 									{
 										SceneManager.MoveGameObjectToScene(gameObject, scene);
-										string sceneRootIndexStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectSceneRootIndex);
-										gameObject.transform.SetSiblingIndex(SafeConvertToInt(sceneRootIndexStr));
+										int sceneRootIndex = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsRuntimeObjectSceneRootIndex, 0);
+										gameObject.transform.SetSiblingIndex(sceneRootIndex);
 									}
 
 									//Restore the game objects data
@@ -1322,14 +1321,9 @@ namespace Framework
 
 						if (scene.IsValid())
 						{
-							PrefabIndexer.EnsureSceneHasPrefabIndexer(scene);
+							PrefabIndexer.CacheScenePrefabInstances(scene);
 						}
 					}
-				}
-
-				private static void OnSceneSaved(Scene scene, string path)
-				{
-					PrefabIndexer.CleanUpPrefabIndexer(scene);
 				}
 
 				private static string GetScenePrefabChildObjectPath(GameObject prefab, Object obj)

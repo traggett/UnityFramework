@@ -488,7 +488,7 @@ namespace Framework
 #if DEBUG
 									else
 									{
-										Debug.Log("Can't serialize type " + type.FullName + " as it shares a name with another class (" + _tagToTypeMap[xmlTag].FullName + ")");
+										//Debug.Log("Can't serialize type " + type.FullName + " as it shares a name with another class (" + _tagToTypeMap[xmlTag].FullName + ")");
 									}
 #endif
 								}

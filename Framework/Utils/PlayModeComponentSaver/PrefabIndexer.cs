@@ -27,7 +27,7 @@ namespace Framework
 
 #if UNITY_EDITOR
 			#region Public Interface
-			public static void EnsureSceneHasPrefabIndexer(Scene scene)
+			public static void CacheScenePrefabInstances(Scene scene)
 			{
 				PrefabIndexer prefabIndexer = GetPrefabIndexer(scene);
 
@@ -54,13 +54,13 @@ namespace Framework
 				}
 			}
 
-			public static bool IsAScenePrefabInstance(Object obj, Scene scene, out GameObject prefab, out int id)
+			public static bool IsScenePrefabInstance(Object obj, Scene scene, out GameObject prefab, out int id)
 			{
 				PrefabIndexer prefabIndexer = GetPrefabIndexer(scene);
 
 				if (prefabIndexer != null)
 				{
-					return prefabIndexer.IsAScenePrefabInstance(obj, out prefab, out id);
+					return prefabIndexer.IsScenePrefabInstance(obj, out prefab, out id);
 				}
 
 				prefab = null;
@@ -68,13 +68,13 @@ namespace Framework
 				return false;
 			}
 
-			public static GameObject GetScenePrefab(Scene scene, int id)
+			public static GameObject GetScenePrefabInstance(Scene scene, int id)
 			{
 				PrefabIndexer prefabIndexer = GetPrefabIndexer(scene);
 
 				if (prefabIndexer != null)
 				{
-					return prefabIndexer.GetScenePrefab(id);
+					return prefabIndexer.GetScenePrefabInstance(id);
 				}
 
 				return null;
@@ -117,7 +117,7 @@ namespace Framework
 				}
 			}
 
-			private bool IsAScenePrefabInstance(Object obj, out GameObject prefab, out int id)
+			private bool IsScenePrefabInstance(Object obj, out GameObject prefab, out int id)
 			{
 				Component component = obj as Component;
 				GameObject gameObject = obj as GameObject;
@@ -184,7 +184,7 @@ namespace Framework
 				return false;
 			}
 
-			private GameObject GetScenePrefab(int id)
+			private GameObject GetScenePrefabInstance(int id)
 			{
 				if (id < 0 || id >= _scenePrefabInstances.Length)
 					return null;
