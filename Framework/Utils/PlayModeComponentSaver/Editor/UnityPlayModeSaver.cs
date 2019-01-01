@@ -133,7 +133,12 @@ namespace Framework
 					GameObject gameObject = command.context as GameObject;
 
 					if (Application.isPlaying && gameObject != null)
-						RegisterSavedObject(gameObject, gameObject.scene.path);
+					{
+						foreach (GameObject go in Selection.gameObjects)
+						{
+							RegisterSavedObject(go, go.scene.path);
+						}
+					}	
 				}
 
 				[MenuItem(kSaveGameObjectMenuString, true)]
@@ -142,7 +147,13 @@ namespace Framework
 					GameObject gameObject = command.context as GameObject;
 					
 					if (Application.isPlaying && gameObject != null)
-						return !IsObjectRegistered(gameObject, gameObject.scene.path);
+					{
+						foreach (GameObject go in Selection.gameObjects)
+						{
+							if (!IsObjectRegistered(go, go.scene.path))
+								return true;
+						}
+					}					
 
 					return false;
 				}
@@ -154,7 +165,10 @@ namespace Framework
 
 					if (Application.isPlaying && gameObject != null)
 					{
-						UnregisterObject(gameObject, gameObject.scene.path);
+						foreach (GameObject go in Selection.gameObjects)
+						{
+							UnregisterObject(go, go.scene.path);
+						}
 					}
 				}
 
@@ -165,7 +179,11 @@ namespace Framework
 
 					if (Application.isPlaying && gameObject != null)
 					{
-						return IsObjectRegistered(gameObject, gameObject.scene.path);
+						foreach (GameObject go in Selection.gameObjects)
+						{
+							if (IsObjectRegistered(go, go.scene.path))
+								return true;
+						}
 					}
 
 					return false;
