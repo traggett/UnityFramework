@@ -11,7 +11,7 @@ namespace Framework
 {
 	namespace Utils
 	{
-		public class PrefabIndexer : MonoBehaviour
+		public class UnityPlayModeSaverSceneUtils : MonoBehaviour
 		{
 			#region Public Data
 			[System.Serializable]
@@ -29,16 +29,16 @@ namespace Framework
 			#region Public Interface
 			public static void CacheScenePrefabInstances(Scene scene)
 			{
-				PrefabIndexer prefabIndexer = GetPrefabIndexer(scene);
+				UnityPlayModeSaverSceneUtils prefabIndexer = GetPrefabIndexer(scene);
 
 				if (prefabIndexer == null)
 				{
-					GameObject gameObject = new GameObject("Prefab Indexer", typeof(PrefabIndexer))
+					GameObject gameObject = new GameObject("Prefab Indexer", typeof(UnityPlayModeSaverSceneUtils))
 					{
 						hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable
 					};
 					SceneManager.MoveGameObjectToScene(gameObject, scene);
-					prefabIndexer = gameObject.GetComponent<PrefabIndexer>();
+					prefabIndexer = gameObject.GetComponent<UnityPlayModeSaverSceneUtils>();
 				}
 
 				prefabIndexer.BuildScenePrefabMap();
@@ -46,7 +46,7 @@ namespace Framework
 
 			public static void CleanUpPrefabIndexer(Scene scene)
 			{
-				PrefabIndexer prefabIndexer = GetPrefabIndexer(scene);
+				UnityPlayModeSaverSceneUtils prefabIndexer = GetPrefabIndexer(scene);
 
 				if (prefabIndexer != null)
 				{
@@ -56,7 +56,7 @@ namespace Framework
 
 			public static bool IsScenePrefabInstance(Object obj, Scene scene, out GameObject prefab, out int id)
 			{
-				PrefabIndexer prefabIndexer = GetPrefabIndexer(scene);
+				UnityPlayModeSaverSceneUtils prefabIndexer = GetPrefabIndexer(scene);
 
 				if (prefabIndexer != null)
 				{
@@ -70,7 +70,7 @@ namespace Framework
 
 			public static GameObject GetScenePrefabInstance(Scene scene, int id)
 			{
-				PrefabIndexer prefabIndexer = GetPrefabIndexer(scene);
+				UnityPlayModeSaverSceneUtils prefabIndexer = GetPrefabIndexer(scene);
 
 				if (prefabIndexer != null)
 				{
@@ -96,33 +96,12 @@ namespace Framework
 				_scenePrefabInstances = prefabInstances.ToArray();
 			}
 
-			private void CheckGameObjectForPrefabs(GameObject gameObject, GameObject parentPrefabRoot, ref List<PrefabInstance> prefabInstances)
-			{
-				GameObject prefabRoot = PrefabUtility.GetNearestPrefabInstanceRoot(gameObject);
-
-				if (prefabRoot != null && prefabRoot != parentPrefabRoot)
-				{
-					PrefabInstance prefabInstance = new PrefabInstance
-					{
-						_gameObject = prefabRoot,
-						_prefab = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(prefabRoot)
-					};
-					prefabInstances.Add(prefabInstance);
-					parentPrefabRoot = prefabRoot;
-				}
-
-				foreach (Transform child in gameObject.transform)
-				{
-					CheckGameObjectForPrefabs(child.gameObject, parentPrefabRoot, ref prefabInstances);
-				}
-			}
-
 			private bool IsScenePrefabInstance(Object obj, out GameObject prefab, out int id)
 			{
 				Component component = obj as Component;
 				GameObject gameObject = obj as GameObject;
 
-				for (int i=0; i<_scenePrefabInstances.Length; i++)
+				for (int i = 0; i < _scenePrefabInstances.Length; i++)
 				{
 					if (component != null)
 					{
@@ -147,6 +126,27 @@ namespace Framework
 				prefab = null;
 				id = -1;
 				return false;
+			}
+
+			private void CheckGameObjectForPrefabs(GameObject gameObject, GameObject parentPrefabRoot, ref List<PrefabInstance> prefabInstances)
+			{
+				GameObject prefabRoot = PrefabUtility.GetNearestPrefabInstanceRoot(gameObject);
+
+				if (prefabRoot != null && prefabRoot != parentPrefabRoot)
+				{
+					PrefabInstance prefabInstance = new PrefabInstance
+					{
+						_gameObject = prefabRoot,
+						_prefab = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(prefabRoot)
+					};
+					prefabInstances.Add(prefabInstance);
+					parentPrefabRoot = prefabRoot;
+				}
+
+				foreach (Transform child in gameObject.transform)
+				{
+					CheckGameObjectForPrefabs(child.gameObject, parentPrefabRoot, ref prefabInstances);
+				}
 			}
 
 			private bool CheckForComponent(GameObject prefabGameObject, Component component)
@@ -192,11 +192,11 @@ namespace Framework
 				return _scenePrefabInstances[id]._gameObject;
 			}
 
-			private static PrefabIndexer GetPrefabIndexer(Scene scene)
+			private static UnityPlayModeSaverSceneUtils GetPrefabIndexer(Scene scene)
 			{
 				foreach (GameObject rootObject in scene.GetRootGameObjects())
 				{
-					PrefabIndexer prefabIndexer = rootObject.GetComponentInChildren<PrefabIndexer>();
+					UnityPlayModeSaverSceneUtils prefabIndexer = rootObject.GetComponentInChildren<UnityPlayModeSaverSceneUtils>();
 
 					if (prefabIndexer != null)
 						return prefabIndexer;

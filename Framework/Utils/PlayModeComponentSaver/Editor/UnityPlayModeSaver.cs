@@ -217,7 +217,7 @@ namespace Framework
 
 				private static void OnSceneSaved(Scene scene, string path)
 				{
-					PrefabIndexer.CleanUpPrefabIndexer(scene);
+					UnityPlayModeSaverSceneUtils.CleanUpPrefabIndexer(scene);
 				}
 
 				private static void RepaintEditorWindows()
@@ -373,7 +373,7 @@ namespace Framework
 
 					if (GetActiveScene(scenePath, out scene))
 					{
-						return PrefabIndexer.IsScenePrefabInstance(obj, scene, out prefab, out prefabSceneId);
+						return UnityPlayModeSaverSceneUtils.IsScenePrefabInstance(obj, scene, out prefab, out prefabSceneId);
 					}
 
 					prefab = null;
@@ -769,7 +769,7 @@ namespace Framework
 
 					if (GetActiveScene(scenePath, out scene))
 					{
-						GameObject prefabInstance = PrefabIndexer.GetScenePrefabInstance(scene, instanceId);
+						GameObject prefabInstance = UnityPlayModeSaverSceneUtils.GetScenePrefabInstance(scene, instanceId);
 
 						if (prefabInstance != null)
 						{
@@ -895,7 +895,7 @@ namespace Framework
 							GameObject prefabInstance;
 							int prefabSceneId;
 
-							if (PrefabIndexer.IsScenePrefabInstance(parentSceneObject, parentSceneObject.scene, out prefabInstance, out prefabSceneId))
+							if (UnityPlayModeSaverSceneUtils.IsScenePrefabInstance(parentSceneObject, parentSceneObject.scene, out prefabInstance, out prefabSceneId))
 							{
 								string prefabPath = GetScenePrefabChildObjectPath(prefabInstance, parentSceneObject);
 
@@ -1339,7 +1339,7 @@ namespace Framework
 
 						if (scene.IsValid())
 						{
-							PrefabIndexer.CacheScenePrefabInstances(scene);
+							UnityPlayModeSaverSceneUtils.CacheScenePrefabInstances(scene);
 						}
 					}
 				}
