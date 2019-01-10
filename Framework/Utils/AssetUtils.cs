@@ -85,6 +85,7 @@ namespace Framework
 				return runtimePath;
 			}
 
+#if UNITY_EDITOR
 			public static bool IsStreamingAsset(Object asset)
 			{
 				if (asset != null)
@@ -97,7 +98,7 @@ namespace Framework
 				return true;
 			}
 
-#if UNITY_EDITOR
+
 			public static bool IsAssetInResources(Object asset)
 			{
 				if (asset != null)
