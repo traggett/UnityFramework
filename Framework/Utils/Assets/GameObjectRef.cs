@@ -50,7 +50,11 @@ namespace Framework
 			#region Public Interface
 			public static implicit operator string(GameObjectRef property)
 			{
-				if (!string.IsNullOrEmpty(property._objectName))
+				if (property._prefab.IsValid())
+				{
+					return property._prefab;
+				}
+				else if (!string.IsNullOrEmpty(property._objectName))
 				{
 					return System.IO.Path.GetFileNameWithoutExtension(property._objectName);
 				}

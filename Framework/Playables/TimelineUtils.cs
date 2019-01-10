@@ -1,4 +1,7 @@
+using Framework.Utils;
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
@@ -16,7 +19,7 @@ namespace Framework
 
 				foreach (TimelineClip clip in clips)
 				{
-					if (clip.asset == (Object)clipAsset)
+					if (clip.asset == (UnityEngine.Object)clipAsset)
 						return clip;
 				}
 
@@ -93,6 +96,69 @@ namespace Framework
 				}
 
 				return null;
+			}
+
+			//Get all playable behaviours in a playable graph of type T, or implementing interface of type T
+			public static List<T> GetPlayableBehaviours<T>(PlayableGraph graph) where T : class
+			{
+				List<T> playables = new List<T>();
+
+				int rootCount = graph.GetRootPlayableCount();
+
+				for (int i = 0; i < rootCount; i++)
+				{
+					Playable root = graph.GetRootPlayable(i);
+
+					int inputCount = root.GetInputCount(); ;
+
+					for (int j = 0; j < inputCount; j++)
+					{
+						GetPlayableBehaviours(root.GetInput(j), ref playables);
+					}
+				}
+
+				return playables;
+			}
+
+			private static void GetPlayableBehaviours<T>(Playable root, ref List<T> playables) where T : class
+			{
+				int inputCount = root.GetInputCount();
+
+				for (int i = 0; i < inputCount; i++)
+				{
+					Playable node = root.GetInput(i);
+
+					if (node.IsValid())
+					{
+						Type playableType = node.GetPlayableType();
+
+						if (SystemUtils.IsTypeOf(typeof(T), playableType))
+						{
+							Type scriptPlayableType = typeof(ScriptPlayable<>).MakeGenericType(new[] { playableType });
+
+							MethodInfo castMethod = scriptPlayableType.GetMethod("op_Explicit", new Type[] { typeof(Playable) });
+
+							if (castMethod != null)
+							{
+								object scriptPlayable = castMethod.Invoke(null, new object[] { node });
+
+								MethodInfo method = scriptPlayableType.GetMethod("GetBehaviour");
+
+								if (method != null)
+								{
+									T playable = method.Invoke(scriptPlayable, new object[0]) as T;
+
+									if (playable != null)
+									{
+										playables.Add(playable);
+									}
+								}
+							}
+						}
+
+						GetPlayableBehaviours(node, ref playables);
+					}
+				}
 			}
 		}
 	}

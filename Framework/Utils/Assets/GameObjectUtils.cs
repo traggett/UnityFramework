@@ -81,6 +81,14 @@ namespace Framework
 					return GameObject.Instantiate(original, parent) as GameObject;
 			}
 
+			public static void Destroy(Object obj)
+			{
+				if (Application.isPlaying)
+					Object.Destroy(obj);
+				else
+					Object.DestroyImmediate(obj);
+			}
+
 			public static void DeleteChildren(Transform transform, bool immediate = false)
             {
                 for (int i = transform.childCount - 1; i >= 0; --i)
