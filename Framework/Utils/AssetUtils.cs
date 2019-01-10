@@ -97,6 +97,7 @@ namespace Framework
 				return true;
 			}
 
+#if UNITY_EDITOR
 			public static bool IsAssetInResources(Object asset)
 			{
 				if (asset != null)
@@ -108,8 +109,7 @@ namespace Framework
 
 				return true;
 			}
-
-#if UNITY_EDITOR
+			
 			public static void RefreshAsset(string filePath)
 			{
 				AssetDatabase.ImportAsset(GetAssetPath(filePath));
