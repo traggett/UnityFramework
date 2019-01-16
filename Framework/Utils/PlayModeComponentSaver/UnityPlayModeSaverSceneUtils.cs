@@ -34,8 +34,8 @@ namespace Framework
 				if (prefabIndexer == null)
 				{
 					GameObject gameObject = new GameObject("Prefab Indexer", typeof(UnityPlayModeSaverSceneUtils))
-					{
-						hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable
+					{hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable
+						
 					};
 					SceneManager.MoveGameObjectToScene(gameObject, scene);
 					prefabIndexer = gameObject.GetComponent<UnityPlayModeSaverSceneUtils>();

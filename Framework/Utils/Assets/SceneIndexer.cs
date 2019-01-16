@@ -26,7 +26,7 @@ namespace Framework
 
 			void Awake()
 			{
-				this.gameObject.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable;
+				this.gameObject.hideFlags = hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable;
 			}
 
 			public static GameObject GetObject(Scene scene, int sceneObjectID)

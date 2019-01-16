@@ -2,7 +2,6 @@ using System.Collections.Generic;
 
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEditor.SceneManagement;
 
 namespace Framework
 {
@@ -26,7 +25,7 @@ namespace Framework
 
 					foreach (string sceneName in sceneNames)
 					{
-						Scene scene = EditorSceneManager.GetSceneByName(sceneName);
+						Scene scene = SceneManager.GetSceneByName(sceneName);
 
 						if (scene.IsValid())
 						{
@@ -46,9 +45,14 @@ namespace Framework
 					//Create a new one if one doesn't exist
 					if (indexer == null)
 					{
-						GameObject newObj = new GameObject("SceneIndexer");
-						SceneManager.MoveGameObjectToScene(newObj, scene);
-						indexer = newObj.AddComponent<SceneIndexer>();
+						GameObject gameObject = new GameObject("Scene Indexer", typeof(SceneIndexer))
+						{
+							hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable
+
+						};
+
+						SceneManager.MoveGameObjectToScene(gameObject, scene);
+						indexer = gameObject.GetComponent<SceneIndexer>();
 					}
 
 					indexer.CacheSceneObjects();
