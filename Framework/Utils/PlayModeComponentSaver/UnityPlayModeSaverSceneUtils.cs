@@ -44,16 +44,6 @@ namespace Framework
 				prefabIndexer.BuildScenePrefabMap();
 			}
 
-			public static void CleanUpPrefabIndexer(Scene scene)
-			{
-				UnityPlayModeSaverSceneUtils prefabIndexer = GetPrefabIndexer(scene);
-
-				if (prefabIndexer != null)
-				{
-					DestroyImmediate(prefabIndexer.gameObject);
-				}
-			}
-
 			public static bool IsScenePrefabInstance(Object obj, Scene scene, out GameObject prefab, out int id)
 			{
 				UnityPlayModeSaverSceneUtils prefabIndexer = GetPrefabIndexer(scene);

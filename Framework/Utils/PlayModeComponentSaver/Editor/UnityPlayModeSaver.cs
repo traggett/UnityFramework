@@ -217,7 +217,7 @@ namespace Framework
 
 				private static void OnSceneSaved(Scene scene, string path)
 				{
-					UnityPlayModeSaverSceneUtils.CleanUpPrefabIndexer(scene);
+					UnityPlayModeSaverSceneUtils.CacheScenePrefabInstances(scene);
 				}
 
 				private static void RepaintEditorWindows()
@@ -664,13 +664,13 @@ namespace Framework
 				}
 
 				#region Scene Objects
-				private static Object FindSceneObject(string scenePath, int localIdentifier)
+				private static Object FindSceneObject(string scenePath, int localIdentifier, bool loadSceneIfNeeded = false)
 				{
 					if (localIdentifier != -1)
 					{
 						Scene scene;
 
-						if (GetActiveScene(scenePath, out scene))
+						if (GetActiveScene(scenePath, out scene, loadSceneIfNeeded))
 						{
 							foreach (GameObject rootObject in scene.GetRootGameObjects())
 							{
@@ -763,11 +763,11 @@ namespace Framework
 				#endregion
 
 				#region Scene Prefab Objects
-				private static Object FindScenePrefabObject(string scenePath, int instanceId, string prefabObjPath)
+				private static Object FindScenePrefabObject(string scenePath, int instanceId, string prefabObjPath, bool loadSceneIfNeeded = false)
 				{
 					Scene scene;
 
-					if (GetActiveScene(scenePath, out scene))
+					if (GetActiveScene(scenePath, out scene, loadSceneIfNeeded))
 					{
 						GameObject prefabInstance = UnityPlayModeSaverSceneUtils.GetScenePrefabInstance(scene, instanceId);
 
@@ -929,7 +929,7 @@ namespace Framework
 					}
 				}
 
-				private static GameObject GetRuntimeObjectParent(string editorPrefKey, string sceneStr)
+				private static GameObject GetRuntimeObjectParent(string editorPrefKey, string sceneStr, bool loadSceneIfNeeded = false)
 				{
 					//Parent is Scene Prefab Instance
 					if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabInstanceId))
@@ -938,14 +938,14 @@ namespace Framework
 						int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
 						string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
 
-						Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr);
+						Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr, loadSceneIfNeeded);
 						return obj as GameObject;
 					}
 					//Parent is Scene object
 					else
 					{
 						int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsRuntimeObjectParentId, -1);
-						Object obj = FindSceneObject(sceneStr, identifier);
+						Object obj = FindSceneObject(sceneStr, identifier, loadSceneIfNeeded);
 						return obj as GameObject;
 					}
 				}
@@ -979,7 +979,7 @@ namespace Framework
 									int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
 									string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
 
-									Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr);
+									Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr, true);
 
 									if (obj != null)
 									{
@@ -1001,7 +1001,7 @@ namespace Framework
 								{
 									int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsObjectSceneId, -1);
 
-									Object obj = FindSceneObject(sceneStr, identifier);
+									Object obj = FindSceneObject(sceneStr, identifier, true);
 
 									if (obj != null)
 									{
@@ -1025,7 +1025,7 @@ namespace Framework
 								string typeStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectType);
 
 								Type objType = GetType(typeStr);
-								GameObject parentObj = GetRuntimeObjectParent(editorPrefKey, sceneStr) as GameObject;
+								GameObject parentObj = GetRuntimeObjectParent(editorPrefKey, sceneStr, true) as GameObject;
 
 								if (objType == typeof(GameObject))
 								{
@@ -1058,7 +1058,7 @@ namespace Framework
 										gameObject.transform.parent = parentObj.transform;
 									}
 									//otherwise make sure its in the correct scene
-									else if (GetActiveScene(sceneStr, out scene))
+									else if (GetActiveScene(sceneStr, out scene, true))
 									{
 										SceneManager.MoveGameObjectToScene(gameObject, scene);
 										int sceneRootIndex = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsRuntimeObjectSceneRootIndex, 0);
@@ -1485,7 +1485,7 @@ namespace Framework
 					return 0;
 				}
 
-				private static bool GetActiveScene(string scenePath, out Scene scene)
+				private static bool GetActiveScene(string scenePath, out Scene scene, bool loadScene = false)
 				{
 					for (int i = 0; i < SceneManager.sceneCount; i++)
 					{
@@ -1500,12 +1500,16 @@ namespace Framework
 						}
 					}
 
-					Debug.LogError("UnityPlayModeSaver: Can't save Components Play Modes changes as its Scene '" + scenePath + "' is not open in the Editor.");
-
+					if (loadScene)
+					{
+						scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+						return scene.IsValid();
+					}
+					
 					scene = new Scene();
 					return false;
 				}
-
+				
 				private static Scene GetObjectScene(Object obj)
 				{
 					Component component = obj as Component;
