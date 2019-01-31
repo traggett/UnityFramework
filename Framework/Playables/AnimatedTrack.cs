@@ -39,7 +39,7 @@ namespace Framework
 
 			private void CheckTrackDurations()
 			{
-				if (!Application.isPlaying)
+				if (Application.isEditor)
 				{
 					//Check any animation clips have been resized?
 					IEnumerable<TimelineClip> clips = GetClips();
