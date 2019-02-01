@@ -17,10 +17,16 @@ namespace Framework
 				//Until Unity makes the SupportsChildTracks public, have to hack our way around creating child tracks
 				public static T CreateChildTrack<T>(TrackAsset parent, string name) where T : TrackAsset
 				{
-					T newTrack = null;
+					return (T)CreateChildTrack(parent, name, typeof(T));
+				}
+
+				public static TrackAsset CreateChildTrack(TrackAsset parent, string name, Type type)
+				{
+					TrackAsset newTrack = null;
 
 					//Add new track via reflection (puke)
-					Type timelineWindowType = Type.GetType("UnityEditor.Timeline.TimelineWindow, UnityEditor.Timeline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null");
+					Assembly assembly = Assembly.GetAssembly(typeof(TimelineEditor));
+					Type timelineWindowType = assembly.GetType("UnityEditor.Timeline.TimelineWindow");
 					//UnityEditor.Timeline.TimelineWindow
 					EditorWindow timelineWindow = EditorWindow.GetWindow(timelineWindowType);
 					//AddTrack(Type type, TrackAsset parent = null, string name = null);
@@ -28,7 +34,7 @@ namespace Framework
 
 					if (methodInfo != null)
 					{
-						newTrack = (T)methodInfo.Invoke(timelineWindow, new object[] { typeof(T), null, name });
+						newTrack = (TrackAsset)methodInfo.Invoke(timelineWindow, new object[] { type, null, name });
 
 						if (newTrack != null)
 						{

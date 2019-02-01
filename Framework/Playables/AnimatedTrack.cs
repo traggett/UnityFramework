@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 using UnityEngine.Timeline;
 using System;
@@ -24,7 +23,7 @@ namespace Framework
 				if (animatedClip != null)
 				{
 					animatedClip._cachedDuration = clip.duration;
-					CreateAnimationCurves(clip);
+					clip.CreateCurves("Clip Parameters");
 					clip.curves.ClearCurves();
 					animatedClip.AddDefaultCurves(clip);
 				}
@@ -68,6 +67,9 @@ namespace Framework
 
 			private void MatchCurvesToClipDuration(TimelineClip clip)
 			{
+				if (clip == null)
+					return;
+
 				AnimatedClipAsset animatedClip = clip.asset as AnimatedClipAsset;
 				AnimationClip animation = clip.curves;
 
@@ -108,54 +110,6 @@ namespace Framework
 						if (animation != null && clip != null)
 							AnimationUtility.SetEditorCurve(animation, bindings[i], curve);
 					}
-				}
-			}
-
-			private static void CreateAnimationCurves(TimelineClip clip)
-			{
-				FieldInfo field = clip.GetType().GetField("m_AnimationCurves", BindingFlags.NonPublic | BindingFlags.Instance);
-				AnimationClip animation = CreateAnimationClipForTrack("Clip Parameters", clip.parentTrack, true);
-				field.SetValue(clip, animation);
-			}
-
-			private static AnimationClip CreateAnimationClipForTrack(string name, TrackAsset track, bool isLegacy)
-			{
-				var timelineAsset = track != null ? track.timelineAsset : null;
-				var trackFlags = track != null ? track.hideFlags : HideFlags.None;
-
-				var curves = new AnimationClip
-				{
-					legacy = isLegacy,
-
-					name = name,
-
-					frameRate = timelineAsset == null
-						? 30f
-						: timelineAsset.editorSettings.fps
-				};
-
-				SaveAssetIntoObject(curves, timelineAsset);
-				curves.hideFlags = trackFlags & ~HideFlags.HideInHierarchy; // Never hide in hierarchy
-
-				//TimelineUndo.RegisterCreatedObjectUndo(curves, "Create Curves");
-
-				return curves;
-			}
-
-			private static void SaveAssetIntoObject(Object childAsset, Object masterAsset)
-			{
-				if (childAsset == null || masterAsset == null)
-					return;
-
-				if ((masterAsset.hideFlags & HideFlags.DontSave) != 0)
-				{
-					childAsset.hideFlags |= HideFlags.DontSave;
-				}
-				else
-				{
-					childAsset.hideFlags |= HideFlags.HideInHierarchy;
-					if (!AssetDatabase.Contains(childAsset) && AssetDatabase.Contains(masterAsset))
-						AssetDatabase.AddObjectToAsset(childAsset, masterAsset);
 				}
 			}
 #endif

@@ -6,7 +6,7 @@ namespace Framework
 	namespace Utils
 	{
 		[Serializable]
-		public struct PrefabRef
+		public struct PrefabResourceRef
 		{
 			[SerializeField]
 			private string _filePath;

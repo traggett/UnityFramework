@@ -5,8 +5,8 @@ namespace Framework
 {
 	namespace Utils
 	{
-		[CustomPropertyDrawer(typeof(PrefabRef))]
-		public class PrefabRefPropertyDrawer : PropertyDrawer
+		[CustomPropertyDrawer(typeof(PrefabResourceRef))]
+		public class PrefabResourceRefPropertyDrawer : PropertyDrawer
 		{
 			public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 			{

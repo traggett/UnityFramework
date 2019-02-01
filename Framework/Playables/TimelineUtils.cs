@@ -61,17 +61,36 @@ namespace Framework
 				return null;
 			}
 
+			public static PlayableBehaviour GetTrackMixer(PlayableGraph graph, TrackAsset track, Type type)
+			{
+				int rootCount = graph.GetRootPlayableCount();
+
+				for (int i = 0; i < rootCount; i++)
+				{
+					Playable root = graph.GetRootPlayable(i);
+
+					PlayableBehaviour trackMixer = GetTrackMixer(root, track, type);
+
+					if (trackMixer != null)
+					{
+						return trackMixer;
+					}
+				}
+
+				return null;
+			}
+
 			private static T GetTrackMixer<T>(Playable root, TrackAsset track) where T : class, IPlayableBehaviour, ITrackMixer, new()
 			{
-				int inputCount = root.GetInputCount(); ;
+				int inputCount = root.GetOutputCount();
 
 				for (int i = 0; i < inputCount; i++)
 				{
-					Playable rootInput = root.GetInput(i);
+					Playable rootInput = root.GetOutput(i);
 
 					if (rootInput.IsValid())
 					{
-						//If this input is a SpineAnimatorTrackMixer, check it matches our track
+						//If this input is a T, check it matches our track
 						if (rootInput.GetPlayableType() == typeof(T))
 						{
 							ScriptPlayable<T> scriptPlayable = (ScriptPlayable<T>)rootInput;
@@ -86,6 +105,43 @@ namespace Framework
 						//Otherwise search this playable's inputs
 						{
 							T trackMixer = GetTrackMixer<T>(rootInput, track);
+
+							if (trackMixer != null)
+							{
+								return trackMixer;
+							}
+						}
+					}
+				}
+
+				return null;
+			}
+
+			private static PlayableBehaviour GetTrackMixer(Playable root, TrackAsset track, Type type)
+			{
+				int inputCount = root.GetOutputCount();
+
+				for (int i = 0; i < inputCount; i++)
+				{
+					Playable rootInput = root.GetOutput(i);
+
+					if (rootInput.IsValid())
+					{
+						//If this input is a T, check it matches our track
+						if (rootInput.GetPlayableType() is ITrackMixer)
+						{
+							PlayableBehaviour playableBehaviour = GetPlayableBehaviour(rootInput, type);
+							ITrackMixer trackMixer = playableBehaviour as ITrackMixer;
+
+							if (trackMixer != null && trackMixer.GetTrackAsset() == track)
+							{
+								return playableBehaviour;
+							}
+						}
+
+						//Otherwise search this playable's inputs
+						{
+							PlayableBehaviour trackMixer = GetTrackMixer(rootInput, track, type);
 
 							if (trackMixer != null)
 							{
@@ -120,6 +176,28 @@ namespace Framework
 				return playables;
 			}
 
+			private static PlayableBehaviour GetPlayableBehaviour(Playable playable, Type playableType)
+			{
+				Type scriptPlayableType = typeof(ScriptPlayable<>).MakeGenericType(new[] { playableType });
+
+				MethodInfo castMethod = scriptPlayableType.GetMethod("op_Explicit", new Type[] { typeof(Playable) });
+
+				if (castMethod != null)
+				{
+					object scriptPlayable = castMethod.Invoke(null, new object[] { playable });
+
+					MethodInfo method = scriptPlayableType.GetMethod("GetBehaviour");
+
+					if (method != null)
+					{
+						return method.Invoke(scriptPlayable, new object[0]) as PlayableBehaviour;
+					}
+				}
+
+				return null;
+			}
+
+
 			private static void GetPlayableBehaviours<T>(Playable root, ref List<T> playables) where T : class
 			{
 				int inputCount = root.GetInputCount();
@@ -134,25 +212,11 @@ namespace Framework
 
 						if (SystemUtils.IsTypeOf(typeof(T), playableType))
 						{
-							Type scriptPlayableType = typeof(ScriptPlayable<>).MakeGenericType(new[] { playableType });
+							T playable = GetPlayableBehaviour(node, playableType) as T;
 
-							MethodInfo castMethod = scriptPlayableType.GetMethod("op_Explicit", new Type[] { typeof(Playable) });
-
-							if (castMethod != null)
+							if (playable != null)
 							{
-								object scriptPlayable = castMethod.Invoke(null, new object[] { node });
-
-								MethodInfo method = scriptPlayableType.GetMethod("GetBehaviour");
-
-								if (method != null)
-								{
-									T playable = method.Invoke(scriptPlayable, new object[0]) as T;
-
-									if (playable != null)
-									{
-										playables.Add(playable);
-									}
-								}
+								playables.Add(playable);
 							}
 						}
 
