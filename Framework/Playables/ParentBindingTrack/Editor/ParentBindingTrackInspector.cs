@@ -32,17 +32,19 @@ namespace Framework
 
 				public override void OnInspectorGUI()
 				{
-					DrawDefaultInspector();
-
 					foreach (Object target in base.targets)
 					{
 						ParentBindingTrack track = target as ParentBindingTrack;
 						if (track == null)
 							break;
 
+						GUILayout.Label(track.name, EditorStyles.boldLabel);
+
+						DrawDefaultInspector();
+
 						IEnumerable<TrackAsset> childTracks = track.GetChildTracks();
 
-						GUILayout.Label(track.name, EditorStyles.boldLabel);
+						GUILayout.Label("Child Tracks", EditorStyles.boldLabel);
 						GUILayout.Space(3f);
 						_channelTracks.list = new List<TrackAsset>(childTracks);
 						_channelTracks.DoLayoutList();

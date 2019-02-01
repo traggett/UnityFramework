@@ -10,7 +10,7 @@ namespace Framework
 		[TrackClipType(typeof(ParentBindingMasterClipAsset))]
 		public abstract class ParentBindingTrack : TrackAsset
 		{
-			private List<IParentBindable> _boundTracks;
+			protected List<IParentBindable> _boundTracks;
 
 			public static void OnBindableCreated(PlayableGraph graph, PlayableBehaviour mixer, PlayableAsset parent)
 			{
@@ -26,6 +26,7 @@ namespace Framework
 			protected void OnCreateTrackMixer(PlayableGraph graph)
 			{
 				EnsureMasterClipExists();
+				ClampMasterClipToChildClips();
 				_boundTracks = new List<IParentBindable>();
 			}
 		
@@ -55,30 +56,32 @@ namespace Framework
 				{
 					masterClip = CreateDefaultClip();
 				}
-				
-				double startTime = double.MaxValue;
-				double endTime = 0d;
-
-				foreach (TrackAsset child in GetChildTracks())
-				{
-					foreach (TimelineClip clip in child.GetClips())
-					{
-						double clipStart = clip.hasPreExtrapolation ? clip.extrapolatedStart : clip.start;
-						double clipDuration = clip.hasPreExtrapolation || clip.hasPostExtrapolation ? clip.extrapolatedDuration : clip.duration;
-
-						startTime = Math.Min(startTime, clipStart);
-						endTime = Math.Max(endTime, clipStart + clipDuration);
-					}
-				}
-
-				masterClip.start = startTime;
-				masterClip.duration = endTime - startTime;
-				masterClip.displayName = GetMasterClipName();
 			}
 
-			protected virtual string GetMasterClipName()
+			public void ClampMasterClipToChildClips()
 			{
-				return "(Parent Clip)";
+				TimelineClip masterClip = GetMasterClip();
+
+				if (masterClip != null)
+				{
+					double startTime = double.MaxValue;
+					double endTime = 0d;
+
+					foreach (TrackAsset child in GetChildTracks())
+					{
+						foreach (TimelineClip clip in child.GetClips())
+						{
+							double clipStart = clip.hasPreExtrapolation ? clip.extrapolatedStart : clip.start;
+							double clipDuration = clip.hasPreExtrapolation || clip.hasPostExtrapolation ? clip.extrapolatedDuration : clip.duration;
+
+							startTime = Math.Min(startTime, clipStart);
+							endTime = Math.Max(endTime, clipStart + clipDuration);
+						}
+					}
+
+					masterClip.start = startTime;
+					masterClip.duration = endTime - startTime;
+				}			
 			}
 		}
 	}
