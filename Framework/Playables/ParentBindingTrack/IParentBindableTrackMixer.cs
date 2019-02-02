@@ -2,7 +2,7 @@ namespace Framework
 {
 	namespace Playables
 	{
-		public interface IParentBindable
+		public interface IParentBindableTrackMixer
 		{
 			void SetBinding(object playerData);
 		}

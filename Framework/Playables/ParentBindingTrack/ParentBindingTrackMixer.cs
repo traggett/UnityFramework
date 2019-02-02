@@ -32,7 +32,7 @@ namespace Framework
 			{
 				ParentBindingTrack track = (ParentBindingTrack)_trackAsset;
 
-				foreach (IParentBindable parentBindable in track.GetBoundTracks())
+				foreach (IParentBindableTrackMixer parentBindable in track.GetBoundTracks())
 				{
 					parentBindable.SetBinding(playerData);
 				}

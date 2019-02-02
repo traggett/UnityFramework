@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
 using Framework.Utils;
-using System.Collections.Generic;
 
 namespace Framework
 {
@@ -15,10 +14,8 @@ namespace Framework
 
 			public override Playable CreateTrackMixer(PlayableGraph graph, GameObject go, int inputCount)
 			{
-				EnsureMasterClipExists();
+				OnCreateTrackMixer(graph);
 				GetMasterClip().displayName = "Prefab Instance";
-
-				_boundTracks = new List<IParentBindable>();
 
 				return TimelineUtils.CreateTrackMixer<PrefabInstanceTrackMixer>(this, graph, go, inputCount);
 			}

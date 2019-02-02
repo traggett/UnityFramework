@@ -10,24 +10,13 @@ namespace Framework
 		[TrackClipType(typeof(ParentBindingMasterClipAsset))]
 		public abstract class ParentBindingTrack : TrackAsset
 		{
-			protected List<IParentBindable> _boundTracks;
-
-			public static void OnBindableCreated(PlayableGraph graph, PlayableBehaviour mixer, PlayableAsset parent)
-			{
-				ParentBindingTrack parentTrack = parent as ParentBindingTrack;
-				IParentBindable child = mixer as IParentBindable;
-
-				if (parentTrack != null && child != null)
-				{
-					parentTrack._boundTracks.Add(child);
-				}
-			}
+			private List<IParentBindableTrackMixer> _boundTracks;
 
 			protected void OnCreateTrackMixer(PlayableGraph graph)
 			{
 				EnsureMasterClipExists();
 				ClampMasterClipToChildClips();
-				_boundTracks = new List<IParentBindable>();
+				_boundTracks = new List<IParentBindableTrackMixer>();
 			}
 		
 			public TimelineClip GetMasterClip()
@@ -43,9 +32,14 @@ namespace Framework
 				return masterClip;
 			}
 
-			public IParentBindable[] GetBoundTracks()
+			public IParentBindableTrackMixer[] GetBoundTracks()
 			{
 				return _boundTracks.ToArray();
+			}
+
+			public void AddChildTrack(IParentBindableTrackMixer boundTrack)
+			{
+				_boundTracks.Add(boundTrack);
 			}
 
 			public void EnsureMasterClipExists()
