@@ -22,6 +22,7 @@ namespace Framework
 
 				if (animatedClip != null)
 				{
+					animatedClip._timelineClip = clip;
 					animatedClip._cachedDuration = clip.duration;
 					clip.CreateCurves("Clip Parameters");
 					clip.curves.ClearCurves();

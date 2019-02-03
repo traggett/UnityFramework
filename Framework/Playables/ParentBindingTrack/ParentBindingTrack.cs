@@ -54,6 +54,7 @@ namespace Framework
 
 			public void ClampMasterClipToChildClips()
 			{
+				return;
 				TimelineClip masterClip = GetMasterClip();
 
 				if (masterClip != null)

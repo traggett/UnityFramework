@@ -10,6 +10,8 @@ namespace Framework
 		{
 			[NonSerialized]
 			public double _cachedDuration;
+			[NonSerialized]
+			public TimelineClip _timelineClip;
 
 			public abstract void AddDefaultCurves(TimelineClip clip);
 		}

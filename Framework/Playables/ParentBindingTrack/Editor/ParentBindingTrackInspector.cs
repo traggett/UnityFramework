@@ -32,26 +32,23 @@ namespace Framework
 
 				public override void OnInspectorGUI()
 				{
-					foreach (Object target in base.targets)
-					{
-						ParentBindingTrack track = target as ParentBindingTrack;
-						if (track == null)
-							break;
+					ParentBindingTrack track = target as ParentBindingTrack;
+					if (track == null)
+						return;
 
-						GUILayout.Label(track.name, EditorStyles.boldLabel);
+					GUILayout.Label(track.name, EditorStyles.boldLabel);
 
-						DrawDefaultInspector();
+					DrawDefaultInspector();
 
-						IEnumerable<TrackAsset> childTracks = track.GetChildTracks();
+					IEnumerable<TrackAsset> childTracks = track.GetChildTracks();
 
-						GUILayout.Label("Child Tracks", EditorStyles.boldLabel);
-						GUILayout.Space(3f);
-						_channelTracks.list = new List<TrackAsset>(childTracks);
-						_channelTracks.DoLayoutList();
-						_channelTracks.index = -1;
+					GUILayout.Label("Child Tracks", EditorStyles.boldLabel);
+					GUILayout.Space(3f);
+					_channelTracks.list = new List<TrackAsset>(childTracks);
+					_channelTracks.DoLayoutList();
+					_channelTracks.index = -1;
 
-						track.EnsureMasterClipExists();
-					}
+					track.EnsureMasterClipExists();
 				}
 
 				private void OnAddTrack(ReorderableList list)
