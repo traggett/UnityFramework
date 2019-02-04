@@ -25,7 +25,7 @@ namespace Framework
 					{
 						EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(EditorUtils.GetLabelWidth()));
 
-						if (GUILayout.Button("Match Animation To Clip", GUILayout.ExpandWidth(false)))
+						if (GUILayout.Button("Match Curves To Clip", GUILayout.ExpandWidth(false)))
 						{
 							BaseAnimatedClipAsset clipAsset = target as BaseAnimatedClipAsset;
 							
@@ -84,7 +84,8 @@ namespace Framework
 								for (int j = 0; j < curve.keys.Length; j++)
 								{
 									keyframes[j] = curve.keys[j];
-									keyframes[j].time = (float)((curve.keys[j].time * scale) + shift);
+									keyframes[j].time = curve.keys[j].time + (float)shift;
+									keyframes[j].time = (float)(keyframes[j].time * scale);
 								}
 
 								curve.keys = keyframes;

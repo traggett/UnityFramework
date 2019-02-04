@@ -9,7 +9,10 @@ namespace Framework
 		{		
 			protected override object GetValue()
 			{
-				return _trackBinding.GetInteger(_parameterHash);
+				if (_parameterHash != -1)
+					return _trackBinding.GetInteger(_parameterHash);
+
+				return 0;
 			}
 
 			protected override object ApplyValue(object value, float inputWeight, Playable playable)

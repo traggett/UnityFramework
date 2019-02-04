@@ -31,14 +31,23 @@ namespace Framework
 				if (_trackBinding == null)
 					return;
 
+				AnimatorParamTrack track = (AnimatorParamTrack)_trackAsset;
+
 				if (_firstFrame)
 				{
-					AnimatorParamTrack track = (AnimatorParamTrack)_trackAsset;
-
-					_parameterHash = Animator.StringToHash(track._parameterId);
+					_parameterHash = GetHash(track._parameterId);
 					_defaultValue = GetValue();
 					_firstFrame = false;
 				}
+
+#if UNITY_EDITOR
+				//Always update hash in editor
+				if (Application.isEditor)
+					_parameterHash = GetHash(track._parameterId);
+#endif
+
+				if (_parameterHash == -1)
+					return;
 
 				object value = _defaultValue;
 
@@ -53,7 +62,7 @@ namespace Framework
 						value = ApplyValue(value, inputWeight, playable.GetInput(i));
 					}
 				}
-
+				
 				SetValue(value);
 			}
 
@@ -98,6 +107,14 @@ namespace Framework
 				}
 			}
 			#endregion
+
+			private static int GetHash(string id)
+			{
+				if (string.IsNullOrEmpty(id))
+					return -1;
+
+				return Animator.StringToHash(id);
+			}
 		}
 	}
 }
