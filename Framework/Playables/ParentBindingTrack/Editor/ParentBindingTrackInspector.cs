@@ -6,6 +6,7 @@ using UnityEngine.Timeline;
 
 namespace Framework
 {
+	using Framework.Utils.Editor;
 	using System;
 	using Utils;
 
@@ -48,7 +49,18 @@ namespace Framework
 					_channelTracks.DoLayoutList();
 					_channelTracks.index = -1;
 
-					track.EnsureMasterClipExists();
+					EditorGUILayout.Separator();
+
+					EditorGUILayout.BeginHorizontal();
+					{
+						EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(EditorUtils.GetLabelWidth()));
+
+						if (GUILayout.Button("Match Child tracks", GUILayout.ExpandWidth(false)))
+						{
+							track.EnsureMasterClipExists();
+						}
+					}
+					EditorGUILayout.EndHorizontal();
 				}
 
 				private void OnAddTrack(ReorderableList list)

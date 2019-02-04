@@ -34,10 +34,10 @@ namespace Framework
 						{
 							if (controllerParameters[i].type == GetParameterType(track))
 							{
-								parameters.Add(controllerParameters[i].name);
-
 								if (controllerParameters[i].name == track._parameterId)
-									index = i;
+									index = parameters.Count;
+
+								parameters.Add(controllerParameters[i].name);
 							}
 						}
 

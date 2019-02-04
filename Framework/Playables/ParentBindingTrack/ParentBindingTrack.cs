@@ -15,7 +15,6 @@ namespace Framework
 			protected void OnCreateTrackMixer(PlayableGraph graph)
 			{
 				EnsureMasterClipExists();
-				ClampMasterClipToChildClips();
 				_boundTracks = new List<IParentBindableTrackMixer>();
 			}
 		
@@ -61,7 +60,6 @@ namespace Framework
 
 			public void ClampMasterClipToChildClips()
 			{
-				return;
 				TimelineClip masterClip = GetMasterClip();
 
 				if (masterClip != null)
