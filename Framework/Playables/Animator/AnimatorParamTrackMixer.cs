@@ -93,15 +93,12 @@ namespace Framework
 			{
 				if (playerData is GameObject)
 				{
-					_trackBinding = GetAnimatorFromGameObject((GameObject)playerData);
-
-
-
+					_trackBinding = AnimatorParamTrack.GetAnimatorFromGameObject((GameObject)playerData);
 					_parentBinding = true;
 				}
 				else if (playerData is Transform)
 				{
-					_trackBinding = GetAnimatorFromGameObject(((Transform)playerData).gameObject);
+					_trackBinding = AnimatorParamTrack.GetAnimatorFromGameObject(((Transform)playerData).gameObject);
 					_parentBinding = true;
 				}
 				else
@@ -117,16 +114,6 @@ namespace Framework
 					return -1;
 
 				return Animator.StringToHash(id);
-			}
-
-			private static Animator GetAnimatorFromGameObject(GameObject gameObject)
-			{
-				Animator animator = gameObject.GetComponent<Animator>();
-
-				if (animator == null)
-					animator = gameObject.GetComponentInChildren<Animator>();
-
-				return animator;
 			}
 		}
 	}

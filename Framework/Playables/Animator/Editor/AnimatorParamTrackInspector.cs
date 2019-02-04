@@ -80,11 +80,11 @@ namespace Framework
 
 							if (binding is GameObject)
 							{
-								return ((GameObject)binding).GetComponent<Animator>();
+								return AnimatorParamTrack.GetAnimatorFromGameObject((GameObject)binding);
 							}
 							else if (binding is Transform)
 							{
-								return ((Transform)binding).gameObject.GetComponent<Animator>();
+								return AnimatorParamTrack.GetAnimatorFromGameObject(((Transform)binding).gameObject);
 							}
 						}
 						else
