@@ -26,6 +26,20 @@ namespace Framework
 				return null;
 			}
 
+			//Finds the TimelineClip corresponding to a playable asset in a timeline
+			public static TimelineClip GetClip(TimelineAsset timeline, IPlayableAsset clipAsset)
+			{
+				foreach (TrackAsset track in timeline.GetRootTracks())
+				{
+					TimelineClip clip = GetClipInAllTracks(track, clipAsset);
+
+					if (clip != null)
+						return clip;
+				}
+
+				return null;
+			}
+
 			//Creates a track mixer for an ITrackMixer PlayableBehaviour
 			public static ScriptPlayable<T> CreateTrackMixer<T>(TrackAsset track, PlayableGraph graph, GameObject go, int inputCount) where T : class, IPlayableBehaviour, ITrackMixer, new()
 			{
@@ -197,6 +211,24 @@ namespace Framework
 				return null;
 			}
 
+			private static TimelineClip GetClipInAllTracks(TrackAsset track, IPlayableAsset clipAsset)
+			{
+				TimelineClip clip = GetClip(track, clipAsset);
+
+				if (clip != null)
+					return clip;
+
+				foreach (TrackAsset childTrack in track.GetChildTracks())
+				{
+					clip = GetClipInAllTracks(childTrack, clipAsset);
+
+					if (clip != null)
+						return clip;
+
+				}
+
+				return null;
+			}
 
 			private static void GetPlayableBehaviours<T>(Playable root, ref List<T> playables) where T : class
 			{
