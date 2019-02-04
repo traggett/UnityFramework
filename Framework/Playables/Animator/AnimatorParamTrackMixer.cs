@@ -6,17 +6,22 @@ namespace Framework
 {
 	namespace Playables
 	{
-		public class AnimatorParamTrackMixer : PlayableBehaviour, ITrackMixer, IParentBindableTrackMixer
+		public abstract class AnimatorParamTrackMixer<T> : PlayableBehaviour, ITrackMixer, IParentBindableTrackMixer 
 		{
 			private TrackAsset _trackAsset;
 			private PlayableDirector _director;
 
-			private Animator _trackBinding;
+			protected Animator _trackBinding;
+			protected int _parameterHash;
+
 			private bool _parentBinding;
 			private bool _firstFrame = true;
 
-			private Vector3 _defaultPosition;
-			private Quaternion _defalultRotation;
+			private object _defaultValue;
+
+			protected abstract object GetValue();
+			protected abstract void SetValue(object value);
+			protected abstract object ApplyValue(object value, float inputWeight, Playable playable);
 
 			public override void ProcessFrame(Playable playable, FrameData info, object playerData)
 			{
@@ -28,48 +33,28 @@ namespace Framework
 
 				if (_firstFrame)
 				{
-					
+					AnimatorParamTrack track = (AnimatorParamTrack)_trackAsset;
+
+					_parameterHash = Animator.StringToHash(track._parameterId);
+					_defaultValue = GetValue();
 					_firstFrame = false;
 				}
 
-				//_trackBinding.position = _defaultPosition;
-				//_trackBinding.rotation = _defalultRotation;
+				object value = _defaultValue;
 
 				int numInputs = playable.GetInputCount();
 
 				for (int i = 0; i < numInputs; i++)
 				{
-					ScriptPlayable<AnimatorPlayableBehaviour> scriptPlayable = (ScriptPlayable<AnimatorPlayableBehaviour>)playable.GetInput(i);
-					AnimatorPlayableBehaviour inputBehaviour = scriptPlayable.GetBehaviour();
+					float inputWeight = playable.GetInputWeight(i);
 
-					if (inputBehaviour != null)
+					if (inputWeight > 0.0f)
 					{
-						float inputWeight = playable.GetInputWeight(i);
-
-						if (inputWeight > 0.0f)
-						{
-							TimelineClip clip = TimelineUtils.GetClip(_trackAsset, inputBehaviour._clipAsset);
-
-							if (clip != null)
-							{
-								double clipStart = clip.hasPreExtrapolation ? clip.extrapolatedStart : clip.start;
-								double clipDuration = clip.hasPreExtrapolation || clip.hasPostExtrapolation ? clip.extrapolatedDuration : clip.duration;
-
-								if (_director.time >= clipStart && _director.time <= clipStart + clipDuration)
-								{
-									//float distance = inputBehaviour._splineProgress * inputBehaviour._spline.PathLength;
-									//float pathT = inputBehaviour._spline.GetPathFractionAtDistance(distance);
-
-									//Vector3 position = inputBehaviour._spline.EvaluatePosition(pathT);
-									//Quaternion rotation = inputBehaviour._spline.EvaluateOrientation(pathT);
-
-									//_trackBinding.position = position;
-									//_trackBinding.rotation = rotation;
-								}
-							}
-						}
+						value = ApplyValue(value, inputWeight, playable.GetInput(i));
 					}
 				}
+
+				SetValue(value);
 			}
 
 			public override void OnPlayableDestroy(Playable playable)

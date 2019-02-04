@@ -1,5 +1,8 @@
 using System;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Framework
 {
@@ -22,7 +25,11 @@ namespace Framework
 
 				if (prefabSourceObject != null)
 				{
+#if UNITY_EDITOR
+					prefab = (GameObject)PrefabUtility.InstantiatePrefab(prefabSourceObject);
+#else
 					prefab = GameObjectUtils.SafeInstantiate(prefabSourceObject, parent);
+#endif
 					prefab.name = prefabSourceObject.name;
 				}
 
@@ -33,19 +40,6 @@ namespace Framework
 			{
 				string resourcePath = AssetUtils.GetResourcePath(_filePath);
 				return Resources.Load<GameObject>(resourcePath) as GameObject; 
-			}
-
-			public GameObject InstantiatePrefab(GameObject prefabObject)
-			{
-				GameObject prefabInstance = null;
-
-				if (prefabObject != null)
-				{
-					prefabInstance = GameObjectUtils.SafeInstantiate(prefabObject);
-					prefabInstance.name = prefabObject.name;
-				}
-
-				return prefabInstance;
 			}
 
 			public string GetGUID()

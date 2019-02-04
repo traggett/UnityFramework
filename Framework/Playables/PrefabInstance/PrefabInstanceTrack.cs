@@ -19,6 +19,13 @@ namespace Framework
 
 				return TimelineUtils.CreateTrackMixer<PrefabInstanceTrackMixer>(this, graph, go, inputCount);
 			}
+
+#if UNITY_EDITOR
+			public override Object GetEditorBinding(PlayableDirector director)
+			{
+				return _prefab.LoadPrefab();
+			}
+#endif
 		}
 	}
 }

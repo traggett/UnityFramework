@@ -8,7 +8,7 @@ namespace Framework
 	namespace Playables
 	{
 		[TrackClipType(typeof(ParentBindingMasterClipAsset))]
-		public abstract class ParentBindingTrack : TrackAsset
+		public abstract class ParentBindingTrack : BaseTrackAsset
 		{
 			private List<IParentBindableTrackMixer> _boundTracks;
 
@@ -41,6 +41,13 @@ namespace Framework
 			{
 				_boundTracks.Add(boundTrack);
 			}
+
+#if UNITY_EDITOR
+			public virtual UnityEngine.Object GetEditorBinding(PlayableDirector director)
+			{
+				return director.GetGenericBinding(this);
+			}
+#endif
 
 			public void EnsureMasterClipExists()
 			{
