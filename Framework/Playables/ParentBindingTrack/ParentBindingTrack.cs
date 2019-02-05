@@ -36,7 +36,8 @@ namespace Framework
 
 			public void AddChildTrack(IParentBindableTrackMixer boundTrack)
 			{
-				_boundTracks.Add(boundTrack);
+				if (_boundTracks != null)
+					_boundTracks.Add(boundTrack);
 			}
 
 #if UNITY_EDITOR
