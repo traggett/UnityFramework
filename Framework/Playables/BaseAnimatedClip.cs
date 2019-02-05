@@ -11,7 +11,7 @@ namespace Framework
 
 			public void OnClipCreated(TimelineClip clip)
 			{
-				clip.CreateCurves("Clip Parameters");
+				TimelineUtils.CreateAnimationCurves(clip);
 				clip.curves.ClearCurves();
 				AddDefaultCurves(clip);
 			}
