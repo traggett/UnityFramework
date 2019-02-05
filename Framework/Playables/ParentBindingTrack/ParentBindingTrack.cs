@@ -13,7 +13,6 @@ namespace Framework
 
 			protected void OnCreateTrackMixer(PlayableGraph graph)
 			{
-				EnsureMasterClipExists();
 				_boundTracks = new List<IParentBindableTrackMixer>();
 			}
 		
@@ -46,16 +45,6 @@ namespace Framework
 				return director.GetGenericBinding(this);
 			}
 #endif
-
-			public void EnsureMasterClipExists()
-			{
-				TimelineClip masterClip = GetMasterClip();
-
-				if (masterClip == null)
-				{
-					masterClip = CreateDefaultClip();
-				}
-			}
 		}
 	}
 }

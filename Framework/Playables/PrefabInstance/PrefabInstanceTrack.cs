@@ -12,11 +12,15 @@ namespace Framework
 		{
 			public PrefabResourceRef _prefab;
 
+			protected override void OnCreateClip(TimelineClip clip)
+			{
+				base.OnCreateClip(clip);
+				clip.displayName = "Prefab Instance";
+			}
+
 			public override Playable CreateTrackMixer(PlayableGraph graph, GameObject go, int inputCount)
 			{
 				OnCreateTrackMixer(graph);
-				GetMasterClip().displayName = "Prefab Instance";
-
 				return TimelineUtils.CreateTrackMixer<PrefabInstanceTrackMixer>(this, graph, go, inputCount);
 			}
 
