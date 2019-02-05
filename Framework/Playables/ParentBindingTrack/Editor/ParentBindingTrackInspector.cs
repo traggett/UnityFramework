@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditorInternal;
@@ -6,14 +7,13 @@ using UnityEngine.Timeline;
 
 namespace Framework
 {
-	using Framework.Utils.Editor;
-	using System;
 	using Utils;
 
 	namespace Playables
 	{
 		namespace Editor
 		{
+			[CustomEditor(typeof(ParentBindingTrack), true)]
 			public class ParentBindingTrackInspector : UnityEditor.Editor
 			{
 				protected ReorderableList _channelTracks;
@@ -48,19 +48,6 @@ namespace Framework
 					_channelTracks.list = new List<TrackAsset>(childTracks);
 					_channelTracks.DoLayoutList();
 					_channelTracks.index = -1;
-
-					EditorGUILayout.Separator();
-
-					EditorGUILayout.BeginHorizontal();
-					{
-						EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(EditorUtils.GetLabelWidth()));
-
-						if (GUILayout.Button("Match Child tracks", GUILayout.ExpandWidth(false)))
-						{
-							track.EnsureMasterClipExists();
-						}
-					}
-					EditorGUILayout.EndHorizontal();
 				}
 
 				private void OnAddTrack(ReorderableList list)

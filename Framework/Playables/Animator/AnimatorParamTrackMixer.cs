@@ -89,7 +89,7 @@ namespace Framework
 			#endregion
 
 			#region IParentBindable
-			public void SetBinding(object playerData)
+			public void SetParentBinding(object playerData)
 			{
 				if (playerData is GameObject)
 				{
@@ -105,6 +105,12 @@ namespace Framework
 				{
 					_parentBinding = false;
 				}
+			}
+
+			public void ClearParentBinding()
+			{
+				_trackBinding = null;
+				_parentBinding = false;
 			}
 			#endregion
 

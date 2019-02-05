@@ -21,17 +21,18 @@ namespace Framework
 				if (_director.time >= clipStart && _director.time <= clipStart + clipDuration)
 				{
 					CreatePrefabInstance();
+					SetChildTrackBindings(_prefabInstance);
 				}
 				else
 				{
 					DestroyPrefabInstance();
+					ClearChildTrackBindings();
 				}
-
-				SetChildTrackBindings(_prefabInstance);
 			}
 
 			public override void OnPlayableDestroy(Playable playable)
 			{
+				base.OnPlayableDestroy(playable);
 				DestroyPrefabInstance();
 			}
 
@@ -43,7 +44,6 @@ namespace Framework
 					PrefabInstanceTrack track = (PrefabInstanceTrack)_trackAsset;
 					_prefabInstance = track._prefab.LoadAndInstantiatePrefab();
 				}
-
 			}
 
 			private void DestroyPrefabInstance()

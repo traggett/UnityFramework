@@ -9,7 +9,7 @@ namespace Framework
 	{
 		[Serializable]
 		[NotKeyable]
-		public class ParentBindingMasterClipAsset : PlayableAsset, ITimelineClipAsset
+		public class ParentBindingMasterClip : PlayableAsset, ITimelineClipAsset
 		{
 			public ClipCaps clipCaps
 			{

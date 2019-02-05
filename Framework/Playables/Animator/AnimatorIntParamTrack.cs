@@ -8,7 +8,7 @@ namespace Framework
 	{
 		[TrackColor(180f / 255f, 115f / 255f, 215f / 255f)]
 		[TrackBindingType(typeof(Animator))]
-		[TrackClipType(typeof(AnimatorIntParamClipAsset))]
+		[TrackClipType(typeof(AnimatorIntParamClip))]
 		public class AnimatorIntParamTrack : AnimatorParamTrack, IParentBindableTrack
 		{	
 			public override Playable CreateTrackMixer(PlayableGraph graph, GameObject go, int inputCount)

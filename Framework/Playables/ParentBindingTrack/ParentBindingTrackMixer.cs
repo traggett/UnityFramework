@@ -28,13 +28,28 @@ namespace Framework
 				SetChildTrackBindings(playerData);
 			}
 
+			public override void OnPlayableDestroy(Playable playable)
+			{
+				ClearChildTrackBindings();
+			}
+
 			protected void SetChildTrackBindings(object playerData)
 			{
 				ParentBindingTrack track = (ParentBindingTrack)_trackAsset;
 
 				foreach (IParentBindableTrackMixer parentBindable in track.GetBoundTracks())
 				{
-					parentBindable.SetBinding(playerData);
+					parentBindable.SetParentBinding(playerData);
+				}
+			}
+
+			protected void ClearChildTrackBindings()
+			{
+				ParentBindingTrack track = (ParentBindingTrack)_trackAsset;
+
+				foreach (IParentBindableTrackMixer parentBindable in track.GetBoundTracks())
+				{
+					parentBindable.ClearParentBinding();
 				}
 			}
 		}

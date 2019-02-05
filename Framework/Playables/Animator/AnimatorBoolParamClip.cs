@@ -8,7 +8,7 @@ namespace Framework
 	namespace Playables
 	{
 		[Serializable]
-		public class AnimatorBoolParamClipAsset : BaseAnimatedClipAsset, ITimelineClipAsset
+		public class AnimatorBoolParamClip : BaseAnimatedClip, ITimelineClipAsset
 		{
 			public AnimatorBoolParamPlayableBehaviour _data;
 
@@ -19,14 +19,14 @@ namespace Framework
 
 			public override void AddDefaultCurves(TimelineClip clip)
 			{
-				clip.curves.SetCurve("", typeof(AnimatorBoolParamClipAsset), "_value", new AnimationCurve());
+				clip.curves.SetCurve("", typeof(AnimatorBoolParamClip), "_value", new AnimationCurve());
 			}
 
 			public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
 			{
 				ScriptPlayable<AnimatorBoolParamPlayableBehaviour> playable = ScriptPlayable<AnimatorBoolParamPlayableBehaviour>.Create(graph, _data);
 				AnimatorBoolParamPlayableBehaviour clone = playable.GetBehaviour();
-				clone._clipAsset = this;
+				clone._Clip = this;
 				return playable;
 			}
 		}

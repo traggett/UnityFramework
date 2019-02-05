@@ -13,13 +13,13 @@ namespace Framework
 		public static class TimelineUtils
 		{
 			//Finds the TimelineClip corresponding to a playable asset in a parent track
-			public static TimelineClip GetClip(TrackAsset track, IPlayableAsset clipAsset)
+			public static TimelineClip GetClip(TrackAsset track, IPlayableAsset Clip)
 			{
 				IEnumerable<TimelineClip> clips = track.GetClips();
 
 				foreach (TimelineClip clip in clips)
 				{
-					if (clip.asset == (UnityEngine.Object)clipAsset)
+					if (clip.asset == (UnityEngine.Object)Clip)
 						return clip;
 				}
 
@@ -27,11 +27,11 @@ namespace Framework
 			}
 
 			//Finds the TimelineClip corresponding to a playable asset in a timeline
-			public static TimelineClip GetClip(TimelineAsset timeline, IPlayableAsset clipAsset)
+			public static TimelineClip GetClip(TimelineAsset timeline, IPlayableAsset Clip)
 			{
 				foreach (TrackAsset track in timeline.GetRootTracks())
 				{
-					TimelineClip clip = GetClipInAllTracks(track, clipAsset);
+					TimelineClip clip = GetClipInAllTracks(track, Clip);
 
 					if (clip != null)
 						return clip;
@@ -211,16 +211,16 @@ namespace Framework
 				return null;
 			}
 
-			private static TimelineClip GetClipInAllTracks(TrackAsset track, IPlayableAsset clipAsset)
+			private static TimelineClip GetClipInAllTracks(TrackAsset track, IPlayableAsset Clip)
 			{
-				TimelineClip clip = GetClip(track, clipAsset);
+				TimelineClip clip = GetClip(track, Clip);
 
 				if (clip != null)
 					return clip;
 
 				foreach (TrackAsset childTrack in track.GetChildTracks())
 				{
-					clip = GetClipInAllTracks(childTrack, clipAsset);
+					clip = GetClipInAllTracks(childTrack, Clip);
 
 					if (clip != null)
 						return clip;

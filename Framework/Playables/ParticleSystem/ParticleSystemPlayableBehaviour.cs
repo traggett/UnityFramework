@@ -10,7 +10,7 @@ namespace Framework
 		public class ParticleSystemPlayableBehaviour : PlayableBehaviour
 		{
 			[NonSerialized]
-			public PlayableAsset _clipAsset;
+			public PlayableAsset _Clip;
 
 			[Range(0f, 1f)]
 			public float _emissionRate;

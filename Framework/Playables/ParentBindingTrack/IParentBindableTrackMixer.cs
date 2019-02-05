@@ -4,7 +4,8 @@ namespace Framework
 	{
 		public interface IParentBindableTrackMixer
 		{
-			void SetBinding(object playerData);
+			void SetParentBinding(object playerData);
+			void ClearParentBinding();
 		}
 	}
 }

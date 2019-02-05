@@ -12,8 +12,8 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			[CustomEditor(typeof(BaseAnimatedClipAsset), true)]
-			public class BaseAnimatedClipAssetInspector : UnityEditor.Editor
+			[CustomEditor(typeof(BaseAnimatedClip), true)]
+			public class BaseAnimatedClipInspector : UnityEditor.Editor
 			{
 				public override void OnInspectorGUI()
 				{
@@ -27,11 +27,11 @@ namespace Framework
 
 						if (GUILayout.Button("Match Curves To Clip", GUILayout.ExpandWidth(false)))
 						{
-							BaseAnimatedClipAsset clipAsset = target as BaseAnimatedClipAsset;
+							BaseAnimatedClip Clip = target as BaseAnimatedClip;
 							
-							if (clipAsset != null && TimelineEditor .inspectedAsset != null)
+							if (Clip != null && TimelineEditor .inspectedAsset != null)
 							{
-								TimelineClip clip = TimelineUtils.GetClip(TimelineEditor.inspectedAsset, clipAsset);
+								TimelineClip clip = TimelineUtils.GetClip(TimelineEditor.inspectedAsset, Clip);
 								MatchCurvesToClipDuration(clip);
 							}
 						}
@@ -45,7 +45,7 @@ namespace Framework
 					if (clip == null)
 						return;
 
-					BaseAnimatedClipAsset animatedClip = clip.asset as BaseAnimatedClipAsset;
+					BaseAnimatedClip animatedClip = clip.asset as BaseAnimatedClip;
 					AnimationClip animation = clip.curves;
 
 					if (animation != null)

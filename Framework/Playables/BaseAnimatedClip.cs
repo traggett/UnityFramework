@@ -5,7 +5,7 @@ namespace Framework
 {
 	namespace Playables
 	{
-		public abstract class BaseAnimatedClipAsset : PlayableAsset, IClipInitialiser
+		public abstract class BaseAnimatedClip : PlayableAsset, IClipInitialiser
 		{
 			public abstract void AddDefaultCurves(TimelineClip clip);
 

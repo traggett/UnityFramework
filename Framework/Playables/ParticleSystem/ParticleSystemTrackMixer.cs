@@ -54,7 +54,7 @@ namespace Framework
 
 						if (inputWeight > 0.0f)
 						{
-							TimelineClip clip = TimelineUtils.GetClip(_trackAsset, inputBehaviour._clipAsset);
+							TimelineClip clip = TimelineUtils.GetClip(_trackAsset, inputBehaviour._Clip);
 
 							if (clip != null)
 							{

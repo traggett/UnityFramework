@@ -8,7 +8,7 @@ namespace Framework
 	namespace Playables
 	{
 		[Serializable]
-		public class ParticleSystemClipAsset : BaseAnimatedClipAsset, ITimelineClipAsset
+		public class ParticleSystemClip : BaseAnimatedClip, ITimelineClipAsset
 		{
 			public ParticleSystemPlayableBehaviour _data;
 			
@@ -19,7 +19,7 @@ namespace Framework
 
 			public override void AddDefaultCurves(TimelineClip clip)
 			{
-				clip.curves.SetCurve("", typeof(ParticleSystemClipAsset), "_emissionRate", new AnimationCurve());
+				clip.curves.SetCurve("", typeof(ParticleSystemClip), "_emissionRate", new AnimationCurve());
 			}
 
 			public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
@@ -27,7 +27,7 @@ namespace Framework
 				ScriptPlayable<ParticleSystemPlayableBehaviour> playable = ScriptPlayable<ParticleSystemPlayableBehaviour>.Create(graph, _data);
 				ParticleSystemPlayableBehaviour clone = playable.GetBehaviour();
 
-				clone._clipAsset = this;
+				clone._Clip = this;
 
 				return playable;
 			}
