@@ -58,7 +58,7 @@ namespace Framework
 
 					foreach (Type type in types)
 					{
-						menu.AddItem(new GUIContent("Add Child " + type.Name), false, CreateSubTrack, type);
+						menu.AddItem(new GUIContent("Add " + ObjectNames.NicifyVariableName(type.Name)), false, CreateSubTrack, type);
 					}
 
 					menu.ShowAsContext();
