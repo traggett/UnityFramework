@@ -115,6 +115,11 @@ namespace Framework
 				return UnityEngine.Random.Range(0, 1) == 0 ? 1 : -1;
 			}
 
+			public static bool AlmostZero(Vector3 vec)
+			{
+				return Mathf.Approximately(vec.x, 0.0f) && Mathf.Approximately(vec.y, 0.0f) && Mathf.Approximately(vec.z, 0.0f);
+			}
+
 			public static bool FloatRangeIntersects(float range1start, float range1end, float range2start, float range2end)
 			{
 				if (range1start <= range2end)
