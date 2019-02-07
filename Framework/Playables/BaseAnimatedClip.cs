@@ -11,9 +11,11 @@ namespace Framework
 
 			public void OnClipCreated(TimelineClip clip)
 			{
+#if UNITY_EDITOR
 				TimelineUtils.CreateAnimationCurves(clip);
 				clip.curves.ClearCurves();
 				AddDefaultCurves(clip);
+#endif
 			}
 		}
 	}
