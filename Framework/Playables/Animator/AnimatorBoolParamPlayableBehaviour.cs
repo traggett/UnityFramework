@@ -9,7 +9,7 @@ namespace Framework
 		public class AnimatorBoolParamPlayableBehaviour : PlayableBehaviour
 		{
 			[NonSerialized]
-			public PlayableAsset _Clip;
+			public PlayableAsset _clip;
 
 			public bool _value;
 		}

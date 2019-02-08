@@ -9,7 +9,7 @@ namespace Framework
 		public class AnimatorFloatParamPlayableBehaviour : PlayableBehaviour
 		{
 			[NonSerialized]
-			public PlayableAsset _Clip;
+			public PlayableAsset _clip;
 
 			public float _value;
 		}

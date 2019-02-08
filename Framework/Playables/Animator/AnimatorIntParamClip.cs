@@ -26,7 +26,7 @@ namespace Framework
 			{
 				ScriptPlayable<AnimatorIntParamPlayableBehaviour> playable = ScriptPlayable<AnimatorIntParamPlayableBehaviour>.Create(graph, _data);
 				AnimatorIntParamPlayableBehaviour clone = playable.GetBehaviour();
-				clone._Clip = this;
+				clone._clip = this;
 				return playable;
 			}
 		}

@@ -19,12 +19,15 @@ namespace Framework
 			//Finds the TimelineClip corresponding to a playable asset in a parent track
 			public static TimelineClip GetClip(TrackAsset track, IPlayableAsset Clip)
 			{
-				IEnumerable<TimelineClip> clips = track.GetClips();
-
-				foreach (TimelineClip clip in clips)
+				if (track != null)
 				{
-					if (clip.asset == (UnityEngine.Object)Clip)
-						return clip;
+					IEnumerable<TimelineClip> clips = track.GetClips();
+
+					foreach (TimelineClip clip in clips)
+					{
+						if (clip.asset == (Object)Clip)
+							return clip;
+					}
 				}
 
 				return null;
@@ -33,12 +36,15 @@ namespace Framework
 			//Finds the TimelineClip corresponding to a playable asset in a timeline
 			public static TimelineClip GetClip(TimelineAsset timeline, IPlayableAsset Clip)
 			{
-				foreach (TrackAsset track in timeline.GetRootTracks())
+				if (timeline != null)
 				{
-					TimelineClip clip = GetClipInAllTracks(track, Clip);
+					foreach (TrackAsset track in timeline.GetRootTracks())
+					{
+						TimelineClip clip = GetClipInAllTracks(track, Clip);
 
-					if (clip != null)
-						return clip;
+						if (clip != null)
+							return clip;
+					}
 				}
 
 				return null;
