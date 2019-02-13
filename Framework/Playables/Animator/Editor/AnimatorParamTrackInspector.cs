@@ -23,7 +23,7 @@ namespace Framework
 					AnimatorParamTrack track = base.target as AnimatorParamTrack;
 					Animator animator = GetClipBoundAnimator();
 
-					if (animator != null)
+					if (animator != null && animator.runtimeAnimatorController != null)
 					{
 						AnimatorControllerParameter[] controllerParameters = (animator.runtimeAnimatorController as AnimatorController).parameters;
 
@@ -43,12 +43,8 @@ namespace Framework
 
 						if (parameters.Count > 0)
 						{
-							EditorGUI.BeginChangeCheck();
 							index = EditorGUILayout.Popup(kParameterLabel, index, parameters.ToArray());
-							if (EditorGUI.EndChangeCheck())
-							{
-								track._parameterId = parameters[index];
-							}
+							track._parameterId = parameters[index];
 						}
 						else
 						{

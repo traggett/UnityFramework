@@ -21,7 +21,7 @@ namespace Framework
 
 			protected abstract object GetValue();
 			protected abstract void SetValue(object value);
-			protected abstract object ApplyValue(object value, float inputWeight, Playable playable);
+			protected abstract object ApplyPlayableValue(object currentValue, Playable playable, float playableWeight);
 
 			public override void ProcessFrame(Playable playable, FrameData info, object playerData)
 			{
@@ -59,7 +59,7 @@ namespace Framework
 
 					if (inputWeight > 0.0f)
 					{
-						value = ApplyValue(value, inputWeight, playable.GetInput(i));
+						value = ApplyPlayableValue(value, playable.GetInput(i), inputWeight);
 					}
 				}
 				

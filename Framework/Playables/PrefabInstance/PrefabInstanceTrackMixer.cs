@@ -15,18 +15,21 @@ namespace Framework
 				PrefabInstanceTrack track = (PrefabInstanceTrack)_trackAsset;
 				TimelineClip clip = track.GetMasterClip();
 
-				double clipStart = clip.hasPreExtrapolation ? clip.extrapolatedStart : clip.start;
-				double clipDuration = clip.hasPreExtrapolation || clip.hasPostExtrapolation ? clip.extrapolatedDuration : clip.duration;
+				if (clip != null)
+				{
+					double clipStart = clip.hasPreExtrapolation ? clip.extrapolatedStart : clip.start;
+					double clipDuration = clip.hasPreExtrapolation || clip.hasPostExtrapolation ? clip.extrapolatedDuration : clip.duration;
 
-				if (_director.time >= clipStart && _director.time <= clipStart + clipDuration)
-				{
-					CreatePrefabInstance();
-					SetChildTrackBindings(_prefabInstance);
-				}
-				else
-				{
-					DestroyPrefabInstance();
-					ClearChildTrackBindings();
+					if (_director.time >= clipStart && _director.time <= clipStart + clipDuration)
+					{
+						CreatePrefabInstance();
+						SetChildTrackBindings(_prefabInstance);
+					}
+					else
+					{
+						DestroyPrefabInstance();
+						ClearChildTrackBindings();
+					}
 				}
 			}
 

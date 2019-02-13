@@ -15,13 +15,12 @@ namespace Framework
 				return 0f;
 			}
 
-			protected override object ApplyValue(object value, float inputWeight, Playable playable)
+			protected override object ApplyPlayableValue(object currentValue, Playable playable, float playableWeight)
 			{
 				ScriptPlayable<AnimatorFloatParamPlayableBehaviour> scriptPlayable = (ScriptPlayable<AnimatorFloatParamPlayableBehaviour>)playable;
 				AnimatorFloatParamPlayableBehaviour inputBehaviour = scriptPlayable.GetBehaviour();
 
-				value = Mathf.Lerp((float)value, inputBehaviour._value, inputWeight);
-				return value;
+				return Mathf.Lerp((float)currentValue, inputBehaviour._value, playableWeight);
 			}
 
 			protected override void SetValue(object value)

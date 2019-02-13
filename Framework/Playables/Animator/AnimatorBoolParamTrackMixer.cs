@@ -14,13 +14,12 @@ namespace Framework
 				return false;
 			}
 
-			protected override object ApplyValue(object value, float inputWeight, Playable playable)
+			protected override object ApplyPlayableValue(object currentValue, Playable playable, float playableWeight)
 			{
 				ScriptPlayable<AnimatorBoolParamPlayableBehaviour> scriptPlayable = (ScriptPlayable<AnimatorBoolParamPlayableBehaviour>)playable;
 				AnimatorBoolParamPlayableBehaviour inputBehaviour = scriptPlayable.GetBehaviour();
 
-				value = inputWeight > 0.5f ? inputBehaviour._value : value;
-				return value;
+				return playableWeight > 0.5f ? inputBehaviour._value : currentValue;
 			}
 
 			protected override void SetValue(object value)
