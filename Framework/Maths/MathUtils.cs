@@ -108,6 +108,12 @@ namespace Framework
 				float lerp = Damp(0.0f, 1.0f, lambda, deltaTime, type);
 				return Vector3.Lerp(a, b, lerp);
 			}
+
+			public static Quaternion Damp(Quaternion a, Quaternion b, float lambda, float deltaTime, eInterpolation type = eInterpolation.Linear)
+			{
+				float lerp = Damp(0.0f, 1.0f, lambda, deltaTime, type);
+				return Quaternion.Slerp(a, b, lerp);
+			}
 			#endregion
 
 			public static int RandomSign()
