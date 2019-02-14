@@ -9,6 +9,7 @@ namespace Framework
 		public class PrefabInstanceTrackMixer : ParentBindingTrackMixer
 		{
 			private GameObject _prefabInstance;
+			private Transform _prefabSpawnPoint;
 
 			public override void ProcessFrame(Playable playable, FrameData info, object playerData)
 			{
@@ -39,13 +40,25 @@ namespace Framework
 				DestroyPrefabInstance();
 			}
 
+			public void SetSpawnPoint(Transform transform)
+			{
+				_prefabSpawnPoint = transform;
+			}
+
 			private void CreatePrefabInstance()
 			{
 				if (_prefabInstance == null)
 				{
 					DestroyPrefabInstance();
 					PrefabInstanceTrack track = (PrefabInstanceTrack)_trackAsset;
-					_prefabInstance = track._prefab.LoadAndInstantiatePrefab();
+					_prefabInstance = track._prefab.LoadAndInstantiatePrefab(_prefabSpawnPoint != null ?_prefabSpawnPoint.parent : null);
+
+					if (_prefabSpawnPoint != null)
+					{
+						_prefabInstance.transform.position = _prefabSpawnPoint.position;
+						_prefabInstance.transform.rotation = _prefabSpawnPoint.rotation;
+						_prefabInstance.transform.localScale = _prefabSpawnPoint.localScale;
+					}
 				}
 			}
 

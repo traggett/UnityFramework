@@ -11,6 +11,7 @@ namespace Framework
 		public class PrefabInstanceTrack : ParentBindingTrack
 		{
 			public PrefabResourceRef _prefab;
+			public ExposedReference<Transform> _prefabSpawnPoint;
 
 			protected override void OnCreateClip(TimelineClip clip)
 			{
@@ -20,8 +21,13 @@ namespace Framework
 
 			public override Playable CreateTrackMixer(PlayableGraph graph, GameObject go, int inputCount)
 			{
+				Transform spawnPoint = _prefabSpawnPoint.Resolve(graph.GetResolver());
 				OnCreateTrackMixer(graph);
-				return TimelineUtils.CreateTrackMixer<PrefabInstanceTrackMixer>(this, graph, go, inputCount);
+
+				ScriptPlayable<PrefabInstanceTrackMixer> mixer = TimelineUtils.CreateTrackMixer<PrefabInstanceTrackMixer>(this, graph, go, inputCount);
+				mixer.GetBehaviour().SetSpawnPoint(spawnPoint);
+
+				return mixer;
 			}
 
 #if UNITY_EDITOR
