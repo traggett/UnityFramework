@@ -4,6 +4,7 @@ using UnityEditor;
 
 namespace Framework
 {
+	using System.Collections.Generic;
 	using Utils;
 
 	namespace MeshInstancing
@@ -14,7 +15,7 @@ namespace Framework
 			{
 				private GameObject _animatorObject;
 				private SkinnedMeshRenderer[] _skinnedMeshes;
-				private SkinnedMeshRenderer _skinnedMesh;
+				private int _skinnedMeshIndex;
 				[SerializeField]
 				private AnimationClip[] _animations;
 				private string _currentFileName;
@@ -49,24 +50,19 @@ namespace Framework
 					{
 						_animatorObject = prefab;
 						_skinnedMeshes = prefab != null ? prefab.GetComponentsInChildren<SkinnedMeshRenderer>() : new SkinnedMeshRenderer[0];
-						_skinnedMesh = null;
+						_skinnedMeshIndex = 0;
 					}
 
 					if (_skinnedMeshes != null && _skinnedMeshes.Length > 0)
 					{
 						string[] skinnedMeshes = new string[_skinnedMeshes.Length];
-						int index = 0;
-
+						
 						for (int i = 0; i < skinnedMeshes.Length; i++)
 						{
 							skinnedMeshes[i] = _skinnedMeshes[i].gameObject.name;
-
-							if (_skinnedMesh == _skinnedMeshes[i])
-								index = i;
 						}
 
-						index = EditorGUILayout.Popup("Skinned Mesh", index, skinnedMeshes);
-						_skinnedMesh = _skinnedMeshes[index];
+						_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
 					}
 
 					_fps = EditorGUILayout.IntField("FPS", _fps);
@@ -77,7 +73,7 @@ namespace Framework
 					EditorGUILayout.PropertyField(animationsProperty, true);
 					so.ApplyModifiedProperties();
 
-					if (_skinnedMesh != null && _animations != null && _animations.Length > 0)
+					if (_skinnedMeshes != null && _animations != null && _animations.Length > 0)
 					{
 						if (GUILayout.Button("Generate"))
 						{
@@ -89,7 +85,12 @@ namespace Framework
 
 								GameObject sampleObject = Instantiate(_animatorObject);
 
-								AnimationTexture animationTexture = CreateAnimationTexture(sampleObject, _skinnedMesh.bones, _animations, _fps);
+								SkinnedMeshRenderer[] skinnedMeshes = sampleObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+								SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
+								Transform[] bones = skinnedMesh.bones;
+								Matrix4x4[] bindPoses = skinnedMesh.sharedMesh.bindposes;
+
+								AnimationTexture animationTexture = CreateAnimationTexture(sampleObject, bones, bindPoses, _animations, _fps);
 								SaveAnimationTexture(animationTexture, _currentFileName);
 
 								DestroyImmediate(sampleObject);
@@ -99,13 +100,20 @@ namespace Framework
 				}
 				#endregion
 
-				private static AnimationTexture CreateAnimationTexture(GameObject gameObject, Transform[] bones, AnimationClip[] animationClips, int bakeFPS)
+				private static AnimationTexture CreateAnimationTexture(GameObject gameObject, Transform[] bones, Matrix4x4[] bindposes, AnimationClip[] animationClips, int bakeFPS)
 				{
 					int numBones = bones.Length;
 					AnimationTexture.Animation[] animations = new AnimationTexture.Animation[animationClips.Length];
 
 					//3d array - animation / frame / bones
 					Matrix4x4[][][] boneWorldMatrix = new Matrix4x4[animations.Length][][];
+
+					Transform root = bones[0];
+					while (root.parent != null)
+					{
+						root = root.parent;
+					}
+					Matrix4x4 rootMat = root.worldToLocalMatrix;
 
 					for (int i = 0; i < animations.Length; i++)
 					{
@@ -123,14 +131,15 @@ namespace Framework
 						for (int j = 0; j < totalFrames; j++)
 						{
 							//Sample animation
-							animationClips[i].SampleAnimation(gameObject, bakeFPS * j);
-
+							animationClips[i].legacy = true;
+							animationClips[i].SampleAnimation(gameObject, (float)bakeFPS * j);
+							animationClips[i].legacy = false;
 							//Save bone matrices
 							boneWorldMatrix[i][j] = new Matrix4x4[numBones];
 
 							for (int k = 0; k < numBones; k++)
 							{
-								boneWorldMatrix[i][j][k] = bones[k].localToWorldMatrix;
+								boneWorldMatrix[i][j][k] = rootMat * bones[k].localToWorldMatrix * bindposes[k];
 							}
 						}
 					}
@@ -266,12 +275,14 @@ namespace Framework
 				{
 					Color[] colors = new Color[4 * boneMatrices.Length];
 
+					int index = 0;
+
 					for (int i = 0; i < boneMatrices.Length; i++)
 					{
-						colors[i + 0] = boneMatrices[i].GetRow(0);
-						colors[i + 1] = boneMatrices[i].GetRow(1);
-						colors[i + 2] = boneMatrices[i].GetRow(2);
-						colors[i + 3] = boneMatrices[i].GetRow(3);
+						colors[index++] = boneMatrices[i].GetRow(0);
+						colors[index++] = boneMatrices[i].GetRow(1);
+						colors[index++] = boneMatrices[i].GetRow(2);
+						colors[index++] = boneMatrices[i].GetRow(3);
 					}
 
 					return colors;

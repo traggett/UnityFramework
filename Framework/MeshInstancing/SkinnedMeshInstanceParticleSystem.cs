@@ -1,4 +1,5 @@
 ﻿using Framework.Maths;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -23,10 +24,16 @@ namespace Framework
 
 			//Info on what animations the particles can use
 			public ParticleAnimation[] _animations;
+
+			public ParticleSystemCustomData _customDataChannel;
 			#endregion
 
 			#region Private Data
 			private AnimationTexture _animationTexture;
+			private List<Vector4> _particleCustomData;
+			private float[] _particleCurrentFrame;
+
+			private static readonly Vector4 kDefaultData = new Vector4(-1.0f, 0.0f, 1.0f, 0.0f);
 			#endregion
 
 			#region Monobehaviour
@@ -37,6 +44,11 @@ namespace Framework
 
 			#endregion
 
+			//Particle custom data
+			//X - animation id
+			//y - frame
+			//z - speed
+
 			#region MeshInstanceParticleSystem
 			protected override void InitialiseIfNeeded()
 			{
@@ -46,12 +58,93 @@ namespace Framework
 				if (_animationTexture == null)
 				{
 					_animationTexture = AnimationTexture.ReadAnimationTexture(_animationTextureAsset);
+
+					//Set material constants
+					_material.SetInt("_numBones", _animationTexture._numBones);
+					_material.SetTexture("_animationTexture", _animationTexture._texture);
+					_material.SetInt("_animationTextureWidth", _animationTexture._texture.width);
+					_material.SetInt("_animationTextureHeight", _animationTexture._texture.height);
+
+					_particleCurrentFrame = new float[_particles.Length];
+
+					_particleCustomData = new List<Vector4>(_particles.Length);
+
+					ParticleSystem.CustomDataModule customData = _particleSystem.customData;
+					//customData.enabled = true;
+					customData.SetMode(_customDataChannel, ParticleSystemCustomDataMode.Vector);
+					customData.SetVector(_customDataChannel, 0, new ParticleSystem.MinMaxCurve(kDefaultData.x));
+					customData.SetVector(_customDataChannel, 1, new ParticleSystem.MinMaxCurve(kDefaultData.y));
+					customData.SetVector(_customDataChannel, 2, new ParticleSystem.MinMaxCurve(kDefaultData.z));
+					customData.SetVector(_customDataChannel, 3, new ParticleSystem.MinMaxCurve(kDefaultData.w));
 				}
 			}
 
-			protected override void UpdateProperties()
+			protected override void UpdateProperties(int numMeshes)
 			{
-				//To do update particle properties based on animations / particle custom data
+				_particleSystem.GetCustomParticleData(_particleCustomData, _customDataChannel);
+
+				//Update particle frame progress
+				for (int i = 0; i < numMeshes; i++)
+				{
+					Vector4 customData = _particleCustomData[i];
+
+					float prevFrame = customData.y;
+
+					//New particle
+					if (customData.w == 0.0f)
+					{
+						_particleCustomData[i] = StartNewAnimation(customData);
+					}
+					//Progress current animation
+					else
+					{
+						AnimationTexture.Animation animation = GetAnimation(customData);
+
+						//Update current frame
+						customData.y += Time.deltaTime * animation._fps * customData.z;
+
+						//Check animation is finished, To do, check loops
+						if (customData.y + 1 > animation._totalFrames)
+						{
+							_particleCustomData[i] = StartNewAnimation(customData);
+						}
+						else
+						{
+							_particleCustomData[i] = customData;
+						}
+					}
+
+					//Update properties
+					_particleCurrentFrame[i] = customData.y;
+				}
+
+				//Update custom data
+				_particleSystem.SetCustomParticleData(_particleCustomData, _customDataChannel);
+
+				//Update property block
+				//_propertyBlock.SetFloat("_frameIndex", _particleCurrentFrame[0]);
+
+				_propertyBlock.SetFloatArray("_frameIndex", _particleCurrentFrame);
+			}
+
+			private Vector4 StartNewAnimation(Vector4 oldData)
+			{
+				Vector4 data;
+
+				//TO DO!
+				data.x = 0.0f;
+				data.y = 0.0f;
+				data.z = 1.0f;
+				data.w = 1.0f;
+
+				return data;
+			}
+
+			private AnimationTexture.Animation GetAnimation(Vector4 data)
+			{
+				int index = Mathf.RoundToInt(data.x);
+				AnimationTexture.Animation animation = _animationTexture._animations[index];
+				return animation;
 			}
 			#endregion
 		}

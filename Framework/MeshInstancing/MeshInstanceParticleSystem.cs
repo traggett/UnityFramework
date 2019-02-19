@@ -15,10 +15,10 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private ParticleSystem _particleSystem;
-			private ParticleSystem.Particle[] _particles;
-			private Matrix4x4[] _particleTransforms;
-			private MaterialPropertyBlock _propertyBlock;
+			protected ParticleSystem _particleSystem;
+			protected ParticleSystem.Particle[] _particles;
+			protected Matrix4x4[] _particleTransforms;
+			protected MaterialPropertyBlock _propertyBlock;
 			#endregion
 
 			#region Monobehaviour
@@ -47,7 +47,7 @@ namespace Framework
 					if (_sortByDepth)
 						Array.Sort(_particleTransforms, SortByDistance);
 
-					UpdateProperties();
+					UpdateProperties(numMeshes);
 
 					Graphics.DrawMeshInstanced(_mesh, 0, _material, _particleTransforms, numMeshes, _propertyBlock);
 				}
@@ -74,7 +74,7 @@ namespace Framework
 				}
 			}
 
-			protected virtual void UpdateProperties()
+			protected virtual void UpdateProperties(int numMeshes)
 			{
 
 			}
