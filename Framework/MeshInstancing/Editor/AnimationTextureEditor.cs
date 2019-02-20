@@ -180,10 +180,7 @@ namespace Framework
 					}
 
 					texture.Apply();
-
-					byte[] bytes = texture.EncodeToPNG();
-					File.WriteAllBytes(Application.dataPath + "/../Pre.png", bytes);
-
+					
 					return new AnimationTexture(animations, numBones, texture);
 				}
 
