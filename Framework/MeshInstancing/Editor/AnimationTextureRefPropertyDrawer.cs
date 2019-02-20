@@ -10,7 +10,6 @@ namespace Framework
 			[CustomPropertyDrawer(typeof(AnimationTextureRef))]
 			public class AnimationTextureRefPropertyDrawer : PropertyDrawer
 			{
-				
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 				{
 					EditorGUI.BeginProperty(position, label, property);

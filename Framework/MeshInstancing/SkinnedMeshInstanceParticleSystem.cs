@@ -20,12 +20,13 @@ namespace Framework
 			{
 				public int _animationIndex; //Index of animation in binary file
 				[Range(0,1)]
-				public float _probabilty; //change of particles using this animation
+				public float _probability; //change of particles using this animation
 				public FloatRange _speedRange;	//What random speed range can be used
 				public bool _loop; //should particles play this anim indefinitely.
 			}
 
 			//Info on what animations the particles can use
+			[HideInInspector]
 			public ParticleAnimation[] _animations;
 
 			public ParticleSystemCustomData _customDataChannel;
@@ -131,7 +132,7 @@ namespace Framework
 
 				for (int i=0; i<_animations.Length; i++)
 				{
-					totalWeights += _animations[i]._probabilty;
+					totalWeights += _animations[i]._probability;
 				}
 
 				float chosen = Random.Range(0.0f, totalWeights);
@@ -139,7 +140,7 @@ namespace Framework
 
 				for (int i = 0; i < _animations.Length; i++)
 				{
-					totalWeights += _animations[i]._probabilty;
+					totalWeights += _animations[i]._probability;
 
 					if (chosen <= totalWeights)
 						return _animations[i];
