@@ -1,6 +1,8 @@
 ﻿using Framework.Maths;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Framework
 {
@@ -13,9 +15,11 @@ namespace Framework
 			//Binary file containing all animation textures as header info
 			public AnimationTextureRef _animationTexture;
 
+			[Serializable]
 			public struct ParticleAnimation
 			{
 				public int _animationIndex; //Index of animation in binary file
+				[Range(0,1)]
 				public float _probabilty; //change of particles using this animation
 				public FloatRange _speedRange;	//What random speed range can be used
 				public bool _loop; //should particles play this anim indefinitely.
@@ -89,24 +93,24 @@ namespace Framework
 					//New particle
 					if (customData.w == 0.0f)
 					{
-						_particleCustomData[i] = StartNewAnimation(customData);
+						_particleCustomData[i] = StartNewAnimation(customData, true);
 					}
 					//Progress current animation
 					else
 					{
-						AnimationTexture.Animation animation = GetAnimation(customData);
+						AnimationTexture.Animation animation = GetAnimation(Mathf.RoundToInt(customData.x));
 
 						//Update current frame
 						customData.y += Time.deltaTime * animation._fps * customData.z;
 
 						//Check animation is finished, To do, check loops
-						if (customData.y + 1 > animation._totalFrames)
+						if (Mathf.FloorToInt(customData.y) < animation._totalFrames - 2)
 						{
-							_particleCustomData[i] = StartNewAnimation(customData);
+							_particleCustomData[i] = customData;
 						}
 						else
 						{
-							_particleCustomData[i] = customData;
+							_particleCustomData[i] = StartNewAnimation(customData, false);
 						}
 					}
 
@@ -121,26 +125,51 @@ namespace Framework
 				_propertyBlock.SetFloatArray("frameIndex", _particleCurrentFrame);
 			}
 
-			private Vector4 StartNewAnimation(Vector4 oldData)
+			private ParticleAnimation PickRandomAnimation()
+			{
+				float totalWeights = 0.0f;
+
+				for (int i=0; i<_animations.Length; i++)
+				{
+					totalWeights += _animations[i]._probabilty;
+				}
+
+				float chosen = Random.Range(0.0f, totalWeights);
+				totalWeights = 0.0f;
+
+				for (int i = 0; i < _animations.Length; i++)
+				{
+					totalWeights += _animations[i]._probabilty;
+
+					if (chosen <= totalWeights)
+						return _animations[i];
+				}
+
+				return _animations[0];
+			}
+
+			private Vector4 StartNewAnimation(Vector4 oldData, bool randomOffset)
 			{
 				Vector4 data;
 
-				//TO DO!
-				data.x = 0.0f;
-				data.y = 0.0f;
-				data.z = 1.0f;
+				ParticleAnimation anim = PickRandomAnimation();
+
+				AnimationTexture.Animation animation = GetAnimation(anim._animationIndex);
+
+				data.x = anim._animationIndex;
+				data.y = randomOffset ? Random.Range(0, animation._totalFrames) : 0;
+				data.z = anim._speedRange.GetRandomValue();
 				data.w = 1.0f;
 
 				return data;
 			}
 
-			private AnimationTexture.Animation GetAnimation(Vector4 data)
+			private AnimationTexture.Animation GetAnimation(int index)
 			{
-				int index = Mathf.RoundToInt(data.x);
-				AnimationTexture.Animation animation = _animationTexture.GetAnimations()[index];
+				AnimationTexture.Animation[] animations =_animationTexture.GetAnimations();
+				AnimationTexture.Animation animation = animations[Mathf.Clamp(index, 0, animations.Length)];
 				return animation;
-			}
-			
+			}			
 			#endregion
 		}
 	}

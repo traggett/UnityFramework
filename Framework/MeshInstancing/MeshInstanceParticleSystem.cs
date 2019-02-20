@@ -11,6 +11,7 @@ namespace Framework
 			#region Public Data
 			public Mesh _mesh;
 			public Material _material;
+			public bool _alignWithVelocity;
 			public bool _sortByDepth;
 			#endregion
 
@@ -39,7 +40,20 @@ namespace Framework
 					for (int i = 0; i < numMeshes; i++)
 					{
 						Vector3 pos = _particles[i].position;
-						Quaternion rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
+						Quaternion rot;
+
+						if (_alignWithVelocity)
+						{
+							Vector3 foward = _particles[i].velocity;
+							//Vector3 left = Vector3.Cross(foward, Vector3.up);
+							//Vector3 up = -Vector3.Cross(foward, left);
+							rot = Quaternion.LookRotation(foward);
+						}
+						else
+						{
+							rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
+						}
+						
 						Vector3 scale = _particles[i].GetCurrentSize3D(_particleSystem);
 						_particleTransforms[i].SetTRS(pos, rot, scale);
 					}
