@@ -53,7 +53,7 @@ namespace Framework
 						_skinnedMeshIndex = 0;
 					}
 
-					if (_skinnedMeshes != null && _skinnedMeshes.Length > 0)
+					if (_animatorObject != null && _skinnedMeshes != null && _skinnedMeshes.Length > 0)
 					{
 						string[] skinnedMeshes = new string[_skinnedMeshes.Length];
 						
@@ -107,39 +107,36 @@ namespace Framework
 
 					//3d array - animation / frame / bones
 					Matrix4x4[][][] boneWorldMatrix = new Matrix4x4[animations.Length][][];
+					
+					Matrix4x4 rootMat = gameObject.transform.worldToLocalMatrix;
 
-					Transform root = bones[0];
-					while (root.parent != null)
+					for (int animIndex = 0; animIndex < animations.Length; animIndex++)
 					{
-						root = root.parent;
-					}
-					Matrix4x4 rootMat = root.worldToLocalMatrix;
-
-					for (int i = 0; i < animations.Length; i++)
-					{
-						string name = animationClips[i].name;
-						int totalFrames = (int)(animationClips[i].length * bakeFPS + 0.5f) + 1;
-						totalFrames = Mathf.Max(totalFrames, 1);
 						int fps = bakeFPS;
-						WrapMode wrapMode = animationClips[i].wrapMode;
-
-						animations[i] = new AnimationTexture.Animation(name, totalFrames, fps, wrapMode);
+						string name = animationClips[animIndex].name;
+						int totalFrames = Mathf.CeilToInt(animationClips[animIndex].length * fps) + 1;
+						WrapMode wrapMode = animationClips[animIndex].wrapMode;
+						animations[animIndex] = new AnimationTexture.Animation(name, totalFrames, fps, wrapMode);
 
 						//Sample animation
-						boneWorldMatrix[i] = new Matrix4x4[totalFrames][];
+						boneWorldMatrix[animIndex] = new Matrix4x4[totalFrames][];
 
-						for (int j = 0; j < totalFrames; j++)
+						for (int frame = 0; frame < totalFrames; frame++)
 						{
-							//Sample animation
-							animationClips[i].legacy = true;
-							animationClips[i].SampleAnimation(gameObject, (float)bakeFPS * j);
-							animationClips[i].legacy = false;
-							//Save bone matrices
-							boneWorldMatrix[i][j] = new Matrix4x4[numBones];
+							float bakeDelta = Mathf.Clamp01((float)frame / totalFrames);
+							float animationTime = bakeDelta * animationClips[animIndex].length;
 
-							for (int k = 0; k < numBones; k++)
+							//Sample animation
+							bool wasLegacy = animationClips[animIndex].legacy;
+							animationClips[animIndex].legacy = true;
+							animationClips[animIndex].SampleAnimation(gameObject, animationTime);
+							animationClips[animIndex].legacy = wasLegacy;
+							//Save bone matrices
+							boneWorldMatrix[animIndex][frame] = new Matrix4x4[numBones];
+
+							for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
 							{
-								boneWorldMatrix[i][j][k] = rootMat * bones[k].localToWorldMatrix * bindposes[k];
+								boneWorldMatrix[animIndex][frame][boneIndex] = rootMat * bones[boneIndex].localToWorldMatrix * bindposes[boneIndex];
 							}
 						}
 					}
@@ -160,16 +157,21 @@ namespace Framework
 					int pixelx = 0;
 					int pixely = 0;
 
-					for (int i = 0; i < boneWorldMatrix.Length; i++)
+					//Foreach animation
+					for (int animIndex = 0; animIndex < boneWorldMatrix.Length; animIndex++)
 					{
-						for (int j = 0; j < boneWorldMatrix[i].Length; j++)
+						//For each frame
+						for (int j = 0; j < boneWorldMatrix[animIndex].Length; j++)
 						{
-							Color[] matrixPixels = ConvertMatricesToColor(boneWorldMatrix[i][j]);
+							//Convert all frame bone matrices to colors
+							Color[] matrixPixels = ConvertMatricesToColor(boneWorldMatrix[animIndex][j]);
 							texture.SetPixels(pixelx, pixely, 4, numBones, matrixPixels);
 
+							//Shift to next frame position
 							pixelx += 4;
 
-							if (pixelx + 4 > textureSize)
+							//If less than 4 pixels from edge, move to next row
+							if (textureSize - pixelx < 4)
 							{
 								pixelx = 0;
 								pixely += numBones;
@@ -178,6 +180,9 @@ namespace Framework
 					}
 
 					texture.Apply();
+
+					byte[] bytes = texture.EncodeToPNG();
+					File.WriteAllBytes(Application.dataPath + "/../Pre.png", bytes);
 
 					return new AnimationTexture(animations, numBones, texture);
 				}
@@ -234,7 +239,7 @@ namespace Framework
 
 					int width = 0;
 
-					if (numFramesToMakeASquare >= numFrames)
+					if (numFrames <= numFramesToMakeASquare)
 					{
 						width = numFramesToMakeASquare * 4;
 					}

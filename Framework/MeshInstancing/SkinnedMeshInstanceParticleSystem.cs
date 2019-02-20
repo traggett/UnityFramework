@@ -60,7 +60,7 @@ namespace Framework
 					_animationTexture = AnimationTexture.ReadAnimationTexture(_animationTextureAsset);
 
 					//Set material constants
-					_material.SetInt("_numBones", _animationTexture._numBones);
+					_material.SetInt("_boneCount", _animationTexture._numBones);
 					_material.SetTexture("_animationTexture", _animationTexture._texture);
 					_material.SetInt("_animationTextureWidth", _animationTexture._texture.width);
 					_material.SetInt("_animationTextureHeight", _animationTexture._texture.height);
@@ -122,9 +122,7 @@ namespace Framework
 				_particleSystem.SetCustomParticleData(_particleCustomData, _customDataChannel);
 
 				//Update property block
-				//_propertyBlock.SetFloat("_frameIndex", _particleCurrentFrame[0]);
-
-				_propertyBlock.SetFloatArray("_frameIndex", _particleCurrentFrame);
+				_propertyBlock.SetFloatArray("frameIndex", _particleCurrentFrame);
 			}
 
 			private Vector4 StartNewAnimation(Vector4 oldData)

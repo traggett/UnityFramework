@@ -7,53 +7,46 @@
 
 #else // _VERTEX_SKINNING
 
-sampler2D _boneTexture;
-
-static const int _pixelsPerMatrix = 4;
-
-int _numBones;
-int _boneTextureWidth;
-int _boneTextureHeight;
+uniform int _boneCount;
+uniform sampler2D _animationTexture;
+uniform int _animationTextureWidth;
+uniform int _animationTextureHeight;
 
 #if (SHADER_TARGET < 30 || SHADER_API_GLES)
 uniform float frameIndex;
-uniform float preFrameIndex;
-uniform float transitionProgress;
 #else
 UNITY_INSTANCING_BUFFER_START(Props)
-	UNITY_DEFINE_INSTANCED_PROP(float, preFrameIndex)
-#define preFrameIndex_arr Props
 	UNITY_DEFINE_INSTANCED_PROP(float, frameIndex)
 #define frameIndex_arr Props
-	UNITY_DEFINE_INSTANCED_PROP(float, transitionProgress)
-#define transitionProgress_arr Props
 UNITY_INSTANCING_BUFFER_END(Props)
 #endif
 
 half4x4 loadAnimationInstanceMatrixFromTexture(uint frameIndex, uint boneIndex)
 {
-	uint blockCount = _boneTextureWidth / _pixelsPerMatrix;
+	uint pixelsPerFrame = 4;
+	
+	//how many frames per row?
+	uint framesPerRow = _animationTextureWidth / pixelsPerFrame;
+	float row = frameIndex / framesPerRow;
+	
 	int2 uv;
-	uv.y = frameIndex / blockCount * _numBones;
-	uv.x = _pixelsPerMatrix * (frameIndex - _boneTextureWidth / _pixelsPerMatrix * uv.y);
-
-	int matCount = _pixelsPerMatrix / 4;
-	uv.x = uv.x + (boneIndex % matCount) * 4;
-	uv.y = uv.y + boneIndex / matCount;
+	uv.y = (row * _boneCount);
+	uv.x = pixelsPerFrame * (frameIndex - _animationTextureWidth / pixelsPerFrame * uv.y);
+	uv.y += boneIndex;
 
 	float2 uvFrame;
-	uvFrame.x = uv.x / (float)_boneTextureWidth;
-	uvFrame.y = uv.y / (float)_boneTextureHeight;
+	uvFrame.x = uv.x / (float)_animationTextureWidth;
+	uvFrame.y = uv.y / (float)_animationTextureHeight;
 	half4 uvf = half4(uvFrame, 0, 0);
 
-	float offset = 1.0f / (float)_boneTextureWidth;
-	half4 c1 = tex2Dlod(_boneTexture, uvf);
+	float offset = 1.0f / (float)_animationTextureWidth;
+	half4 c1 = tex2Dlod(_animationTexture, uvf);
 	uvf.x = uvf.x + offset;
-	half4 c2 = tex2Dlod(_boneTexture, uvf);
+	half4 c2 = tex2Dlod(_animationTexture, uvf);
 	uvf.x = uvf.x + offset;
-	half4 c3 = tex2Dlod(_boneTexture, uvf);
+	half4 c3 = tex2Dlod(_animationTexture, uvf);
 	uvf.x = uvf.x + offset;
-	//half4 c4 = tex2Dlod(_boneTexture, uvf);
+	//half4 c4 = tex2Dlod(_animationTexture, uvf);
 	half4 c4 = half4(0, 0, 0, 1);
 	//float4x4 m = float4x4(c1, c2, c3, c4);
 	half4x4 m;
@@ -68,15 +61,10 @@ half4 animationInstanceSkinning(float4 vertex, float4 boneWeights, half4 boneIDs
 {
 #if (SHADER_TARGET < 30 || SHADER_API_GLES)
 	float curFrame = frameIndex;
-	float preAniFrame = preFrameIndex;
-	float progress = transitionProgress;
 #else
 	float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, frameIndex);
-	float preAniFrame = UNITY_ACCESS_INSTANCED_PROP(preFrameIndex_arr, preFrameIndex);
-	float progress = UNITY_ACCESS_INSTANCED_PROP(transitionProgress_arr, transitionProgress);
 #endif
 
-	//float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex);
 	int preFrame = curFrame;
 	int nextFrame = curFrame + 1.0f;
 	half4x4 localToWorldMatrixPre = loadAnimationInstanceMatrixFromTexture(preFrame, boneIDs.x) * boneWeights.x;
@@ -105,13 +93,7 @@ half4 animationInstanceSkinning(float4 vertex, float4 boneWeights, half4 boneIDs
 	half3 localTanPre = mul(tangent.xyz, (float3x3)localToWorldMatrixPre);
 	half3 localTanNext = mul(tangent.xyz, (float3x3)localToWorldMatrixNext);
 	tangent.xyz = normalize(lerp(localTanPre, localTanNext, curFrame - preFrame));
-
-	if (preAniFrame >= 0.0f)
-	{
-		half4x4 localToWorldMatrixPreAni = loadAnimationInstanceMatrixFromTexture(preAniFrame, boneIDs.x);
-		half4 localPosPreAni = mul(vertex, localToWorldMatrixPreAni);
-		localPos = lerp(localPosPreAni, localPos, progress);
-	}
+	
 	return localPos;
 }
 
@@ -119,13 +101,10 @@ half4 animationInstanceSkinningShadows(float4 vertex, float4 boneWeights, half4 
 {
 #if (SHADER_TARGET < 30 || SHADER_API_GLES)
 	float curFrame = frameIndex;
-	float preAniFrame = preFrameIndex;
-	float progress = transitionProgress;
 #else
 	float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, frameIndex);
-	float preAniFrame = UNITY_ACCESS_INSTANCED_PROP(preFrameIndex_arr, preFrameIndex);
-	float progress = UNITY_ACCESS_INSTANCED_PROP(transitionProgress_arr, transitionProgress);
 #endif
+
 	int preFrame = curFrame;
 	int nextFrame = curFrame + 1.0f;
 	half4x4 localToWorldMatrixPre = loadAnimationInstanceMatrixFromTexture(preFrame, boneIDs.x);
@@ -133,12 +112,6 @@ half4 animationInstanceSkinningShadows(float4 vertex, float4 boneWeights, half4 
 	half4 localPosPre = mul(vertex, localToWorldMatrixPre);
 	half4 localPosNext = mul(vertex, localToWorldMatrixNext);
 	half4 localPos = lerp(localPosPre, localPosNext, curFrame - preFrame);
-	if (preAniFrame >= 0.0f)
-	{
-		half4x4 localToWorldMatrixPreAni = loadAnimationInstanceMatrixFromTexture(preAniFrame, boneIDs.x);
-		half4 localPosPreAni = mul(vertex, localToWorldMatrixPreAni);
-		localPos = lerp(localPosPreAni, localPos, progress);
-	}
 	
 	return localPos;
 }
