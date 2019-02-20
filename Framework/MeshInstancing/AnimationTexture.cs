@@ -35,7 +35,7 @@ namespace Framework
 				_texture = texture;
 			}
 
-			public static AnimationTexture ReadAnimationTexture(TextAsset file)
+			public static AnimationTexture LoadFromFile(TextAsset file)
 			{
 				BinaryReader reader = new BinaryReader(new MemoryStream(file.bytes));
 

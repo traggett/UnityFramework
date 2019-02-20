@@ -1,6 +1,5 @@
 ﻿using Framework.Maths;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 namespace Framework
@@ -12,7 +11,7 @@ namespace Framework
 		{
 			#region Public Data
 			//Binary file containing all animation textures as header info
-			public TextAsset _animationTextureAsset;
+			public AnimationTextureRef _animationTexture;
 
 			public struct ParticleAnimation
 			{
@@ -29,7 +28,6 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private AnimationTexture _animationTexture;
 			private List<Vector4> _particleCustomData;
 			private float[] _particleCurrentFrame;
 
@@ -53,24 +51,18 @@ namespace Framework
 			protected override void InitialiseIfNeeded()
 			{
 				base.InitialiseIfNeeded();
-
-				//Load animation texture data.
-				if (_animationTexture == null)
+				
+				if (_particleCustomData == null)
 				{
-					_animationTexture = AnimationTexture.ReadAnimationTexture(_animationTextureAsset);
+					_animationTexture.SetMaterialProperties(_material);
 
-					//Set material constants
-					_material.SetInt("_boneCount", _animationTexture._numBones);
-					_material.SetTexture("_animationTexture", _animationTexture._texture);
-					_material.SetInt("_animationTextureWidth", _animationTexture._texture.width);
-					_material.SetInt("_animationTextureHeight", _animationTexture._texture.height);
+					_mesh = AnimationTexture.AddExtraMeshData(_mesh, 4);
 
 					_particleCurrentFrame = new float[_particles.Length];
 
 					_particleCustomData = new List<Vector4>(_particles.Length);
 
 					ParticleSystem.CustomDataModule customData = _particleSystem.customData;
-					//customData.enabled = true;
 					customData.SetMode(_customDataChannel, ParticleSystemCustomDataMode.Vector);
 					customData.SetVector(_customDataChannel, 0, new ParticleSystem.MinMaxCurve(kDefaultData.x));
 					customData.SetVector(_customDataChannel, 1, new ParticleSystem.MinMaxCurve(kDefaultData.y));
@@ -82,6 +74,10 @@ namespace Framework
 			protected override void UpdateProperties(int numMeshes)
 			{
 				_particleSystem.GetCustomParticleData(_particleCustomData, _customDataChannel);
+			
+#if UNITY_EDITOR
+				_animationTexture.SetMaterialProperties(_material);
+#endif
 
 				//Update particle frame progress
 				for (int i = 0; i < numMeshes; i++)
@@ -141,9 +137,10 @@ namespace Framework
 			private AnimationTexture.Animation GetAnimation(Vector4 data)
 			{
 				int index = Mathf.RoundToInt(data.x);
-				AnimationTexture.Animation animation = _animationTexture._animations[index];
+				AnimationTexture.Animation animation = _animationTexture.GetAnimations()[index];
 				return animation;
 			}
+			
 			#endregion
 		}
 	}
