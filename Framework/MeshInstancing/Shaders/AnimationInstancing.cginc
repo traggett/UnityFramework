@@ -65,8 +65,8 @@ half4 animationInstanceSkinning(float4 vertex, float4 boneWeights, half4 boneIDs
 	float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, frameIndex);
 #endif
 
-	int preFrame = curFrame;
-	int nextFrame = curFrame + 1.0f;
+	int preFrame = floor(curFrame);
+	int nextFrame = preFrame + 1;
 	half4x4 localToWorldMatrixPre = loadAnimationInstanceMatrixFromTexture(preFrame, boneIDs.x) * boneWeights.x;
 	if (boneWeights.y > 0.0f)
 		localToWorldMatrixPre = localToWorldMatrixPre + loadAnimationInstanceMatrixFromTexture(preFrame, boneIDs.y) * boneWeights.y;
@@ -105,8 +105,8 @@ half4 animationInstanceSkinningShadows(float4 vertex, float4 boneWeights, half4 
 	float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, frameIndex);
 #endif
 
-	int preFrame = curFrame;
-	int nextFrame = curFrame + 1.0f;
+	int preFrame = floor(curFrame);
+	int nextFrame = preFrame + 1;
 	half4x4 localToWorldMatrixPre = loadAnimationInstanceMatrixFromTexture(preFrame, boneIDs.x);
 	half4x4 localToWorldMatrixNext = loadAnimationInstanceMatrixFromTexture(nextFrame, boneIDs.x);
 	half4 localPosPre = mul(vertex, localToWorldMatrixPre);
