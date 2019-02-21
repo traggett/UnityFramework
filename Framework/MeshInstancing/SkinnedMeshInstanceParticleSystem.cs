@@ -12,7 +12,6 @@ namespace Framework
 		public class SkinnedMeshInstanceParticleSystem : MeshInstanceParticleSystem
 		{
 			#region Public Data
-			//Binary file containing all animation textures as header info
 			public AnimationTextureRef _animationTexture;
 
 			[Serializable]
@@ -22,7 +21,6 @@ namespace Framework
 				[Range(0,1)]
 				public float _probability; //change of particles using this animation
 				public FloatRange _speedRange;	//What random speed range can be used
-				public bool _loop; //should particles play this anim indefinitely.
 			}
 
 			//Info on what animations the particles can use
@@ -37,14 +35,6 @@ namespace Framework
 			private float[] _particleCurrentFrame;
 
 			private static readonly Vector4 kDefaultData = new Vector4(-1.0f, 0.0f, 1.0f, 0.0f);
-			#endregion
-
-			#region Monobehaviour
-
-			#endregion
-
-			#region Public Interface
-
 			#endregion
 
 			//Particle custom data
@@ -75,17 +65,35 @@ namespace Framework
 					customData.SetVector(_customDataChannel, 3, new ParticleSystem.MinMaxCurve(kDefaultData.w));
 				}
 			}
+		
 
-			protected override void UpdateProperties(int numMeshes)
+			protected override void UpdateProperties()
 			{
-				_particleSystem.GetCustomParticleData(_particleCustomData, _customDataChannel);
-			
 #if UNITY_EDITOR
 				_animationTexture.SetMaterialProperties(_material);
 #endif
 
+				UpdateAnimations();
+
+				//Update property block
+				for (int i = 0; i < _numRenderedParticles; i++)
+				{
+					int index = _renderedParticles[i]._index;
+					_particleCurrentFrame[i] = _particleCustomData[index].y;
+				}				
+
+				//Update property block
+				_propertyBlock.SetFloatArray("frameIndex", _particleCurrentFrame);
+			}
+			#endregion
+
+			#region Private Functions
+			private void UpdateAnimations()
+			{
+				int numParticles = _particleSystem.GetCustomParticleData(_particleCustomData, _customDataChannel);
+
 				//Update particle frame progress
-				for (int i = 0; i < numMeshes; i++)
+				for (int i = 0; i < numParticles; i++)
 				{
 					Vector4 customData = _particleCustomData[i];
 
@@ -114,16 +122,10 @@ namespace Framework
 							_particleCustomData[i] = StartNewAnimation(customData, false);
 						}
 					}
-
-					//Update properties
-					_particleCurrentFrame[i] = customData.y;
 				}
 
 				//Update custom data
 				_particleSystem.SetCustomParticleData(_particleCustomData, _customDataChannel);
-
-				//Update property block
-				_propertyBlock.SetFloatArray("frameIndex", _particleCurrentFrame);
 			}
 
 			private ParticleAnimation PickRandomAnimation()

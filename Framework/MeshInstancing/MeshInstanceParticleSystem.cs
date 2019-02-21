@@ -13,58 +13,36 @@ namespace Framework
 			public Material _material;
 			public bool _alignWithVelocity;
 			public bool _sortByDepth;
+			public bool _frustrumCull;
+			public float _boundRadius;
+			public float _frustrumPadding;
 			#endregion
 
 			#region Private Data
+			protected struct ParticleData : IComparable
+			{
+				public int _index;
+				public float _distToCamera;
+
+				public int CompareTo(object obj)
+				{
+					ParticleData other = (ParticleData)obj;
+
+					return other._distToCamera.CompareTo(_distToCamera);
+				}
+			}
 			protected ParticleSystem _particleSystem;
 			protected ParticleSystem.Particle[] _particles;
+			protected int _numRenderedParticles;
+			protected ParticleData[] _renderedParticles;
 			protected Matrix4x4[] _particleTransforms;
 			protected MaterialPropertyBlock _propertyBlock;
 			#endregion
 
 			#region Monobehaviour
-			protected virtual void Update()
+			void Update()
 			{
-				InitialiseIfNeeded();
-
-				if (_mesh == null || _material == null)
-					return;
-
-				int numAlive = _particleSystem.GetParticles(_particles);
-
-				if (numAlive > 0)
-				{
-					int numMeshes = Math.Min(numAlive, _particleTransforms.Length);
-					Vector4[] batchedColorArray = new Vector4[numMeshes];
-
-					for (int i = 0; i < numMeshes; i++)
-					{
-						Vector3 pos = _particles[i].position;
-						Quaternion rot;
-
-						if (_alignWithVelocity)
-						{
-							Vector3 foward = _particles[i].velocity;
-							//Vector3 left = Vector3.Cross(foward, Vector3.up);
-							//Vector3 up = -Vector3.Cross(foward, left);
-							rot = Quaternion.LookRotation(foward);
-						}
-						else
-						{
-							rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
-						}
-						
-						Vector3 scale = _particles[i].GetCurrentSize3D(_particleSystem);
-						_particleTransforms[i].SetTRS(pos, rot, scale);
-					}
-					
-					if (_sortByDepth)
-						Array.Sort(_particleTransforms, SortByDistance);
-
-					UpdateProperties(numMeshes);
-
-					Graphics.DrawMeshInstanced(_mesh, 0, _material, _particleTransforms, numMeshes, _propertyBlock);
-				}
+				Render(Camera.main);
 			}
 			#endregion
 
@@ -85,28 +63,106 @@ namespace Framework
 					_particleSystem = GetComponent<ParticleSystem>();
 					_particles = new ParticleSystem.Particle[_particleSystem.main.maxParticles];
 					_particleTransforms = new Matrix4x4[Math.Min(_particleSystem.main.maxParticles, 1023)];
+					_renderedParticles = new ParticleData[_particleTransforms.Length];
 				}
 			}
 
-			protected virtual void UpdateProperties(int numMeshes)
+			protected void Render(Camera camera)
+			{
+				InitialiseIfNeeded();
+
+				if (_mesh == null || _material == null)
+					return;
+
+				int numAlive = _particleSystem.GetParticles(_particles);
+
+				if (numAlive > 0)
+				{
+					Plane[] planes = null;
+
+					if (_frustrumCull)
+						planes = GeometryUtility.CalculateFrustumPlanes(camera);
+
+					_numRenderedParticles = 0;
+
+					int numParticles = Math.Min(numAlive, _particleTransforms.Length);
+					
+					for (int i = 0; i < numParticles; i++)
+					{
+						Vector3 pos = _particles[i].position;
+
+						bool rendered = true;
+
+						//If frustum culling is enabled, check should draw this particle
+						if (_frustrumCull)
+						{
+							if (!IsSphereInFrustrum(ref planes, ref pos, _boundRadius, _frustrumPadding))
+							{
+								rendered = false;
+							}
+						}
+
+						if (rendered)
+						{
+							Quaternion rot;
+
+							if (_alignWithVelocity)
+							{
+								Vector3 foward = _particles[i].velocity;
+								rot = Quaternion.LookRotation(foward);
+							}
+							else
+							{
+								rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
+							}
+
+							Vector3 scale = _particles[i].GetCurrentSize3D(_particleSystem);
+
+							_particleTransforms[_numRenderedParticles].SetTRS(pos, rot, scale);
+							_renderedParticles[_numRenderedParticles]._index = i;
+
+							if (_sortByDepth)
+								_renderedParticles[_numRenderedParticles]._distToCamera = (camera.transform.position - pos).sqrMagnitude;
+
+							_numRenderedParticles++;
+						}
+					}
+
+					if (_numRenderedParticles > 0)
+					{
+						if (_sortByDepth)
+							Array.Sort(_renderedParticles, _particleTransforms);
+
+						UpdateProperties();
+
+						Graphics.DrawMeshInstanced(_mesh, 0, _material, _particleTransforms, _numRenderedParticles, _propertyBlock);
+					}
+				}
+			}
+
+			protected virtual void UpdateProperties()
 			{
 
 			}
-
-			private int SortByDistance(Matrix4x4 a, Matrix4x4 b)
+			
+			private bool IsSphereInFrustrum(ref Plane[] frustrumPlanes, ref Vector3 center, float radius, float frustumPadding = 0)
 			{
-				Vector3 camPos = Camera.main.transform.position;
+				for (int i = 0; i < frustrumPlanes.Length; i++)
+				{
+					var normal = frustrumPlanes[i].normal;
+					var distance = frustrumPlanes[i].distance;
 
-				float aDist = (camPos - new Vector3(a.m03, a.m13, a.m23)).sqrMagnitude;
-				float bDist = (camPos - new Vector3(b.m03, b.m13, b.m23)).sqrMagnitude;
+					float dist = normal.x * center.x + normal.y * center.y + normal.z * center.z + distance;
 
-				return bDist.CompareTo(aDist);
+					if (dist < -radius - frustumPadding)
+					{
+						return false;
+					}
+				}
+
+				return true;
 			}
 
-			private static Vector4 ColorToVector(Color32 color)
-			{
-				return new Vector4(color.r, color.g, color.b, color.a);
-			}
 			#endregion
 		}
 	}
