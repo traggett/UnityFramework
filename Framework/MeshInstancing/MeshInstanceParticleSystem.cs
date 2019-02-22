@@ -24,7 +24,7 @@ namespace Framework
 			{
 				public int _index;
 				public Matrix4x4 _transform;
-				public float _distToCamera;
+				public float _zDist;
 			}
 			protected ParticleSystem _particleSystem;
 			protected ParticleSystem.Particle[] _particles;
@@ -116,7 +116,9 @@ namespace Framework
 							_particleData[i]._transform.SetTRS(pos, rot, scale);
 
 							if (_sortByDepth)
-								_particleData[i]._distToCamera = (camera.transform.position - pos).sqrMagnitude;
+							{
+								_particleData[i]._zDist = (camera.transform.position - pos).sqrMagnitude;
+							}
 
 							AddToSortedList(ref _particleData[i]);
 						}
@@ -178,7 +180,7 @@ namespace Framework
 
 				if (_sortByDepth)
 				{
-					index = FindInsertIndex(particleData._distToCamera, 0, _renderedParticles.Count);
+					index = FindInsertIndex(particleData._zDist, 0, _renderedParticles.Count);
 				}	
 
 				_renderedParticles.Insert(index, particleData);
@@ -186,7 +188,7 @@ namespace Framework
 
 			private static readonly int kSearchNodes = 8;
 
-			private int FindInsertIndex(float dist, int startIndex, int endIndex)
+			private int FindInsertIndex(float zDist, int startIndex, int endIndex)
 			{
 				int searchWidth = endIndex - startIndex;
 				int numSearches = Mathf.Min(kSearchNodes, searchWidth);
@@ -198,7 +200,7 @@ namespace Framework
 				for (int i =0; i<numSearches; i++)
 				{
 					//If this distance is greater than current node its between this and prev node
-					if (dist > _renderedParticles[currIndex]._distToCamera)
+					if (zDist > _renderedParticles[currIndex]._zDist)
 					{
 						//If first node or search one node at a time then found our index
 						if (i == 0  || nodesPerSearch == 1)
@@ -208,7 +210,7 @@ namespace Framework
 						//Otherwise its between this and the previous index
 						else
 						{
-							return FindInsertIndex(dist, prevIndex, currIndex);
+							return FindInsertIndex(zDist, prevIndex, currIndex);
 						}
 					}
 
