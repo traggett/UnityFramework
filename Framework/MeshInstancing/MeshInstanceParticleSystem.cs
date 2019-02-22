@@ -11,7 +11,10 @@ namespace Framework
 		{
 			#region Public Data
 			public Mesh _mesh;
-			public Material _material;
+			public Material[] _materials;
+			public Vector3 _meshOffset = Vector3.zero;
+			public Vector3 _meshScale = Vector3.one;
+
 			public bool _alignWithVelocity;
 			public bool _sortByDepth;
 			public bool _frustrumCull;
@@ -20,7 +23,7 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			protected class ParticleData
+			private class ParticleData
 			{
 				public int _index;
 				public Matrix4x4 _transform;
@@ -28,24 +31,21 @@ namespace Framework
 			}
 			protected ParticleSystem _particleSystem;
 			protected ParticleSystem.Particle[] _particles;
+			protected MaterialPropertyBlock _propertyBlock;
 			private ParticleData[] _particleData;
 			private List<ParticleData> _renderedParticles;
 			private Matrix4x4[] _particleTransforms;
-			protected MaterialPropertyBlock _propertyBlock;
 			#endregion
 
 			#region Monobehaviour
-			void Update()
+			protected virtual void Update()
 			{
+				InitialiseIfNeeded();
 				Render(Camera.main);
 			}
 			#endregion
-
-			#region Public Interface
-
-			#endregion
-
-			#region Private Functions
+			
+			#region Protected Functions
 			protected virtual void InitialiseIfNeeded()
 			{
 				if (_propertyBlock == null)
@@ -65,11 +65,24 @@ namespace Framework
 				}
 			}
 
+			protected virtual void UpdateProperties()
+			{
+
+			}
+
+			protected int GetNumRenderedParticles()
+			{
+				return _renderedParticles.Count;
+			}
+
+			protected int GetRenderedParticlesIndex(int i)
+			{
+				return _renderedParticles[i]._index;
+			}
+
 			protected void Render(Camera camera)
 			{
-				InitialiseIfNeeded();
-
-				if (_mesh == null || _material == null)
+				if (_mesh == null || _materials.Length < _mesh.subMeshCount)
 					return;
 
 				int numAlive = _particleSystem.GetParticles(_particles);
@@ -83,35 +96,35 @@ namespace Framework
 						planes = GeometryUtility.CalculateFrustumPlanes(camera);
 
 					int numParticles = Math.Min(numAlive, _particleTransforms.Length);
-					
+
 					for (int i = 0; i < numParticles; i++)
 					{
-						Vector3 pos = _particles[i].position;
+						Quaternion rot;
+
+						if (_alignWithVelocity)
+						{
+							Vector3 foward = _particles[i].velocity;
+							rot = Quaternion.LookRotation(foward);
+						}
+						else
+						{
+							rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
+						}
+
+						Vector3 scale = Vector3.Scale(_particles[i].GetCurrentSize3D(_particleSystem), _meshScale);
+
+						Vector3 pos = _particles[i].position + rot * _meshOffset;
 
 						bool rendered = true;
 
 						//If frustum culling is enabled, check should draw this particle
 						if (_frustrumCull)
 						{
-							rendered = IsSphereInFrustrum(ref planes, ref pos, _boundRadius, _frustrumPadding);
+							rendered = IsSphereInFrustrum(ref planes, ref pos, _boundRadius * Mathf.Max(scale.x, scale.y, scale.z), _frustrumPadding);
 						}
 
 						if (rendered)
 						{
-							Quaternion rot;
-
-							if (_alignWithVelocity)
-							{
-								Vector3 foward = _particles[i].velocity;
-								rot = Quaternion.LookRotation(foward);
-							}
-							else
-							{
-								rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
-							}
-
-							Vector3 scale = _particles[i].GetCurrentSize3D(_particleSystem);
-							
 							_particleData[i]._index = i;
 							_particleData[i]._transform.SetTRS(pos, rot, scale);
 
@@ -128,26 +141,17 @@ namespace Framework
 					{
 						UpdateProperties();
 						FillTransformMatricies();
-						Graphics.DrawMeshInstanced(_mesh, 0, _material, _particleTransforms, _renderedParticles.Count, _propertyBlock);
+
+						for (int i = 0; i < _mesh.subMeshCount; i++)
+						{
+							Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _particleTransforms, _renderedParticles.Count, _propertyBlock);
+						}
 					}
 				}
 			}
+			#endregion
 
-			protected virtual void UpdateProperties()
-			{
-
-			}
-
-			protected int GetNumRenderedParticles()
-			{
-				return _renderedParticles.Count;
-			}
-
-			protected int GetRenderedParticlesIndex(int i)
-			{
-				return _renderedParticles[i]._index;
-			}
-
+			#region Private Functions
 			private bool IsSphereInFrustrum(ref Plane[] frustrumPlanes, ref Vector3 center, float radius, float frustumPadding = 0)
 			{
 				for (int i = 0; i < frustrumPlanes.Length; i++)

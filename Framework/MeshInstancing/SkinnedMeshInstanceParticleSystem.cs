@@ -33,14 +33,22 @@ namespace Framework
 			#region Private Data
 			private List<Vector4> _particleCustomData;
 			private float[] _particleCurrentFrame;
-
-			private static readonly Vector4 kDefaultData = new Vector4(-1.0f, 0.0f, 1.0f, 0.0f);
-			#endregion
-
+			
 			//Particle custom data
 			//X - animation id
 			//y - frame
 			//z - speed
+			private static readonly Vector4 kDefaultData = new Vector4(-1.0f, 0.0f, 1.0f, 0.0f);
+			#endregion
+
+			#region Monobehaviour
+			protected override void Update()
+			{
+				InitialiseIfNeeded();
+				UpdateAnimations();
+				Render(Camera.main);
+			}
+			#endregion
 
 			#region MeshInstanceParticleSystem
 			protected override void InitialiseIfNeeded()
@@ -49,7 +57,10 @@ namespace Framework
 				
 				if (_particleCustomData == null)
 				{
-					_animationTexture.SetMaterialProperties(_material);
+					for (int i = 0; i < _materials.Length; i++)
+					{
+						_animationTexture.SetMaterialProperties(_materials[i]);
+					}
 
 					_mesh = AnimationTexture.AddExtraMeshData(_mesh, 4);
 
@@ -70,10 +81,11 @@ namespace Framework
 			protected override void UpdateProperties()
 			{
 #if UNITY_EDITOR
-				_animationTexture.SetMaterialProperties(_material);
+				for (int i = 0; i < _materials.Length; i++)
+				{
+					_animationTexture.SetMaterialProperties(_materials[i]);
+				}
 #endif
-
-				UpdateAnimations();
 
 				//Update property block
 				for (int i = 0; i < GetNumRenderedParticles(); i++)
@@ -160,7 +172,7 @@ namespace Framework
 				AnimationTexture.Animation animation = GetAnimation(anim._animationIndex);
 
 				data.x = anim._animationIndex;
-				data.y = randomOffset ? Random.Range(0, animation._totalFrames) : 0;
+				data.y = randomOffset ? Random.Range(0, animation._totalFrames - 2) : 0;
 				data.z = anim._speedRange.GetRandomValue();
 				data.w = 1.0f;
 
