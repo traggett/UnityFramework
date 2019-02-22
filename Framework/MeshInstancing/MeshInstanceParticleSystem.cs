@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Framework
@@ -19,23 +20,17 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			protected struct ParticleData : IComparable
+			protected class ParticleData
 			{
 				public int _index;
+				public Matrix4x4 _transform;
 				public float _distToCamera;
-
-				public int CompareTo(object obj)
-				{
-					ParticleData other = (ParticleData)obj;
-
-					return other._distToCamera.CompareTo(_distToCamera);
-				}
 			}
 			protected ParticleSystem _particleSystem;
 			protected ParticleSystem.Particle[] _particles;
-			protected int _numRenderedParticles;
-			protected ParticleData[] _renderedParticles;
-			protected Matrix4x4[] _particleTransforms;
+			private ParticleData[] _particleData;
+			private List<ParticleData> _renderedParticles;
+			private Matrix4x4[] _particleTransforms;
 			protected MaterialPropertyBlock _propertyBlock;
 			#endregion
 
@@ -63,7 +58,10 @@ namespace Framework
 					_particleSystem = GetComponent<ParticleSystem>();
 					_particles = new ParticleSystem.Particle[_particleSystem.main.maxParticles];
 					_particleTransforms = new Matrix4x4[Math.Min(_particleSystem.main.maxParticles, 1023)];
-					_renderedParticles = new ParticleData[_particleTransforms.Length];
+					_particleData = new ParticleData[_particleTransforms.Length];
+					for (int i = 0; i < _particleTransforms.Length; i++)
+						_particleData[i] = new ParticleData();
+					_renderedParticles = new List<ParticleData>(_particleTransforms.Length);
 				}
 			}
 
@@ -75,6 +73,7 @@ namespace Framework
 					return;
 
 				int numAlive = _particleSystem.GetParticles(_particles);
+				_renderedParticles.Clear();
 
 				if (numAlive > 0)
 				{
@@ -82,8 +81,6 @@ namespace Framework
 
 					if (_frustrumCull)
 						planes = GeometryUtility.CalculateFrustumPlanes(camera);
-
-					_numRenderedParticles = 0;
 
 					int numParticles = Math.Min(numAlive, _particleTransforms.Length);
 					
@@ -96,10 +93,7 @@ namespace Framework
 						//If frustum culling is enabled, check should draw this particle
 						if (_frustrumCull)
 						{
-							if (!IsSphereInFrustrum(ref planes, ref pos, _boundRadius, _frustrumPadding))
-							{
-								rendered = false;
-							}
+							rendered = IsSphereInFrustrum(ref planes, ref pos, _boundRadius, _frustrumPadding);
 						}
 
 						if (rendered)
@@ -117,25 +111,22 @@ namespace Framework
 							}
 
 							Vector3 scale = _particles[i].GetCurrentSize3D(_particleSystem);
-
-							_particleTransforms[_numRenderedParticles].SetTRS(pos, rot, scale);
-							_renderedParticles[_numRenderedParticles]._index = i;
+							
+							_particleData[i]._index = i;
+							_particleData[i]._transform.SetTRS(pos, rot, scale);
 
 							if (_sortByDepth)
-								_renderedParticles[_numRenderedParticles]._distToCamera = (camera.transform.position - pos).sqrMagnitude;
+								_particleData[i]._distToCamera = (camera.transform.position - pos).sqrMagnitude;
 
-							_numRenderedParticles++;
+							AddToSortedList(ref _particleData[i]);
 						}
 					}
 
-					if (_numRenderedParticles > 0)
+					if (_renderedParticles.Count > 0)
 					{
-						if (_sortByDepth)
-							Array.Sort(_renderedParticles, _particleTransforms);
-
 						UpdateProperties();
-
-						Graphics.DrawMeshInstanced(_mesh, 0, _material, _particleTransforms, _numRenderedParticles, _propertyBlock);
+						FillTransformMatricies();
+						Graphics.DrawMeshInstanced(_mesh, 0, _material, _particleTransforms, _renderedParticles.Count, _propertyBlock);
 					}
 				}
 			}
@@ -144,7 +135,17 @@ namespace Framework
 			{
 
 			}
-			
+
+			protected int GetNumRenderedParticles()
+			{
+				return _renderedParticles.Count;
+			}
+
+			protected int GetRenderedParticlesIndex(int i)
+			{
+				return _renderedParticles[i]._index;
+			}
+
 			private bool IsSphereInFrustrum(ref Plane[] frustrumPlanes, ref Vector3 center, float radius, float frustumPadding = 0)
 			{
 				for (int i = 0; i < frustrumPlanes.Length; i++)
@@ -163,6 +164,60 @@ namespace Framework
 				return true;
 			}
 
+			private void FillTransformMatricies()
+			{
+				for (int i = 0; i < _renderedParticles.Count; i++)
+				{
+					_particleTransforms[i] = _renderedParticles[i]._transform;
+				}
+			}
+
+			private void AddToSortedList(ref ParticleData particleData)
+			{
+				int index = 0;
+
+				if (_sortByDepth)
+				{
+					index = FindInsertIndex(particleData._distToCamera, 0, _renderedParticles.Count);
+				}	
+
+				_renderedParticles.Insert(index, particleData);
+			}
+
+			private static readonly int kSearchNodes = 8;
+
+			private int FindInsertIndex(float dist, int startIndex, int endIndex)
+			{
+				int searchWidth = endIndex - startIndex;
+				int numSearches = Mathf.Min(kSearchNodes, searchWidth);
+				int nodesPerSearch = Mathf.FloorToInt(searchWidth / (float)numSearches);
+
+				int currIndex = startIndex;
+				int prevIndex = currIndex;
+
+				for (int i =0; i<numSearches; i++)
+				{
+					//If this distance is greater than current node its between this and prev node
+					if (dist > _renderedParticles[currIndex]._distToCamera)
+					{
+						//If first node or search one node at a time then found our index
+						if (i == 0  || nodesPerSearch == 1)
+						{
+							return currIndex;
+						}
+						//Otherwise its between this and the previous index
+						else
+						{
+							return FindInsertIndex(dist, prevIndex, currIndex);
+						}
+					}
+
+					prevIndex = currIndex;
+					currIndex = (i == numSearches - 1) ? endIndex : startIndex + ((i + 1) * nodesPerSearch);
+				}
+
+				return endIndex;
+			}
 			#endregion
 		}
 	}

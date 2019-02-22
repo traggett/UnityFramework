@@ -76,9 +76,9 @@ namespace Framework
 				UpdateAnimations();
 
 				//Update property block
-				for (int i = 0; i < _numRenderedParticles; i++)
+				for (int i = 0; i < GetNumRenderedParticles(); i++)
 				{
-					int index = _renderedParticles[i]._index;
+					int index = GetRenderedParticlesIndex(i);
 					_particleCurrentFrame[i] = _particleCustomData[index].y;
 				}				
 
