@@ -75,8 +75,7 @@ namespace Framework
 					customData.SetVector(_customDataChannel, 2, new ParticleSystem.MinMaxCurve(kDefaultData.z));
 					customData.SetVector(_customDataChannel, 3, new ParticleSystem.MinMaxCurve(kDefaultData.w));
 				}
-			}
-		
+			}	
 
 			protected override void UpdateProperties()
 			{
