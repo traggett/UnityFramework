@@ -123,7 +123,7 @@ namespace Framework
 						//Update current frame
 						customData.y += Time.deltaTime * animation._fps * customData.z;
 
-						//Check animation is finished, To do, check loops
+						//Is animation finished?
 						if (Mathf.FloorToInt(customData.y) < animation._totalFrames - 2)
 						{
 							_particleCustomData[i] = customData;
