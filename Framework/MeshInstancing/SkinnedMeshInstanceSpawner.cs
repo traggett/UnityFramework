@@ -38,6 +38,7 @@ namespace Framework
 				public int _animationIndex;
 				public float _currentFrame;
 				public float _animationSpeed;
+				public SkinnedMeshRenderer[] _skinnedMeshes;
 			}
 			private InstanceData[] _instanceData;
 			private float[] _currentFrame;
@@ -96,10 +97,10 @@ namespace Framework
 						if (_instanceData[i]._gameObject == null)
 						{
 							_instanceData[i]._gameObject = _prefab.LoadAndInstantiatePrefab(this.transform);
-							SkinnedMeshRenderer[] skinnedMeshes = _instanceData[i]._gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+							_instanceData[i]._skinnedMeshes = _instanceData[i]._gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
 
-							for (int j = 0; j < skinnedMeshes.Length; j++)
-								skinnedMeshes[j].enabled = false;
+							for (int j = 0; j < _instanceData[i]._skinnedMeshes.Length; j++)
+								_instanceData[i]._skinnedMeshes[j].enabled = false;
 						}
 
 						Animation animation = PickRandomAnimation();
@@ -115,13 +116,18 @@ namespace Framework
 			}
 			#endregion
 
-			#region Private Functions
-			private void Render(Camera camera)
+			#region Protected Functions
+			protected void Render(Camera camera)
 			{
 				if (_skinnedMeshes == null || _instanceData == null)
 					return;
 
 				_renderedObjects.Clear();
+
+				Plane[] planes = null;
+
+				if (_frustrumCull)
+					planes = GeometryUtility.CalculateFrustumPlanes(camera);
 
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
@@ -130,7 +136,7 @@ namespace Framework
 					//If frustum culling is enabled, check should draw this game object
 					if (_frustrumCull && rendered)
 					{
-						rendered = true; // to do!
+						rendered = IsInFrustrum(planes, ref _instanceData[i]);
 					}
 
 					if (rendered)
@@ -162,7 +168,7 @@ namespace Framework
 				}
 			}
 
-			private void UpdateProperties()
+			protected virtual void UpdateProperties()
 			{
 #if UNITY_EDITOR
 				//In editor always set shared data
@@ -184,6 +190,14 @@ namespace Framework
 
 				//Update property block
 				_propertyBlock.SetFloatArray("frameIndex", _currentFrame);
+			}
+			#endregion
+
+			#region Private Functions
+			private bool IsInFrustrum(Plane[] cameraFrustrumPlanes, ref InstanceData instanceData)
+			{
+				//Only test first skinned mesh?
+				return GeometryUtility.TestPlanesAABB(cameraFrustrumPlanes, instanceData._skinnedMeshes[0].bounds);
 			}
 
 			private void UpdateAnimations()
