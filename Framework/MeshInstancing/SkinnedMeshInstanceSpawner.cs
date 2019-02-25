@@ -197,16 +197,8 @@ namespace Framework
 				//Update property block
 				_propertyBlock.SetFloatArray("frameIndex", _currentFrame);
 			}
-			#endregion
 
-			#region Private Functions
-			private bool IsInFrustrum(Plane[] cameraFrustrumPlanes, ref InstanceData instanceData)
-			{
-				//Only test first skinned mesh?
-				return GeometryUtility.TestPlanesAABB(cameraFrustrumPlanes, instanceData._skinnedMeshes[0].bounds);
-			}
-
-			private void UpdateAnimations()
+			protected void UpdateAnimations()
 			{
 				//Update particle frame progress
 				for (int i = 0; i < _instanceData.Length; i++)
@@ -232,6 +224,14 @@ namespace Framework
 						}
 					}
 				}
+			}
+			#endregion
+
+			#region Private Functions
+			private bool IsInFrustrum(Plane[] cameraFrustrumPlanes, ref InstanceData instanceData)
+			{
+				//Only test first skinned mesh?
+				return GeometryUtility.TestPlanesAABB(cameraFrustrumPlanes, instanceData._skinnedMeshes[0].bounds);
 			}
 
 			private Animation PickRandomAnimation()
