@@ -90,7 +90,8 @@ namespace Framework
 				for (int i = 0; i < GetNumRenderedParticles(); i++)
 				{
 					int index = GetRenderedParticlesIndex(i);
-					_particleCurrentFrame[i] = _particleCustomData[index].y;
+					AnimationTexture.Animation animation = GetAnimation(Mathf.RoundToInt(_particleCustomData[index].x));
+					_particleCurrentFrame[i] = animation._startFrameOffset + _particleCustomData[index].y;
 				}				
 
 				//Update property block

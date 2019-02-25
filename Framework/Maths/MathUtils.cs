@@ -368,6 +368,24 @@ namespace Framework
 
 				return true;
 			}
+
+			public static bool IsSphereInFrustrum(ref Plane[] frustrumPlanes, ref Vector3 center, float radius, float frustumPadding = 0f)
+			{
+				for (int i = 0; i < frustrumPlanes.Length; i++)
+				{
+					var normal = frustrumPlanes[i].normal;
+					var distance = frustrumPlanes[i].distance;
+
+					float dist = normal.x * center.x + normal.y * center.y + normal.z * center.z + distance;
+
+					if (dist < -radius - frustumPadding)
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
 		}
 	}
 }

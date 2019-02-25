@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace Framework
 {
+	using Maths;
+
 	namespace MeshInstancing
 	{
 		[RequireComponent(typeof(ParticleSystem))]
@@ -120,7 +122,7 @@ namespace Framework
 						//If frustum culling is enabled, check should draw this particle
 						if (_frustrumCull)
 						{
-							rendered = IsSphereInFrustrum(ref planes, ref pos, _boundRadius * Mathf.Max(scale.x, scale.y, scale.z), _frustrumPadding);
+							rendered = MathUtils.IsSphereInFrustrum(ref planes, ref pos, _boundRadius * Mathf.Max(scale.x, scale.y, scale.z), _frustrumPadding);
 						}
 
 						if (rendered)
@@ -152,24 +154,6 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private bool IsSphereInFrustrum(ref Plane[] frustrumPlanes, ref Vector3 center, float radius, float frustumPadding = 0)
-			{
-				for (int i = 0; i < frustrumPlanes.Length; i++)
-				{
-					var normal = frustrumPlanes[i].normal;
-					var distance = frustrumPlanes[i].distance;
-
-					float dist = normal.x * center.x + normal.y * center.y + normal.z * center.z + distance;
-
-					if (dist < -radius - frustumPadding)
-					{
-						return false;
-					}
-				}
-
-				return true;
-			}
-
 			private void FillTransformMatricies()
 			{
 				for (int i = 0; i < _renderedParticles.Count; i++)
@@ -190,7 +174,7 @@ namespace Framework
 				_renderedParticles.Insert(index, particleData);
 			}
 
-			private static readonly int kSearchNodes = 8;
+			private static readonly int kSearchNodes = 24;
 
 			private int FindInsertIndex(float zDist, int startIndex, int endIndex)
 			{

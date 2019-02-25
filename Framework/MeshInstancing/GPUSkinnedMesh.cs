@@ -14,7 +14,7 @@ namespace Framework
 
 			private void Start()
 			{
-				_skinnedMesh.sharedMesh = AnimationTexture.AddExtraMeshData(_skinnedMesh.sharedMesh, 4);
+				_skinnedMesh.sharedMesh = AnimationTexture.AddExtraMeshData(_skinnedMesh.sharedMesh);
 
 				_animationTexture.SetMaterialProperties(_material);
 			}

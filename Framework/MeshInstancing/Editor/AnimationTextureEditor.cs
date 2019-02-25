@@ -109,6 +109,7 @@ namespace Framework
 					Matrix4x4[][][] boneWorldMatrix = new Matrix4x4[animations.Length][][];
 					
 					Matrix4x4 rootMat = gameObject.transform.worldToLocalMatrix;
+					int startOffset = 0;
 
 					for (int animIndex = 0; animIndex < animations.Length; animIndex++)
 					{
@@ -116,7 +117,8 @@ namespace Framework
 						string name = animationClips[animIndex].name;
 						int totalFrames = Mathf.CeilToInt(animationClips[animIndex].length * fps) + 1;
 						WrapMode wrapMode = animationClips[animIndex].wrapMode;
-						animations[animIndex] = new AnimationTexture.Animation(name, totalFrames, fps, wrapMode);
+						animations[animIndex] = new AnimationTexture.Animation(name, startOffset, totalFrames, fps, wrapMode);
+						startOffset += totalFrames;
 
 						//Sample animation
 						boneWorldMatrix[animIndex] = new Matrix4x4[totalFrames][];
@@ -201,6 +203,7 @@ namespace Framework
 					for (int i = 0; i < animationTexture._animations.Length; i++)
 					{
 						writer.Write(animationTexture._animations[i]._name);
+						writer.Write(animationTexture._animations[i]._startFrameOffset);
 						writer.Write(animationTexture._animations[i]._totalFrames);
 						writer.Write(animationTexture._animations[i]._fps);
 						writer.Write((int)animationTexture._animations[i]._wrapMode);

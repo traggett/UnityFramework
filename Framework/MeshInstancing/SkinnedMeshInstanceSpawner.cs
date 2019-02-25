@@ -16,7 +16,15 @@ namespace Framework
 			public AnimationTextureRef _animationTexture;
 			public PrefabResourceRef _prefab;
 			public bool _sortByDepth;
-			public bool _frustrumCull;
+
+			public enum eFrustrumCulling
+			{
+				Off,
+				Sphere,
+				Bounds
+			}
+			public eFrustrumCulling _frustrumCulling;
+			public float _sphereCullingRadius;
 
 			[Serializable]
 			public struct Animation
@@ -39,6 +47,7 @@ namespace Framework
 				public float _currentFrame;
 				public float _animationSpeed;
 				public SkinnedMeshRenderer[] _skinnedMeshes;
+				public object _extraData;
 			}
 			private InstanceData[] _instanceData;
 			private float[] _currentFrame;
@@ -67,6 +76,16 @@ namespace Framework
 				if (_referencePrefab != null)
 				{
 					_skinnedMeshes = _referencePrefab.GetComponentsInChildren<SkinnedMeshRenderer>();
+
+					for (int i=0; i<_skinnedMeshes.Length; i++)
+					{
+						_skinnedMeshes[i].sharedMesh = AnimationTexture.AddExtraMeshData(_skinnedMeshes[i].sharedMesh);
+
+						for (int j = 0; j < _skinnedMeshes[i].sharedMaterials.Length; j++)
+						{
+							_animationTexture.SetMaterialProperties(_skinnedMeshes[i].sharedMaterials[j]);
+						}
+					}
 				}
 
 				_renderedObjects = new List<RenderData>(kMaxMeshes);
@@ -97,6 +116,7 @@ namespace Framework
 						if (_instanceData[i]._gameObject == null)
 						{
 							_instanceData[i]._gameObject = _prefab.LoadAndInstantiatePrefab(this.transform);
+
 							_instanceData[i]._skinnedMeshes = _instanceData[i]._gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
 
 							for (int j = 0; j < _instanceData[i]._skinnedMeshes.Length; j++)
@@ -108,6 +128,9 @@ namespace Framework
 						_instanceData[i]._animationIndex = animation._animationIndex;
 						_instanceData[i]._currentFrame = Random.Range(0, textureAnim._totalFrames - 2);
 						_instanceData[i]._animationSpeed = animation._speedRange.GetRandomValue();
+
+						OnSpawnObject(ref _instanceData[i]);
+
 						return _instanceData[i]._gameObject;
 					}
 				}
@@ -126,7 +149,7 @@ namespace Framework
 
 				Plane[] planes = null;
 
-				if (_frustrumCull)
+				if (_frustrumCulling != eFrustrumCulling.Off)
 					planes = GeometryUtility.CalculateFrustumPlanes(camera);
 
 				for (int i = 0; i < _instanceData.Length; i++)
@@ -134,9 +157,15 @@ namespace Framework
 					bool rendered = _instanceData[i]._gameObject != null && _instanceData[i]._gameObject.activeInHierarchy;
 
 					//If frustum culling is enabled, check should draw this game object
-					if (_frustrumCull && rendered)
+					if (rendered && _frustrumCulling == eFrustrumCulling.Bounds)
 					{
-						rendered = IsInFrustrum(planes, ref _instanceData[i]);
+						rendered = AreBoundsInFrustrum(planes, ref _instanceData[i]);
+					}
+					else if (rendered && _frustrumCulling == eFrustrumCulling.Sphere)
+					{
+						Vector3 position = _instanceData[i]._gameObject.transform.position;
+						Vector3 scale = _instanceData[i]._gameObject.transform.lossyScale;
+						rendered = MathUtils.IsSphereInFrustrum(ref planes, ref position, _sphereCullingRadius * Mathf.Max(scale.x, scale.y, scale.z));
 					}
 
 					if (rendered)
@@ -182,7 +211,7 @@ namespace Framework
 				{
 					for (int j = 0; j < _skinnedMeshes[i].sharedMesh.subMeshCount; j++)
 					{
-						_animationTexture.SetMaterialProperties(_skinnedMeshes[i].sharedMaterials[j]);
+						_animationTexture.SetMaterialProperties(_skinnedMeshes[i].materials[j]);
 					}
 				}
 #endif
@@ -203,7 +232,7 @@ namespace Framework
 				//Update particle frame progress
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
-					if (_instanceData[i]._gameObject != null)
+					if (_instanceData[i]._gameObject != null && _instanceData[i]._gameObject.activeInHierarchy)
 					{
 						float prevFrame = _instanceData[i]._currentFrame;
 
@@ -222,13 +251,25 @@ namespace Framework
 							_instanceData[i]._currentFrame = 0f;
 							_instanceData[i]._animationSpeed = newAnimation._speedRange.GetRandomValue();
 						}
+
+						UpdateGameObject(ref _instanceData[i]);
 					}
 				}
+			}
+
+			protected virtual void UpdateGameObject(ref InstanceData instanceData)
+			{
+
+			}
+
+			protected virtual void OnSpawnObject(ref InstanceData instanceData)
+			{
+
 			}
 			#endregion
 
 			#region Private Functions
-			private bool IsInFrustrum(Plane[] cameraFrustrumPlanes, ref InstanceData instanceData)
+			private bool AreBoundsInFrustrum(Plane[] cameraFrustrumPlanes, ref InstanceData instanceData)
 			{
 				//Only test first skinned mesh?
 				return GeometryUtility.TestPlanesAABB(cameraFrustrumPlanes, instanceData._skinnedMeshes[0].bounds);
@@ -272,19 +313,19 @@ namespace Framework
 				}
 			}
 
-			private void AddToSortedList(ref RenderData particleData)
+			private void AddToSortedList(ref RenderData renderData)
 			{
 				int index = 0;
 
 				if (_sortByDepth)
 				{
-					index = FindInsertIndex(particleData._zDist, 0, _renderedObjects.Count);
+					index = FindInsertIndex(renderData._zDist, 0, _renderedObjects.Count);
 				}
 
-				_renderedObjects.Insert(index, particleData);
+				_renderedObjects.Insert(index, renderData);
 			}
 
-			private static readonly int kSearchNodes = 8;
+			private static readonly int kSearchNodes = 24;
 
 			private int FindInsertIndex(float zDist, int startIndex, int endIndex)
 			{
