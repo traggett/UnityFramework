@@ -32,6 +32,9 @@ namespace Framework
 
 					SkinnedMeshInstanceSpawner spawner = target as SkinnedMeshInstanceSpawner;
 
+					if (spawner._animations == null)
+						spawner._animations = new SkinnedMeshInstanceSpawner.Animation[0];
+
 					GUILayout.Label("Animations", EditorStyles.boldLabel);
 					GUILayout.Space(3f);
 					_animationList.list = new List<SkinnedMeshInstanceSpawner.Animation>(spawner._animations);
@@ -60,13 +63,20 @@ namespace Framework
 					float columnWidth = rect.width / 3f;
 					rect.width = columnWidth;
 
-					AnimationTexture.Animation[] animations = spawner._animationTexture.GetAnimations();
+					if (spawner._animationTexture.IsValid())
+					{
+						AnimationTexture.Animation[] animations = spawner._animationTexture.GetAnimations();
 
-					GUIContent[] animNames = new GUIContent[animations.Length];
-					for (int i = 0; i < animNames.Length; i++)
-						animNames[i] = new GUIContent(animations[i]._name);
+						GUIContent[] animNames = new GUIContent[animations.Length];
+						for (int i = 0; i < animNames.Length; i++)
+							animNames[i] = new GUIContent(animations[i]._name);
 
-					animation._animationIndex = EditorGUI.Popup(rect, animation._animationIndex, animNames);
+						animation._animationIndex = EditorGUI.Popup(rect, animation._animationIndex, animNames);
+					}
+					else
+					{
+						EditorGUI.LabelField(rect, "(Invalid Animation Texture)");
+					}
 
 					rect.x += columnWidth;
 					animation._probability = EditorGUI.Slider(rect, animation._probability, 0f, 1f);

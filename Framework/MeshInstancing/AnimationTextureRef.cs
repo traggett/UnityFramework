@@ -31,6 +31,11 @@ namespace Framework
 				}
 			}
 
+			public bool IsValid()
+			{
+				return _asset != null;
+			}
+
 			public AnimationTexture.Animation[] GetAnimations()
 			{
 				LoadIfNeeded();

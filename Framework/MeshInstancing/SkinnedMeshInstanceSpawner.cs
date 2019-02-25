@@ -32,7 +32,7 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private struct InstanceData
+			protected struct InstanceData
 			{
 				public GameObject _gameObject;
 				public int _animationIndex;
@@ -142,11 +142,12 @@ namespace Framework
 					if (rendered)
 					{
 						_renderData[i]._index = i;
-						_renderData[i]._transform = _instanceData[i]._gameObject.transform.localToWorldMatrix;
+						_renderData[i]._transform = GetTransform(ref _instanceData[i]);
 
 						if (_sortByDepth)
 						{
-							_renderData[i]._zDist = (camera.transform.position - _instanceData[i]._gameObject.transform.position).sqrMagnitude;
+							Vector3 position = new Vector3(_renderData[i]._transform.m03, _renderData[i]._transform.m13, _renderData[i]._transform.m23);
+							_renderData[i]._zDist = (camera.transform.position - position).sqrMagnitude;
 						}
 
 						AddToSortedList(ref _renderData[i]);
@@ -166,6 +167,11 @@ namespace Framework
 						}
 					}
 				}
+			}
+
+			protected virtual Matrix4x4 GetTransform(ref InstanceData instanceData)
+			{
+				return instanceData._gameObject.transform.localToWorldMatrix;
 			}
 
 			protected virtual void UpdateProperties()
