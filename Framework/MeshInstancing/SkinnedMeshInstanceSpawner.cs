@@ -111,7 +111,7 @@ namespace Framework
 			{
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
-					if (_instanceData[i]._gameObject == null || !_instanceData[i]._gameObject.activeInHierarchy)
+					if (!IsObjectActive(ref _instanceData[i]))
 					{
 						if (_instanceData[i]._gameObject == null)
 						{
@@ -130,6 +130,7 @@ namespace Framework
 						_instanceData[i]._animationSpeed = animation._speedRange.GetRandomValue();
 
 						OnSpawnObject(ref _instanceData[i]);
+						OnPlayAnimation(ref _instanceData[i]);
 
 						return _instanceData[i]._gameObject;
 					}
@@ -154,7 +155,7 @@ namespace Framework
 
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
-					bool rendered = _instanceData[i]._gameObject != null && _instanceData[i]._gameObject.activeInHierarchy;
+					bool rendered = IsObjectActive(ref _instanceData[i]);
 
 					//If frustum culling is enabled, check should draw this game object
 					if (rendered && _frustrumCulling == eFrustrumCulling.Bounds)
@@ -232,7 +233,7 @@ namespace Framework
 				//Update particle frame progress
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
-					if (_instanceData[i]._gameObject != null && _instanceData[i]._gameObject.activeInHierarchy)
+					if (IsObjectActive(ref _instanceData[i]))
 					{
 						float prevFrame = _instanceData[i]._currentFrame;
 
@@ -250,6 +251,8 @@ namespace Framework
 							_instanceData[i]._animationIndex = newAnimation._animationIndex;
 							_instanceData[i]._currentFrame = 0f;
 							_instanceData[i]._animationSpeed = newAnimation._speedRange.GetRandomValue();
+
+							OnPlayAnimation(ref _instanceData[i]);
 						}
 
 						UpdateGameObject(ref _instanceData[i]);
@@ -266,9 +269,34 @@ namespace Framework
 			{
 
 			}
+
+			protected int GetSpawnedObjectCount()
+			{
+				int count = 0;
+
+				for (int i = 0; i < _instanceData.Length; i++)
+				{
+					if (IsObjectActive(ref _instanceData[i]))
+					{
+						count++;
+					}
+				}
+
+				return count;
+			}
+
+			protected virtual void OnPlayAnimation(ref InstanceData instanceData)
+			{
+				
+			}
 			#endregion
 
 			#region Private Functions
+			private bool IsObjectActive(ref InstanceData instanceData)
+			{
+				return instanceData._gameObject != null && instanceData._gameObject.activeInHierarchy;
+			}
+
 			private bool AreBoundsInFrustrum(Plane[] cameraFrustrumPlanes, ref InstanceData instanceData)
 			{
 				//Only test first skinned mesh?
