@@ -49,7 +49,7 @@ namespace Framework
 				public SkinnedMeshRenderer[] _skinnedMeshes;
 				public object _extraData;
 			}
-			private InstanceData[] _instanceData;
+			protected InstanceData[] _instanceData;
 			private float[] _currentFrame;
 			private SkinnedMeshRenderer[] _skinnedMeshes;
 			private MaterialPropertyBlock _propertyBlock;
@@ -130,8 +130,7 @@ namespace Framework
 						_instanceData[i]._animationSpeed = animation._speedRange.GetRandomValue();
 
 						OnSpawnObject(ref _instanceData[i]);
-						OnPlayAnimation(ref _instanceData[i]);
-
+						
 						return _instanceData[i]._gameObject;
 					}
 				}
@@ -250,19 +249,10 @@ namespace Framework
 
 							_instanceData[i]._animationIndex = newAnimation._animationIndex;
 							_instanceData[i]._currentFrame = 0f;
-							_instanceData[i]._animationSpeed = newAnimation._speedRange.GetRandomValue();
-
-							OnPlayAnimation(ref _instanceData[i]);
+							_instanceData[i]._animationSpeed = newAnimation._speedRange.GetRandomValue();;
 						}
-
-						UpdateGameObject(ref _instanceData[i]);
 					}
 				}
-			}
-
-			protected virtual void UpdateGameObject(ref InstanceData instanceData)
-			{
-
 			}
 
 			protected virtual void OnSpawnObject(ref InstanceData instanceData)
@@ -285,18 +275,13 @@ namespace Framework
 				return count;
 			}
 
-			protected virtual void OnPlayAnimation(ref InstanceData instanceData)
+			protected bool IsObjectActive(ref InstanceData instanceData)
 			{
-				
+				return instanceData._gameObject != null && instanceData._gameObject.activeInHierarchy;
 			}
 			#endregion
 
 			#region Private Functions
-			private bool IsObjectActive(ref InstanceData instanceData)
-			{
-				return instanceData._gameObject != null && instanceData._gameObject.activeInHierarchy;
-			}
-
 			private bool AreBoundsInFrustrum(Plane[] cameraFrustrumPlanes, ref InstanceData instanceData)
 			{
 				//Only test first skinned mesh?
