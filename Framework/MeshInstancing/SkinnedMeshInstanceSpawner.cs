@@ -200,7 +200,8 @@ namespace Framework
 
 			protected virtual Matrix4x4 GetTransform(ref InstanceData instanceData)
 			{
-				return instanceData._gameObject.transform.localToWorldMatrix;
+				//By defualt use first skinned mesh transform?
+				return instanceData._skinnedMeshes[0].transform.localToWorldMatrix;
 			}
 
 			protected virtual void UpdateProperties()
