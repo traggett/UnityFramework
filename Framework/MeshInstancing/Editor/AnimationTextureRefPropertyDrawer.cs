@@ -3,6 +3,8 @@ using UnityEditor;
 
 namespace Framework
 {
+	using Utils.Editor;
+
 	namespace MeshInstancing
 	{
 		namespace Editor
@@ -16,8 +18,15 @@ namespace Framework
 					
 					SerializedProperty assetProp = property.FindPropertyRelative("_asset");
 
+					EditorGUI.BeginChangeCheck();
+
 					EditorGUI.ObjectField(position, assetProp, label);
 
+					if (EditorGUI.EndChangeCheck())
+					{
+						AnimationTextureRef animationTexture = SerializedPropertyUtils.GetSerializedPropertyValue<AnimationTextureRef>(property);
+						animationTexture.UnloadTexture();
+					}
 
 					EditorGUI.EndProperty();
 				}

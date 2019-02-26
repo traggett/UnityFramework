@@ -46,6 +46,13 @@ namespace Framework
 				return null;
 			}
 
+#if UNITY_EDITOR
+			public void UnloadTexture()
+			{
+				_animationTexture = null;
+			}
+#endif
+
 			private void LoadIfNeeded()
 			{
 				if (_animationTexture == null && _asset != null)
