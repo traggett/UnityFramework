@@ -115,7 +115,7 @@ namespace Framework
 					{
 						if (_instanceData[i]._gameObject == null)
 						{
-							_instanceData[i]._gameObject = _prefab.LoadAndInstantiatePrefab(this.transform);
+							_instanceData[i]._gameObject = Instantiate(_referencePrefab, this.transform);
 
 							_instanceData[i]._skinnedMeshes = _instanceData[i]._gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
 
