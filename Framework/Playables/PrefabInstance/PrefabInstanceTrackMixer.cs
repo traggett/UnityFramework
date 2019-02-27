@@ -10,6 +10,7 @@ namespace Framework
 		{
 			private GameObject _prefabInstance;
 			private Transform _prefabSpawnPoint;
+			private bool _prefabSpawnPointIsParent;
 
 			public override void ProcessFrame(Playable playable, FrameData info, object playerData)
 			{
@@ -40,9 +41,10 @@ namespace Framework
 				DestroyPrefabInstance();
 			}
 
-			public void SetSpawnPoint(Transform transform)
+			public void SetSpawnPoint(Transform transform, bool setAsParent)
 			{
 				_prefabSpawnPoint = transform;
+				_prefabSpawnPointIsParent = setAsParent;
 			}
 
 			private void CreatePrefabInstance()
@@ -55,9 +57,19 @@ namespace Framework
 
 					if (_prefabSpawnPoint != null)
 					{
-						_prefabInstance.transform.position = _prefabSpawnPoint.position;
-						_prefabInstance.transform.rotation = _prefabSpawnPoint.rotation;
-						_prefabInstance.transform.localScale = _prefabSpawnPoint.localScale;
+						if (_prefabSpawnPointIsParent)
+						{
+							_prefabInstance.transform.parent = _prefabSpawnPoint;
+							_prefabInstance.transform.localPosition = Vector3.zero;
+							_prefabInstance.transform.localRotation = Quaternion.identity;
+							_prefabInstance.transform.localScale = Vector3.one;
+						}
+						else
+						{
+							_prefabInstance.transform.position = _prefabSpawnPoint.position;
+							_prefabInstance.transform.rotation = _prefabSpawnPoint.rotation;
+							_prefabInstance.transform.localScale = _prefabSpawnPoint.localScale;
+						}
 					}
 				}
 			}

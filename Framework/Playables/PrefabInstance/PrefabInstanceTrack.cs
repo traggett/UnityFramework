@@ -12,6 +12,7 @@ namespace Framework
 		{
 			public PrefabResourceRef _prefab;
 			public ExposedReference<Transform> _prefabSpawnPoint;
+			public bool _makePrefabSpawnPointParent;
 
 			protected override void OnCreateClip(TimelineClip clip)
 			{
@@ -25,7 +26,7 @@ namespace Framework
 				OnCreateTrackMixer(graph);
 
 				ScriptPlayable<PrefabInstanceTrackMixer> mixer = TimelineUtils.CreateTrackMixer<PrefabInstanceTrackMixer>(this, graph, go, inputCount);
-				mixer.GetBehaviour().SetSpawnPoint(spawnPoint);
+				mixer.GetBehaviour().SetSpawnPoint(spawnPoint, _makePrefabSpawnPointParent);
 
 				return mixer;
 			}
