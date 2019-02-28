@@ -32,14 +32,21 @@ namespace Framework
 					
 					SkinnedMeshInstanceParticleSystem particleSystem = target as SkinnedMeshInstanceParticleSystem;
 
+					EditorGUI.BeginChangeCheck();
+
 					GUILayout.Label("Animations", EditorStyles.boldLabel);
 					GUILayout.Space(3f);
 					_animationList.list = new List<SkinnedMeshInstanceParticleSystem.ParticleAnimation>(particleSystem._animations);
 					_animationList.DoLayoutList();
 
-					particleSystem._animations = new SkinnedMeshInstanceParticleSystem.ParticleAnimation[_animationList.list.Count];
-					for (int i = 0; i < particleSystem._animations.Length; i++)
-						particleSystem._animations[i] = (SkinnedMeshInstanceParticleSystem.ParticleAnimation)_animationList.list[i];
+					if (EditorGUI.EndChangeCheck())
+					{
+						Undo.RecordObject(target, "Changed Animations");
+
+						particleSystem._animations = new SkinnedMeshInstanceParticleSystem.ParticleAnimation[_animationList.list.Count];
+						for (int i = 0; i < particleSystem._animations.Length; i++)
+							particleSystem._animations[i] = (SkinnedMeshInstanceParticleSystem.ParticleAnimation)_animationList.list[i];
+					}
 				}
 
 				protected virtual void OnDrawHeader(Rect rect)
