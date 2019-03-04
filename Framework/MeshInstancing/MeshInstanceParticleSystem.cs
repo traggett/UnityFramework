@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Framework
 {
@@ -16,6 +17,7 @@ namespace Framework
 			public Material[] _materials;
 			public Vector3 _meshOffset = Vector3.zero;
 			public Vector3 _meshScale = Vector3.one;
+			public ShadowCastingMode _shadowCastingMode;
 
 			public bool _alignWithVelocity;
 			public bool _sortByDepth;
@@ -146,7 +148,7 @@ namespace Framework
 
 						for (int i = 0; i < _mesh.subMeshCount; i++)
 						{
-							Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _particleTransforms, _renderedParticles.Count, _propertyBlock);
+							Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _particleTransforms, _renderedParticles.Count, _propertyBlock, _shadowCastingMode);
 						}
 					}
 				}
