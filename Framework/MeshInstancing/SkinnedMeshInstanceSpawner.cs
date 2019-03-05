@@ -151,9 +151,25 @@ namespace Framework
 				_renderedObjects.Clear();
 
 				Plane[] planes = null;
+				Vector3[] planeNormals = null;
+				float[] planeDistances = null;
 
 				if (_frustrumCulling != eFrustrumCulling.Off)
+				{
 					planes = GeometryUtility.CalculateFrustumPlanes(camera);
+
+					if (_frustrumCulling == eFrustrumCulling.Sphere)
+					{
+						planeNormals = new Vector3[planes.Length];
+						planeDistances = new float[planes.Length];
+
+						for (int i = 0; i < planes.Length; i++)
+						{
+							planeNormals[i] = planes[i].normal;
+							planeDistances[i] = planes[i].distance;
+						}
+					}
+				}
 
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
@@ -168,7 +184,7 @@ namespace Framework
 					{
 						Vector3 position = _instanceData[i]._gameObject.transform.position;
 						Vector3 scale = _instanceData[i]._gameObject.transform.lossyScale;
-						rendered = MathUtils.IsSphereInFrustrum(ref planes, ref position, _sphereCullingRadius * Mathf.Max(scale.x, scale.y, scale.z));
+						rendered = IsSphereInFrustrum(ref planes, ref planeNormals, ref planeDistances, ref position, _sphereCullingRadius * Mathf.Max(scale.x, scale.y, scale.z));
 					}
 
 					if (rendered)
@@ -342,8 +358,6 @@ namespace Framework
 				_renderedObjects.Insert(index, renderData);
 			}
 
-			private static readonly int kSearchNodes = 24;
-
 			private int FindInsertIndex(float zDist, int startIndex, int endIndex)
 			{
 				int searchWidth = endIndex - startIndex;
@@ -375,6 +389,23 @@ namespace Framework
 				}
 
 				return endIndex;
+			}
+
+			private static readonly int kSearchNodes = 24;
+
+			private static bool IsSphereInFrustrum(ref Plane[] frustrumPlanes, ref Vector3[] planeNormals, ref float[] planeDistances, ref Vector3 center, float radius, float frustumPadding = 0f)
+			{
+				for (int i = 0; i < frustrumPlanes.Length; i++)
+				{
+					float dist = planeNormals[i].x * center.x + planeNormals[i].y * center.y + planeNormals[i].z * center.z + planeDistances[i];
+
+					if (dist < -radius - frustumPadding)
+					{
+						return false;
+					}
+				}
+
+				return true;
 			}
 			#endregion
 		}

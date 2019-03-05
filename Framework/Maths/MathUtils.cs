@@ -373,8 +373,8 @@ namespace Framework
 			{
 				for (int i = 0; i < frustrumPlanes.Length; i++)
 				{
-					var normal = frustrumPlanes[i].normal;
-					var distance = frustrumPlanes[i].distance;
+					Vector3 normal = frustrumPlanes[i].normal;
+					float distance = frustrumPlanes[i].distance;
 
 					float dist = normal.x * center.x + normal.y * center.y + normal.z * center.z + distance;
 

@@ -5,8 +5,6 @@ using UnityEngine.Rendering;
 
 namespace Framework
 {
-	using Maths;
-
 	namespace MeshInstancing
 	{
 		[RequireComponent(typeof(ParticleSystem))]
@@ -100,15 +98,29 @@ namespace Framework
 
 				if (numAlive > 0)
 				{
+					//Cache culling data if culling is enabled
 					Plane[] planes = null;
+					Vector3[] planeNormals = null;
+					float[] planeDistances = null;
 
 					if (_frustrumCull)
+					{
 						planes = GeometryUtility.CalculateFrustumPlanes(camera);
+						planeNormals = new Vector3[planes.Length];
+						planeDistances = new float[planes.Length];
+
+						for (int i = 0; i < planes.Length; i++)
+						{
+							planeNormals[i] = planes[i].normal;
+							planeDistances[i] = planes[i].distance;
+						}
+					}
 
 					int numParticles = Math.Min(numAlive, _particleTransforms.Length);
 
 					for (int i = 0; i < numParticles; i++)
 					{
+						Vector3 pos = GetParticlePos(i);
 						Quaternion rot;
 
 						switch (_particleRotation)
@@ -121,7 +133,7 @@ namespace Framework
 								break;
 							case eRotationType.Billboard:
 								{
-									Vector3 forward = _particles[i].position - camera.transform.position;
+									Vector3 forward = pos - camera.transform.position;
 									Vector3 left = Vector3.Cross(forward, Vector3.up);
 									Vector3 up = Quaternion.AngleAxis(_particles[i].rotation, forward) * Vector3.Cross(left, forward);
 									rot = Quaternion.LookRotation(forward, up);
@@ -135,16 +147,14 @@ namespace Framework
 								break;
 						}
 
+						pos += rot * _meshOffset;
 						Vector3 scale = Vector3.Scale(_particles[i].GetCurrentSize3D(_particleSystem), _meshScale);
 
-						Vector3 pos = _particles[i].position + rot * _meshOffset;
-
 						bool rendered = true;
-
-						//If frustum culling is enabled, check should draw this particle
+						
 						if (_frustrumCull)
 						{
-							rendered = MathUtils.IsSphereInFrustrum(ref planes, ref pos, _boundRadius * Mathf.Max(scale.x, scale.y, scale.z), _frustrumPadding);
+							rendered = IsSphereInFrustrum(ref planes, ref planeNormals, ref planeDistances, ref pos, _boundRadius * Mathf.Max(scale.x, scale.y, scale.z), _frustrumPadding);
 						}
 
 						if (rendered)
@@ -172,6 +182,11 @@ namespace Framework
 						}
 					}
 				}
+			}
+
+			protected virtual Vector3 GetParticlePos(int index)
+			{
+				return _particles[index].position;
 			}
 			#endregion
 
@@ -229,6 +244,21 @@ namespace Framework
 				}
 
 				return endIndex;
+			}
+
+			private static bool IsSphereInFrustrum(ref Plane[] frustrumPlanes, ref Vector3[] planeNormals, ref float[] planeDistances, ref Vector3 center, float radius, float frustumPadding = 0f)
+			{
+				for (int i = 0; i < frustrumPlanes.Length; i++)
+				{
+					float dist = planeNormals[i].x * center.x + planeNormals[i].y * center.y + planeNormals[i].z * center.z + planeDistances[i];
+
+					if (dist < -radius - frustumPadding)
+					{
+						return false;
+					}
+				}
+
+				return true;
 			}
 			#endregion
 		}
