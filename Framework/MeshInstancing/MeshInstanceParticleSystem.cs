@@ -19,7 +19,13 @@ namespace Framework
 			public Vector3 _meshScale = Vector3.one;
 			public ShadowCastingMode _shadowCastingMode;
 
-			public bool _alignWithVelocity;
+			public enum eRotationType
+			{
+				FromParticle,
+				Billboard,
+				AlignWithVelocity,
+			}
+			public eRotationType _particleRotation;
 			public bool _sortByDepth;
 			public bool _frustrumCull;
 			public float _boundRadius;
@@ -105,14 +111,28 @@ namespace Framework
 					{
 						Quaternion rot;
 
-						if (_alignWithVelocity)
+						switch (_particleRotation)
 						{
-							Vector3 foward = _particles[i].velocity;
-							rot = Quaternion.LookRotation(foward);
-						}
-						else
-						{
-							rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
+							case eRotationType.AlignWithVelocity:
+								{
+									Vector3 foward = _particles[i].velocity;
+									rot = Quaternion.LookRotation(foward);
+								}
+								break;
+							case eRotationType.Billboard:
+								{
+									Vector3 forward = _particles[i].position - camera.transform.position;
+									Vector3 left = Vector3.Cross(forward, Vector3.up);
+									Vector3 up = Quaternion.AngleAxis(_particles[i].rotation, forward) * Vector3.Cross(left, forward);
+									rot = Quaternion.LookRotation(forward, up);
+								}
+								break;
+							case eRotationType.FromParticle:
+							default:
+								{
+									rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
+								}
+								break;
 						}
 
 						Vector3 scale = Vector3.Scale(_particles[i].GetCurrentSize3D(_particleSystem), _meshScale);
