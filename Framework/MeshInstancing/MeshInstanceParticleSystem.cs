@@ -28,6 +28,10 @@ namespace Framework
 			public bool _frustrumCull;
 			public float _boundRadius;
 			public float _frustrumPadding;
+			public delegate void ModifyParticlePosition(int index, ref Vector3 position);
+			public delegate void ModifyParticleRotation(int index, Vector3 pos, ref Quaternion rotation);
+			public ModifyParticlePosition _modifyPositionDelegate;
+			public ModifyParticleRotation _modifyRotationDelegate;
 			#endregion
 
 			#region Private Data
@@ -40,6 +44,8 @@ namespace Framework
 			protected ParticleSystem _particleSystem;
 			protected ParticleSystem.Particle[] _particles;
 			protected MaterialPropertyBlock _propertyBlock;
+
+
 			private ParticleData[] _particleData;
 			private List<ParticleData> _renderedParticles;
 			private Matrix4x4[] _particleTransforms;
@@ -120,7 +126,10 @@ namespace Framework
 
 					for (int i = 0; i < numParticles; i++)
 					{
-						Vector3 pos = GetParticlePos(i);
+						Vector3 pos = _particles[i].position;
+
+						_modifyPositionDelegate?.Invoke(i, ref pos);
+
 						Quaternion rot;
 
 						switch (_particleRotation)
@@ -146,6 +155,8 @@ namespace Framework
 								}
 								break;
 						}
+
+						_modifyRotationDelegate?.Invoke(i, pos, ref rot);
 
 						pos += rot * _meshOffset;
 						Vector3 scale = Vector3.Scale(_particles[i].GetCurrentSize3D(_particleSystem), _meshScale);
