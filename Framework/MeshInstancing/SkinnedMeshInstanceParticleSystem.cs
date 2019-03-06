@@ -42,7 +42,7 @@ namespace Framework
 			#endregion
 
 			#region Monobehaviour
-			protected override void Update()
+			private void Update()
 			{
 				InitialiseIfNeeded();
 				UpdateAnimations();

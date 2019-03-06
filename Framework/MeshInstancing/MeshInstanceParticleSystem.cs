@@ -16,22 +16,19 @@ namespace Framework
 			public Vector3 _meshOffset = Vector3.zero;
 			public Vector3 _meshScale = Vector3.one;
 			public ShadowCastingMode _shadowCastingMode;
-
-			public enum eRotationType
-			{
-				FromParticle,
-				Billboard,
-				AlignWithVelocity,
-			}
-			public eRotationType _particleRotation;
+			public bool _billboard;
 			public bool _sortByDepth;
 			public bool _frustrumCull;
 			public float _boundRadius;
 			public float _frustrumPadding;
-			public delegate void ModifyParticlePosition(int index, ref Vector3 position);
-			public delegate void ModifyParticleRotation(int index, Vector3 pos, ref Quaternion rotation);
-			public ModifyParticlePosition _modifyPositionDelegate;
-			public ModifyParticleRotation _modifyRotationDelegate;
+			public delegate void GetParticleTransform(ref ParticleSystem.Particle particle, Camera camera, out Vector3 position, out Quaternion rotation);
+			public GetParticleTransform _calcParticleTransform;
+			public delegate void ModifyParticlePosition(int index, ref ParticleSystem.Particle particle, ref Vector3 position);
+			public ModifyParticlePosition _modifyParticlePosition;
+			public delegate void ModifyParticleRotation(int index, ref ParticleSystem.Particle particle, ref Quaternion rotation);
+			public ModifyParticleRotation _modifyParticleRotation;
+			public delegate void ModifyParticleScale(int index, ref ParticleSystem.Particle particle, ref Vector3 scale);
+			public ModifyParticleScale _modifyParticleScale;
 			#endregion
 
 			#region Private Data
@@ -52,7 +49,7 @@ namespace Framework
 			#endregion
 
 			#region Monobehaviour
-			protected virtual void Update()
+			private void Update()
 			{
 				InitialiseIfNeeded();
 				Render(Camera.main);
@@ -126,40 +123,35 @@ namespace Framework
 
 					for (int i = 0; i < numParticles; i++)
 					{
-						Vector3 pos = _particles[i].position;
-
-						_modifyPositionDelegate?.Invoke(i, ref pos);
-
+						Vector3 pos;
 						Quaternion rot;
 
-						switch (_particleRotation)
+						if (_calcParticleTransform != null)
 						{
-							case eRotationType.AlignWithVelocity:
-								{
-									Vector3 foward = _particles[i].velocity;
-									rot = Quaternion.LookRotation(foward);
-								}
-								break;
-							case eRotationType.Billboard:
-								{
-									Vector3 forward = pos - camera.transform.position;
-									Vector3 left = Vector3.Cross(forward, Vector3.up);
-									Vector3 up = Quaternion.AngleAxis(_particles[i].rotation, forward) * Vector3.Cross(left, forward);
-									rot = Quaternion.LookRotation(forward, up);
-								}
-								break;
-							case eRotationType.FromParticle:
-							default:
-								{
-									rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
-								}
-								break;
+							_calcParticleTransform.Invoke(ref _particles[i], camera, out pos, out rot);
+						}
+						else
+						{
+							pos = _particles[i].position;
+
+							if (_billboard)
+							{
+								Vector3 forward = pos - camera.transform.position;
+								rot = Quaternion.LookRotation(forward, Quaternion.AngleAxis(_particles[i].rotation, Vector3.forward) * Vector3.up);
+							}
+							else
+							{
+								rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
+							}
 						}
 
-						_modifyRotationDelegate?.Invoke(i, pos, ref rot);
-
 						pos += rot * _meshOffset;
+
 						Vector3 scale = Vector3.Scale(_particles[i].GetCurrentSize3D(_particleSystem), _meshScale);
+
+						_modifyParticlePosition?.Invoke(i, ref _particles[i], ref pos);
+						_modifyParticleRotation?.Invoke(i, ref _particles[i], ref rot);
+						_modifyParticleScale?.Invoke(i, ref _particles[i], ref scale);
 
 						bool rendered = true;
 						
