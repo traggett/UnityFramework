@@ -4,7 +4,6 @@ using UnityEditor;
 
 namespace Framework
 {
-	using System.Collections.Generic;
 	using Utils;
 
 	namespace MeshInstancing
@@ -13,13 +12,13 @@ namespace Framework
 		{
 			public class AnimationTextureEditor : EditorWindow
 			{
-				private GameObject _animatorObject;
-				private SkinnedMeshRenderer[] _skinnedMeshes;
-				private int _skinnedMeshIndex;
+				protected GameObject _animatorObject;
+				protected SkinnedMeshRenderer[] _skinnedMeshes;
+				protected int _skinnedMeshIndex;
 				[SerializeField]
-				private AnimationClip[] _animations;
-				private string _currentFileName;
-				private int _fps = 15;
+				protected AnimationClip[] _animations;
+				protected string _currentFileName;
+				protected int _fps = 15;
 
 				private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048 };
 
