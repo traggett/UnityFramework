@@ -21,7 +21,7 @@ namespace Framework
 			public bool _frustrumCull;
 			public float _boundRadius;
 			public float _frustrumPadding;
-			public delegate void GetParticleTransform(ref ParticleSystem.Particle particle, Camera camera, out Vector3 position, out Quaternion rotation);
+			public delegate void GetParticleTransform(ref ParticleSystem.Particle particle, Vector3 cameraPos, out Vector3 position, out Quaternion rotation);
 			public GetParticleTransform _calcParticleTransform;
 			public delegate void ModifyParticlePosition(int index, ref ParticleSystem.Particle particle, ref Vector3 position);
 			public ModifyParticlePosition _modifyParticlePosition;
@@ -46,6 +46,10 @@ namespace Framework
 			private ParticleData[] _particleData;
 			private List<ParticleData> _renderedParticles;
 			private Matrix4x4[] _particleTransforms;
+
+			private Plane[] _frustrumPlanes;
+			private Vector3[] _frustrumPlaneNormals;
+			private float[] _frustrumPlaneDistances ;
 			#endregion
 
 			#region Monobehaviour
@@ -73,6 +77,10 @@ namespace Framework
 					for (int i = 0; i < _particleTransforms.Length; i++)
 						_particleData[i] = new ParticleData();
 					_renderedParticles = new List<ParticleData>(_particleTransforms.Length);
+
+					_frustrumPlanes = new Plane[6];
+					_frustrumPlaneNormals = new Vector3[6];
+					_frustrumPlaneDistances = new float[6];
 				}
 			}
 
@@ -102,24 +110,21 @@ namespace Framework
 				if (numAlive > 0)
 				{
 					//Cache culling data if culling is enabled
-					Plane[] planes = null;
-					Vector3[] planeNormals = null;
-					float[] planeDistances = null;
+					
 
 					if (_frustrumCull)
 					{
-						planes = GeometryUtility.CalculateFrustumPlanes(camera);
-						planeNormals = new Vector3[planes.Length];
-						planeDistances = new float[planes.Length];
+						_frustrumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
 
-						for (int i = 0; i < planes.Length; i++)
+						for (int i = 0; i < _frustrumPlanes.Length; i++)
 						{
-							planeNormals[i] = planes[i].normal;
-							planeDistances[i] = planes[i].distance;
+							_frustrumPlaneNormals[i] = _frustrumPlanes[i].normal;
+							_frustrumPlaneDistances[i] = _frustrumPlanes[i].distance;
 						}
 					}
 
 					int numParticles = Math.Min(numAlive, _particleTransforms.Length);
+					Vector3 cameraPos = camera.transform.position;
 
 					for (int i = 0; i < numParticles; i++)
 					{
@@ -128,7 +133,7 @@ namespace Framework
 
 						if (_calcParticleTransform != null)
 						{
-							_calcParticleTransform.Invoke(ref _particles[i], camera, out pos, out rot);
+							_calcParticleTransform.Invoke(ref _particles[i], cameraPos, out pos, out rot);
 						}
 						else
 						{
@@ -157,7 +162,7 @@ namespace Framework
 						
 						if (_frustrumCull)
 						{
-							rendered = IsSphereInFrustrum(ref planes, ref planeNormals, ref planeDistances, ref pos, _boundRadius * Mathf.Max(scale.x, scale.y, scale.z), _frustrumPadding);
+							rendered = IsSphereInFrustrum(ref _frustrumPlanes, ref _frustrumPlaneNormals, ref _frustrumPlaneDistances, ref pos, _boundRadius * Mathf.Max(scale.x, scale.y, scale.z), _frustrumPadding);
 						}
 
 						if (rendered)
