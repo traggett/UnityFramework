@@ -21,7 +21,7 @@ namespace Framework
 			public bool _frustrumCull;
 			public float _boundRadius;
 			public float _frustrumPadding;
-			public delegate void GetParticleTransform(ref ParticleSystem.Particle particle, Vector3 cameraPos, out Vector3 position, out Quaternion rotation);
+			public delegate bool GetParticleTransform(MeshInstanceParticleSystem particleSystem, ref ParticleSystem.Particle particle, Vector3 scale, Vector3 cameraPos, out Vector3 position, out Quaternion rotation);
 			public GetParticleTransform _calcParticleTransform;
 			public delegate void ModifyParticlePosition(int index, ref ParticleSystem.Particle particle, ref Vector3 position);
 			public ModifyParticlePosition _modifyParticlePosition;
@@ -59,7 +59,26 @@ namespace Framework
 				Render(Camera.main);
 			}
 			#endregion
-			
+
+			#region Public Interface
+			public bool IsParticleInFrustrum(Vector3 pos, Vector3 scale)
+			{
+				float radius = _boundRadius * Mathf.Max(scale.x, scale.y, scale.z);
+
+				for (int i = 0; i < _frustrumPlanes.Length; i++)
+				{
+					float dist = _frustrumPlaneNormals[i].x * pos.x + _frustrumPlaneNormals[i].y * pos.y + _frustrumPlaneNormals[i].z * pos.z + _frustrumPlaneDistances[i];
+
+					if (dist < -radius - _frustrumPadding)
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+			#endregion
+
 			#region Protected Functions
 			protected virtual void InitialiseIfNeeded()
 			{
@@ -109,9 +128,6 @@ namespace Framework
 
 				if (numAlive > 0)
 				{
-					//Cache culling data if culling is enabled
-					
-
 					if (_frustrumCull)
 					{
 						_frustrumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
@@ -130,10 +146,12 @@ namespace Framework
 					{
 						Vector3 pos;
 						Quaternion rot;
+						Vector3 scale = Vector3.Scale(_particles[i].GetCurrentSize3D(_particleSystem), _meshScale);
+						bool rendered = true;
 
 						if (_calcParticleTransform != null)
 						{
-							_calcParticleTransform.Invoke(ref _particles[i], cameraPos, out pos, out rot);
+							rendered = _calcParticleTransform.Invoke(this, ref _particles[i], scale, cameraPos, out pos, out rot);
 						}
 						else
 						{
@@ -148,25 +166,22 @@ namespace Framework
 							{
 								rot = Quaternion.AngleAxis(_particles[i].rotation, _particles[i].axisOfRotation);
 							}
-						}
 
-						pos += rot * _meshOffset;
+							pos += rot * _meshOffset;
+							scale = Vector3.Scale(_particles[i].GetCurrentSize3D(_particleSystem), _meshScale);
 
-						Vector3 scale = Vector3.Scale(_particles[i].GetCurrentSize3D(_particleSystem), _meshScale);
-
-						_modifyParticlePosition?.Invoke(i, ref _particles[i], ref pos);
-						_modifyParticleRotation?.Invoke(i, ref _particles[i], ref rot);
-						_modifyParticleScale?.Invoke(i, ref _particles[i], ref scale);
-
-						bool rendered = true;
-						
-						if (_frustrumCull)
-						{
-							rendered = IsSphereInFrustrum(ref _frustrumPlanes, ref _frustrumPlaneNormals, ref _frustrumPlaneDistances, ref pos, _boundRadius * Mathf.Max(scale.x, scale.y, scale.z), _frustrumPadding);
+							if (_frustrumCull)
+							{
+								rendered = IsParticleInFrustrum(pos, scale);
+							}
 						}
 
 						if (rendered)
 						{
+							_modifyParticlePosition?.Invoke(i, ref _particles[i], ref pos);
+							_modifyParticleRotation?.Invoke(i, ref _particles[i], ref rot);
+							_modifyParticleScale?.Invoke(i, ref _particles[i], ref scale);
+						
 							_particleData[i]._index = i;
 							_particleData[i]._transform.SetTRS(pos, rot, scale);
 
@@ -254,20 +269,7 @@ namespace Framework
 				return endIndex;
 			}
 
-			private static bool IsSphereInFrustrum(ref Plane[] frustrumPlanes, ref Vector3[] planeNormals, ref float[] planeDistances, ref Vector3 center, float radius, float frustumPadding = 0f)
-			{
-				for (int i = 0; i < frustrumPlanes.Length; i++)
-				{
-					float dist = planeNormals[i].x * center.x + planeNormals[i].y * center.y + planeNormals[i].z * center.z + planeDistances[i];
-
-					if (dist < -radius - frustumPadding)
-					{
-						return false;
-					}
-				}
-
-				return true;
-			}
+			
 			#endregion
 		}
 	}
