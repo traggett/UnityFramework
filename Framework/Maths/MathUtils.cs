@@ -386,6 +386,11 @@ namespace Framework
 
 				return true;
 			}
+
+			public static Vector3 GetPosition(ref Matrix4x4 matrix)
+			{
+				return new Vector3(matrix.m03, matrix.m13, matrix.m23);
+			}
 		}
 	}
 }
