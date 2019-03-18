@@ -67,7 +67,7 @@ namespace Framework
 			#endregion
 		
 			#region Public Interface
-			public int GetNumActiveInstances()
+			public int GetNumInstances()
 			{
 				int numActiveInstances = 0;
 
@@ -80,7 +80,7 @@ namespace Framework
 				return numActiveInstances;
 			}
 
-			public bool ActiveObject(Vector3 position, Quaternion rotation, Vector3 scale)
+			public int AddInstance(Vector3 position, Quaternion rotation, Vector3 scale)
 			{
 				for (int i=0; i<kMaxInstances; i++)
 				{
@@ -91,14 +91,14 @@ namespace Framework
 
 						_onMeshInstanceActivated?.Invoke(i, ref _instanceTransforms[i]);
 
-						return true;
+						return i;
 					}
 				}
 				
-				return false;
+				return -1;
 			}
 
-			public void DeactiveObject(int index)
+			public void DeactiveInstance(int index)
 			{
 				if (0 <= index && index < kMaxInstances)
 				{
