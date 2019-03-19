@@ -100,10 +100,27 @@ namespace Framework
 
 			public void DeactiveInstance(int index)
 			{
-				if (0 <= index && index < kMaxInstances)
-				{
-					_instanceActive[index] = false;
-				}
+				_instanceActive[index] = false;
+			}
+
+			public bool IsInstanceActive(int index)
+			{
+				return _instanceActive[index];
+			}
+
+			public Matrix4x4 GetInstanceTransform(int index)
+			{
+				return _instanceTransforms[index];
+			}
+
+			public void SetInstanceTransform(int index, Matrix4x4 matrix)
+			{
+				_instanceTransforms[index] = matrix;
+			}
+
+			public Vector3 GetInstancePosition(int index)
+			{
+				return new Vector3(_instanceTransforms[index].m03, _instanceTransforms[index].m13, _instanceTransforms[index].m23);
 			}
 			#endregion
 
