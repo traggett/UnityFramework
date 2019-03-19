@@ -94,7 +94,7 @@ namespace Framework
 				_depthSortedObjects.Insert(index, particleData);
 			}
 
-			private static readonly int kSearchNodes = 24;
+			private static readonly int kSearchNodes = 16;
 
 			private int FindInsertIndex(float zDist, int startIndex, int endIndex)
 			{
