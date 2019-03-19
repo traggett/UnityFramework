@@ -56,10 +56,10 @@ namespace Framework
 				{
 					if (_instanceActive[i])
 					{
-						if (IsParticleInFrustrum(ref _instanceTransforms[i]))
+						if (IsMeshInFrustrum(i))
 						{
 							_sortedObjectData[i]._index = i;
-							_sortedObjectData[i]._transform = GetTransform(i, cameraPos);
+							_sortedObjectData[i]._transform = GetModifiedTransform(i, cameraPos);
 							_sortedObjectData[i]._zDist = (cameraPos - MathUtils.GetPosition(ref _sortedObjectData[i]._transform)).sqrMagnitude;
 
 							AddToSortedList(ref _sortedObjectData[i]);

@@ -18,7 +18,7 @@ namespace Framework
 			public float _boundRadius;
 			public float _frustrumPadding;
 
-			public delegate void OnMeshInstanceActivated(int index, ref Matrix4x4 matrix);
+			public delegate void OnMeshInstanceActivated(int index);
 			public OnMeshInstanceActivated _onMeshInstanceActivated;
 			public delegate void OnMeshInstanceWillBeRendered(int renderIndex, int instanceIndex);
 			public OnMeshInstanceWillBeRendered _onMeshInstanceWillBeRendered;
@@ -32,6 +32,7 @@ namespace Framework
 			protected MaterialPropertyBlock _propertyBlock;
 
 			protected Matrix4x4[] _instanceTransforms;
+			protected Vector3[] _instanceCachedScales;
 			protected bool[] _instanceActive;
 
 			protected int _numRenderedInstances;
@@ -87,9 +88,8 @@ namespace Framework
 					if (!_instanceActive[i])
 					{
 						_instanceActive[i] = true;
-						_instanceTransforms[i] = Matrix4x4.TRS(position, rotation, scale);
-
-						_onMeshInstanceActivated?.Invoke(i, ref _instanceTransforms[i]);
+						SetInstanceTransform(i, Matrix4x4.TRS(position, rotation, scale));
+						_onMeshInstanceActivated?.Invoke(i);
 
 						return i;
 					}
@@ -116,6 +116,7 @@ namespace Framework
 			public void SetInstanceTransform(int index, Matrix4x4 matrix)
 			{
 				_instanceTransforms[index] = matrix;
+				_instanceCachedScales[index] = matrix.lossyScale;
 			}
 
 			public Vector3 GetInstancePosition(int index)
@@ -135,6 +136,7 @@ namespace Framework
 				if (_instanceTransforms == null || _renderedInstanceTransforms == null)
 				{ 
 					_instanceTransforms = new Matrix4x4[kMaxInstances];
+					_instanceCachedScales = new Vector3[kMaxInstances];
 					_instanceActive = new bool[kMaxInstances];
 					_renderedInstanceTransforms = new Matrix4x4[kMaxInstances];
 
@@ -165,9 +167,9 @@ namespace Framework
 				{
 					if (_instanceActive[i])
 					{
-						if (IsParticleInFrustrum(ref _instanceTransforms[i]))
+						if (IsMeshInFrustrum(i))
 						{
-							_renderedInstanceTransforms[_numRenderedInstances] = GetTransform(i, cameraPos);
+							_renderedInstanceTransforms[_numRenderedInstances] = GetModifiedTransform(i, cameraPos);
 							_onMeshInstanceWillBeRendered?.Invoke(_numRenderedInstances, i);
 							_numRenderedInstances++;
 						}
@@ -185,7 +187,7 @@ namespace Framework
 				}
 			}
 
-			protected Matrix4x4 GetTransform(int index, Vector3 cameraPos)
+			protected Matrix4x4 GetModifiedTransform(int index, Vector3 cameraPos)
 			{
 				Matrix4x4 matrix = _instanceTransforms[index];
 
@@ -193,9 +195,9 @@ namespace Framework
 				
 				if (_billboard)
 				{
-					float rotationAngle = Vector3.Angle(Vector3.up, matrix.GetColumn(1));
+					float rotationAngle = Vector3.Angle(Vector3.up, new Vector3(matrix.m01, matrix.m11, matrix.m21));
 
-					Vector3 forward = (MathUtils.GetPosition(ref matrix) - cameraPos).normalized;
+					Vector3 forward = (cameraPos - MathUtils.GetPosition(ref matrix)).normalized;
 					Quaternion rotation = Quaternion.AngleAxis(rotationAngle, forward);
 
 					Vector3 left = Vector3.Cross(forward, Vector3.up);
@@ -203,22 +205,33 @@ namespace Framework
 
 					Vector3 scale = matrix.lossyScale;
 
-					matrix.SetColumn(0, rotation * left * scale.x);
-					matrix.SetColumn(1, rotation * up * scale.y);
-					matrix.SetColumn(2, forward * scale.x);
+					left = rotation * left * scale.x;
+					matrix.m00 = left.x;
+					matrix.m10 = left.y;
+					matrix.m20 = left.z;
+
+					up = rotation * up * scale.y;
+					matrix.m01 = up.x;
+					matrix.m11 = up.y;
+					matrix.m21 = up.z;
+					
+					forward = rotation * forward * scale.z;
+					matrix.m02 = forward.x;
+					matrix.m12 = forward.y;
+					matrix.m22 = forward.z;
 				}
 
 				return matrix;
 			}
 
-			protected bool IsParticleInFrustrum(ref Matrix4x4 matrix)
+			protected bool IsMeshInFrustrum(int index)
 			{
-				Vector3 scale = matrix.lossyScale;
+				Vector3 scale = _instanceCachedScales[index];
 				float radius = _boundRadius * Mathf.Max(scale.x, scale.y, scale.z);
 
 				for (int i = 0; i < _frustrumPlanes.Length; i++)
 				{
-					float dist = _frustrumPlaneNormals[i].x * matrix.m03 + _frustrumPlaneNormals[i].y * matrix.m13 + _frustrumPlaneNormals[i].z * matrix.m23 + _frustrumPlaneDistances[i];
+					float dist = _frustrumPlaneNormals[i].x * _instanceTransforms[index].m03 + _frustrumPlaneNormals[i].y * _instanceTransforms[index].m13 + _frustrumPlaneNormals[i].z * _instanceTransforms[index].m23 + _frustrumPlaneDistances[i];
 
 					if (dist < -radius - _frustrumPadding)
 					{
