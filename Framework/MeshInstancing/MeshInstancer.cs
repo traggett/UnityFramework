@@ -226,10 +226,9 @@ namespace Framework
 
 			protected bool IsMeshInFrustrum(int index)
 			{
-				Vector3 scale = _instanceCachedScales[index];
-				float radius = _boundRadius * Mathf.Max(scale.x, scale.y, scale.z);
+				float radius = _boundRadius * Mathf.Max(_instanceCachedScales[index].x, _instanceCachedScales[index].y, _instanceCachedScales[index].z);
 
-				for (int i = 0; i < _frustrumPlanes.Length; i++)
+				for (int i = 0; i < 6; i++)
 				{
 					float dist = _frustrumPlaneNormals[i].x * _instanceTransforms[index].m03 + _frustrumPlaneNormals[i].y * _instanceTransforms[index].m13 + _frustrumPlaneNormals[i].z * _instanceTransforms[index].m23 + _frustrumPlaneDistances[i];
 
