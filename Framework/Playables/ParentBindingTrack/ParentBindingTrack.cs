@@ -10,23 +10,26 @@ namespace Framework
 		public abstract class ParentBindingTrack : BaseTrackAsset
 		{
 			private List<IParentBindableTrackMixer> _boundTracks;
+			private TimelineClip _masterClip;
 
 			protected void OnCreateTrackMixer(PlayableGraph graph)
 			{
 				_boundTracks = new List<IParentBindableTrackMixer>();
+				_masterClip = null;
 			}
 		
 			public TimelineClip GetMasterClip()
 			{
-				TimelineClip masterClip = null;
-
-				foreach (TimelineClip clip in GetClips())
+				if (_masterClip == null)
 				{
-					masterClip = clip;
-					break;
+					foreach (TimelineClip clip in GetClips())
+					{
+						_masterClip = clip;
+						break;
+					}
 				}
 
-				return masterClip;
+				return _masterClip;
 			}
 
 			public IParentBindableTrackMixer[] GetBoundTracks()

@@ -27,7 +27,7 @@ namespace Framework
 						CreatePrefabInstance();
 						SetChildTrackBindings(_prefabInstance);
 					}
-					else
+					else if (_prefabInstance != null)
 					{
 						DestroyPrefabInstance();
 						ClearChildTrackBindings();

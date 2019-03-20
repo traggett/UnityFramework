@@ -214,13 +214,12 @@ namespace Framework
 				
 				if (_billboard)
 				{
-					float rotationAngle = Vector3.Angle(Vector3.up, new Vector3(matrix.m01, matrix.m11, matrix.m21));
-
 					Vector3 forward = (cameraPos - MathUtils.GetPosition(ref matrix)).normalized;
-					Quaternion rotation = Quaternion.AngleAxis(rotationAngle, forward);
-
 					Vector3 left = Vector3.Cross(forward, Vector3.up);
 					Vector3 up = Vector3.Cross(left, forward);
+
+					float rotationAngle = Vector3.Angle(Vector3.up, new Vector3(matrix.m01, matrix.m11, matrix.m21));
+					Quaternion rotation = Quaternion.AngleAxis(rotationAngle, forward);
 
 					Vector3 scale = matrix.lossyScale;
 

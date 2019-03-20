@@ -38,9 +38,9 @@ namespace Framework
 			{
 				if (timeline != null)
 				{
-					foreach (TrackAsset track in timeline.GetRootTracks())
+					for (int i=0; i< timeline.rootTrackCount; i++)
 					{
-						TimelineClip clip = GetClipInAllTracks(track, Clip);
+						TimelineClip clip = GetClipInAllTracks(timeline.GetRootTrack(i), Clip);
 
 						if (clip != null)
 							return clip;
