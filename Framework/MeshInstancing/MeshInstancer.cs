@@ -33,6 +33,7 @@ namespace Framework
 
 			protected Matrix4x4[] _instanceTransforms;
 			protected Vector3[] _instanceCachedScales;
+			protected float[] _instanceCachedMaxScales;
 			protected bool[] _instanceActive;
 
 			protected int _numRenderedInstances;
@@ -117,6 +118,7 @@ namespace Framework
 			{
 				_instanceTransforms[index] = matrix;
 				_instanceCachedScales[index] = matrix.lossyScale;
+				_instanceCachedMaxScales[index] = Mathf.Max(_instanceCachedScales[index].x, _instanceCachedScales[index].y, _instanceCachedScales[index].z);
 			}
 
 			public Vector3 GetInstancePosition(int index)
@@ -125,7 +127,7 @@ namespace Framework
 			}
 			#endregion
 
-			#region Protected Functions
+			#region Virtual Interface
 			protected virtual void InitialiseIfNeeded()
 			{
 				if (_propertyBlock == null)
@@ -137,6 +139,7 @@ namespace Framework
 				{ 
 					_instanceTransforms = new Matrix4x4[kMaxInstances];
 					_instanceCachedScales = new Vector3[kMaxInstances];
+					_instanceCachedMaxScales = new float[kMaxInstances];
 					_instanceActive = new bool[kMaxInstances];
 					_renderedInstanceTransforms = new Matrix4x4[kMaxInstances];
 
@@ -145,11 +148,30 @@ namespace Framework
 					_frustrumPlaneDistances = new float[6];
 				}
 			}
-			
-			protected virtual void Render(Camera camera)
+
+			protected virtual void OnPreRender()
+			{
+			}
+
+			protected virtual void OnMeshShouldBeRendered(int index, Vector3 cameraPos)
+			{
+				GetMeshRenderTransform(index, cameraPos, ref _renderedInstanceTransforms[_numRenderedInstances]);
+				_onMeshInstanceWillBeRendered?.Invoke(_numRenderedInstances, index);
+				_numRenderedInstances++;
+			}
+
+			protected virtual void OnRenderMeshes()
+			{
+			}
+			#endregion
+
+			#region Protected Functions
+			protected void Render(Camera camera)
 			{
 				if (_mesh == null || _materials.Length < _mesh.subMeshCount)
 					return;
+
+				OnPreRender();
 
 				_numRenderedInstances = 0;
 
@@ -165,16 +187,13 @@ namespace Framework
 
 				for (int i = 0; i < kMaxInstances; i++)
 				{
-					if (_instanceActive[i])
+					if (_instanceActive[i] && IsMeshInFrustrum(i))
 					{
-						if (IsMeshInFrustrum(i))
-						{
-							_renderedInstanceTransforms[_numRenderedInstances] = GetModifiedTransform(i, cameraPos);
-							_onMeshInstanceWillBeRendered?.Invoke(_numRenderedInstances, i);
-							_numRenderedInstances++;
-						}
+						OnMeshShouldBeRendered(i, cameraPos);
 					}
 				}
+
+				OnRenderMeshes();
 
 				if (_numRenderedInstances > 0)
 				{
@@ -187,9 +206,9 @@ namespace Framework
 				}
 			}
 
-			protected Matrix4x4 GetModifiedTransform(int index, Vector3 cameraPos)
+			protected void GetMeshRenderTransform(int index, Vector3 cameraPos, ref Matrix4x4 matrix)
 			{
-				Matrix4x4 matrix = _instanceTransforms[index];
+				matrix = _instanceTransforms[index];
 
 				_updateInstanceTransform?.Invoke(ref matrix);
 				
@@ -220,13 +239,11 @@ namespace Framework
 					matrix.m12 = forward.y;
 					matrix.m22 = forward.z;
 				}
-
-				return matrix;
 			}
 
 			protected bool IsMeshInFrustrum(int index)
 			{
-				float radius = _boundRadius * Mathf.Max(_instanceCachedScales[index].x, _instanceCachedScales[index].y, _instanceCachedScales[index].z);
+				float radius = _boundRadius * _instanceCachedMaxScales[index];
 
 				for (int i = 0; i < 6; i++)
 				{

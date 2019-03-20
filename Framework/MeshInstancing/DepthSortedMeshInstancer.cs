@@ -34,55 +34,28 @@ namespace Framework
 				}
 			}
 
-			protected override void Render(Camera camera)
+			protected override void OnPreRender()
 			{
-				if (_mesh == null || _materials.Length < _mesh.subMeshCount)
-					return;
-
-				_numRenderedInstances = 0;
 				_depthSortedObjects.Clear();
+			}
 
-				_frustrumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
+			protected override void OnMeshShouldBeRendered(int index, Vector3 cameraPos)
+			{
+				GetMeshRenderTransform(index, cameraPos, ref _sortedObjectData[index]._transform);
+				_sortedObjectData[index]._index = index;
+				_sortedObjectData[index]._zDist = (cameraPos - MathUtils.GetPosition(ref _sortedObjectData[index]._transform)).sqrMagnitude;
 
-				for (int i = 0; i < _frustrumPlanes.Length; i++)
-				{
-					_frustrumPlaneNormals[i] = _frustrumPlanes[i].normal;
-					_frustrumPlaneDistances[i] = _frustrumPlanes[i].distance;
-				}
+				AddToSortedList(ref _sortedObjectData[index]);
+			}
 
-				Vector3 cameraPos = camera.transform.position;
-
-				for (int i = 0; i < kMaxInstances; i++)
-				{
-					if (_instanceActive[i])
-					{
-						if (IsMeshInFrustrum(i))
-						{
-							_sortedObjectData[i]._index = i;
-							_sortedObjectData[i]._transform = GetModifiedTransform(i, cameraPos);
-							_sortedObjectData[i]._zDist = (cameraPos - MathUtils.GetPosition(ref _sortedObjectData[i]._transform)).sqrMagnitude;
-
-							AddToSortedList(ref _sortedObjectData[i]);
-						}
-					}
-				}
-
+			protected override void OnRenderMeshes()
+			{
 				_numRenderedInstances = _depthSortedObjects.Count;
 
-				if (_numRenderedInstances > 0)
+				for (int i = 0; i < _numRenderedInstances; i++)
 				{
-					for (int i = 0; i < _numRenderedInstances; i++)
-					{
-						_renderedInstanceTransforms[i] = _depthSortedObjects[i]._transform;
-						_onMeshInstanceWillBeRendered?.Invoke(i, _depthSortedObjects[i]._index);
-					}
-
-					_onUpdateMaterialPropertyBlock?.Invoke(_propertyBlock);
-
-					for (int i = 0; i < _mesh.subMeshCount; i++)
-					{
-						Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedInstanceTransforms, _numRenderedInstances, _propertyBlock, _shadowCastingMode);
-					}
+					_renderedInstanceTransforms[i] = _depthSortedObjects[i]._transform;
+					_onMeshInstanceWillBeRendered?.Invoke(i, _depthSortedObjects[i]._index);
 				}
 			}
 			#endregion
