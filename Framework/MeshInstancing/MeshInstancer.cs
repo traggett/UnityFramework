@@ -45,7 +45,7 @@ namespace Framework
 			#endregion
 
 			#region Monobehaviour
-			private void Start()
+			private void Awake()
 			{
 				InitialiseIfNeeded();
 			}
@@ -84,12 +84,15 @@ namespace Framework
 
 			public int AddInstance(Vector3 position, Quaternion rotation, Vector3 scale)
 			{
+				InitialiseIfNeeded();
+
 				for (int i=0; i<kMaxInstances; i++)
 				{
 					if (!_instanceActive[i])
 					{
 						_instanceActive[i] = true;
-						SetInstanceTransform(i, Matrix4x4.TRS(position, rotation, scale));
+						Matrix4x4 matrix = Matrix4x4.TRS(position, rotation, scale);
+						SetInstanceTransform(i, ref matrix);
 						_onMeshInstanceActivated?.Invoke(i);
 
 						return i;
@@ -114,7 +117,7 @@ namespace Framework
 				return _instanceTransforms[index];
 			}
 
-			public void SetInstanceTransform(int index, Matrix4x4 matrix)
+			public void SetInstanceTransform(int index, ref Matrix4x4 matrix)
 			{
 				_instanceTransforms[index] = matrix;
 				_instanceCachedScales[index] = matrix.lossyScale;

@@ -20,7 +20,7 @@ namespace Framework
 				protected string _currentFileName;
 				protected int _fps = 15;
 
-				private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048 };
+				private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
 
 				#region EditorWindow
 				[MenuItem("GPU Skinning/Animation Texture Generator", false)]
