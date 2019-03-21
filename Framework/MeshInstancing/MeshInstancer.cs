@@ -14,7 +14,15 @@ namespace Framework
 			public Mesh _mesh;
 			public Material[] _materials;
 			public ShadowCastingMode _shadowCastingMode;
-			public bool _billboard;
+
+			public enum Billboard
+			{
+				Off,
+				WorldSpace,
+				CameraSpace,
+			}
+
+			public Billboard _billboard;
 			public float _boundRadius;
 			public float _frustrumPadding;
 
@@ -156,9 +164,9 @@ namespace Framework
 			{
 			}
 
-			protected virtual void OnMeshShouldBeRendered(int index, Vector3 cameraPos)
+			protected virtual void OnMeshShouldBeRendered(int index, Vector3 cameraPos, Vector3 cameraUp)
 			{
-				GetMeshRenderTransform(index, cameraPos, ref _renderedInstanceTransforms[_numRenderedInstances]);
+				GetMeshRenderTransform(index, cameraPos, cameraUp, ref _renderedInstanceTransforms[_numRenderedInstances]);
 				_onMeshInstanceWillBeRendered?.Invoke(_numRenderedInstances, index);
 				_numRenderedInstances++;
 			}
@@ -187,12 +195,13 @@ namespace Framework
 				}
 
 				Vector3 cameraPos = camera.transform.position;
+				Vector3 cameraUp = camera.transform.up;
 
 				for (int i = 0; i < kMaxInstances; i++)
 				{
 					if (_instanceActive[i] && IsMeshInFrustrum(i))
 					{
-						OnMeshShouldBeRendered(i, cameraPos);
+						OnMeshShouldBeRendered(i, cameraPos, cameraUp);
 					}
 				}
 
@@ -209,37 +218,66 @@ namespace Framework
 				}
 			}
 
-			protected void GetMeshRenderTransform(int index, Vector3 cameraPos, ref Matrix4x4 matrix)
+			protected void GetMeshRenderTransform(int index, Vector3 cameraPos, Vector3 cameraUp, ref Matrix4x4 matrix)
 			{
 				matrix = _instanceTransforms[index];
 
 				_updateInstanceTransform?.Invoke(ref matrix);
-				
-				if (_billboard)
+
+
+				switch (_billboard)
 				{
-					Vector3 forward = (cameraPos - MathUtils.GetPosition(ref matrix)).normalized;
-					Vector3 left = Vector3.Cross(forward, Vector3.up);
-					Vector3 up = Vector3.Cross(left, forward);
+					case Billboard.CameraSpace:
+						{
+							Vector3 forward = (cameraPos - MathUtils.GetPosition(ref matrix)).normalized;
+							Vector3 left = Vector3.Cross(forward, cameraUp).normalized;
+							Vector3 up = Vector3.Cross(left, forward);
+							
+							Vector3 scale = matrix.lossyScale;
 
-					float rotationAngle = Vector3.Angle(Vector3.up, new Vector3(matrix.m01, matrix.m11, matrix.m21));
-					Quaternion rotation = Quaternion.AngleAxis(rotationAngle, forward);
+							left = left * scale.x;
+							matrix.m00 = left.x;
+							matrix.m10 = left.y;
+							matrix.m20 = left.z;
 
-					Vector3 scale = matrix.lossyScale;
+							up = up * scale.y;
+							matrix.m01 = up.x;
+							matrix.m11 = up.y;
+							matrix.m21 = up.z;
 
-					left = rotation * left * scale.x;
-					matrix.m00 = left.x;
-					matrix.m10 = left.y;
-					matrix.m20 = left.z;
+							forward =  forward * scale.z;
+							matrix.m02 = forward.x;
+							matrix.m12 = forward.y;
+							matrix.m22 = forward.z;
+						}
+						break;
+					case Billboard.WorldSpace:
+						{
+							Vector3 forward = (cameraPos - MathUtils.GetPosition(ref matrix)).normalized;
+							Vector3 left = Vector3.Cross(forward, Vector3.up);
+							Vector3 up = Vector3.Cross(left, forward);
 
-					up = rotation * up * scale.y;
-					matrix.m01 = up.x;
-					matrix.m11 = up.y;
-					matrix.m21 = up.z;
-					
-					forward = rotation * forward * scale.z;
-					matrix.m02 = forward.x;
-					matrix.m12 = forward.y;
-					matrix.m22 = forward.z;
+							float rotationAngle = Vector3.Angle(Vector3.up, new Vector3(matrix.m01, matrix.m11, matrix.m21));
+							Quaternion rotation = Quaternion.AngleAxis(rotationAngle, forward);
+
+							Vector3 scale = matrix.lossyScale;
+
+							left = rotation * left * scale.x;
+							matrix.m00 = left.x;
+							matrix.m10 = left.y;
+							matrix.m20 = left.z;
+
+							up = rotation * up * scale.y;
+							matrix.m01 = up.x;
+							matrix.m11 = up.y;
+							matrix.m21 = up.z;
+
+							forward = rotation * forward * scale.z;
+							matrix.m02 = forward.x;
+							matrix.m12 = forward.y;
+							matrix.m22 = forward.z;
+						}
+						break;
 				}
 			}
 

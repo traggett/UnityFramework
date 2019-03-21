@@ -39,9 +39,9 @@ namespace Framework
 				_depthSortedObjects.Clear();
 			}
 
-			protected override void OnMeshShouldBeRendered(int index, Vector3 cameraPos)
+			protected override void OnMeshShouldBeRendered(int index, Vector3 cameraPos, Vector3 cameraUp)
 			{
-				GetMeshRenderTransform(index, cameraPos, ref _sortedObjectData[index]._transform);
+				GetMeshRenderTransform(index, cameraPos, cameraUp, ref _sortedObjectData[index]._transform);
 				_sortedObjectData[index]._index = index;
 				_sortedObjectData[index]._zDist = (cameraPos - MathUtils.GetPosition(ref _sortedObjectData[index]._transform)).sqrMagnitude;
 
