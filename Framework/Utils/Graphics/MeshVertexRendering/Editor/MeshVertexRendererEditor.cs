@@ -51,8 +51,7 @@ namespace Framework
 				{
 					Mesh mesh = new Mesh();
 					Mesh sourceMesh = null;
-					int sourceMeshVertCount = 0;
-
+					
 					SkinnedMeshRenderer skinnedMesh = sourceObject.GetComponent<SkinnedMeshRenderer>();
 					MeshFilter meshFilter = sourceObject.GetComponent<MeshFilter>();
 
@@ -65,46 +64,73 @@ namespace Framework
 						sourceMesh = meshFilter.sharedMesh;
 					}
 
-					sourceMeshVertCount = sourceMesh.vertexCount;
+					if (sourceMesh == null)
+						return;
 
-					Vector3[] vertices = new Vector3[sourceMeshVertCount * 4];
-					Vector2[] uvs = new Vector2[sourceMeshVertCount * 4];
-					int[] triangles = new int[sourceMeshVertCount * 6];
+					int sourceMeshVertCount = sourceMesh.vertexCount;
 
-					//For each vert in avatar...
-					for (int i = 0; i < sourceMeshVertCount; i++)
+					//Update verts / uvs
 					{
-						int vertOffset = i * 4;
+						Vector3[] vertices = new Vector3[sourceMeshVertCount * 4];
+						Vector2[] uvs = new Vector2[sourceMeshVertCount * 4];
 
-						//Create quad verts
-						vertices[vertOffset + 0] = new Vector3(-0.5f, -0.5f, i);
-						vertices[vertOffset + 1] = new Vector3(0.5f, -0.5f, i);
-						vertices[vertOffset + 2] = new Vector3(-0.5f, 0.5f, i);
-						vertices[vertOffset + 3] = new Vector3(0.5f, 0.5f, i);
+						int[] triangles = new int[sourceMeshVertCount * 6];
+						
+						//For each vert in avatar...
+						for (int i = 0; i < sourceMeshVertCount; i++)
+						{
+							int vertOffset = i * 4;
 
-						//Create UVs
-						uvs[vertOffset + 0] = new Vector2(0, 0);
-						uvs[vertOffset + 1] = new Vector2(1, 0);
-						uvs[vertOffset + 2] = new Vector2(0, 1);
-						uvs[vertOffset + 3] = new Vector2(1, 1);
+							//Create quad verts
+							vertices[vertOffset + 0] = new Vector3(-0.5f, -0.5f, i);
+							vertices[vertOffset + 1] = new Vector3(0.5f, -0.5f, i);
+							vertices[vertOffset + 2] = new Vector3(-0.5f, 0.5f, i);
+							vertices[vertOffset + 3] = new Vector3(0.5f, 0.5f, i);
 
-						int indexOffset = i * 6;
+							//Create UVs
+							uvs[vertOffset + 0] = new Vector2(0, 0);
+							uvs[vertOffset + 1] = new Vector2(1, 0);
+							uvs[vertOffset + 2] = new Vector2(0, 1);
+							uvs[vertOffset + 3] = new Vector2(1, 1);
+							
+							int indexOffset = i * 6;
 
-						//Work out indices
-						triangles[indexOffset + 0] = vertOffset + 0;
-						triangles[indexOffset + 1] = vertOffset + 1;
-						triangles[indexOffset + 2] = vertOffset + 2;
-						triangles[indexOffset + 3] = vertOffset + 2;
-						triangles[indexOffset + 4] = vertOffset + 3;
-						triangles[indexOffset + 5] = vertOffset + 1;
+							//Work out indices
+							triangles[indexOffset + 0] = vertOffset + 0;
+							triangles[indexOffset + 1] = vertOffset + 1;
+							triangles[indexOffset + 2] = vertOffset + 2;
+							triangles[indexOffset + 3] = vertOffset + 2;
+							triangles[indexOffset + 4] = vertOffset + 3;
+							triangles[indexOffset + 5] = vertOffset + 1;
+						}
+
+						mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+						mesh.vertices = vertices;
+						mesh.uv = uvs;
+						mesh.SetIndices(triangles, MeshTopology.Triangles, 0);
+						mesh.bounds = sourceMesh.bounds;
 					}
 
-					mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
-					mesh.vertices = vertices;
-					mesh.uv = uvs;
-					mesh.SetIndices(triangles, MeshTopology.Triangles, 0);
-					mesh.bounds = sourceMesh.bounds;
-					//mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 1000);
+					//Update colors
+					if (false && sourceMesh.colors != null && sourceMesh.colors.Length > 0)
+					{
+						Color[] colors = new Color[sourceMeshVertCount * 4];
+
+						//For each vert in avatar...
+						for (int i = 0; i < sourceMeshVertCount; i++)
+						{
+							Color color = sourceMesh.colors[i];
+							int vertOffset = i * 4;
+
+							colors[vertOffset + 0] = color;
+							colors[vertOffset + 1] = color;
+							colors[vertOffset + 2] = color;
+							colors[vertOffset + 3] = color;
+						}
+
+						mesh.colors = colors;
+					}
+
 					mesh.UploadMeshData(true);
 
 					string path = FileUtil.GetProjectRelativePath(fileName);
