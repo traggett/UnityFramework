@@ -31,6 +31,10 @@ namespace Framework
 
 			private void LateUpdate()
 			{
+#if UNITY_EDITOR
+				SetupMaterials();
+#endif
+
 				//Render skinned mesh to texture
 				_vertexBufferCamera.targetTexture = _vertexPositionBuffer;
 				_vertexBufferCamera.RenderWithShader(_vertexBakingShader, "VertexBaking");
