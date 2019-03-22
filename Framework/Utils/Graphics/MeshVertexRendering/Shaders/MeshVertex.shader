@@ -3,10 +3,7 @@ Shader "Mesh Vertex Rendering/Mesh Vertex Shader"
 	Properties
 	{
 		_MainTex ("Main Texture", 2D) = "white" {}
-		_VertexPositions ("Vertex Buffer", 2D) = "white" {}
-		_VertexPositionsSize ("Vertex Buffer Size", Float) = 1.0
 		_QuadSize ("Quad Size", Float) = 1.0
-		[PerRendererData] _Color ("Color", Color) = (1,1,1,1)
 	}
 	
 	CGINCLUDE

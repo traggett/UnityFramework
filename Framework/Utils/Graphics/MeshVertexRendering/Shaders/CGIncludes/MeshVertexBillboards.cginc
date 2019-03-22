@@ -4,16 +4,6 @@
 #include "UnityCG.cginc"
 #include "MeshVertexRendering.cginc"
 
-#if (SHADER_TARGET < 30 || SHADER_API_GLES)
-uniform fixed4 _Color;
-#else
-UNITY_INSTANCING_BUFFER_START(ColorProps)
-	UNITY_DEFINE_INSTANCED_PROP(fixed4, _Color)
-#define _color_arr ColorProps
-UNITY_INSTANCING_BUFFER_END(ColorProps)
-#endif
-
-
 ////////////////////////////////////////
 // Vertex structs
 //
@@ -60,12 +50,7 @@ VertexOutput vert(VertexInput v)
 	output.posWorld = worldPos;
 	
 	output.texcoord = TRANSFORM_TEX(v.texcoord, _MainTex);
-
-#if (SHADER_TARGET < 30 || SHADER_API_GLES)
-	output.color = v.color * _Color;
-#else
-	output.color = v.color * UNITY_ACCESS_INSTANCED_PROP(_color_arr, _Color);
-#endif
+	output.color = v.color;
 
 	return output;
 }

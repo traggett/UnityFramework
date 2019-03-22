@@ -16,7 +16,6 @@ namespace Framework
 
 			#region Private Data
 			private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
-			private MeshRenderer _meshRenderer;
 			private RenderTexture _vertexPositionBuffer;
 			private Camera _vertexBufferCamera;
 			#endregion
@@ -89,10 +88,10 @@ namespace Framework
 			
 			private void SetupMeshRenderer()
 			{
-				_meshRenderer = GetComponent<MeshRenderer>();
-				
-				_meshRenderer.material.SetTexture("_VertexPositions", _vertexPositionBuffer);
-				_meshRenderer.material.SetFloat("_VertexPositionsSize", _vertexPositionBuffer.width);
+				MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
+
+				meshRenderer.material.SetTexture("_VertexPositions", _vertexPositionBuffer);
+				meshRenderer.material.SetFloat("_VertexPositionsSize", _vertexPositionBuffer.width);
 			}
 
 			private void CreateCamera()
