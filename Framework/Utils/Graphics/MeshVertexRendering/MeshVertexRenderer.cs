@@ -4,7 +4,6 @@ namespace Framework
 {
 	namespace Utils
 	{
-		[RequireComponent(typeof(MeshRenderer))]
 		public class MeshVertexRenderer : MonoBehaviour
 		{
 			#region Public Data
@@ -12,6 +11,7 @@ namespace Framework
 			public Shader _vertexBakingShader;
 			public Shader _vertexBakingReplacementShader;
 			public LayerProperty _vertexBakingLayer;
+			public MaterialRefProperty[] _targetMaterials;
 			#endregion
 
 			#region Private Data
@@ -24,9 +24,9 @@ namespace Framework
 			private void Awake()
 			{
 				CreateVertexBuffer();
-				CreateCamera();
-				SetupMeshRenderer();
+				CreateCamera();			
 				SetupSkinnedMesh();
+				SetupMaterials();
 			}
 
 			private void LateUpdate()
@@ -86,12 +86,13 @@ namespace Framework
 				_vertexPositionBuffer = new RenderTexture(textureSize, textureSize, 0, RenderTextureFormat.ARGBFloat);
 			}
 			
-			private void SetupMeshRenderer()
+			private void SetupMaterials()
 			{
-				MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
-
-				meshRenderer.material.SetTexture("_VertexPositions", _vertexPositionBuffer);
-				meshRenderer.material.SetFloat("_VertexPositionsSize", _vertexPositionBuffer.width);
+				for (int i=0; i<_targetMaterials.Length; i++)
+				{
+					_targetMaterials[i].GetMaterial().SetTexture("_VertexPositions", _vertexPositionBuffer);
+					_targetMaterials[i].GetMaterial().SetFloat("_VertexPositionsSize", _vertexPositionBuffer.width);
+				}
 			}
 
 			private void CreateCamera()
