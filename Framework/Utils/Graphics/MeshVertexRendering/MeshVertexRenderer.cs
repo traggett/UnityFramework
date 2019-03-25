@@ -12,6 +12,7 @@ namespace Framework
 			public Shader _vertexBakingReplacementShader;
 			public LayerProperty _vertexBakingLayer;
 			public MaterialRefProperty[] _targetMaterials;
+			public bool _updateMesh;
 			#endregion
 
 			#region Private Data
@@ -130,17 +131,20 @@ namespace Framework
 				_sourceMesh.material = new Material(_vertexBakingReplacementShader);
 				_sourceMesh.gameObject.layer = _vertexBakingLayer;
 				
-				SkinnedMeshRenderer skinnedMesh = _sourceMesh.GetComponent<SkinnedMeshRenderer>();
-				MeshFilter meshFilter = _sourceMesh.GetComponent<MeshFilter>();
+				if (_updateMesh)
+				{
+					SkinnedMeshRenderer skinnedMesh = _sourceMesh.GetComponent<SkinnedMeshRenderer>();
+					MeshFilter meshFilter = _sourceMesh.GetComponent<MeshFilter>();
 
-				if (skinnedMesh != null)
-				{
-					skinnedMesh.sharedMesh = AddExtraMeshData(skinnedMesh.sharedMesh);
-				}
-				else if (meshFilter != null)
-				{
-					meshFilter.mesh = AddExtraMeshData(meshFilter.mesh);
-				}
+					if (skinnedMesh != null)
+					{
+						skinnedMesh.sharedMesh = AddExtraMeshData(skinnedMesh.sharedMesh);
+					}
+					else if (meshFilter != null)
+					{
+						meshFilter.mesh = AddExtraMeshData(meshFilter.mesh);
+					}
+				}	
 			}
 
 			private static Mesh AddExtraMeshData(Mesh mesh)
