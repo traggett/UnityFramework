@@ -209,9 +209,10 @@ namespace Framework
 					
 					for (int i = 0; i < _skinnedMeshes.Length; i++)
 					{
-						for (int j = 0; j < _skinnedMeshes[i].sharedMesh.subMeshCount; j++)
+						for (int j = 0; j < _skinnedMeshes[i].sharedMaterials.Length; j++)
 						{
-							Graphics.DrawMeshInstanced(_skinnedMeshes[i].sharedMesh, j, _skinnedMeshes[i].sharedMaterials[j], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock);
+							int subMesh = Math.Min(j, _skinnedMeshes[i].sharedMesh.subMeshCount - 1);
+							Graphics.DrawMeshInstanced(_skinnedMeshes[i].sharedMesh, subMesh, _skinnedMeshes[i].sharedMaterials[j], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock);
 						}
 					}
 				}
