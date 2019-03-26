@@ -118,17 +118,16 @@ namespace Framework
 						if (_instanceData[i]._gameObject == null)
 						{
 							_instanceData[i]._gameObject = Instantiate(_referencePrefab, this.transform);
+							_instanceData[i]._gameObject.transform.position = position;
+							_instanceData[i]._gameObject.SetActive(true);
 
 							_instanceData[i]._skinnedMeshes = _instanceData[i]._gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
 							for (int j = 0; j < _instanceData[i]._skinnedMeshes.Length; j++)
 							{
 								_instanceData[i]._skinnedMeshes[j].enabled = false;
 							}
-
+							
 							_instanceData[i]._transform = _instanceData[i]._skinnedMeshes[0].transform;
-							_instanceData[i]._transform.position = position;
-
-							_instanceData[i]._gameObject.SetActive(true);
 						}
 
 						_instanceData[i]._active = true;
@@ -261,8 +260,6 @@ namespace Framework
 				//Update particle frame progress
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
-					_instanceData[i]._active = _instanceData[i]._active && _instanceData[i]._gameObject != null;
-
 					if (_instanceData[i]._active)
 					{
 						float prevFrame = _instanceData[i]._currentFrame;
