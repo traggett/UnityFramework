@@ -42,7 +42,9 @@ namespace Framework
 			#region Private Data
 			protected struct InstanceData
 			{
+				public bool _active;
 				public GameObject _gameObject;
+				public Transform _transform;
 				public int _animationIndex;
 				public float _currentFrame;
 				public float _animationSpeed;
@@ -111,20 +113,25 @@ namespace Framework
 			{
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
-					if (!IsObjectActive(ref _instanceData[i]))
+					if (!_instanceData[i]._active)
 					{
 						if (_instanceData[i]._gameObject == null)
 						{
 							_instanceData[i]._gameObject = Instantiate(_referencePrefab, this.transform);
-							_instanceData[i]._gameObject.transform.position = position;
 
 							_instanceData[i]._skinnedMeshes = _instanceData[i]._gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
-
 							for (int j = 0; j < _instanceData[i]._skinnedMeshes.Length; j++)
+							{
 								_instanceData[i]._skinnedMeshes[j].enabled = false;
+							}
+
+							_instanceData[i]._transform = _instanceData[i]._skinnedMeshes[0].transform;
+							_instanceData[i]._transform.position = position;
 
 							_instanceData[i]._gameObject.SetActive(true);
 						}
+
+						_instanceData[i]._active = true;
 
 						Animation animation = PickRandomAnimation();
 						AnimationTexture.Animation textureAnim = GetAnimation(animation._animationIndex);
@@ -154,6 +161,8 @@ namespace Framework
 				Vector3[] planeNormals = null;
 				float[] planeDistances = null;
 
+				Vector3 cameraPos = camera.transform.position;
+
 				if (_frustrumCulling != eFrustrumCulling.Off)
 				{
 					planes = GeometryUtility.CalculateFrustumPlanes(camera);
@@ -173,7 +182,7 @@ namespace Framework
 
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
-					bool rendered = IsObjectActive(ref _instanceData[i]);
+					bool rendered = _instanceData[i]._active;
 
 					//If frustum culling is enabled, check should draw this game object
 					if (rendered && _frustrumCulling == eFrustrumCulling.Bounds)
@@ -182,8 +191,8 @@ namespace Framework
 					}
 					else if (rendered && _frustrumCulling == eFrustrumCulling.Sphere)
 					{
-						Vector3 position = _instanceData[i]._gameObject.transform.position;
-						Vector3 scale = _instanceData[i]._gameObject.transform.lossyScale;
+						Vector3 position = _instanceData[i]._transform.position;
+						Vector3 scale = _instanceData[i]._transform.lossyScale;
 						rendered = IsSphereInFrustrum(ref planes, ref planeNormals, ref planeDistances, ref position, _sphereCullingRadius * Mathf.Max(scale.x, scale.y, scale.z));
 					}
 
@@ -195,7 +204,7 @@ namespace Framework
 						if (_sortByDepth)
 						{
 							Vector3 position = new Vector3(_renderData[i]._transform.m03, _renderData[i]._transform.m13, _renderData[i]._transform.m23);
-							_renderData[i]._zDist = (camera.transform.position - position).sqrMagnitude;
+							_renderData[i]._zDist = (cameraPos - position).sqrMagnitude;
 						}
 
 						AddToSortedList(ref _renderData[i]);
@@ -220,8 +229,7 @@ namespace Framework
 
 			protected virtual Matrix4x4 GetTransform(ref InstanceData instanceData)
 			{
-				//By defualt use first skinned mesh transform?
-				return instanceData._skinnedMeshes[0].transform.localToWorldMatrix;
+				return instanceData._transform.localToWorldMatrix;
 			}
 
 			protected virtual void UpdateProperties()
@@ -253,7 +261,9 @@ namespace Framework
 				//Update particle frame progress
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
-					if (IsObjectActive(ref _instanceData[i]))
+					_instanceData[i]._active = _instanceData[i]._active && _instanceData[i]._gameObject != null;
+
+					if (_instanceData[i]._active)
 					{
 						float prevFrame = _instanceData[i]._currentFrame;
 
@@ -287,18 +297,13 @@ namespace Framework
 
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
-					if (IsObjectActive(ref _instanceData[i]))
+					if (_instanceData[i]._active)
 					{
 						count++;
 					}
 				}
 
 				return count;
-			}
-
-			protected bool IsObjectActive(ref InstanceData instanceData)
-			{
-				return instanceData._gameObject != null && instanceData._gameObject.activeInHierarchy;
 			}
 			#endregion
 
