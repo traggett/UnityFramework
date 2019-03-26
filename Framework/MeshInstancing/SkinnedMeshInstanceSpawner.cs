@@ -230,7 +230,7 @@ namespace Framework
 				//In editor always set shared data
 				for (int i = 0; i < _skinnedMeshes.Length; i++)
 				{
-					for (int j = 0; j < _skinnedMeshes[i].sharedMesh.subMeshCount; j++)
+					for (int j = 0; j < _skinnedMeshes[i].materials.Length; j++)
 					{
 						_animationTexture.SetMaterialProperties(_skinnedMeshes[i].materials[j]);
 					}
