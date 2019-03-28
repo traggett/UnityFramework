@@ -24,10 +24,10 @@ namespace Framework
 				//Set material constants
 				if (_animationTexture != null)
 				{
-					material.SetInt("_boneCount", _animationTexture._numBones);
+					material.SetFloat("_boneCount", _animationTexture._numBones);
 					material.SetTexture("_animationTexture", _animationTexture._texture);
-					material.SetInt("_animationTextureWidth", _animationTexture._texture.width);
-					material.SetInt("_animationTextureHeight", _animationTexture._texture.height);
+					material.SetFloat("_animationTextureWidth", _animationTexture._texture.width);
+					material.SetFloat("_animationTextureHeight", _animationTexture._texture.height);
 				}
 			}
 

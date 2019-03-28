@@ -237,9 +237,9 @@ namespace Framework
 				//In editor always set shared data
 				for (int i = 0; i < _skinnedMeshes.Length; i++)
 				{
-					for (int j = 0; j < _skinnedMeshes[i].materials.Length; j++)
+					for (int j = 0; j < _skinnedMeshes[i].sharedMaterials.Length; j++)
 					{
-						_animationTexture.SetMaterialProperties(_skinnedMeshes[i].materials[j]);
+						_animationTexture.SetMaterialProperties(_skinnedMeshes[i].sharedMaterials[j]);
 					}
 				}
 #endif
@@ -336,9 +336,7 @@ namespace Framework
 
 			private AnimationTexture.Animation GetAnimation(int index)
 			{
-				AnimationTexture.Animation[] animations = _animationTexture.GetAnimations();
-				AnimationTexture.Animation animation = animations[Mathf.Clamp(index, 0, animations.Length)];
-				return animation;
+				return _animationTexture.GetAnimations()[index];
 			}
 
 			private void FillTransformMatricies()
