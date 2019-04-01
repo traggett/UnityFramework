@@ -38,7 +38,7 @@ namespace Framework
 			[HideInInspector]
 			public Animation[] _animations;
 			#endregion
-
+			 
 			#region Private Data
 			protected struct InstanceData
 			{
@@ -83,9 +83,9 @@ namespace Framework
 					{
 						_skinnedMeshes[i].sharedMesh = AnimationTexture.AddExtraMeshData(_skinnedMeshes[i].sharedMesh);
 
-						for (int j = 0; j < _skinnedMeshes[i].sharedMaterials.Length; j++)
+						for (int j = 0; j < _skinnedMeshes[i].materials.Length; j++)
 						{
-							_animationTexture.SetMaterialProperties(_skinnedMeshes[i].sharedMaterials[j]);
+							_animationTexture.SetMaterialProperties(_skinnedMeshes[i].materials[j]);
 						}
 					}
 				}
@@ -109,6 +109,11 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
+			public GameObject GetReferenceModel()
+			{
+				return _referencePrefab;
+			}
+
 			public GameObject SpawnObject(Vector3 position)
 			{
 				for (int i = 0; i < _instanceData.Length; i++)
@@ -217,10 +222,10 @@ namespace Framework
 					
 					for (int i = 0; i < _skinnedMeshes.Length; i++)
 					{
-						for (int j = 0; j < _skinnedMeshes[i].sharedMaterials.Length; j++)
+						for (int j = 0; j < _skinnedMeshes[i].materials.Length; j++)
 						{
 							int subMesh = Math.Min(j, _skinnedMeshes[i].sharedMesh.subMeshCount - 1);
-							Graphics.DrawMeshInstanced(_skinnedMeshes[i].sharedMesh, subMesh, _skinnedMeshes[i].sharedMaterials[j], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock);
+							Graphics.DrawMeshInstanced(_skinnedMeshes[i].sharedMesh, subMesh, _skinnedMeshes[i].materials[j], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock);
 						}
 					}
 				}
@@ -237,9 +242,9 @@ namespace Framework
 				//In editor always set shared data
 				for (int i = 0; i < _skinnedMeshes.Length; i++)
 				{
-					for (int j = 0; j < _skinnedMeshes[i].sharedMaterials.Length; j++)
+					for (int j = 0; j < _skinnedMeshes[i].materials.Length; j++)
 					{
-						_animationTexture.SetMaterialProperties(_skinnedMeshes[i].sharedMaterials[j]);
+						_animationTexture.SetMaterialProperties(_skinnedMeshes[i].materials[j]);
 					}
 				}
 #endif
