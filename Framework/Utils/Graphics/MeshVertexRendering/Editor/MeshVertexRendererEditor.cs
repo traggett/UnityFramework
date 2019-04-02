@@ -75,7 +75,7 @@ namespace Framework
 						Vector2[] uvs = new Vector2[sourceMeshVertCount * 4];
 
 						int[] triangles = new int[sourceMeshVertCount * 6];
-						
+
 						//For each vert in avatar...
 						for (int i = 0; i < sourceMeshVertCount; i++)
 						{
@@ -92,7 +92,7 @@ namespace Framework
 							uvs[vertOffset + 1] = new Vector2(1, 0);
 							uvs[vertOffset + 2] = new Vector2(0, 1);
 							uvs[vertOffset + 3] = new Vector2(1, 1);
-							
+
 							int indexOffset = i * 6;
 
 							//Work out indices
@@ -112,15 +112,16 @@ namespace Framework
 					}
 
 					//Update colors
-					if (false && sourceMesh.colors != null && sourceMesh.colors.Length > 0)
+					if (sourceMesh.colors != null)
 					{
 						Color[] colors = new Color[sourceMeshVertCount * 4];
 
 						//For each vert in avatar...
 						for (int i = 0; i < sourceMeshVertCount; i++)
 						{
-							Color color = sourceMesh.colors[i];
 							int vertOffset = i * 4;
+
+							Color color = sourceMesh.colors[i];
 
 							colors[vertOffset + 0] = color;
 							colors[vertOffset + 1] = color;
@@ -132,7 +133,6 @@ namespace Framework
 					}
 
 					mesh.UploadMeshData(true);
-
 					string path = FileUtil.GetProjectRelativePath(fileName);
 
 					AssetDatabase.CreateAsset(mesh, path);
