@@ -16,7 +16,7 @@ namespace Framework
 
 				void OnEnable()
 				{
-					_animationList = new ReorderableList(new SkinnedMeshInstanceSpawner.Animation[0], typeof(SkinnedMeshInstanceSpawner.Animation), false, true, true, true)
+					_animationList = new ReorderableList(new SkinnedMeshInstanceSpawner.AnimationData[0], typeof(SkinnedMeshInstanceSpawner.AnimationData), false, true, true, true)
 					{
 						drawHeaderCallback = new ReorderableList.HeaderCallbackDelegate(OnDrawHeader),
 						drawElementCallback = new ReorderableList.ElementCallbackDelegate(OnDrawAnimationItem),
@@ -33,22 +33,22 @@ namespace Framework
 					SkinnedMeshInstanceSpawner spawner = target as SkinnedMeshInstanceSpawner;
 
 					if (spawner._animations == null)
-						spawner._animations = new SkinnedMeshInstanceSpawner.Animation[0];
+						spawner._animations = new SkinnedMeshInstanceSpawner.AnimationData[0];
 
 					EditorGUI.BeginChangeCheck();
 
 					GUILayout.Label("Animations", EditorStyles.boldLabel);
 					GUILayout.Space(3f);
-					_animationList.list = new List<SkinnedMeshInstanceSpawner.Animation>(spawner._animations);
+					_animationList.list = new List<SkinnedMeshInstanceSpawner.AnimationData>(spawner._animations);
 					_animationList.DoLayoutList();
 
 					if (EditorGUI.EndChangeCheck())
 					{
 						Undo.RecordObject(target, "Changed Animations");
 
-						spawner._animations = new SkinnedMeshInstanceSpawner.Animation[_animationList.list.Count];
+						spawner._animations = new SkinnedMeshInstanceSpawner.AnimationData[_animationList.list.Count];
 						for (int i = 0; i < spawner._animations.Length; i++)
-							spawner._animations[i] = (SkinnedMeshInstanceSpawner.Animation)_animationList.list[i];
+							spawner._animations[i] = (SkinnedMeshInstanceSpawner.AnimationData)_animationList.list[i];
 					}
 				}
 
@@ -65,7 +65,7 @@ namespace Framework
 				private void OnDrawAnimationItem(Rect rect, int index, bool selected, bool focused)
 				{
 					SkinnedMeshInstanceSpawner spawner = target as SkinnedMeshInstanceSpawner;
-					SkinnedMeshInstanceSpawner.Animation animation = (SkinnedMeshInstanceSpawner.Animation)_animationList.list[index];
+					SkinnedMeshInstanceSpawner.AnimationData animation = (SkinnedMeshInstanceSpawner.AnimationData)_animationList.list[index];
 					
 					float columnWidth = rect.width / 3f;
 					rect.width = columnWidth;

@@ -26,6 +26,7 @@ namespace Framework
 					{
 						AnimationTextureRef animationTexture = SerializedPropertyUtils.GetSerializedPropertyValue<AnimationTextureRef>(property);
 						animationTexture.UnloadTexture();
+						SerializedPropertyUtils.SetSerializedPropertyValue(property, animationTexture);
 					}
 
 					EditorGUI.EndProperty();

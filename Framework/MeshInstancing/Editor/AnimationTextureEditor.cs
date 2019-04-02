@@ -124,7 +124,7 @@ namespace Framework
 
 						for (int frame = 0; frame < totalFrames; frame++)
 						{
-							float bakeDelta = Mathf.Clamp01((float)frame / totalFrames);
+							float bakeDelta = Mathf.Clamp01((float)frame / (totalFrames - 1));
 							float animationTime = bakeDelta * animationClips[animIndex].length;
 
 							//Sample animation

@@ -27,7 +27,7 @@ namespace Framework
 			public float _sphereCullingRadius;
 
 			[Serializable]
-			public struct Animation
+			public struct AnimationData
 			{
 				public int _animationIndex;
 				[Range(0, 1)]
@@ -36,7 +36,7 @@ namespace Framework
 			}
 			
 			[HideInInspector]
-			public Animation[] _animations;
+			public AnimationData[] _animations;
 			#endregion
 			 
 			#region Private Data
@@ -137,7 +137,7 @@ namespace Framework
 
 						_instanceData[i]._active = true;
 
-						Animation animation = PickRandomAnimation();
+						AnimationData animation = PickRandomAnimation();
 						AnimationTexture.Animation textureAnim = GetAnimation(animation._animationIndex);
 						_instanceData[i]._animationIndex = animation._animationIndex;
 						_instanceData[i]._currentFrame = Random.Range(0, textureAnim._totalFrames - 2);
@@ -267,8 +267,6 @@ namespace Framework
 				{
 					if (_instanceData[i]._active)
 					{
-						float prevFrame = _instanceData[i]._currentFrame;
-
 						//Progress current animation
 						AnimationTexture.Animation animation = GetAnimation(_instanceData[i]._animationIndex);
 
@@ -276,13 +274,14 @@ namespace Framework
 						_instanceData[i]._currentFrame += Time.deltaTime * animation._fps * _instanceData[i]._animationSpeed;
 
 						//Is animation finished?
-						if (Mathf.FloorToInt(_instanceData[i]._currentFrame) >= animation._totalFrames - 2)
+						if (Mathf.FloorToInt(_instanceData[i]._currentFrame - animation._startFrameOffset) >= animation._totalFrames - 1)
 						{
-							Animation newAnimation = PickRandomAnimation();
+							AnimationData newAnimationData = PickRandomAnimation();
+							animation = GetAnimation(newAnimationData._animationIndex);
 
-							_instanceData[i]._animationIndex = newAnimation._animationIndex;
-							_instanceData[i]._currentFrame = 0f;
-							_instanceData[i]._animationSpeed = newAnimation._speedRange.GetRandomValue();;
+							_instanceData[i]._animationIndex = newAnimationData._animationIndex;
+							_instanceData[i]._currentFrame = animation._startFrameOffset;
+							_instanceData[i]._animationSpeed = newAnimationData._speedRange.GetRandomValue();;
 						}
 					}
 				}
@@ -316,7 +315,7 @@ namespace Framework
 				return GeometryUtility.TestPlanesAABB(cameraFrustrumPlanes, instanceData._skinnedMeshes[0].bounds);
 			}
 
-			private Animation PickRandomAnimation()
+			private AnimationData PickRandomAnimation()
 			{
 				float totalWeights = 0.0f;
 
