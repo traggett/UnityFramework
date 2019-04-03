@@ -114,7 +114,7 @@ namespace Framework
 				return _referencePrefab;
 			}
 
-			public GameObject SpawnObject(Vector3 position)
+			public GameObject SpawnObject(Vector3 position, Quaternion rotation, Vector3 scale)
 			{
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
@@ -124,6 +124,9 @@ namespace Framework
 						{
 							_instanceData[i]._gameObject = Instantiate(_referencePrefab, this.transform);
 							_instanceData[i]._gameObject.transform.position = position;
+							_instanceData[i]._gameObject.transform.rotation = rotation;
+							_instanceData[i]._gameObject.transform.localScale = scale;
+
 							_instanceData[i]._gameObject.SetActive(true);
 
 							_instanceData[i]._skinnedMeshes = _instanceData[i]._gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
