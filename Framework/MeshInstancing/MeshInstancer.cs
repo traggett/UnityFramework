@@ -14,15 +14,6 @@ namespace Framework
 			public Mesh _mesh;
 			public Material[] _materials;
 			public ShadowCastingMode _shadowCastingMode;
-
-			public enum Billboard
-			{
-				Off,
-				WorldSpace,
-				CameraSpace,
-			}
-
-			public Billboard _billboard;
 			public float _boundRadius;
 			public float _frustrumPadding;
 
@@ -223,62 +214,6 @@ namespace Framework
 				matrix = _instanceTransforms[index];
 
 				_updateInstanceTransform?.Invoke(ref matrix);
-
-
-				switch (_billboard)
-				{
-					case Billboard.CameraSpace:
-						{
-							Vector3 forward = (cameraPos - MathUtils.GetPosition(ref matrix)).normalized;
-							Vector3 left = Vector3.Cross(forward, cameraUp).normalized;
-							Vector3 up = Vector3.Cross(left, forward);
-							
-							Vector3 scale = matrix.lossyScale;
-
-							left = left * scale.x;
-							matrix.m00 = left.x;
-							matrix.m10 = left.y;
-							matrix.m20 = left.z;
-
-							up = up * scale.y;
-							matrix.m01 = up.x;
-							matrix.m11 = up.y;
-							matrix.m21 = up.z;
-
-							forward =  forward * scale.z;
-							matrix.m02 = forward.x;
-							matrix.m12 = forward.y;
-							matrix.m22 = forward.z;
-						}
-						break;
-					case Billboard.WorldSpace:
-						{
-							Vector3 forward = (cameraPos - MathUtils.GetPosition(ref matrix)).normalized;
-							Vector3 left = Vector3.Cross(forward, Vector3.up);
-							Vector3 up = Vector3.Cross(left, forward);
-
-							float rotationAngle = Vector3.Angle(Vector3.up, new Vector3(matrix.m01, matrix.m11, matrix.m21));
-							Quaternion rotation = Quaternion.AngleAxis(rotationAngle, forward);
-
-							Vector3 scale = matrix.lossyScale;
-
-							left = rotation * left * scale.x;
-							matrix.m00 = left.x;
-							matrix.m10 = left.y;
-							matrix.m20 = left.z;
-
-							up = rotation * up * scale.y;
-							matrix.m01 = up.x;
-							matrix.m11 = up.y;
-							matrix.m21 = up.z;
-
-							forward = rotation * forward * scale.z;
-							matrix.m02 = forward.x;
-							matrix.m12 = forward.y;
-							matrix.m22 = forward.z;
-						}
-						break;
-				}
 			}
 
 			protected bool IsMeshInFrustrum(int index)
