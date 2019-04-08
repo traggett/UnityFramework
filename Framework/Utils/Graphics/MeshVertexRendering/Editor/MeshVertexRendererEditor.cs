@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using System.IO;
 
 namespace Framework
 {
@@ -11,10 +12,10 @@ namespace Framework
 			{
 				protected GameObject _sourceObject;
 				protected string _currentFileName;
-
+				
 				#region EditorWindow
 				[MenuItem("Tools/Mesh Vertex Renderer", false)]
-				static void MakeWindow()
+				private static void MakeWindow()
 				{
 					MeshVertexRendererEditor window = GetWindow(typeof(MeshVertexRendererEditor)) as MeshVertexRendererEditor;
 				}
@@ -41,31 +42,57 @@ namespace Framework
 
 						if (!string.IsNullOrEmpty(path))
 						{
-							SaveMesh(_sourceObject, path);
+							Mesh sourceMesh = GetMesh(_sourceObject);
+
+							if (sourceMesh == null)
+								return;
+
+							//Skinned Mesh
+							{
+								sourceMesh = GenerateSkinnedMesh(sourceMesh);
+
+								sourceMesh.UploadMeshData(true);
+								string assetPath = FileUtil.GetProjectRelativePath(Path.GetFileNameWithoutExtension(path) + "_Skinned.asset");
+
+								AssetDatabase.CreateAsset(sourceMesh, assetPath);
+								AssetDatabase.SaveAssets();
+							}
+
+							//Rendered mesh
+							{
+								Mesh mesh = GenerateRenderedMesh(sourceMesh);
+
+								mesh.UploadMeshData(true);
+								string assetPath = FileUtil.GetProjectRelativePath(path);
+
+								AssetDatabase.CreateAsset(mesh, assetPath);
+								AssetDatabase.SaveAssets();
+							}
 						}
 					}
 				}
 				#endregion
 
-				private static void SaveMesh(GameObject sourceObject, string fileName)
+				protected static Mesh GetMesh(GameObject sourceObject)
 				{
-					Mesh mesh = new Mesh();
-					Mesh sourceMesh = null;
-					
 					SkinnedMeshRenderer skinnedMesh = sourceObject.GetComponent<SkinnedMeshRenderer>();
 					MeshFilter meshFilter = sourceObject.GetComponent<MeshFilter>();
 
 					if (skinnedMesh != null)
 					{
-						sourceMesh = skinnedMesh.sharedMesh;
+						return skinnedMesh.sharedMesh;
 					}
 					else if (meshFilter != null)
 					{
-						sourceMesh = meshFilter.sharedMesh;
+						return meshFilter.sharedMesh;
 					}
 
-					if (sourceMesh == null)
-						return;
+					return null;
+				}
+
+				protected static Mesh GenerateRenderedMesh(Mesh sourceMesh)
+				{
+					Mesh mesh = new Mesh();
 
 					int sourceMeshVertCount = sourceMesh.vertexCount;
 
@@ -132,11 +159,38 @@ namespace Framework
 						mesh.colors = colors;
 					}
 
-					mesh.UploadMeshData(true);
-					string path = FileUtil.GetProjectRelativePath(fileName);
+					return mesh;
+				}
 
-					AssetDatabase.CreateAsset(mesh, path);
-					AssetDatabase.SaveAssets();
+				protected static Mesh GenerateSkinnedMesh(Mesh sourceMesh)
+				{
+					Mesh mesh = Instantiate(sourceMesh);
+
+					int sourceMeshVertCount = sourceMesh.vertexCount;
+
+					//Update UVs and Indices (change to point topology, uv is info for where vert pixel is)
+					{
+						float textureSize = MeshVertexRenderer.GetTextureSize(sourceMeshVertCount);
+						
+						Vector2[] uvs = new Vector2[sourceMeshVertCount];
+						int[] indices = new int[sourceMeshVertCount];
+
+						for (int i = 0; i < sourceMeshVertCount; i++)
+						{
+							//Set mesh uv to be the screen pos for this vert	
+							float row = Mathf.Floor(i / textureSize);
+							float col = i - (row * textureSize);
+
+							uvs[i].x = (col + 0.5f) / textureSize;
+							uvs[i].y = (row + 0.5f) / textureSize;
+							indices[i] = i;
+						}
+
+						mesh.uv = uvs;
+						mesh.SetIndices(indices, MeshTopology.Points, 0);
+					}
+
+					return mesh;
 				}
 			}
 		}

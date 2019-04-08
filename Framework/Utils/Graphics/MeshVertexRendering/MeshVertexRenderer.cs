@@ -129,48 +129,7 @@ namespace Framework
 			private void SetupSkinnedMesh()
 			{
 				_sourceMesh.material = new Material(_vertexBakingReplacementShader);
-				_sourceMesh.gameObject.layer = _vertexBakingLayer;
-				
-				if (_updateMesh)
-				{
-					SkinnedMeshRenderer skinnedMesh = _sourceMesh.GetComponent<SkinnedMeshRenderer>();
-					MeshFilter meshFilter = _sourceMesh.GetComponent<MeshFilter>();
-
-					if (skinnedMesh != null)
-					{
-						skinnedMesh.sharedMesh = AddExtraMeshData(skinnedMesh.sharedMesh);
-					}
-					else if (meshFilter != null)
-					{
-						meshFilter.mesh = AddExtraMeshData(meshFilter.mesh);
-					}
-				}	
-			}
-
-			private static Mesh AddExtraMeshData(Mesh mesh)
-			{
-				//Set mesh uv.x to be the pixel uv for this vert
-				int avatarVertCount = mesh.vertexCount;
-				float textureSize = GetTextureSize(avatarVertCount);
-
-				Vector2[] uvs = new Vector2[avatarVertCount];
-				int[] indices = new int[avatarVertCount];
-
-				for (int i = 0; i < avatarVertCount; i++)
-				{
-					float row = Mathf.Floor(i / textureSize);
-					float col = i - (row * textureSize);
-
-					uvs[i].x = (col + 0.5f) / textureSize;
-					uvs[i].y = (row + 0.5f) / textureSize;
-					indices[i] = i;
-				}
-
-				mesh.uv = uvs;
-				mesh.SetIndices(indices, MeshTopology.Points, 0);
-				mesh.UploadMeshData(false);
-
-				return mesh;
+				_sourceMesh.gameObject.layer = _vertexBakingLayer;	
 			}
 			#endregion
 		}
