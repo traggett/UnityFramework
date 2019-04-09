@@ -12,7 +12,6 @@ namespace Framework
 			public Shader _vertexBakingReplacementShader;
 			public LayerProperty _vertexBakingLayer;
 			public MaterialRefProperty[] _targetMaterials;
-			public bool _updateMesh;
 			#endregion
 
 			#region Private Data
