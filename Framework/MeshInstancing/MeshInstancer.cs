@@ -1,5 +1,4 @@
-﻿using Framework.Maths;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Rendering;
 
 namespace Framework
@@ -14,6 +13,7 @@ namespace Framework
 			public Mesh _mesh;
 			public Material[] _materials;
 			public ShadowCastingMode _shadowCastingMode;
+			public bool _recieveShadows;
 			public float _boundRadius;
 			public float _frustrumPadding;
 
@@ -204,7 +204,7 @@ namespace Framework
 
 					for (int i = 0; i < _mesh.subMeshCount; i++)
 					{
-						Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedInstanceTransforms, _numRenderedInstances, _propertyBlock, _shadowCastingMode);
+						Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedInstanceTransforms, _numRenderedInstances, _propertyBlock, _shadowCastingMode, _recieveShadows, this.gameObject.layer);
 					}
 				}
 			}

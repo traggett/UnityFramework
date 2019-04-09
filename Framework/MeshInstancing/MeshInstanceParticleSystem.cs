@@ -16,6 +16,7 @@ namespace Framework
 			public Vector3 _meshOffset = Vector3.zero;
 			public Vector3 _meshScale = Vector3.one;
 			public ShadowCastingMode _shadowCastingMode;
+			public bool _recieveShadows;
 			public bool _billboard;
 			public bool _sortByDepth;
 			public bool _frustrumCull;
@@ -201,7 +202,7 @@ namespace Framework
 
 						for (int i = 0; i < _mesh.subMeshCount; i++)
 						{
-							Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _particleTransforms, _renderedParticles.Count, _propertyBlock, _shadowCastingMode);
+							Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _particleTransforms, _renderedParticles.Count, _propertyBlock, _shadowCastingMode, _recieveShadows, this.gameObject.layer);
 						}
 					}
 				}

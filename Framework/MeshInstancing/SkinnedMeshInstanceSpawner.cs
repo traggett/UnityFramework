@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace Framework
 {
-	using Maths;	
+	using Maths;
 	using Utils;
 	
 	namespace MeshInstancing
@@ -16,6 +17,8 @@ namespace Framework
 			public AnimationTextureRef _animationTexture;
 			public PrefabResourceRef _prefab;
 			public bool _sortByDepth;
+			public ShadowCastingMode _shadowCastingMode;
+			public bool _recieveShadows;
 
 			public enum eFrustrumCulling
 			{
@@ -228,7 +231,7 @@ namespace Framework
 						for (int j = 0; j < _skinnedMeshes[i].materials.Length; j++)
 						{
 							int subMesh = Math.Min(j, _skinnedMeshes[i].sharedMesh.subMeshCount - 1);
-							Graphics.DrawMeshInstanced(_skinnedMeshes[i].sharedMesh, subMesh, _skinnedMeshes[i].materials[j], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock);
+							Graphics.DrawMeshInstanced(_skinnedMeshes[i].sharedMesh, subMesh, _skinnedMeshes[i].materials[j], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock, _shadowCastingMode, _recieveShadows, this.gameObject.layer);
 						}
 					}
 				}
