@@ -391,6 +391,13 @@ namespace Framework
 			{
 				return new Vector3(matrix.m03, matrix.m13, matrix.m23);
 			}
+
+			public static void SetPosition(ref Matrix4x4 matrix, Vector3 position)
+			{
+				matrix.m03 = position.x;
+				matrix.m13 = position.y;
+				matrix.m23 = position.z;
+			}
 		}
 	}
 }
