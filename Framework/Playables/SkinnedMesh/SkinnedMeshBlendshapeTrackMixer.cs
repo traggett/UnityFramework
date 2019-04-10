@@ -44,7 +44,7 @@ namespace Framework
 
 					if (inputWeight > 0.0f)
 					{
-						ScriptPlayable<SkinnedMeshBlendshapePlayableBehaviour> scriptPlayable = (ScriptPlayable<SkinnedMeshBlendshapePlayableBehaviour>)playable;
+						ScriptPlayable<SkinnedMeshBlendshapePlayableBehaviour> scriptPlayable = (ScriptPlayable<SkinnedMeshBlendshapePlayableBehaviour>)playable.GetInput(i);
 						SkinnedMeshBlendshapePlayableBehaviour inputBehaviour = scriptPlayable.GetBehaviour();
 
 						weight = Mathf.Lerp(weight, inputBehaviour._weight, inputWeight);
