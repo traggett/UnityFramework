@@ -57,6 +57,7 @@ namespace Framework
 			protected InstanceData[] _instanceData;
 			private float[] _currentFrame;
 			private SkinnedMeshRenderer[] _skinnedMeshes;
+			private Material[][] _materials;
 			private MaterialPropertyBlock _propertyBlock;
 			private class RenderData
 			{
@@ -81,14 +82,16 @@ namespace Framework
 				if (_referencePrefab != null)
 				{
 					_skinnedMeshes = _referencePrefab.GetComponentsInChildren<SkinnedMeshRenderer>();
+					_materials = new Material[_skinnedMeshes.Length][];
 
 					for (int i=0; i<_skinnedMeshes.Length; i++)
 					{
 						_skinnedMeshes[i].sharedMesh = AnimationTexture.AddExtraMeshData(_skinnedMeshes[i].sharedMesh);
+						_materials[i] = _skinnedMeshes[i].materials;
 
-						for (int j = 0; j < _skinnedMeshes[i].materials.Length; j++)
+						for (int j = 0; j < _materials[i].Length; j++)
 						{
-							_animationTexture.SetMaterialProperties(_skinnedMeshes[i].materials[j]);
+							_animationTexture.SetMaterialProperties(_materials[i][j]);
 						}
 					}
 				}
@@ -228,10 +231,10 @@ namespace Framework
 					
 					for (int i = 0; i < _skinnedMeshes.Length; i++)
 					{
-						for (int j = 0; j < _skinnedMeshes[i].materials.Length; j++)
+						for (int j = 0; j < _materials[i].Length; j++)
 						{
 							int subMesh = Math.Min(j, _skinnedMeshes[i].sharedMesh.subMeshCount - 1);
-							Graphics.DrawMeshInstanced(_skinnedMeshes[i].sharedMesh, subMesh, _skinnedMeshes[i].materials[j], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock, _shadowCastingMode, _recieveShadows, this.gameObject.layer);
+							Graphics.DrawMeshInstanced(_skinnedMeshes[i].sharedMesh, subMesh, _materials[i][j], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock, _shadowCastingMode, _recieveShadows, this.gameObject.layer);
 						}
 					}
 				}
@@ -248,9 +251,9 @@ namespace Framework
 				//In editor always set shared data
 				for (int i = 0; i < _skinnedMeshes.Length; i++)
 				{
-					for (int j = 0; j < _skinnedMeshes[i].materials.Length; j++)
+					for (int j = 0; j < _materials[i].Length; j++)
 					{
-						_animationTexture.SetMaterialProperties(_skinnedMeshes[i].materials[j]);
+						_animationTexture.SetMaterialProperties(_materials[i][j]);
 					}
 				}
 #endif

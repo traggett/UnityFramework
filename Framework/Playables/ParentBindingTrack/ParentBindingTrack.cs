@@ -1,20 +1,21 @@
-using System.Collections.Generic;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
 
 namespace Framework
 {
+	using Utils;
+
 	namespace Playables
 	{
 		[TrackClipType(typeof(ParentBindingMasterClip))]
 		public abstract class ParentBindingTrack : BaseTrackAsset
 		{
-			private List<IParentBindableTrackMixer> _boundTracks;
+			private IParentBindableTrackMixer[] _boundTracks;
 			private TimelineClip _masterClip;
 
 			protected void OnCreateTrackMixer(PlayableGraph graph)
 			{
-				_boundTracks = new List<IParentBindableTrackMixer>();
+				_boundTracks = new IParentBindableTrackMixer[0];
 				_masterClip = null;
 			}
 		
@@ -34,13 +35,15 @@ namespace Framework
 
 			public IParentBindableTrackMixer[] GetBoundTracks()
 			{
-				return _boundTracks.ToArray();
+				return _boundTracks;
 			}
 
 			public void AddChildTrack(IParentBindableTrackMixer boundTrack)
 			{
 				if (_boundTracks != null)
-					_boundTracks.Add(boundTrack);
+				{
+					ArrayUtils.Add(ref _boundTracks, boundTrack);
+				}
 			}
 
 #if UNITY_EDITOR

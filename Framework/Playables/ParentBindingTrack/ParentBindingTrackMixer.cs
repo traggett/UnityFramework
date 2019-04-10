@@ -9,12 +9,14 @@ namespace Framework
 		{
 			protected TrackAsset _trackAsset;
 			protected PlayableDirector _director;
+			private object _currentBinding;
 
 			#region ITrackMixer
 			public virtual void SetTrackAsset(TrackAsset trackAsset, PlayableDirector playableDirector)
 			{
 				_trackAsset = trackAsset;
 				_director = playableDirector;
+				_currentBinding = null;
 			}
 
 			public TrackAsset GetTrackAsset()
@@ -35,11 +37,15 @@ namespace Framework
 
 			protected void SetChildTrackBindings(object playerData)
 			{
-				ParentBindingTrack track = (ParentBindingTrack)_trackAsset;
-
-				foreach (IParentBindableTrackMixer parentBindable in track.GetBoundTracks())
+				if (_currentBinding != playerData)
 				{
-					parentBindable.SetParentBinding(playerData);
+					_currentBinding = playerData;
+					ParentBindingTrack track = (ParentBindingTrack)_trackAsset;
+
+					foreach (IParentBindableTrackMixer parentBindable in track.GetBoundTracks())
+					{
+						parentBindable.SetParentBinding(playerData);
+					}
 				}
 			}
 
@@ -51,6 +57,8 @@ namespace Framework
 				{
 					parentBindable.ClearParentBinding();
 				}
+
+				_currentBinding = null;
 			}
 		}
 	}
