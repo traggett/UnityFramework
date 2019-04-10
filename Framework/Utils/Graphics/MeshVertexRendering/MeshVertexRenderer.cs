@@ -14,14 +14,14 @@ namespace Framework
 			public MaterialRefProperty[] _targetMaterials;
 			#endregion
 
-			#region Private Data
-			private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
-			private RenderTexture _vertexPositionBuffer;
-			private Camera _vertexBufferCamera;
+			#region Protected Data
+			protected static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
+			protected RenderTexture _vertexPositionBuffer;
+			protected Camera _vertexBufferCamera;
 			#endregion
-
+			
 			#region Monobehaviour
-			private void Awake()
+			private void Start()
 			{
 				CreateVertexBuffer();
 				CreateCamera();			
@@ -34,10 +34,7 @@ namespace Framework
 #if UNITY_EDITOR
 				SetupMaterials();
 #endif
-
-				//Render skinned mesh to texture
-				_vertexBufferCamera.targetTexture = _vertexPositionBuffer;
-				_vertexBufferCamera.RenderWithShader(_vertexBakingShader, "VertexBaking");
+				RenderVertexBuffer();
 			}
 
 			void OnDestroy()
@@ -65,8 +62,8 @@ namespace Framework
 			}
 			#endregion
 
-			#region Private Functions
-			private int GetVertexCount()
+			#region Protected Functions
+			protected int GetVertexCount()
 			{
 				if (_sourceMesh is SkinnedMeshRenderer)
 				{
@@ -81,16 +78,22 @@ namespace Framework
 				return 0;
 			}
 
-			private void CreateVertexBuffer()
+			protected virtual void RenderVertexBuffer()
+			{
+				_vertexBufferCamera.Render();
+			}
+
+			protected virtual void CreateVertexBuffer()
 			{
 				int avatarVertCount = GetVertexCount();
 
 				//Work out min square texture to contain the verts
 				int textureSize = GetTextureSize(avatarVertCount);
 				_vertexPositionBuffer = new RenderTexture(textureSize, textureSize, 0, RenderTextureFormat.ARGBFloat);
+				_vertexPositionBuffer.Create();
 			}
-			
-			private void SetupMaterials()
+
+			protected virtual void SetupMaterials()
 			{
 				for (int i=0; i<_targetMaterials.Length; i++)
 				{
@@ -99,7 +102,7 @@ namespace Framework
 				}
 			}
 
-			private void CreateCamera()
+			protected virtual void CreateCamera()
 			{
 				GameObject cameraObj = new GameObject("Avatar Vertex Camera");
 				cameraObj.transform.parent = this.transform;
@@ -109,7 +112,9 @@ namespace Framework
 				cameraObj.transform.localRotation = Quaternion.identity;
 
 				_vertexBufferCamera = cameraObj.AddComponent<Camera>();
-				
+
+				_vertexBufferCamera.enabled = false;
+
 				_vertexBufferCamera.clearFlags = CameraClearFlags.SolidColor;
 				_vertexBufferCamera.renderingPath = RenderingPath.Forward;
 				_vertexBufferCamera.backgroundColor = Color.clear;
@@ -120,12 +125,12 @@ namespace Framework
 				_vertexBufferCamera.farClipPlane = 100;
 				_vertexBufferCamera.orthographic = true;
 				_vertexBufferCamera.orthographicSize = 100;
-
 				_vertexBufferCamera.targetTexture = _vertexPositionBuffer;
-				_vertexBufferCamera.enabled = false; 
+
+				_vertexBufferCamera.SetReplacementShader(_vertexBakingShader, "VertexBaking");
 			}
 
-			private void SetupSkinnedMesh()
+			protected virtual void SetupSkinnedMesh()
 			{
 				_sourceMesh.material = new Material(_vertexBakingReplacementShader);
 				_sourceMesh.gameObject.layer = _vertexBakingLayer;	

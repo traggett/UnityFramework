@@ -1,5 +1,5 @@
-#ifndef AVATAR_VERTEX_BAKING_INCLUDED
-#define AVATAR_VERTEX_BAKING_INCLUDED
+#ifndef MESH_VERTEX_BAKING_INCLUDED
+#define MESH_VERTEX_BAKING_INCLUDED
 
 ////////////////////////////////////////
 // Vertex structs
@@ -47,4 +47,4 @@ float4 frag(VertexOutput i) : SV_Target
     return float4(i.posWorld, 1);
 }
 
-#endif // AVATAR_VERTEX_BAKING_INCLUDED
+#endif // MESH_VERTEX_BAKING_INCLUDED
