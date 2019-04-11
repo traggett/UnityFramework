@@ -83,6 +83,7 @@ namespace Framework
 
 			public static void SafeDestroy(Object obj)
 			{
+#if UNITY_EDITOR
 				if (Application.isPlaying)
 				{
 					Object.Destroy(obj);
@@ -98,7 +99,9 @@ namespace Framework
 						Object.Destroy(obj);
 					}
 				}
-					
+#else
+				Object.Destroy(obj);
+#endif
 			}
 
 			public static void DeleteChildren(Transform transform, bool immediate = false)
