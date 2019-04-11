@@ -1,3 +1,4 @@
+using Framework.Utils;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
@@ -78,11 +79,7 @@ namespace Framework
 			{
 				if (_prefabInstance != null)
 				{
-					if (Application.isPlaying)
-						Object.Destroy(_prefabInstance);
-					else
-						Object.DestroyImmediate(_prefabInstance);
-
+					GameObjectUtils.SafeDestroy(_prefabInstance);
 					_prefabInstance = null;
 				}
 			}

@@ -70,7 +70,7 @@ namespace Framework
                 if (_isShuttingDown)
                     return null;
                 else
-                    return GameObject.Instantiate(original, position, rotation) as GameObject;
+                    return Object.Instantiate(original, position, rotation);
             }
 
 			public static GameObject SafeInstantiate(GameObject original, Transform parent = null)
@@ -78,15 +78,27 @@ namespace Framework
 				if (_isShuttingDown)
 					return null;
 				else
-					return GameObject.Instantiate(original, parent) as GameObject;
+					return Object.Instantiate(original, parent);
 			}
 
-			public static void Destroy(Object obj)
+			public static void SafeDestroy(Object obj)
 			{
 				if (Application.isPlaying)
+				{
 					Object.Destroy(obj);
+				}
 				else
-					Object.DestroyImmediate(obj);
+				{
+					try
+					{
+						Object.DestroyImmediate(obj);
+					}
+					catch
+					{
+						Object.Destroy(obj);
+					}
+				}
+					
 			}
 
 			public static void DeleteChildren(Transform transform, bool immediate = false)
