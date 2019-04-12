@@ -1337,7 +1337,7 @@ namespace Framework
 					{
 						Scene scene = SceneManager.GetSceneAt(i);
 
-						if (scene.IsValid())
+						if (scene.IsValid() && scene.isLoaded)
 						{
 							UnityPlayModeSaverSceneUtils.CacheScenePrefabInstances(scene);
 						}
