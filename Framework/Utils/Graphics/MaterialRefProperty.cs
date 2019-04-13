@@ -17,10 +17,10 @@ namespace Framework
 			[SerializeField]
 			private Renderer _renderer;
 			[SerializeField]
-			private Graphic _graphic;	
+			private Graphic _graphic;
 			#endregion
 
-			public MaterialRefProperty(Material material = null, int materialIndex=0, Renderer renderer=null, Graphic graphic=null)
+			public MaterialRefProperty(Material material = null, int materialIndex = 0, Renderer renderer = null, Graphic graphic = null)
 			{
 				_material = material;
 				_materialIndex = materialIndex;
@@ -48,7 +48,7 @@ namespace Framework
 					{
 						if (_graphic != null && _graphic.material != null)
 						{
-							
+
 #if UNITY_EDITOR
 							if (!Application.isPlaying)
 							{
@@ -63,7 +63,7 @@ namespace Framework
 						}
 					}
 					//...get from renderer / index
-					else if (_materialIndex != -1 )
+					else if (_materialIndex != -1)
 					{
 						if (_renderer != null && 0 <= _materialIndex && _materialIndex < _renderer.sharedMaterials.Length)
 						{
