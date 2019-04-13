@@ -43,7 +43,7 @@ namespace Framework
 			{
 				for (int i = 0; i < animation._events.Length; i++)
 				{
-					float animationEventFrame = animation._startFrameOffset + animation._events[i].time;
+					float animationEventFrame = animation._startFrameOffset + (animation._events[i].time * animation._fps);
 
 					if (prevTime < animationEventFrame && currTime >= animationEventFrame)
 					{
