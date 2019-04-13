@@ -36,9 +36,9 @@ namespace Framework
 						case MaterialPerInstanceProperties.Vector4Property.ePropertySource.Range:
 							{
 								SerializedProperty valueXProperty = property.FindPropertyRelative("_xValueRange");
-								SerializedProperty valueyProperty = property.FindPropertyRelative("_xValueRange");
-								SerializedProperty valuezProperty = property.FindPropertyRelative("_xValueRange");
-								SerializedProperty valuewProperty = property.FindPropertyRelative("_xValueRange");
+								SerializedProperty valueyProperty = property.FindPropertyRelative("_yValueRange");
+								SerializedProperty valuezProperty = property.FindPropertyRelative("_zValueRange");
+								SerializedProperty valuewProperty = property.FindPropertyRelative("_wValueRange");
 
 								EditorGUI.PropertyField(valueRect, valueXProperty, new GUIContent("X Value"));
 								valueRect.position = new Vector2(valueRect.position.x, valueRect.position.y + valueRect.height);
@@ -52,9 +52,9 @@ namespace Framework
 						case MaterialPerInstanceProperties.Vector4Property.ePropertySource.Curves:
 							{
 								SerializedProperty valueXProperty = property.FindPropertyRelative("_xValueCurve");
-								SerializedProperty valueyProperty = property.FindPropertyRelative("_xValueCurve");
-								SerializedProperty valuezProperty = property.FindPropertyRelative("_xValueCurve");
-								SerializedProperty valuewProperty = property.FindPropertyRelative("_xValueCurve");
+								SerializedProperty valueyProperty = property.FindPropertyRelative("_yValueCurve");
+								SerializedProperty valuezProperty = property.FindPropertyRelative("_zValueCurve");
+								SerializedProperty valuewProperty = property.FindPropertyRelative("_wValueCurve");
 
 								EditorGUI.PropertyField(valueRect, valueXProperty, new GUIContent("X Value"));
 								valueRect.position = new Vector2(valueRect.position.x, valueRect.position.y + valueRect.height);
