@@ -15,14 +15,16 @@ namespace Framework
 				public readonly int _totalFrames;
 				public readonly int _fps;
 				public readonly WrapMode _wrapMode;
+				public readonly AnimationEvent[] _events;
 
-				public Animation(string name, int startOffset, int frameCount, int fps, WrapMode wrapMode)
+				public Animation(string name, int startOffset, int frameCount, int fps, WrapMode wrapMode, AnimationEvent[] events)
 				{
 					_name = name;
 					_startFrameOffset = startOffset;
 					_totalFrames = frameCount;
 					_fps = fps;
 					_wrapMode = wrapMode;
+					_events = events;
 				}
 			}
 
@@ -35,6 +37,20 @@ namespace Framework
 				_animations = animations;
 				_numBones = numBones;
 				_texture = texture;
+			}
+
+			public static void CheckForEvents(GameObject gameObject, Animation animation, float prevTime, float currTime)
+			{
+				for (int i = 0; i < animation._events.Length; i++)
+				{
+					float animationEventFrame = animation._startFrameOffset + animation._events[i].time;
+
+					if (prevTime < animationEventFrame && currTime >= animationEventFrame)
+					{
+						//Trigger event! TO DO - different ones?
+						gameObject.SendMessage(animation._events[i].functionName);
+					}
+				}
 			}
 
 			public static AnimationTexture LoadFromFile(TextAsset file)
@@ -55,7 +71,25 @@ namespace Framework
 					int fps = reader.ReadInt32();
 					WrapMode wrapMode = (WrapMode)reader.ReadInt32();
 
-					animations[i] = new Animation(name, startOffset, totalFrames, fps, wrapMode);
+					int numEvents = reader.ReadInt32();
+					AnimationEvent[] events = new AnimationEvent[numEvents];
+
+					for (int j=0; j<numEvents; j++)
+					{
+						events[j] = new AnimationEvent
+						{
+							time = reader.ReadSingle(),
+							functionName = reader.ReadString(),
+
+							stringParameter = reader.ReadString(),
+							floatParameter = reader.ReadSingle(),
+							intParameter = reader.ReadInt32()
+							//TO DO?
+							//evnt.objectReferenceParameter = reader.Rea();
+						};
+					}
+
+					animations[i] = new Animation(name, startOffset, totalFrames, fps, wrapMode, events);
 				}
 
 				//Read texture

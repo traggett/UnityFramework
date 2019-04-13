@@ -25,9 +25,9 @@ namespace Framework
 				
 				_currentFrame += Time.deltaTime * animation._fps;
 
-				if (_currentFrame + 1 > animation._totalFrames)
+				if (Mathf.FloorToInt(_currentFrame - animation._startFrameOffset) >= animation._totalFrames - 1)
 				{
-					_currentFrame = 0.0f;
+					_currentFrame = animation._startFrameOffset;
 				}
 				
 				_material.GetMaterial().SetFloat("frameIndex", _currentFrame);

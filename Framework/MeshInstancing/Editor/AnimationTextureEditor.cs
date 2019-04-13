@@ -116,7 +116,8 @@ namespace Framework
 						string name = animationClips[animIndex].name;
 						int totalFrames = Mathf.CeilToInt(animationClips[animIndex].length * fps) + 1;
 						WrapMode wrapMode = animationClips[animIndex].wrapMode;
-						animations[animIndex] = new AnimationTexture.Animation(name, startOffset, totalFrames, fps, wrapMode);
+						AnimationEvent[] events = animationClips[animIndex].events;
+						animations[animIndex] = new AnimationTexture.Animation(name, startOffset, totalFrames, fps, wrapMode, events);
 						startOffset += totalFrames;
 
 						//Sample animation
@@ -206,6 +207,19 @@ namespace Framework
 						writer.Write(animationTexture._animations[i]._totalFrames);
 						writer.Write(animationTexture._animations[i]._fps);
 						writer.Write((int)animationTexture._animations[i]._wrapMode);
+
+						writer.Write(animationTexture._animations[i]._events.Length);
+
+						for (int j = 0; j < animationTexture._animations[i]._events.Length; j++)
+						{
+							writer.Write(animationTexture._animations[i]._events[j].time);
+							writer.Write(animationTexture._animations[i]._events[j].functionName);
+							writer.Write(animationTexture._animations[i]._events[j].stringParameter);
+							writer.Write(animationTexture._animations[i]._events[j].floatParameter);
+							writer.Write(animationTexture._animations[i]._events[j].intParameter);
+							//TO DO?
+							//writer.Write(animationTexture._animations[i]._events[j].objectReferenceParameter);
+						}
 					}
 
 					//Write texture!

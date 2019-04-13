@@ -280,7 +280,11 @@ namespace Framework
 						AnimationTexture.Animation animation = GetAnimation(_instanceData[i]._animationIndex);
 
 						//Update current frame
+						float prevFrame = _instanceData[i]._currentFrame;
 						_instanceData[i]._currentFrame += Time.deltaTime * animation._fps * _instanceData[i]._animationSpeed;
+
+						//Check for events
+						AnimationTexture.CheckForEvents(_instanceData[i]._gameObject, animation, prevFrame, _instanceData[i]._currentFrame);
 
 						//Is animation finished?
 						if (Mathf.FloorToInt(_instanceData[i]._currentFrame - animation._startFrameOffset) >= animation._totalFrames - 1)
