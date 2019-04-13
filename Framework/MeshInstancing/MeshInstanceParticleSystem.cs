@@ -121,7 +121,7 @@ namespace Framework
 
 			protected void Render(Camera camera)
 			{
-				if (_mesh == null || _materials.Length < _mesh.subMeshCount)
+				if (camera == null || _mesh == null || _materials.Length < _mesh.subMeshCount)
 					return;
 
 				int numAlive = _particleSystem.GetParticles(_particles);

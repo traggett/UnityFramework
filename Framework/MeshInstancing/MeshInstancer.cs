@@ -170,7 +170,7 @@ namespace Framework
 			#region Protected Functions
 			protected void Render(Camera camera)
 			{
-				if (_mesh == null || _materials.Length < _mesh.subMeshCount)
+				if (camera == null || _mesh == null || _materials.Length < _mesh.subMeshCount)
 					return;
 
 				OnPreRender();

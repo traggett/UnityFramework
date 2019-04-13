@@ -165,7 +165,7 @@ namespace Framework
 			#region Protected Functions
 			protected void Render(Camera camera)
 			{
-				if (_skinnedMeshes == null || _instanceData == null)
+				if (camera == null || _skinnedMeshes == null || _instanceData == null)
 					return;
 
 				_renderedObjects.Clear();
