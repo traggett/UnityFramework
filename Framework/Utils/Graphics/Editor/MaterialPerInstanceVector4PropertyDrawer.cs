@@ -30,7 +30,7 @@ namespace Framework
 						case MaterialPerInstanceProperties.Vector4Property.ePropertySource.Constant:
 							{
 								SerializedProperty valueProperty = property.FindPropertyRelative("_value");
-								EditorGUI.PropertyField(valueRect, valueProperty, new GUIContent("Value"));
+								valueProperty.vector4Value = EditorGUI.Vector4Field(valueRect, "", valueProperty.vector4Value);
 							}
 							break;
 						case MaterialPerInstanceProperties.Vector4Property.ePropertySource.Range:
