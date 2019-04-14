@@ -13,14 +13,19 @@ namespace Framework
 			#region Public Data
 			public Renderer _renderer;
 
+			public interface IProperty
+			{
+				string GetPropertyId();
+			}
+
 			[Serializable]
-			public class FloatProperty
+			public class FloatProperty : IProperty
 			{
 				public enum ePropertySource : short
 				{
 					Constant,
-					Range,
-					Curve,
+					RandomRange,
+					RandomCurve,
 				}
 
 				public string _name = "_Value";
@@ -28,46 +33,35 @@ namespace Framework
 				public float _value = 0.0f;
 				public FloatRange _valueRange = new FloatRange(0f, 1f);
 				public AnimationCurve _valueCurve = new AnimationCurve(new Keyframe(0f,0f), new Keyframe(1f,1f));
+
+				public string GetPropertyId() { return _name; }
 			}
 
 			[Serializable]
-			public class IntProperty
+			public class ColorProperty : IProperty
 			{
 				public enum ePropertySource : short
 				{
 					Constant,
-					Range,
-				}
-
-				public string _name = "_Value";
-				public ePropertySource _source = ePropertySource.Constant;
-				public int _value = 0;
-				public IntRange _valueRange = new IntRange(0, 1);
-			}
-
-			[Serializable]
-			public class ColorProperty
-			{
-				public enum ePropertySource : short
-				{
-					Constant,
-					Gradient,
+					RandomFromGradient,
 				}
 
 				public string _name = "_Color";
 				public ePropertySource _source = ePropertySource.Constant;
 				public Color _value = Color.white;
 				public Gradient _valueGradient = new Gradient();
+
+				public string GetPropertyId() { return _name; }
 			}
 
 			[Serializable]
-			public class Vector4Property
+			public class Vector4Property : IProperty
 			{
 				public enum ePropertySource : short
 				{
 					Constant,
-					Range,
-					Curves,
+					RandomRange,
+					RandomCurve,
 				}
 
 				public string _name = "_Value";
@@ -81,25 +75,28 @@ namespace Framework
 				public AnimationCurve _yValueCurve = new AnimationCurve(new Keyframe(0f,0f), new Keyframe(1f,1f));
 				public AnimationCurve _zValueCurve = new AnimationCurve(new Keyframe(0f,0f), new Keyframe(1f,1f));
 				public AnimationCurve _wValueCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(1f, 1f));
+
+				public string GetPropertyId() { return _name; }
 			}
 
 			[Serializable]
-			public class TextureProperty
+			public class TextureProperty : IProperty
 			{
 				public enum ePropertySource : short
 				{
 					Constant,
-					Array,
+					RandomArray,
 				}
 
 				public string _name = "_Value";
 				public ePropertySource _source = ePropertySource.Constant;
 				public Texture _value = null;
 				public Texture[] _valueArray = new Texture[0];
+
+				public string GetPropertyId() { return _name; }
 			}
 			
 			public FloatProperty[] _floatProperties;
-			public IntProperty[] _intProperties;
 			public ColorProperty[] _colorProperties;
 			public Vector4Property[] _vector4Properties;
 			public TextureProperty[] _textureProperties;
@@ -108,28 +105,28 @@ namespace Framework
 			#region MonoBehaviour
 			private void OnEnable()
 			{
-				SetProperties();
+				UpdateProperties();
 			}
 			#endregion
 
-			#region Private Functions
-			private void SetProperties()
+			#region Public Interface
+			public MaterialPropertyBlock GetPropertyBlock()
 			{
+				MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
+
 				if (_renderer != null)
 				{
-					MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
-
 					//Floats
-					for (int i=0; i< _floatProperties.Length; i++)
+					for (int i = 0; i < _floatProperties.Length; i++)
 					{
 						float value;
 
 						switch (_floatProperties[i]._source)
 						{
-							case FloatProperty.ePropertySource.Range:
+							case FloatProperty.ePropertySource.RandomRange:
 								value = _floatProperties[i]._valueRange.GetRandomValue();
 								break;
-							case FloatProperty.ePropertySource.Curve:
+							case FloatProperty.ePropertySource.RandomCurve:
 								value = _floatProperties[i]._valueCurve.Evaluate(Random.value);
 								break;
 							case FloatProperty.ePropertySource.Constant:
@@ -139,26 +136,7 @@ namespace Framework
 
 						}
 
-						propertyBlock.SetFloat(_floatProperties[i]._name, value);
-					}
-
-					//Ints
-					for (int i = 0; i < _intProperties.Length; i++)
-					{
-						int value;
-
-						switch (_intProperties[i]._source)
-						{
-							case IntProperty.ePropertySource.Range:
-								value = _intProperties[i]._valueRange.GetRandomValue();
-								break;
-							case IntProperty.ePropertySource.Constant:
-							default:
-								value = _intProperties[i]._value;
-								break;
-						}
-
-						propertyBlock.SetInt(_intProperties[i]._name, value);
+						propertyBlock.SetFloat(_floatProperties[i].GetPropertyId(), value);
 					}
 
 					//Colors
@@ -167,8 +145,8 @@ namespace Framework
 						Color value;
 
 						switch (_colorProperties[i]._source)
-						{				
-							case ColorProperty.ePropertySource.Gradient:
+						{
+							case ColorProperty.ePropertySource.RandomFromGradient:
 								value = _colorProperties[i]._valueGradient.Evaluate(Random.value);
 								break;
 							case ColorProperty.ePropertySource.Constant:
@@ -177,7 +155,7 @@ namespace Framework
 								break;
 						}
 
-						propertyBlock.SetColor(_colorProperties[i]._name, value);
+						propertyBlock.SetColor(_colorProperties[i].GetPropertyId(), value);
 					}
 
 					//Vector4s
@@ -187,13 +165,13 @@ namespace Framework
 
 						switch (_vector4Properties[i]._source)
 						{
-							case Vector4Property.ePropertySource.Range:
+							case Vector4Property.ePropertySource.RandomRange:
 								value.x = _vector4Properties[i]._xValueRange.GetRandomValue();
 								value.y = _vector4Properties[i]._yValueRange.GetRandomValue();
 								value.z = _vector4Properties[i]._zValueRange.GetRandomValue();
 								value.w = _vector4Properties[i]._wValueRange.GetRandomValue();
 								break;
-							case Vector4Property.ePropertySource.Curves:
+							case Vector4Property.ePropertySource.RandomCurve:
 								value.x = _vector4Properties[i]._xValueCurve.Evaluate(Random.value);
 								value.y = _vector4Properties[i]._yValueCurve.Evaluate(Random.value);
 								value.z = _vector4Properties[i]._zValueCurve.Evaluate(Random.value);
@@ -205,7 +183,7 @@ namespace Framework
 								break;
 						}
 
-						propertyBlock.SetVector(_vector4Properties[i]._name, value);
+						propertyBlock.SetVector(_vector4Properties[i].GetPropertyId(), value);
 					}
 
 					//Textures
@@ -215,8 +193,8 @@ namespace Framework
 
 						switch (_textureProperties[i]._source)
 						{
-							
-							case TextureProperty.ePropertySource.Array:
+
+							case TextureProperty.ePropertySource.RandomArray:
 								if (_textureProperties[i]._valueArray.Length > 0)
 									value = _textureProperties[i]._valueArray[Random.Range(0, _textureProperties[i]._valueArray.Length)];
 								else
@@ -228,9 +206,18 @@ namespace Framework
 								break;
 						}
 
-						propertyBlock.SetTexture(_textureProperties[i]._name, value);
+						propertyBlock.SetTexture(_textureProperties[i].GetPropertyId(), value);
 					}
+				}
 
+				return propertyBlock;
+			}
+
+			public void UpdateProperties()
+			{
+				if (_renderer != null)
+				{
+					MaterialPropertyBlock propertyBlock = GetPropertyBlock();
 					_renderer.SetPropertyBlock(propertyBlock);
 				}
 			}
