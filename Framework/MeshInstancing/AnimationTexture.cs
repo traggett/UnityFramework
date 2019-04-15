@@ -4,6 +4,8 @@ using UnityEngine;
 
 namespace Framework
 {
+	using Utils;
+
 	namespace MeshInstancing
 	{
 		public class AnimationTexture
@@ -39,16 +41,15 @@ namespace Framework
 				_texture = texture;
 			}
 
-			public static void CheckForEvents(GameObject gameObject, Animation animation, float prevTime, float currTime)
+			public static void CheckForEvents(GameObject gameObject, Animation animation, float prevFrame, float currFrame)
 			{
 				for (int i = 0; i < animation._events.Length; i++)
 				{
 					float animationEventFrame = animation._startFrameOffset + (animation._events[i].time * animation._fps);
 
-					if (prevTime < animationEventFrame && currTime >= animationEventFrame)
+					if (prevFrame < animationEventFrame && currFrame >= animationEventFrame)
 					{
-						//Trigger event! TO DO - different ones?
-						gameObject.SendMessage(animation._events[i].functionName);
+						AnimationUtils.TriggerAnimationEvent(animation._events[i], gameObject);
 					}
 				}
 			}
@@ -56,11 +57,9 @@ namespace Framework
 			public static AnimationTexture LoadFromFile(TextAsset file)
 			{
 				BinaryReader reader = new BinaryReader(new MemoryStream(file.bytes));
-
-				//Read animation infos
+				
 				int numBones = reader.ReadInt32();
 				int animCount = reader.ReadInt32();
-				
 
 				Animation[] animations = new Animation[animCount];
 				for (int i=0; i<animCount; i++)
