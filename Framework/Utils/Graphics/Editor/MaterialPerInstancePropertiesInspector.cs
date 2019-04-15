@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace Framework
 {
+	using Framework.Maths.Editor;
 	using Maths;
 
 	namespace Utils
@@ -297,14 +298,13 @@ namespace Framework
 						break;
 					case MaterialPerInstanceProperties.Vector4Property.ePropertySource.RandomRange:
 						{
-							//TO DO!
-							vectorProperty._xValueCurve = EditorGUI.CurveField(valueRect, vectorProperty._xValueCurve);
+							vectorProperty._xValueRange = FloatRangeDrawer.FloatRangeField(valueRect, vectorProperty._xValueRange);
 							valueRect.position = new Vector2(valueRect.position.x, valueRect.position.y + EditorGUIUtility.singleLineHeight);
-							vectorProperty._yValueCurve = EditorGUI.CurveField(valueRect, vectorProperty._yValueCurve);
+							vectorProperty._yValueRange = FloatRangeDrawer.FloatRangeField(valueRect, vectorProperty._yValueRange);
 							valueRect.position = new Vector2(valueRect.position.x, valueRect.position.y + EditorGUIUtility.singleLineHeight);
-							vectorProperty._zValueCurve = EditorGUI.CurveField(valueRect, vectorProperty._zValueCurve);
+							vectorProperty._zValueRange = FloatRangeDrawer.FloatRangeField(valueRect, vectorProperty._zValueRange);
 							valueRect.position = new Vector2(valueRect.position.x, valueRect.position.y + EditorGUIUtility.singleLineHeight);
-							vectorProperty._wValueCurve = EditorGUI.CurveField(valueRect, vectorProperty._wValueCurve);
+							vectorProperty._wValueRange = FloatRangeDrawer.FloatRangeField(valueRect, vectorProperty._wValueRange);
 						}
 						break;
 					case MaterialPerInstanceProperties.Vector4Property.ePropertySource.RandomCurve:
@@ -338,8 +338,7 @@ namespace Framework
 						floatProperty._value = EditorGUI.FloatField(valueRect, floatProperty._value);
 						break;
 					case MaterialPerInstanceProperties.FloatProperty.ePropertySource.RandomRange:
-						//TO DO!
-						//floatProperty._valueRange = EditorGUI.CurveField(valueRect, floatProperty._valueRange);
+						floatProperty._valueRange = FloatRangeDrawer.FloatRangeField(valueRect, floatProperty._valueRange);
 						break;
 					case MaterialPerInstanceProperties.FloatProperty.ePropertySource.RandomCurve:
 						floatProperty._valueCurve = EditorGUI.CurveField(valueRect, floatProperty._valueCurve);

@@ -28,7 +28,6 @@ namespace Framework
 				{
 					return EditorGUIUtility.singleLineHeight;
 				}
-				
 			}
 		}
 	}
