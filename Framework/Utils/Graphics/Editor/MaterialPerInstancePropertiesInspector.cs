@@ -111,7 +111,7 @@ namespace Framework
 
 				Rect nameRect = new Rect(rect.x, rect.y, rect.width * 0.5f, EditorGUIUtility.singleLineHeight);
 				Rect sourceRect = new Rect(rect.x + nameRect.width, rect.y, rect.width * 0.5f, EditorGUIUtility.singleLineHeight);
-				Rect valueRect = new Rect(rect.x + nameRect.width, rect.y + nameRect.height, rect.width, EditorGUIUtility.singleLineHeight);
+				Rect valueRect = new Rect(rect.x + nameRect.width, rect.y + nameRect.height, rect.width * 0.5f, EditorGUIUtility.singleLineHeight);
 
 				if (property is MaterialPerInstanceProperties.ColorProperty)
 				{
