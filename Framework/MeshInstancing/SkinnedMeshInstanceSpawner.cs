@@ -107,6 +107,19 @@ namespace Framework
 				_propertyBlock = new MaterialPropertyBlock();
 			}
 
+			private void OnDisable()
+			{
+				for (int i = 0; i < _instanceData.Length; i++)
+				{
+					if (_instanceData[i]._gameObject != null)
+					{
+						Destroy(_instanceData[i]._gameObject);
+						_instanceData[i]._gameObject = null;
+						_instanceData[i]._active = false;
+					}
+				}
+			}
+
 			private void Update()
 			{
 				UpdateAnimations();
@@ -159,6 +172,20 @@ namespace Framework
 				}
 
 				return null;
+			}
+
+			public void DestroyObject(GameObject gameObject)
+			{
+				for (int i = 0; i < _instanceData.Length; i++)
+				{
+					if (_instanceData[i]._gameObject == gameObject)
+					{
+						Destroy(_instanceData[i]._gameObject);
+						_instanceData[i]._gameObject = null;
+						_instanceData[i]._active = false;
+						break;
+					}
+				}
 			}
 			#endregion
 
