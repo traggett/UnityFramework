@@ -22,7 +22,7 @@ namespace Framework
 					float[] values = new float[] { range._min, range._max };
 					EditorGUI.MultiFloatField(position, new GUIContent[] { new GUIContent("f"), new GUIContent("t") }, values);
 
-					return new FloatRange(range._min, range._max);
+					return new FloatRange(values[0], values[1]);
 				}
 			}
 		}
