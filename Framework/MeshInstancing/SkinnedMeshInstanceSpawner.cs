@@ -19,6 +19,7 @@ namespace Framework
 			public bool _sortByDepth;
 			public ShadowCastingMode _shadowCastingMode;
 			public bool _recieveShadows;
+			public bool _stripInstanceChildren;
 
 			public enum eFrustrumCulling
 			{
@@ -41,8 +42,11 @@ namespace Framework
 			[HideInInspector]
 			public AnimationData[] _animations;
 			#endregion
-			 
+
 			#region Private Data
+			private static readonly int kMaxMeshes = 1023;
+			private static readonly int kSearchNodes = 24;
+
 			protected struct InstanceData
 			{
 				public bool _active;
@@ -69,22 +73,21 @@ namespace Framework
 			private List<RenderData> _renderedObjects;
 			private Matrix4x4[] _renderedObjectTransforms;
 			private GameObject _referencePrefab;
-			private static readonly int kMaxMeshes = 1023;
+			private GameObject _clone;
 			#endregion
 
 			#region Monobehaviour
 			private void Awake()
 			{
-				//Find list of meshes and materials from prefab
-				_referencePrefab = _prefab.LoadAndInstantiatePrefab(this.transform);
-				_referencePrefab.SetActive(false);
-
-				if (_referencePrefab != null)
+				//Create a reference prefab that will be used to render them
 				{
+					_referencePrefab = _prefab.LoadAndInstantiatePrefab(this.transform);
+					_referencePrefab.SetActive(false);
+
 					_skinnedMeshes = _referencePrefab.GetComponentsInChildren<SkinnedMeshRenderer>();
 					_materials = new Material[_skinnedMeshes.Length][];
 
-					for (int i=0; i<_skinnedMeshes.Length; i++)
+					for (int i = 0; i < _skinnedMeshes.Length; i++)
 					{
 						_skinnedMeshes[i].sharedMesh = AnimationTexture.AddExtraMeshData(_skinnedMeshes[i].sharedMesh);
 						_materials[i] = _skinnedMeshes[i].materials;
@@ -96,6 +99,30 @@ namespace Framework
 					}
 				}
 
+
+				//Create stripped down clone that will be instantiated
+				{
+					_clone = _prefab.LoadAndInstantiatePrefab(this.transform);
+					_clone.SetActive(false);
+
+					if (_stripInstanceChildren)
+					{
+						//Delete all skinned meshes
+						SkinnedMeshRenderer[] skinnedMeshes = _clone.GetComponentsInChildren<SkinnedMeshRenderer>();
+
+						for (int i = 0; i < skinnedMeshes.Length; i++)
+						{
+							skinnedMeshes[i].enabled = false;
+							skinnedMeshes[i].sharedMesh = null;
+							skinnedMeshes[i].sharedMaterials = new Material[0];
+
+							//Delete bones too
+							GameObjectUtils.DeleteChildren(skinnedMeshes[i].rootBone);
+						}
+					}
+				}		
+
+				//Init data
 				_renderedObjects = new List<RenderData>(kMaxMeshes);
 				_instanceData = new InstanceData[kMaxMeshes];
 				_renderData = new RenderData[kMaxMeshes];
@@ -141,7 +168,7 @@ namespace Framework
 					{
 						if (_instanceData[i]._gameObject == null)
 						{
-							_instanceData[i]._gameObject = Instantiate(_referencePrefab, this.transform);
+							_instanceData[i]._gameObject = Instantiate(_clone, this.transform);
 							_instanceData[i]._gameObject.transform.position = position;
 							_instanceData[i]._gameObject.transform.rotation = rotation;
 							_instanceData[i]._gameObject.transform.localScale = scale;
@@ -435,8 +462,6 @@ namespace Framework
 
 				return endIndex;
 			}
-
-			private static readonly int kSearchNodes = 24;
 
 			private static bool IsSphereInFrustrum(ref Plane[] frustrumPlanes, ref Vector3[] planeNormals, ref float[] planeDistances, ref Vector3 center, float radius, float frustumPadding = 0f)
 			{
