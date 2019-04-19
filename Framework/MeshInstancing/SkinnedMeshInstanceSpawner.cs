@@ -89,7 +89,6 @@ namespace Framework
 
 					for (int i = 0; i < _skinnedMeshes.Length; i++)
 					{
-						_skinnedMeshes[i].sharedMesh = AnimationTexture.AddExtraMeshData(_skinnedMeshes[i].sharedMesh);
 						_materials[i] = _skinnedMeshes[i].materials;
 
 						for (int j = 0; j < _materials[i].Length; j++)

@@ -4,6 +4,7 @@ using UnityEditor;
 
 namespace Framework
 {
+	using System.Collections.Generic;
 	using Utils;
 
 	namespace MeshInstancing
@@ -15,6 +16,7 @@ namespace Framework
 				protected GameObject _animatorObject;
 				protected SkinnedMeshRenderer[] _skinnedMeshes;
 				protected int _skinnedMeshIndex;
+				protected Mesh _mesh;
 				[SerializeField]
 				protected AnimationClip[] _animations;
 				protected string _currentFileName;
@@ -41,6 +43,7 @@ namespace Framework
 					}
 					GUILayout.EndHorizontal();
 
+					EditorGUILayout.Separator();
 
 					EditorGUILayout.LabelField("Generate Animation Texture");
 
@@ -93,6 +96,24 @@ namespace Framework
 								SaveAnimationTexture(animationTexture, _currentFileName);
 
 								DestroyImmediate(sampleObject);
+							}
+						}
+					}
+
+					EditorGUILayout.Separator();
+
+					EditorGUILayout.LabelField("Generate Animation Texture Mesh");
+
+					_mesh = EditorGUILayout.ObjectField("Mesh", _mesh, typeof(Mesh), true) as Mesh;
+					if (_mesh != null)
+					{
+						if (GUILayout.Button("Generate Animated Texture Ready Mesh"))
+						{
+							string path = EditorUtility.SaveFilePanel("Save Mesh Asset", "Assets/", name, "asset");
+
+							if (!string.IsNullOrEmpty(path))
+							{
+								AddMeshForAnimations(_mesh, path);
 							}
 						}
 					}
@@ -304,6 +325,148 @@ namespace Framework
 					}
 
 					return colors;
+				}
+
+				private static void AddMeshForAnimations(Mesh sourceMesh, string path)
+				{
+					Mesh mesh = CreateMeshWithExtraData(sourceMesh);
+					mesh.UploadMeshData(true);
+
+					string assetPath = FileUtil.GetProjectRelativePath(path);
+
+					AssetDatabase.CreateAsset(mesh, assetPath);
+					AssetDatabase.SaveAssets();
+				}
+
+				private static Mesh CreateMeshWithExtraData(Mesh sourceMesh, int bonesPerVertex = 4)
+				{
+					Mesh mesh = new Mesh();
+
+					//Copy verts
+					{
+						Vector3[] vertices = new Vector3[sourceMesh.vertexCount];
+						for (int i = 0; i < sourceMesh.vertexCount; i++)
+							vertices[i] = sourceMesh.vertices[i];
+
+						mesh.vertices = vertices;
+					}
+
+					//Copy normals
+					{
+						Vector3[] normals = new Vector3[sourceMesh.normals.Length];
+						for (int i = 0; i < sourceMesh.normals.Length; i++)
+							normals[i] = sourceMesh.normals[i];
+
+						mesh.normals = normals;
+					}
+
+					//Copy tangents
+					{
+						Vector4[] tangents = new Vector4[sourceMesh.tangents.Length];
+						for (int i = 0; i < sourceMesh.tangents.Length; i++)
+							tangents[i] = sourceMesh.tangents[i];
+
+						mesh.tangents = tangents;
+					}
+
+					//Copy triangles
+					{
+						int[] triangles = new int[sourceMesh.triangles.Length];
+						for (int i = 0; i < sourceMesh.triangles.Length; i++)
+							triangles[i] = sourceMesh.triangles[i];
+
+						mesh.triangles = triangles;
+					}
+
+					//Copy UVs
+					{
+						Vector2[] uvs = new Vector2[sourceMesh.uv.Length];
+						for (int i = 0; i < sourceMesh.uv.Length; i++)
+							uvs[i] = sourceMesh.uv[i];
+
+						mesh.uv = uvs;
+					}
+
+					//Copy Bone Weights
+					{
+						BoneWeight[] boneWeights = new BoneWeight[sourceMesh.boneWeights.Length];
+						for (int i = 0; i < sourceMesh.boneWeights.Length; i++)
+							boneWeights[i] = sourceMesh.boneWeights[i];
+
+						mesh.boneWeights = boneWeights;
+					}
+
+					//Copy Bindposes
+					{
+						Matrix4x4[] bindposes = new Matrix4x4[sourceMesh.bindposes.Length];
+						for (int i = 0; i < sourceMesh.bindposes.Length; i++)
+							bindposes[i] = sourceMesh.bindposes[i];
+
+						mesh.bindposes = bindposes;
+					}
+
+					//Copy Submesh count
+					mesh.subMeshCount = sourceMesh.subMeshCount;
+
+					//Copy Index Format
+					mesh.indexFormat = sourceMesh.indexFormat;
+
+					//Copy Bounds
+					mesh.bounds = sourceMesh.bounds;
+
+					//Colors and secondary UVs
+					{
+						Color[] colors = new Color[sourceMesh.vertexCount];
+						List<Vector4> uv2 = new List<Vector4>();
+
+						for (int i = 0; i != mesh.vertexCount; ++i)
+						{
+							BoneWeight weight = mesh.boneWeights[i];
+
+							colors[i].r = weight.weight0;
+							colors[i].g = weight.weight1;
+							colors[i].b = weight.weight2;
+							colors[i].a = weight.weight3;
+
+							Vector4 boneIds;
+
+							boneIds.x = weight.boneIndex0;
+							boneIds.y = weight.boneIndex1;
+							boneIds.z = weight.boneIndex2;
+							boneIds.w = weight.boneIndex3;
+
+							if (bonesPerVertex == 3)
+							{
+								float rate = 1.0f / (weight.boneIndex0 + weight.boneIndex1 + weight.boneIndex2);
+								colors[i].r = colors[i].r * rate;
+								colors[i].g = colors[i].g * rate;
+								colors[i].b = colors[i].b * rate;
+								colors[i].a = -0.1f;
+							}
+							else if (bonesPerVertex == 2)
+							{
+								float rate = 1.0f / (weight.boneIndex0 + weight.boneIndex1);
+								colors[i].r = colors[i].r * rate;
+								colors[i].g = colors[i].g * rate;
+								colors[i].b = -0.1f;
+								colors[i].a = -0.1f;
+							}
+							else if (bonesPerVertex == 1)
+							{
+								colors[i].r = 1.0f;
+								colors[i].g = -0.1f;
+								colors[i].b = -0.1f;
+								colors[i].a = -0.1f;
+							}
+
+							uv2.Add(boneIds);
+						}
+
+						mesh.colors = colors;
+						mesh.SetUVs(2, uv2);
+					}
+
+					return mesh;
 				}
 			}
 		}

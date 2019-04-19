@@ -61,9 +61,7 @@ namespace Framework
 					{
 						_animationTexture.SetMaterialProperties(_materials[i]);
 					}
-
-					_mesh = AnimationTexture.AddExtraMeshData(_mesh, 4);
-
+					
 					_particleCurrentFrame = new float[_particles.Length];
 
 					_particleCustomData = new List<Vector4>(_particles.Length);
