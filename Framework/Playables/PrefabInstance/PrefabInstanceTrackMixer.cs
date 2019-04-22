@@ -54,15 +54,17 @@ namespace Framework
 			{
 				if (_prefabInstance == null)
 				{
-                    if (!_loadingPrefab)
+                    PrefabInstanceTrack track = (PrefabInstanceTrack)_trackAsset;
+
+                    if (!track._asyncLoad || !_loadingPrefab)
                     {
                         DestroyPrefabInstance();
-                        PrefabInstanceTrack track = (PrefabInstanceTrack)_trackAsset;
 
                         if (track._asyncLoad)
                         {
                             _loadingPrefab = true;
-                            track._prefab.AsyncLoadAndInstantiatePrefab(new Action<GameObject>(delegate (GameObject obj) { _prefabInstance = obj; _loadingPrefab = false; SetupPrefab(); }), _prefabSpawnPoint != null ? _prefabSpawnPoint.parent : null);
+                            //TO DO! start coroutine
+                           track._prefab.AsyncLoadAndInstantiatePrefab(new Action<GameObject>(delegate (GameObject obj) { _prefabInstance = obj; _loadingPrefab = false; SetupPrefab(); }), _prefabSpawnPoint != null ? _prefabSpawnPoint.parent : null);
                         }
                         else
                         {
