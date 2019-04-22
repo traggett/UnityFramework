@@ -11,6 +11,7 @@ namespace Framework
 		public class PrefabInstanceTrack : ParentBindingTrack
 		{
 			public PrefabResourceRef _prefab;
+            public bool _asyncLoad;
 			public ExposedReference<Transform> _prefabSpawnPoint;
 			public bool _makePrefabSpawnPointParent;
 
@@ -34,7 +35,7 @@ namespace Framework
 #if UNITY_EDITOR
 			public override Object GetEditorBinding(PlayableDirector director)
 			{
-				return _prefab.LoadPrefab();
+				return _prefab.LoadPrefabResource();
 			}
 #endif
 		}

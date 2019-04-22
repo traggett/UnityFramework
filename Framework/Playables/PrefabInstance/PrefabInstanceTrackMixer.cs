@@ -1,4 +1,5 @@
 using Framework.Utils;
+using System;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
@@ -10,6 +11,7 @@ namespace Framework
 		public class PrefabInstanceTrackMixer : ParentBindingTrackMixer
 		{
 			private GameObject _prefabInstance;
+            private bool _loadingPrefab;
 			private Transform _prefabSpawnPoint;
 			private bool _prefabSpawnPointIsParent;
 
@@ -52,28 +54,44 @@ namespace Framework
 			{
 				if (_prefabInstance == null)
 				{
-					DestroyPrefabInstance();
-					PrefabInstanceTrack track = (PrefabInstanceTrack)_trackAsset;
-					_prefabInstance = track._prefab.LoadAndInstantiatePrefab(_prefabSpawnPoint != null ?_prefabSpawnPoint.parent : null);
+                    if (!_loadingPrefab)
+                    {
+                        DestroyPrefabInstance();
+                        PrefabInstanceTrack track = (PrefabInstanceTrack)_trackAsset;
 
-					if (_prefabSpawnPoint != null)
-					{
-						if (_prefabSpawnPointIsParent)
-						{
-							_prefabInstance.transform.parent = _prefabSpawnPoint;
-							_prefabInstance.transform.localPosition = Vector3.zero;
-							_prefabInstance.transform.localRotation = Quaternion.identity;
-							_prefabInstance.transform.localScale = Vector3.one;
-						}
-						else
-						{
-							_prefabInstance.transform.position = _prefabSpawnPoint.position;
-							_prefabInstance.transform.rotation = _prefabSpawnPoint.rotation;
-							_prefabInstance.transform.localScale = _prefabSpawnPoint.localScale;
-						}
-					}
+                        if (track._asyncLoad)
+                        {
+                            _loadingPrefab = true;
+                            track._prefab.AsyncLoadAndInstantiatePrefab(new Action<GameObject>(delegate (GameObject obj) { _prefabInstance = obj; _loadingPrefab = false; SetupPrefab(); }), _prefabSpawnPoint != null ? _prefabSpawnPoint.parent : null);
+                        }
+                        else
+                        {
+                            _prefabInstance = track._prefab.LoadAndInstantiatePrefab(_prefabSpawnPoint != null ? _prefabSpawnPoint.parent : null);
+                            SetupPrefab();
+                        }                  
+                    }
 				}
 			}
+
+            private void SetupPrefab()
+            {
+                if (_prefabSpawnPoint != null)
+                {
+                    if (_prefabSpawnPointIsParent)
+                    {
+                        _prefabInstance.transform.parent = _prefabSpawnPoint;
+                        _prefabInstance.transform.localPosition = Vector3.zero;
+                        _prefabInstance.transform.localRotation = Quaternion.identity;
+                        _prefabInstance.transform.localScale = Vector3.one;
+                    }
+                    else
+                    {
+                        _prefabInstance.transform.position = _prefabSpawnPoint.position;
+                        _prefabInstance.transform.rotation = _prefabSpawnPoint.rotation;
+                        _prefabInstance.transform.localScale = _prefabSpawnPoint.localScale;
+                    }
+                }
+            }
 
 			private void DestroyPrefabInstance()
 			{
@@ -81,7 +99,8 @@ namespace Framework
 				{
 					GameObjectUtils.SafeDestroy(_prefabInstance);
 					_prefabInstance = null;
-				}
+                    _loadingPrefab = false;
+                }
 			}
 
 		}
