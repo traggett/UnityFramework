@@ -14,9 +14,11 @@ namespace Framework
 				{
 					EditorGUI.BeginProperty(position, label, property);
 					
-					SerializedProperty layerProperty = property.FindPropertyRelative("_layer");
-
-					layerProperty.intValue = EditorGUI.LayerField(position, label, layerProperty.intValue);
+                    if (!property.hasMultipleDifferentValues)
+                    {
+                        SerializedProperty layerProperty = property.FindPropertyRelative("_layer");
+                        layerProperty.intValue = EditorGUI.LayerField(position, label, layerProperty.intValue);
+                    }
 					
 					EditorGUI.EndProperty();
 				}
