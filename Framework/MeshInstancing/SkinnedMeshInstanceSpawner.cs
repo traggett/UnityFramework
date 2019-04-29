@@ -200,15 +200,13 @@ namespace Framework
 				return null;
 			}
 
-			public void DestroyObject(GameObject gameObject)
+			public void DestorySpawnedObject(GameObject gameObject)
 			{
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
 					if (_instanceData[i]._gameObject == gameObject)
 					{
-						Destroy(_instanceData[i]._gameObject);
-						_instanceData[i]._gameObject = null;
-						_instanceData[i]._active = false;
+						DestorySpawnedObject(i);
 						break;
 					}
 				}
@@ -371,6 +369,16 @@ namespace Framework
 				}
 
 				return count;
+			}
+
+			protected void DestorySpawnedObject(int index)
+			{
+				if (_instanceData[index]._gameObject != null)
+				{
+					Destroy(_instanceData[index]._gameObject);
+					_instanceData[index]._gameObject = null;
+				}
+				_instanceData[index]._active = false;
 			}
 			#endregion
 
