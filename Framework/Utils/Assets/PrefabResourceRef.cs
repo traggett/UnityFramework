@@ -40,8 +40,8 @@ namespace Framework
 
                 while (!request.isDone)
                 {
-                    yield return new WaitForEndOfFrame();
-                }
+					yield return null;
+				}
 
                 GameObject prefabSourceObject = (GameObject)request.asset;
 

@@ -43,10 +43,8 @@ namespace Framework
 			public AnimationData[] _animations;
 			#endregion
 
-			#region Private Data
-			private static readonly int kMaxMeshes = 1023;
-			private static readonly int kSearchNodes = 24;
-
+			#region Protected Data
+			protected static readonly int kMaxMeshes = 1023;
 			protected struct InstanceData
 			{
 				public bool _active;
@@ -59,18 +57,23 @@ namespace Framework
 				public object _extraData;
 			}
 			protected InstanceData[] _instanceData;
-			private float[] _currentFrame;
-			private SkinnedMeshRenderer[] _skinnedMeshes;
-			private Material[][] _materials;
-			private MaterialPropertyBlock _propertyBlock;
-			private class RenderData
+			protected MaterialPropertyBlock _propertyBlock;
+			protected class RenderData
 			{
 				public int _index;
 				public Matrix4x4 _transform;
 				public float _zDist;
 			}
+			protected List<RenderData> _renderedObjects;
+			#endregion
+
+			#region Private Data
+			private static readonly int kSearchNodes = 24;
+			
+			private float[] _currentFrame;
+			private SkinnedMeshRenderer[] _skinnedMeshes;
+			private Material[][] _materials;
 			private RenderData[] _renderData;
-			private List<RenderData> _renderedObjects;
 			private Matrix4x4[] _renderedObjectTransforms;
 			private GameObject _referencePrefab;
 			private GameObject _clone;

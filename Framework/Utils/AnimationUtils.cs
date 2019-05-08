@@ -8,6 +8,9 @@ namespace Framework
 		{
 			public static void TriggerAnimationEvent(AnimationEvent animationEvent, GameObject gameObject)
 			{
+				if (gameObject == null)
+					return;
+
 				//Try parameterless first
 				try
 				{
