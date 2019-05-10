@@ -126,6 +126,10 @@ namespace Framework
 				_vertexBufferCamera.orthographic = true;
 				_vertexBufferCamera.orthographicSize = 100;
 				_vertexBufferCamera.targetTexture = _vertexPositionBuffer;
+				_vertexBufferCamera.allowMSAA = false;
+				_vertexBufferCamera.allowHDR = false;
+				_vertexBufferCamera.useOcclusionCulling = false;
+				_vertexBufferCamera.stereoTargetEye = StereoTargetEyeMask.None;
 
 				_vertexBufferCamera.SetReplacementShader(_vertexBakingShader, "VertexBaking");
 			}
