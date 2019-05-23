@@ -91,9 +91,12 @@ namespace Framework
 								SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
 								Transform[] bones = skinnedMesh.bones;
 								Matrix4x4[] bindPoses = skinnedMesh.sharedMesh.bindposes;
-
-								AnimationTexture animationTexture = CreateAnimationTexture(sampleObject, bones, bindPoses, _animations, _fps);
-								SaveAnimationTexture(animationTexture, _currentFileName);
+                                
+                                if (skinnedMesh.bones.Length > 0)
+                                {
+                                    AnimationTexture animationTexture = CreateAnimationTexture(sampleObject, bones, bindPoses, _animations, _fps);
+                                    SaveAnimationTexture(animationTexture, _currentFileName);
+                                }					
 
 								DestroyImmediate(sampleObject);
 							}
