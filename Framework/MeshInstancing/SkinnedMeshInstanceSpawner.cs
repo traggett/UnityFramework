@@ -11,10 +11,12 @@ namespace Framework
 	
 	namespace MeshInstancing
 	{
+		using GPUAnimations;
+
 		public class SkinnedMeshInstanceSpawner : MonoBehaviour
 		{
 			#region Public Data
-			public AnimationTextureRef _animationTexture;
+			public GPUAnimationsRef _animationTexture;
 			public PrefabResourceRef _prefab;
 			public bool _sortByDepth;
 			public ShadowCastingMode _shadowCastingMode;
@@ -189,7 +191,7 @@ namespace Framework
 						_instanceData[i]._active = true;
 
 						AnimationData animation = PickRandomAnimation();
-						AnimationTexture.Animation textureAnim = GetAnimation(animation._animationIndex);
+						GPUAnimations.GPUAnimations.Animation textureAnim = GetAnimation(animation._animationIndex);
 						_instanceData[i]._animationIndex = animation._animationIndex;
 						_instanceData[i]._currentFrame = Random.Range(0, textureAnim._totalFrames - 2);
 						_instanceData[i]._animationSpeed = animation._speedRange.GetRandomValue();
@@ -331,14 +333,14 @@ namespace Framework
 					if (_instanceData[i]._active)
 					{
 						//Progress current animation
-						AnimationTexture.Animation animation = GetAnimation(_instanceData[i]._animationIndex);
+						GPUAnimations.GPUAnimations.Animation animation = GetAnimation(_instanceData[i]._animationIndex);
 
 						//Update current frame
 						float prevFrame = _instanceData[i]._currentFrame;
 						_instanceData[i]._currentFrame += Time.deltaTime * animation._fps * _instanceData[i]._animationSpeed;
 
 						//Check for events
-						AnimationTexture.CheckForEvents(_instanceData[i]._gameObject, animation, prevFrame, _instanceData[i]._currentFrame);
+						GPUAnimations.GPUAnimations.CheckForEvents(_instanceData[i]._gameObject, animation, prevFrame, _instanceData[i]._currentFrame);
 
 						//Is animation finished?
 						if (Mathf.FloorToInt(_instanceData[i]._currentFrame - animation._startFrameOffset) >= animation._totalFrames - 1)
@@ -415,7 +417,7 @@ namespace Framework
 				return _animations[0];
 			}
 
-			private AnimationTexture.Animation GetAnimation(int index)
+			private GPUAnimations.GPUAnimations.Animation GetAnimation(int index)
 			{
 				return _animationTexture.GetAnimations()[index];
 			}

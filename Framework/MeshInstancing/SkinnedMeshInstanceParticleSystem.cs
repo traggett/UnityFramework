@@ -8,11 +8,13 @@ namespace Framework
 {
 	namespace MeshInstancing
 	{
+		using GPUAnimations;
+
 		[RequireComponent(typeof(ParticleSystem))]
 		public class SkinnedMeshInstanceParticleSystem : MeshInstanceParticleSystem
 		{
 			#region Public Data
-			public AnimationTextureRef _animationTexture;
+			public GPUAnimationsRef _animationTexture;
 
 			[Serializable]
 			public struct ParticleAnimation
@@ -88,7 +90,7 @@ namespace Framework
 				for (int i = 0; i < GetNumRenderedParticles(); i++)
 				{
 					int index = GetRenderedParticlesIndex(i);
-					AnimationTexture.Animation animation = GetAnimation(Mathf.RoundToInt(_particleCustomData[index].x));
+					GPUAnimations.GPUAnimations.Animation animation = GetAnimation(Mathf.RoundToInt(_particleCustomData[index].x));
 					_particleCurrentFrame[i] = animation._startFrameOffset + _particleCustomData[index].y;
 				}				
 
@@ -117,7 +119,7 @@ namespace Framework
 					//Progress current animation
 					else
 					{
-						AnimationTexture.Animation animation = GetAnimation(Mathf.RoundToInt(customData.x));
+						GPUAnimations.GPUAnimations.Animation animation = GetAnimation(Mathf.RoundToInt(customData.x));
 
 						//Update current frame
 						customData.y += Time.deltaTime * animation._fps * customData.z;
@@ -167,7 +169,7 @@ namespace Framework
 
 				ParticleAnimation anim = PickRandomAnimation();
 
-				AnimationTexture.Animation animation = GetAnimation(anim._animationIndex);
+				GPUAnimations.GPUAnimations.Animation animation = GetAnimation(anim._animationIndex);
 
 				data.x = anim._animationIndex;
 				data.y = randomOffset ? Random.Range(0, animation._totalFrames - 2) : 0;
@@ -177,10 +179,10 @@ namespace Framework
 				return data;
 			}
 
-			private AnimationTexture.Animation GetAnimation(int index)
+			private GPUAnimations.GPUAnimations.Animation GetAnimation(int index)
 			{
-				AnimationTexture.Animation[] animations =_animationTexture.GetAnimations();
-				AnimationTexture.Animation animation = animations[Mathf.Clamp(index, 0, animations.Length)];
+				GPUAnimations.GPUAnimations.Animation[] animations = _animationTexture.GetAnimations();
+				GPUAnimations.GPUAnimations.Animation animation = animations[Mathf.Clamp(index, 0, animations.Length)];
 				return animation;
 			}			
 			#endregion

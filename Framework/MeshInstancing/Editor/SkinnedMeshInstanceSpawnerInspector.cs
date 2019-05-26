@@ -7,6 +7,8 @@ namespace Framework
 {
 	namespace MeshInstancing
 	{
+		using GPUAnimations;
+
 		namespace Editor
 		{
 			[CustomEditor(typeof(SkinnedMeshInstanceSpawner), true)]
@@ -72,7 +74,7 @@ namespace Framework
 
 					if (spawner._animationTexture.IsValid())
 					{
-						AnimationTexture.Animation[] animations = spawner._animationTexture.GetAnimations();
+						GPUAnimations.GPUAnimations.Animation[] animations = spawner._animationTexture.GetAnimations();
 
 						GUIContent[] animNames = new GUIContent[animations.Length];
 						for (int i = 0; i < animNames.Length; i++)
