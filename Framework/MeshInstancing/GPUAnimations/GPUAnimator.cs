@@ -17,7 +17,9 @@ namespace Framework
 				#region Private Data
 				private Animator _animator;
 				private GPUAnimationPlayer _currentAnimation;
+				private int _currentAnimationState;
 				private GPUAnimationPlayer _blendedAnimation;
+				private int _blendedAnimationState;
 				private float _blend;
 				private Matrix4x4 _renderMatrix;
 				private Dictionary<AnimationClip, int> _animationLookUp;
@@ -34,7 +36,7 @@ namespace Framework
 				{
 					//For now start playing first animation
 					_currentAnimation.Play(this.gameObject, _animations.GetAnimations()[0]);
-					_blend = 0.0f;
+					_blend = 1.0f;
 
 					_renderMatrix = this.transform.localToWorldMatrix;
 				}
@@ -97,16 +99,45 @@ namespace Framework
 					_animator.runtimeAnimatorController = overrideController;
 				}
 
+				private void UpdateAnimation(AnimatorStateInfo state, AnimatorClipInfo[] clips, ref GPUAnimationPlayer animationPlayer, ref int stateHash)
+				{
+					if (stateHash != state.shortNameHash)
+					{
+						stateHash = state.shortNameHash;
+
+						if (clips.Length > 0)
+							animationPlayer.Play(this.gameObject, _animations.GetAnimations()[_animationLookUp[clips[0].clip]]);
+						else
+							animationPlayer.Stop();
+					}
+
+					animationPlayer._speed = state.speed * state.speedMultiplier;
+				}
+
 				private void UpdateAnimator()
 				{
-					//Check what state the animator is in, whats the corresponding clip and what speed its playing
-					AnimatorClipInfo[] clipInfo = _animator.GetCurrentAnimatorClipInfo(0);
+					AnimatorStateInfo currentState = _animator.GetCurrentAnimatorStateInfo(0);
+					AnimatorClipInfo[] currentClip = _animator.GetCurrentAnimatorClipInfo(0);
 
-					//Find animation with highest blend
-					//Find animation with second highest blend
+					//Check if we're transitioning
+					if (_animator.IsInTransition(0))
+					{
+						AnimatorTransitionInfo transitionInfo = _animator.GetAnimatorTransitionInfo(0);
+						AnimatorStateInfo nextState = _animator.GetNextAnimatorStateInfo(0);
+						AnimatorClipInfo[] nextClip = _animator.GetCurrentAnimatorClipInfo(0);
 
-					//if (clipInfo.Length > 0)
-					//	_currentAnimation.Play(_animationLookUp[clipInfo[0].clip]);
+						UpdateAnimation(nextState, nextClip, ref _currentAnimation, ref _currentAnimationState);
+						UpdateAnimation(currentState, currentClip, ref _blendedAnimation, ref _blendedAnimationState);
+
+						_blend = transitionInfo.normalizedTime;
+					}
+					//Otherwise just update current animation
+					else
+					{
+						UpdateAnimation(currentState, currentClip, ref _currentAnimation, ref _currentAnimationState);
+						_blendedAnimation.Stop();
+						_blend = 1.0f;
+					}
 				}
 
 				private int GetAnimationIndex(AnimationClip clip)
