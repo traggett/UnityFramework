@@ -9,6 +9,10 @@
 
 #else // _VERTEX_SKINNING
 
+#if defined(UNITY_PASS_SHADOWCASTER)
+#define _SKIN_POS_ONLY
+#endif
+
 uniform int _boneCount;
 uniform sampler2D _animationTexture;
 uniform int _animationTextureWidth;
@@ -120,7 +124,7 @@ void calcVertexFromAnimation(float4 boneWeights, half4 boneIDs, float curFrame, 
 	vertex = lerp(localPosPre, localPosNext, frameLerp);
 }
 
-void animationInstanceSkinning(float4 boneWeights, half4 boneIDs, inout half4 vertex, inout half3 normal, inout half4 tangent)
+void gpuSkinning(float4 boneWeights, half4 boneIDs, inout half4 vertex, inout half3 normal, inout half4 tangent)
 {
 #if (SHADER_TARGET < 30 || SHADER_API_GLES)
 	float curAnimFrame = _currentAnimationFrame;
@@ -136,19 +140,29 @@ void animationInstanceSkinning(float4 boneWeights, half4 boneIDs, inout half4 ve
 	half4 curAnimVertex = vertex;
 	half4 curAnimNormal = normal;
 	half4 curAnimTangent = tangent;
+	
+#if _SKIN_POS_ONLY
 	calcVertexFromAnimation(boneWeights, boneIDs, curAnimFrame, curAnimVertex, curAnimNormal, curAnimTangent);
+#else
+	calcVertexFromAnimation(boneWeights, boneIDs, curAnimFrame, curAnimVertex);
+#endif
 
 	//Find vertex position for previous animation if blending on top of it and lerp current one on top
 	if (curAnimWeight < 1.0)
 	{
 		half4 prevAnimVertex = vertex;
+		
+#if _SKIN_POS_ONLY
 		half4 prevAnimNormal = normal;
 		half4 prevAnimTangent = tangent;
 		calcVertexFromAnimation(boneWeights, boneIDs, preAnimFrame, prevAnimVertex, prevAnimNormal, prevAnimTangent);
 		
-		curAnimVertex = lerp(prevAnimVertex, curAnimVertex, curAnimWeight);
 		curAnimNormal = normalize(lerp(prevAnimNormal, curAnimNormal, curAnimWeight));
 		curAnimTangent = normalize(lerp(prevAnimTangent, curAnimTangent, curAnimWeight));
+#else
+		calcVertexFromAnimation(boneWeights, boneIDs, preAnimFrame, prevAnimVertex);
+#endif	
+		curAnimVertex = lerp(prevAnimVertex, curAnimVertex, curAnimWeight);
 	}
 	
 	vertex = curAnimVertex;
@@ -156,42 +170,8 @@ void animationInstanceSkinning(float4 boneWeights, half4 boneIDs, inout half4 ve
 	tangent = curAnimTangent;
 }
 
-void animationInstanceSkinningPosOnly(float4 boneWeights, half4 boneID, inout half4 vertex)
-{
-#if (SHADER_TARGET < 30 || SHADER_API_GLES)
-	float curAnimFrame = _currentAnimationFrame;
-	float curAnimWeight = _currentAnimationWeight;
-	float preAnimFrame = _previousAnimationFrame;
-#else
-	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationFrame_arr, _currentAnimationFrame);
-	float curAnimWeight = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationWeight_arr, _currentAnimationWeight);
-	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_previousAnimationFrame_arr, _previousAnimationFrame);
-#endif
-
-	//Find vertex position for currently playing animation
-	half4 curAnimVertex = vertex;
-	calcVertexFromAnimation(boneWeights, boneIDs, curAnimFrame, curAnimVertex);
-
-	//Find vertex position for previous animation if blending on top of it and lerp current one on top
-	if (curAnimWeight < 1.0)
-	{
-		half4 prevAnimVertex = vertex;
-		calcVertexFromAnimation(boneWeights, boneIDs, preAnimFrame, prevAnimVertex);
-		
-		curAnimVertex = lerp(prevAnimVertex, curAnimVertex, curAnimWeight);
-	}
-	
-	vertex = curAnimVertex;
-}
-
-
-#ifdef UNITY_PASS_SHADOWCASTER
 #define APPLY_VERTEX_SKINNING(vertex, boneWeights, boneIDs, normal, tangent) \
-	animationInstanceSkinningPosOnly(boneWeights, boneIDs, vertex);
-#else
-#define APPLY_VERTEX_SKINNING(vertex, boneWeights, boneIDs, normal, tangent) \
-	animationInstanceSkinning(boneWeights, boneIDs, vertex, normal, tangent);
-#endif
+	gpuSkinning(boneWeights, boneIDs, vertex, normal, tangent);
 
 #endif // _VERTEX_SKINNING
 
