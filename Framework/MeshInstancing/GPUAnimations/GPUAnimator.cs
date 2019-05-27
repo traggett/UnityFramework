@@ -109,6 +109,7 @@ namespace Framework
 					{
 						AnimationClip overrideClip = new AnimationClip();
 						overrideClip.name = origClip.name;
+						overrideClip.wrapMode = origClip.wrapMode;
 						//Override original animation
 						anims.Add(new KeyValuePair<AnimationClip, AnimationClip>(origClip, overrideClip));
 						//Cache what gpu animation it corresponds too
@@ -134,9 +135,17 @@ namespace Framework
 						stateHash = state.shortNameHash;
 
 						if (clips.Length > 0)
-							animationPlayer.Play(this.gameObject, _animations.GetAnimations()[_animationLookUp[clips[0].clip]]);
+						{
+							AnimationClip clip = clips[0].clip;
+							int animationIndex = _animationLookUp[clip];
+							GPUAnimations.Animation animation = _animations.GetAnimations()[animationIndex];
+							animationPlayer.Play(this.gameObject, animation, clip.wrapMode);
+						}
 						else
+						{
 							animationPlayer.Stop();
+						}
+							
 					}
 
 					animationPlayer._speed = state.speed * state.speedMultiplier;
