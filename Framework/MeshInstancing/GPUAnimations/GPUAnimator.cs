@@ -20,9 +20,9 @@ namespace Framework
 				private Animator _animator;
 				private GPUAnimationPlayer _currentAnimation;
 				private int _currentAnimationState;
-				private GPUAnimationPlayer _blendedAnimation;
+				private GPUAnimationPlayer _previousAnimation;
 				private int _blendedAnimationState;
-				private float _blend;
+				private float _currentAnimationWeight;
 				private Matrix4x4 _worldMatrix;
 				private Vector3 _worldPos;
 				private Vector3 _worldScale;
@@ -48,24 +48,23 @@ namespace Framework
 
 					UpdateAnimator();
 					_currentAnimation.Update(Time.deltaTime);
-					_blendedAnimation.Update(Time.deltaTime);
+					_previousAnimation.Update(Time.deltaTime);
 				}
 				#endregion
 				
 				#region IGPUAnimator
 				public float GetCurrentAnimationFrame()
 				{
-					return _currentAnimation.GetCurrentFrame();
+					return _currentAnimation.GetCurrentTexureFrame();
 				}
 
-				public float GetBlendedAnimationFrame()
+				public float GetCurrentAnimationWeight()
 				{
-					return _blendedAnimation.GetCurrentFrame();
+					return _currentAnimationWeight;
 				}
-
-				public float GetAnimationBlend()
+				public float GetPreviousAnimationFrame()
 				{
-					return _blend;
+					return _previousAnimation.GetCurrentTexureFrame();
 				}
 
 				public float GetSphericalBoundsRadius()
@@ -146,26 +145,26 @@ namespace Framework
 				private void UpdateAnimator()
 				{
 					AnimatorStateInfo currentState = _animator.GetCurrentAnimatorStateInfo(0);
-					AnimatorClipInfo[] currentClip = _animator.GetCurrentAnimatorClipInfo(0);
+					AnimatorClipInfo[] currentClips = _animator.GetCurrentAnimatorClipInfo(0);
 
 					//Check if we're transitioning
 					if (_animator.IsInTransition(0))
 					{
 						AnimatorTransitionInfo transitionInfo = _animator.GetAnimatorTransitionInfo(0);
 						AnimatorStateInfo nextState = _animator.GetNextAnimatorStateInfo(0);
-						AnimatorClipInfo[] nextClip = _animator.GetCurrentAnimatorClipInfo(0);
+						AnimatorClipInfo[] nextClips = _animator.GetNextAnimatorClipInfo(0);
 
-						UpdateAnimation(nextState, nextClip, ref _currentAnimation, ref _currentAnimationState);
-						UpdateAnimation(currentState, currentClip, ref _blendedAnimation, ref _blendedAnimationState);
+						UpdateAnimation(nextState, nextClips, ref _currentAnimation, ref _currentAnimationState);
+						UpdateAnimation(currentState, currentClips, ref _previousAnimation, ref _blendedAnimationState);
 
-						_blend = transitionInfo.normalizedTime;
+						_currentAnimationWeight = transitionInfo.normalizedTime;
 					}
 					//Otherwise just update current animation
 					else
 					{
-						UpdateAnimation(currentState, currentClip, ref _currentAnimation, ref _currentAnimationState);
-						_blendedAnimation.Stop();
-						_blend = 1.0f;
+						UpdateAnimation(currentState, currentClips, ref _currentAnimation, ref _currentAnimationState);
+						_previousAnimation.Stop();
+						_currentAnimationWeight = 1.0f;
 					}
 				}
 

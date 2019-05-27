@@ -9,13 +9,14 @@ namespace Framework
 			public interface IGPUAnimatorInstance
 			{
 				float GetCurrentAnimationFrame();
-				float GetBlendedAnimationFrame();
-				float GetAnimationBlend();
+				float GetCurrentAnimationWeight();
+				float GetPreviousAnimationFrame();
+
+				SkinnedMeshRenderer GetSkinnedMeshRenderer();
 				float GetSphericalBoundsRadius();
 				Matrix4x4 GetWorldMatrix();
 				Vector3 GetWorldPos();
 				Vector3 GetWorldScale();
-				SkinnedMeshRenderer GetSkinnedMeshRenderer();
 			}
 
 			public struct GPUAnimatorInstance : IMeshInstance

@@ -14,9 +14,9 @@ namespace Framework
 				#endregion
 
 				#region Private Data
-				private float[] _currentFrames;
-				private float[] _blendedFrames;
-				private float[] _blends;
+				private float[] _currentAnimationFrames;
+				private float[] _previousAnimationFrames;
+				private float[] _currentAnimationWeights;
 				#endregion
 
 				#region MonoBehaviour
@@ -67,9 +67,9 @@ namespace Framework
 				#region MeshInstanceRenderer
 				protected override void Initialise()
 				{
-					_currentFrames = new float[kMaxMeshes];
-					_blendedFrames = new float[kMaxMeshes];
-					_blends = new float[kMaxMeshes];
+					_currentAnimationFrames = new float[kMaxMeshes];
+					_previousAnimationFrames = new float[kMaxMeshes];
+					_currentAnimationWeights = new float[kMaxMeshes];
 				}
 
 				protected override void UpdateProperties()
@@ -78,16 +78,17 @@ namespace Framework
 					int index = 0;
 					foreach (RenderData renderData in _renderedObjects)
 					{
-						int instanceIndex = renderData._index;
-						_currentFrames[index] = _instanceData[index]._animator.GetCurrentAnimationFrame();
-						_blendedFrames[index] = _instanceData[index]._animator.GetBlendedAnimationFrame();
-						_blends[index] = _instanceData[index]._animator.GetAnimationBlend();
+						IGPUAnimatorInstance animator = _instanceData[renderData._index]._animator;
+						_currentAnimationFrames[index] = animator.GetCurrentAnimationFrame();
+						_currentAnimationWeights[index] = animator.GetCurrentAnimationWeight();
+						_previousAnimationFrames[index] = animator.GetPreviousAnimationFrame();
+						
 						index++;
 					}
 
-					_propertyBlock.SetFloatArray("_animationFrame", _currentFrames);
-					_propertyBlock.SetFloatArray("_blendedAnimationFrame", _blendedFrames);
-					_propertyBlock.SetFloatArray("_animationBlend", _blends);
+					_propertyBlock.SetFloatArray("_currentAnimationFrame", _currentAnimationFrames);
+					_propertyBlock.SetFloatArray("_currentAnimationWeight", _currentAnimationWeights);
+					_propertyBlock.SetFloatArray("_previousAnimationFrame", _previousAnimationFrames);
 				}
 				#endregion
 			}

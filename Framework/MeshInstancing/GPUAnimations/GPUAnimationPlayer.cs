@@ -26,7 +26,7 @@ namespace Framework
 					_gameObject = null;
 				}
 
-				public float GetCurrentFrame()
+				public float GetCurrentTexureFrame()
 				{
 					return _animation._startFrameOffset + _frame;
 				}

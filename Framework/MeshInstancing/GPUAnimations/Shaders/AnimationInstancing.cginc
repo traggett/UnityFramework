@@ -1,4 +1,6 @@
-﻿#ifndef ANIMATION_INSTANCING_INCLUDED
+﻿// Upgrade NOTE: upgraded instancing buffer 'Props' to new syntax.
+
+#ifndef ANIMATION_INSTANCING_INCLUDED
 #define ANIMATION_INSTANCING_INCLUDED
 
 #if !defined(_VERTEX_SKINNING)
@@ -13,13 +15,17 @@ uniform int _animationTextureWidth;
 uniform int _animationTextureHeight;
 
 #if (SHADER_TARGET < 30 || SHADER_API_GLES)
-uniform float _animationFrame;
-uniform float _blendedAnimationFrame;
-uniform float _animationBlend;
+uniform float _currentAnimationFrame;
+uniform float _currentAnimationWeight;
+uniform float _previousAnimationFrame;
 #else
 UNITY_INSTANCING_BUFFER_START(Props)
-	UNITY_DEFINE_INSTANCED_PROP(float, _animationFrame)
-#define frameIndex_arr Props
+	UNITY_DEFINE_INSTANCED_PROP(float, _currentAnimationFrame)
+#define _currentAnimationFrame_arr Props
+	UNITY_DEFINE_INSTANCED_PROP(float, _currentAnimationWeight)
+#define _currentAnimationWeight_arr Props
+	UNITY_DEFINE_INSTANCED_PROP(float, _previousAnimationFrame)
+#define _previousAnimationFrame_arr Props
 UNITY_INSTANCING_BUFFER_END(Props)
 #endif
 
@@ -59,72 +65,132 @@ half4x4 loadAnimationInstanceMatrixFromTexture(uint frameIndex, uint boneIndex)
 	return m;
 }
 
-half4 animationInstanceSkinning(float4 vertex, float4 boneWeights, half4 boneIDs, inout half3 normal, inout half4 tangent)
+
+half4x4 calcVertexMatrix(float4 boneWeights, half4 boneIDs, int frame)
 {
-#if (SHADER_TARGET < 30 || SHADER_API_GLES)
-	float curFrame = _animationFrame;
-#else
-	float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, _animationFrame);
-#endif
-
-	int preFrame = floor(curFrame);
-	int nextFrame = preFrame + 1;
-	half4x4 localToWorldMatrixPre = loadAnimationInstanceMatrixFromTexture(preFrame, boneIDs.x) * boneWeights.x;
+	int frameIndex = floor(frame);
+	half4x4 localToWorldMatrixPre = loadAnimationInstanceMatrixFromTexture(frameIndex, boneIDs.x) * boneWeights.x;
 	if (boneWeights.y > 0.0f)
-		localToWorldMatrixPre = localToWorldMatrixPre + loadAnimationInstanceMatrixFromTexture(preFrame, boneIDs.y) * boneWeights.y;
+		localToWorldMatrixPre = localToWorldMatrixPre + loadAnimationInstanceMatrixFromTexture(frameIndex, boneIDs.y) * boneWeights.y;
 	if (boneWeights.z > 0.0f)
-		localToWorldMatrixPre = localToWorldMatrixPre + loadAnimationInstanceMatrixFromTexture(preFrame, boneIDs.z) * boneWeights.z;
+		localToWorldMatrixPre = localToWorldMatrixPre + loadAnimationInstanceMatrixFromTexture(frameIndex, boneIDs.z) * boneWeights.z;
 	if (boneWeights.w > 0.0f)
-		localToWorldMatrixPre = localToWorldMatrixPre + loadAnimationInstanceMatrixFromTexture(preFrame, boneIDs.w) * boneWeights.w;
-
-	half4x4 localToWorldMatrixNext = loadAnimationInstanceMatrixFromTexture(nextFrame, boneIDs.x) * boneWeights.x;
-	if (boneWeights.y > 0.0f)
-		localToWorldMatrixNext = localToWorldMatrixNext + loadAnimationInstanceMatrixFromTexture(nextFrame, boneIDs.y) * boneWeights.y;
-	if (boneWeights.z > 0.0f)
-		localToWorldMatrixNext = localToWorldMatrixNext + loadAnimationInstanceMatrixFromTexture(nextFrame, boneIDs.z) * boneWeights.z;
-	if (boneWeights.w > 0.0f)
-		localToWorldMatrixNext = localToWorldMatrixNext + loadAnimationInstanceMatrixFromTexture(nextFrame, boneIDs.w) * boneWeights.w;
-
-	half4 localPosPre = mul(vertex, localToWorldMatrixPre);
-	half4 localPosNext = mul(vertex, localToWorldMatrixNext);
-	half4 localPos = lerp(localPosPre, localPosNext, curFrame - preFrame);
-
-	half3 localNormPre = mul(normal.xyz, (float3x3)localToWorldMatrixPre);
-	half3 localNormNext = mul(normal.xyz, (float3x3)localToWorldMatrixNext);
-	normal = normalize(lerp(localNormPre, localNormNext, curFrame - preFrame));
-	half3 localTanPre = mul(tangent.xyz, (float3x3)localToWorldMatrixPre);
-	half3 localTanNext = mul(tangent.xyz, (float3x3)localToWorldMatrixNext);
-	tangent.xyz = normalize(lerp(localTanPre, localTanNext, curFrame - preFrame));
-	
-	return localPos;
+		localToWorldMatrixPre = localToWorldMatrixPre + loadAnimationInstanceMatrixFromTexture(frameIndex, boneIDs.w) * boneWeights.w;
+		
+	return localToWorldMatrixPre;
 }
 
-half4 animationInstanceSkinningShadows(float4 vertex, float4 boneWeights, half4 boneIDs, inout half3 normal, inout half4 tangent)
+void calcVertexFromAnimation(float4 boneWeights, half4 boneIDs, float curFrame, inout half4 vertex, inout half3 normal, inout half4 tangent)
 {
-#if (SHADER_TARGET < 30 || SHADER_API_GLES)
-	float curFrame = frameIndex;
-#else
-	float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, frameIndex);
-#endif
+	int preFrame = curFrame;
+	int nextFrame = curFrame + 1.0f;
+	float frameLerp = curFrame - preFrame;
+	
+	half4x4 localToWorldMatrixPre = calcVertexMatrix(boneWeights, boneIDs, preFrame);
+	half4x4 localToWorldMatrixNext = calcVertexMatrix(boneWeights, boneIDs, nextFrame);
 
-	int preFrame = floor(curFrame);
-	int nextFrame = preFrame + 1;
-	half4x4 localToWorldMatrixPre = loadAnimationInstanceMatrixFromTexture(preFrame, boneIDs.x);
-	half4x4 localToWorldMatrixNext = loadAnimationInstanceMatrixFromTexture(nextFrame, boneIDs.x);
+	//Work out vertex pos
 	half4 localPosPre = mul(vertex, localToWorldMatrixPre);
 	half4 localPosNext = mul(vertex, localToWorldMatrixNext);
-	half4 localPos = lerp(localPosPre, localPosNext, curFrame - preFrame);
+	vertex = lerp(localPosPre, localPosNext, frameLerp);
 	
-	return localPos;
+	//Work out normal
+	half3 localNormPre = mul(normal.xyz, (float3x3)localToWorldMatrixPre);
+	half3 localNormNext = mul(normal.xyz, (float3x3)localToWorldMatrixNext);
+	normal = normalize(lerp(localNormPre, localNormNext, frameLerp));
+	
+	//Work out tangent
+	half3 localTanPre = mul(tangent.xyz, (float3x3)localToWorldMatrixPre);
+	half3 localTanNext = mul(tangent.xyz, (float3x3)localToWorldMatrixNext);
+	tangent.xyz = normalize(lerp(localTanPre, localTanNext, frameLerp));
+}
+
+void calcVertexFromAnimation(float4 boneWeights, half4 boneIDs, float curFrame, inout half4 vertex)
+{
+	int preFrame = curFrame;
+	int nextFrame = curFrame + 1.0f;
+	float frameLerp = curFrame - preFrame;
+	
+	half4x4 localToWorldMatrixPre = calcVertexMatrix(boneWeights, boneIDs, preFrame);
+	half4x4 localToWorldMatrixNext = calcVertexMatrix(boneWeights, boneIDs, nextFrame);
+
+	//Work out vertex pos
+	half4 localPosPre = mul(vertex, localToWorldMatrixPre);
+	half4 localPosNext = mul(vertex, localToWorldMatrixNext);
+	vertex = lerp(localPosPre, localPosNext, frameLerp);
+}
+
+void animationInstanceSkinning(float4 boneWeights, half4 boneIDs, inout half4 vertex, inout half3 normal, inout half4 tangent)
+{
+#if (SHADER_TARGET < 30 || SHADER_API_GLES)
+	float curAnimFrame = _currentAnimationFrame;
+	float curAnimWeight = _currentAnimationWeight;
+	float preAnimFrame = _previousAnimationFrame;
+#else
+	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationFrame_arr, _currentAnimationFrame);
+	float curAnimWeight = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationWeight_arr, _currentAnimationWeight);
+	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_previousAnimationFrame_arr, _previousAnimationFrame);
+#endif
+
+	//Find vertex position for currently playing animation
+	half4 curAnimVertex = vertex;
+	half4 curAnimNormal = normal;
+	half4 curAnimTangent = tangent;
+	calcVertexFromAnimation(boneWeights, boneIDs, curAnimFrame, curAnimVertex, curAnimNormal, curAnimTangent);
+
+	//Find vertex position for previous animation if blending on top of it and lerp current one on top
+	if (curAnimWeight < 1.0)
+	{
+		half4 prevAnimVertex = vertex;
+		half4 prevAnimNormal = normal;
+		half4 prevAnimTangent = tangent;
+		calcVertexFromAnimation(boneWeights, boneIDs, preAnimFrame, prevAnimVertex, prevAnimNormal, prevAnimTangent);
+		
+		curAnimVertex = lerp(prevAnimVertex, curAnimVertex, curAnimWeight);
+		curAnimNormal = normalize(lerp(prevAnimNormal, curAnimNormal, curAnimWeight));
+		curAnimTangent = normalize(lerp(prevAnimTangent, curAnimTangent, curAnimWeight));
+	}
+	
+	vertex = curAnimVertex;
+	normal = curAnimNormal;
+	tangent = curAnimTangent;
+}
+
+void animationInstanceSkinningPosOnly(float4 boneWeights, half4 boneID, inout half4 vertex)
+{
+#if (SHADER_TARGET < 30 || SHADER_API_GLES)
+	float curAnimFrame = _currentAnimationFrame;
+	float curAnimWeight = _currentAnimationWeight;
+	float preAnimFrame = _previousAnimationFrame;
+#else
+	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationFrame_arr, _currentAnimationFrame);
+	float curAnimWeight = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationWeight_arr, _currentAnimationWeight);
+	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_previousAnimationFrame_arr, _previousAnimationFrame);
+#endif
+
+	//Find vertex position for currently playing animation
+	half4 curAnimVertex = vertex;
+	calcVertexFromAnimation(boneWeights, boneIDs, curAnimFrame, curAnimVertex);
+
+	//Find vertex position for previous animation if blending on top of it and lerp current one on top
+	if (curAnimWeight < 1.0)
+	{
+		half4 prevAnimVertex = vertex;
+		calcVertexFromAnimation(boneWeights, boneIDs, preAnimFrame, prevAnimVertex);
+		
+		curAnimVertex = lerp(prevAnimVertex, curAnimVertex, curAnimWeight);
+	}
+	
+	vertex = curAnimVertex;
 }
 
 
 #ifdef UNITY_PASS_SHADOWCASTER
 #define APPLY_VERTEX_SKINNING(vertex, boneWeights, boneIDs, normal, tangent) \
-	vertex = animationInstanceSkinningShadows(vertex, boneWeights, boneIDs, normal, tangent);
+	animationInstanceSkinningPosOnly(boneWeights, boneIDs, vertex);
 #else
 #define APPLY_VERTEX_SKINNING(vertex, boneWeights, boneIDs, normal, tangent) \
-	vertex = animationInstanceSkinning(vertex, boneWeights, boneIDs, normal, tangent);
+	animationInstanceSkinning(boneWeights, boneIDs, vertex, normal, tangent);
 #endif
 
 #endif // _VERTEX_SKINNING
