@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Framework
 {
@@ -7,21 +6,17 @@ namespace Framework
 	{
 		namespace GPUAnimations
 		{
-			public class GPUAnimatorInstanceRenderer : MonoBehaviour
+			public class GPUAnimatorInstanceRenderer : MeshInstanceRenderer<GPUAnimatorInstance>
 			{
 				#region Public Data
 				public GPUAnimationsRef _animationTexture;
-				public Mesh _mesh;
-				public Material[] _materials;
-				public ShadowCastingMode _shadowCastingMode;
-				public bool _recieveShadows;
+				public GameObject _prefab;
 				#endregion
 
 				#region Private Data
-				private GPUAnimator[] _animators;
-				private MaterialPropertyBlock _propertyBlock;
-				private Matrix4x4[] _renderedInstanceTransforms;
 				private float[] _currentFrames;
+				private float[] _blendedFrames;
+				private float[] _blends;
 				#endregion
 
 				#region MonoBehaviour
@@ -45,43 +40,54 @@ namespace Framework
 #endif
 
 					UpdateProperties();
-					Render();
+					Render(Camera.main);
 				}
 				#endregion
 
 				#region Public Functions
-				public void SetAnimators(GPUAnimator[] animators)
+				public GameObject SpawnInstance()
 				{
-					_animators = animators;
-					_currentFrames = new float[_animators.Length];
-					_renderedInstanceTransforms = new Matrix4x4[_animators.Length];
+					GameObject instanceGameObject = Instantiate(_prefab);
+					GPUAnimatorInstance instance = new GPUAnimatorInstance(instanceGameObject);
+					if (instance._animator != null)
+					{
+						//Disable skinned mesh renderer
+						instance._animator.GetSkinnedMeshRenderer().enabled = false;
+						ActivateInstance(instance);
+					}
+					else
+					{
+						Destroy(instanceGameObject);
+					}
+
+					return instanceGameObject;
 				}
 				#endregion
 
-				#region Private Functions
-				private void UpdateProperties()
+				#region MeshInstanceRenderer
+				protected override void Initialise()
 				{
-					//Update transforms and animation data
-					for (int i = 0; i < _animators.Length; i++)
-					{
-						_renderedInstanceTransforms[i] = _animators[i].GetRenderMatrix();
-						_currentFrames[i] = _animators[i].GetCurrentAnimationFrame();
-					}
-
-					_propertyBlock.SetFloatArray("frameIndex", _currentFrames);
-					//_material.GetMaterial().SetFloat("preFrameIndex", -1.0f);
-					//_material.GetMaterial().SetFloat("transitionProgress", -1.0f);
+					_currentFrames = new float[kMaxMeshes];
+					_blendedFrames = new float[kMaxMeshes];
+					_blends = new float[kMaxMeshes];
 				}
 
-				private void Render()
+				protected override void UpdateProperties()
 				{
-					if (_animators.Length > 0)
+					//Update transforms and animation data
+					int index = 0;
+					foreach (RenderData renderData in _renderedObjects)
 					{
-						for (int i = 0; i < _mesh.subMeshCount; i++)
-						{
-							Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedInstanceTransforms, _renderedInstanceTransforms.Length, _propertyBlock, _shadowCastingMode, _recieveShadows, this.gameObject.layer);
-						}
+						int instanceIndex = renderData._index;
+						_currentFrames[index] = _instanceData[index]._animator.GetCurrentAnimationFrame();
+						_blendedFrames[index] = _instanceData[index]._animator.GetBlendedAnimationFrame();
+						_blends[index] = _instanceData[index]._animator.GetAnimationBlend();
+						index++;
 					}
+
+					_propertyBlock.SetFloatArray("_animationFrame", _currentFrames);
+					_propertyBlock.SetFloatArray("_blendedAnimationFrame", _blendedFrames);
+					_propertyBlock.SetFloatArray("_animationBlend", _blends);
 				}
 				#endregion
 			}

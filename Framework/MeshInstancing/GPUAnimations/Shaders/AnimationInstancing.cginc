@@ -13,10 +13,12 @@ uniform int _animationTextureWidth;
 uniform int _animationTextureHeight;
 
 #if (SHADER_TARGET < 30 || SHADER_API_GLES)
-uniform float frameIndex;
+uniform float _animationFrame;
+uniform float _blendedAnimationFrame;
+uniform float _animationBlend;
 #else
 UNITY_INSTANCING_BUFFER_START(Props)
-	UNITY_DEFINE_INSTANCED_PROP(float, frameIndex)
+	UNITY_DEFINE_INSTANCED_PROP(float, _animationFrame)
 #define frameIndex_arr Props
 UNITY_INSTANCING_BUFFER_END(Props)
 #endif
@@ -60,9 +62,9 @@ half4x4 loadAnimationInstanceMatrixFromTexture(uint frameIndex, uint boneIndex)
 half4 animationInstanceSkinning(float4 vertex, float4 boneWeights, half4 boneIDs, inout half3 normal, inout half4 tangent)
 {
 #if (SHADER_TARGET < 30 || SHADER_API_GLES)
-	float curFrame = frameIndex;
+	float curFrame = _animationFrame;
 #else
-	float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, frameIndex);
+	float curFrame = UNITY_ACCESS_INSTANCED_PROP(frameIndex_arr, _animationFrame);
 #endif
 
 	int preFrame = floor(curFrame);

@@ -8,53 +8,51 @@ namespace Framework
 		namespace GPUAnimations
 		{
 			[RequireComponent(typeof(Animator))]
-			public class GPUAnimator : MonoBehaviour
+			public class GPUAnimator : MonoBehaviour, IGPUAnimatorInstance
 			{
 				#region Public Data
 				public GPUAnimationsRef _animations;
+				public float _sphericalBoundsRadius;
 				#endregion
 
 				#region Private Data
+				private SkinnedMeshRenderer _skinnedMeshRenderer;
 				private Animator _animator;
 				private GPUAnimationPlayer _currentAnimation;
 				private int _currentAnimationState;
 				private GPUAnimationPlayer _blendedAnimation;
 				private int _blendedAnimationState;
 				private float _blend;
-				private Matrix4x4 _renderMatrix;
+				private Matrix4x4 _worldMatrix;
+				private Vector3 _worldPos;
+				private Vector3 _worldScale;
+				private float _worldBoundsRadius;
 				private Dictionary<AnimationClip, int> _animationLookUp;
 				#endregion
 
 				#region MonoBehaviour
 				private void Awake()
 				{
-					_animator = GetComponent<Animator>();
-					Prepare();
+					Initialise();
 				}
 
 				private void Start()
 				{
-					//For now start playing first animation
-					_currentAnimation.Play(this.gameObject, _animations.GetAnimations()[0]);
-					_blend = 1.0f;
-
-					_renderMatrix = this.transform.localToWorldMatrix;
+					UpdateCachedTransform();
 				}
 
 				private void Update()
 				{
 					if (this.transform.hasChanged)
-					{
-						_renderMatrix = this.transform.localToWorldMatrix;
-					}
+						UpdateCachedTransform();
 
 					UpdateAnimator();
 					_currentAnimation.Update(Time.deltaTime);
 					_blendedAnimation.Update(Time.deltaTime);
 				}
 				#endregion
-
-				#region Public Functions
+				
+				#region IGPUAnimator
 				public float GetCurrentAnimationFrame()
 				{
 					return _currentAnimation.GetCurrentFrame();
@@ -70,15 +68,38 @@ namespace Framework
 					return _blend;
 				}
 
-				public Matrix4x4 GetRenderMatrix()
+				public float GetSphericalBoundsRadius()
 				{
-					return _renderMatrix;
+					return _worldBoundsRadius;
+				}
+
+				public Matrix4x4 GetWorldMatrix()
+				{
+					return _worldMatrix;
+				}
+
+				public Vector3 GetWorldPos()
+				{
+					return _worldPos;
+				}
+
+				public Vector3 GetWorldScale()
+				{
+					return _worldScale;
+				}
+
+				public SkinnedMeshRenderer GetSkinnedMeshRenderer()
+				{
+					return _skinnedMeshRenderer;
 				}
 				#endregion
 
 				#region Private Functions
-				private void Prepare()
+				private void Initialise()
 				{
+					_animator = GetComponent<Animator>();
+					_skinnedMeshRenderer = GetComponent<SkinnedMeshRenderer>();
+
 					AnimatorOverrideController overrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
 
 					_animationLookUp = new Dictionary<AnimationClip, int>();
@@ -97,6 +118,14 @@ namespace Framework
 
 					overrideController.ApplyOverrides(anims);
 					_animator.runtimeAnimatorController = overrideController;
+				}
+
+				private void UpdateCachedTransform()
+				{
+					_worldMatrix = this.transform.localToWorldMatrix;
+					_worldPos = this.transform.position;
+					_worldScale = this.transform.lossyScale;
+					_worldBoundsRadius = Mathf.Max(_worldScale.x, _worldScale.y, _worldScale.x) * _sphericalBoundsRadius;
 				}
 
 				private void UpdateAnimation(AnimatorStateInfo state, AnimatorClipInfo[] clips, ref GPUAnimationPlayer animationPlayer, ref int stateHash)

@@ -103,7 +103,6 @@ namespace Framework
 					}
 				}
 
-
 				//Create stripped down clone that will be instantiated
 				{
 					_clone = _prefab.LoadAndInstantiatePrefab(this.transform);
