@@ -7,6 +7,8 @@ namespace Framework
 {
 	namespace MeshInstancing
 	{
+		using GPUAnimations;
+
 		namespace Editor
 		{
 			[CustomEditor(typeof(SkinnedMeshInstanceParticleSystem), true)]
@@ -67,7 +69,7 @@ namespace Framework
 					float columnWidth = rect.width / 3f;
 					rect.width = columnWidth;
 
-					AnimationTexture.Animation[] animations = particleSystem._animationTexture.GetAnimations();
+					GPUAnimations.GPUAnimations.Animation[] animations = particleSystem._animationTexture.GetAnimations();
 
 					GUIContent[] animNames = new GUIContent[animations.Length];
 					for (int i = 0; i < animNames.Length; i++)
