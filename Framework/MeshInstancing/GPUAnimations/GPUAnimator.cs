@@ -25,7 +25,7 @@ namespace Framework
 				private GPUAnimationPlayer _currentAnimation;
 				private int _currentAnimationState;
 				private GPUAnimationPlayer _previousAnimation;
-				private int _blendedAnimationState;
+				private int _previousAnimationState;
 				private float _currentAnimationWeight;
 				private Matrix4x4 _worldMatrix;
 				private Vector3 _worldPos;
@@ -125,9 +125,13 @@ namespace Framework
 					AnimationClip overrideClip = new AnimationClip
 					{
 						name = origClip.name,
-						wrapMode = origClip.wrapMode
+						wrapMode = origClip.wrapMode,
+						legacy = true
 					};
-					overrideClip.SetCurve("", typeof(GPUAnimator), "_animatedValue", new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(origClip.length, 1f)));
+
+					overrideClip.SetCurve("", typeof(GPUAnimator), "_animatedValue", new AnimationCurve(new Keyframe(origClip.length, 0f)));
+					overrideClip.legacy = false;
+
 					return overrideClip;
 				}
 
@@ -170,12 +174,11 @@ namespace Framework
 					//Check if we're transitioning - TO DO! transition from state to same state seem broken / cause pops
 					if (_animator.IsInTransition(0))
 					{
-						AnimatorTransitionInfo transitionInfo = _animator.GetAnimatorTransitionInfo(0);
 						AnimatorStateInfo nextState = _animator.GetNextAnimatorStateInfo(0);
 						AnimatorClipInfo[] nextClips = _animator.GetNextAnimatorClipInfo(0);
 
 						UpdateAnimation(nextState, nextClips, ref _currentAnimation, ref _currentAnimationState);
-						UpdateAnimation(currentState, currentClips, ref _previousAnimation, ref _blendedAnimationState);
+						UpdateAnimation(currentState, currentClips, ref _previousAnimation, ref _previousAnimationState);
 
 						_currentAnimationWeight = nextClips[0].weight;
 					}
