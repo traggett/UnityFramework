@@ -167,7 +167,7 @@ namespace Framework
 					AnimatorStateInfo currentState = _animator.GetCurrentAnimatorStateInfo(0);
 					AnimatorClipInfo[] currentClips = _animator.GetCurrentAnimatorClipInfo(0);
 
-					//Check if we're transitioning
+					//Check if we're transitioning - TO DO! transition from state to same state seem broken / cause pops
 					if (_animator.IsInTransition(0))
 					{
 						AnimatorTransitionInfo transitionInfo = _animator.GetAnimatorTransitionInfo(0);
@@ -177,7 +177,7 @@ namespace Framework
 						UpdateAnimation(nextState, nextClips, ref _currentAnimation, ref _currentAnimationState);
 						UpdateAnimation(currentState, currentClips, ref _previousAnimation, ref _blendedAnimationState);
 
-						_currentAnimationWeight = transitionInfo.normalizedTime;
+						_currentAnimationWeight = nextClips[0].weight;
 					}
 					//Otherwise just update current animation
 					else
