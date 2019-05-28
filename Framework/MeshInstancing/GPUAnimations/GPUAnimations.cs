@@ -16,11 +16,11 @@ namespace Framework
 					public readonly string _name;
 					public readonly int _startFrameOffset;
 					public readonly int _totalFrames;
-					public readonly int _fps;
+					public readonly float _fps;
 					public readonly WrapMode _wrapMode;
 					public readonly AnimationEvent[] _events;
 
-					public Animation(string name, int startOffset, int frameCount, int fps, WrapMode wrapMode, AnimationEvent[] events)
+					public Animation(string name, int startOffset, int frameCount, float fps, WrapMode wrapMode, AnimationEvent[] events)
 					{
 						_name = name;
 						_startFrameOffset = startOffset;
@@ -68,7 +68,7 @@ namespace Framework
 						string name = reader.ReadString();
 						int startOffset = reader.ReadInt32();
 						int totalFrames = reader.ReadInt32();
-						int fps = reader.ReadInt32();
+						float fps = reader.ReadSingle();
 						WrapMode wrapMode = (WrapMode)reader.ReadInt32();
 
 						int numEvents = reader.ReadInt32();

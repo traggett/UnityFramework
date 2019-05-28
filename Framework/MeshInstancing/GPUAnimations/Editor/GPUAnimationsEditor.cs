@@ -22,7 +22,6 @@ namespace Framework
 					[SerializeField]
 					protected AnimationClip[] _animations;
 					protected string _currentFileName;
-					protected int _fps = 15;
 
 					private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
 
@@ -47,85 +46,92 @@ namespace Framework
 
 						EditorGUILayout.Separator();
 
-						EditorGUILayout.LabelField("Generate Animation Texture");
-
-						GameObject prefab = EditorGUILayout.ObjectField("Asset to Evaluate", _animatorObject, typeof(GameObject), true) as GameObject;
-						if (prefab != _animatorObject)
+						GUILayout.BeginVertical();
 						{
-							_animatorObject = prefab;
-							_skinnedMeshes = prefab != null ? prefab.GetComponentsInChildren<SkinnedMeshRenderer>() : new SkinnedMeshRenderer[0];
-							_skinnedMeshIndex = 0;
-						}
+							EditorGUILayout.LabelField("Generate Animation Texture", EditorStyles.largeLabel);
 
-						if (_animatorObject != null && _skinnedMeshes != null && _skinnedMeshes.Length > 0)
-						{
-							string[] skinnedMeshes = new string[_skinnedMeshes.Length];
-
-							for (int i = 0; i < skinnedMeshes.Length; i++)
+							GameObject prefab = EditorGUILayout.ObjectField("Asset to Evaluate", _animatorObject, typeof(GameObject), true) as GameObject;
+							if (prefab != _animatorObject)
 							{
-								skinnedMeshes[i] = _skinnedMeshes[i].gameObject.name;
+								_animatorObject = prefab;
+								_skinnedMeshes = prefab != null ? prefab.GetComponentsInChildren<SkinnedMeshRenderer>() : new SkinnedMeshRenderer[0];
+								_skinnedMeshIndex = 0;
 							}
 
-							_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
-						}
-
-						_fps = EditorGUILayout.IntField("FPS", _fps);
-						_fps = Mathf.Clamp(_fps, 1, 120);
-
-						//Draw list showing animation clip, 
-						SerializedProperty animationsProperty = so.FindProperty("_animations");
-						EditorGUILayout.PropertyField(animationsProperty, true);
-						so.ApplyModifiedProperties();
-
-						if (_skinnedMeshes != null && _animations != null && _animations.Length > 0)
-						{
-							if (GUILayout.Button("Generate"))
+							if (_animatorObject != null && _skinnedMeshes != null && _skinnedMeshes.Length > 0)
 							{
-								string path = EditorUtility.SaveFilePanelInProject("Save Animation Texture", Path.GetFileNameWithoutExtension(_currentFileName), "bytes", "Please enter a file name to save the animation texture to");
+								string[] skinnedMeshes = new string[_skinnedMeshes.Length];
 
-								if (!string.IsNullOrEmpty(path))
+								for (int i = 0; i < skinnedMeshes.Length; i++)
 								{
-									_currentFileName = path;
+									skinnedMeshes[i] = _skinnedMeshes[i].gameObject.name;
+								}
 
-									GameObject sampleObject = Instantiate(_animatorObject);
+								_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
+							}
 
-									SkinnedMeshRenderer[] skinnedMeshes = sampleObject.GetComponentsInChildren<SkinnedMeshRenderer>();
-									SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
-									Transform[] bones = skinnedMesh.bones;
-									Matrix4x4[] bindPoses = skinnedMesh.sharedMesh.bindposes;
+							//Draw list showing animation clip, 
+							SerializedProperty animationsProperty = so.FindProperty("_animations");
+							EditorGUILayout.PropertyField(animationsProperty, true);
+							so.ApplyModifiedProperties();
 
-									if (skinnedMesh.bones.Length > 0)
+							if (_skinnedMeshes != null && _animations != null && _animations.Length > 0)
+							{
+								if (GUILayout.Button("Generate"))
+								{
+									string path = EditorUtility.SaveFilePanelInProject("Save Animation Texture", Path.GetFileNameWithoutExtension(_currentFileName), "bytes", "Please enter a file name to save the animation texture to");
+
+									if (!string.IsNullOrEmpty(path))
 									{
-										GPUAnimations animationTexture = CreateAnimationTexture(sampleObject, bones, bindPoses, _animations, _fps);
-										SaveAnimationTexture(animationTexture, _currentFileName);
-									}
+										_currentFileName = path;
 
-									DestroyImmediate(sampleObject);
+										GameObject sampleObject = Instantiate(_animatorObject);
+
+										SkinnedMeshRenderer[] skinnedMeshes = sampleObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+										SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
+										Transform[] bones = skinnedMesh.bones;
+										Matrix4x4[] bindPoses = skinnedMesh.sharedMesh.bindposes;
+
+										if (skinnedMesh.bones.Length > 0)
+										{
+											GPUAnimations animationTexture = CreateAnimationTexture(sampleObject, bones, bindPoses, _animations);
+											SaveAnimationTexture(animationTexture, _currentFileName);
+										}
+
+										DestroyImmediate(sampleObject);
+									}
 								}
 							}
 						}
+						GUILayout.EndVertical();
 
 						EditorGUILayout.Separator();
+						EditorGUILayout.Separator();
+						EditorGUILayout.Separator();
 
-						EditorGUILayout.LabelField("Generate Animation Texture Mesh");
-
-						_mesh = EditorGUILayout.ObjectField("Mesh", _mesh, typeof(Mesh), true) as Mesh;
-						if (_mesh != null)
+						GUILayout.BeginVertical();
 						{
-							if (GUILayout.Button("Generate Animated Texture Ready Mesh"))
-							{
-								string path = EditorUtility.SaveFilePanel("Save Mesh Asset", "Assets/", name, "asset");
+							EditorGUILayout.LabelField("Generate Animation Texture Mesh", EditorStyles.largeLabel);
 
-								if (!string.IsNullOrEmpty(path))
+							_mesh = EditorGUILayout.ObjectField("Mesh", _mesh, typeof(Mesh), true) as Mesh;
+							if (_mesh != null)
+							{
+								if (GUILayout.Button("Generate Animated Texture Ready Mesh"))
 								{
-									AddMeshForAnimations(_mesh, path);
+									string path = EditorUtility.SaveFilePanel("Save Mesh Asset", "Assets/", name, "asset");
+
+									if (!string.IsNullOrEmpty(path))
+									{
+										AddMeshForAnimations(_mesh, path);
+									}
 								}
 							}
 						}
+						GUILayout.EndVertical();
 					}
 					#endregion
 
-					private static GPUAnimations CreateAnimationTexture(GameObject gameObject, Transform[] bones, Matrix4x4[] bindposes, AnimationClip[] animationClips, int bakeFPS)
+					private static GPUAnimations CreateAnimationTexture(GameObject gameObject, Transform[] bones, Matrix4x4[] bindposes, AnimationClip[] animationClips)
 					{
 						int numBones = bones.Length;
 						GPUAnimations.Animation[] animations = new GPUAnimations.Animation[animationClips.Length];
@@ -138,27 +144,29 @@ namespace Framework
 
 						for (int animIndex = 0; animIndex < animations.Length; animIndex++)
 						{
-							int fps = bakeFPS;
-							string name = animationClips[animIndex].name;
-							int totalFrames = Mathf.CeilToInt(animationClips[animIndex].length * fps) + 1;
-							WrapMode wrapMode = animationClips[animIndex].wrapMode;
-							AnimationEvent[] events = animationClips[animIndex].events;
-							animations[animIndex] = new GPUAnimations.Animation(name, startOffset, totalFrames, fps, wrapMode, events);
+							AnimationClip clip = animationClips[animIndex];
+							
+							string name = clip.name;
+							int totalFrames = Mathf.FloorToInt(clip.length * clip.frameRate);
+							WrapMode wrapMode = clip.wrapMode;
+							AnimationEvent[] events = clip.events;
+							animations[animIndex] = new GPUAnimations.Animation(name, startOffset, totalFrames, clip.frameRate, wrapMode, events);
 							startOffset += totalFrames;
 
 							//Sample animation
 							boneWorldMatrix[animIndex] = new Matrix4x4[totalFrames][];
 
+							float lastFrame = totalFrames - 1;
+
 							for (int frame = 0; frame < totalFrames; frame++)
 							{
-								float bakeDelta = Mathf.Clamp01((float)frame / (totalFrames - 1));
-								float animationTime = bakeDelta * animationClips[animIndex].length;
+								float animationTime = Mathf.Lerp(0f, clip.length, frame / lastFrame);
 
 								//Sample animation
-								bool wasLegacy = animationClips[animIndex].legacy;
-								animationClips[animIndex].legacy = true;
-								animationClips[animIndex].SampleAnimation(gameObject, animationTime);
-								animationClips[animIndex].legacy = wasLegacy;
+								bool wasLegacy = clip.legacy;
+								clip.legacy = true;
+								clip.SampleAnimation(gameObject, animationTime);
+								clip.legacy = wasLegacy;
 								//Save bone matrices
 								boneWorldMatrix[animIndex][frame] = new Matrix4x4[numBones];
 
