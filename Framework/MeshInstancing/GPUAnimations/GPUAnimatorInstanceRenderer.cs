@@ -20,16 +20,6 @@ namespace Framework
 				#endregion
 
 				#region MonoBehaviour
-				private void Awake()
-				{
-					_propertyBlock = new MaterialPropertyBlock();
-
-					for (int i = 0; i < _materials.Length; i++)
-					{
-						_animationTexture.SetMaterialProperties(_materials[i]);
-					}
-				}
-
 				private void Update()
 				{
 #if UNITY_EDITOR
@@ -38,8 +28,7 @@ namespace Framework
 						_animationTexture.SetMaterialProperties(_materials[i]);
 					}
 #endif
-
-					UpdateProperties();
+					
 					Render(Camera.main);
 				}
 				#endregion
@@ -67,9 +56,16 @@ namespace Framework
 				#region MeshInstanceRenderer
 				protected override void Initialise()
 				{
+					base.Initialise();
+
 					_currentAnimationFrames = new float[kMaxMeshes];
 					_previousAnimationFrames = new float[kMaxMeshes];
 					_currentAnimationWeights = new float[kMaxMeshes];
+
+					for (int i = 0; i < _materials.Length; i++)
+					{
+						_animationTexture.SetMaterialProperties(_materials[i]);
+					}
 				}
 
 				protected override void UpdateProperties()

@@ -24,8 +24,9 @@ namespace Framework
 				{
 					_gameObject = gameObject;
 					_animation = animation;
-					_frame = 0;
-					_speed = 1.0f;
+					_frame = 0f;
+					_speed = speed;
+					_wrapMode = wrapMode;
 				}
 
 				public void Stop()
@@ -38,24 +39,38 @@ namespace Framework
 					return _animation._startFrameOffset + _frame;
 				}
 
+				public void SetNormalizedTime(float normalizedTime)
+				{
+					if (_gameObject != null)
+					{
+						//TO DO! use wrap mode to clamp, loop or ping-pong
+
+
+						float prevFrame = _frame;
+						_frame = (_animation._totalFrames - 1) * (normalizedTime - Mathf.Floor(normalizedTime));
+
+						GPUAnimations.CheckForEvents(_gameObject, _animation, prevFrame, _frame);
+					}
+				}
+
 				public void Update(float deltaTime)
 				{
-					if (_gameObject != null && deltaTime > 0.0f)
+					if (_gameObject != null && deltaTime > 0f && _speed > 0f)
 					{
-						float preFrame = _frame;
+						float prevFrame = _frame;
 
 						_frame += deltaTime * _animation._fps * _speed;
 
-						GPUAnimations.CheckForEvents(_gameObject, _animation, preFrame, _frame);
-
-						if (Mathf.FloorToInt(_frame) >= _animation._totalFrames - 1)
+						GPUAnimations.CheckForEvents(_gameObject, _animation, prevFrame, _frame);
+						
+						if (_frame > _animation._totalFrames - 1)
 						{
 							switch (_wrapMode)
 							{
 								case WrapMode.Clamp:
 								case WrapMode.ClampForever:
 									{
-										_frame = _animation._totalFrames - 2;
+										_frame = _animation._totalFrames - 1;
 									}
 									break;
 
@@ -69,7 +84,7 @@ namespace Framework
 								case WrapMode.Default:
 								default:
 									{
-										_frame = 0;
+										_frame -= (_animation._totalFrames - 1);
 									}
 									break;
 							}

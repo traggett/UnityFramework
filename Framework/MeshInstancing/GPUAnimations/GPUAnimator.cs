@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Framework
 {
+	using Utils;
+
 	namespace MeshInstancing
 	{
 		namespace GPUAnimations
@@ -13,6 +15,8 @@ namespace Framework
 				#region Public Data
 				public GPUAnimationsRef _animations;
 				public float _sphericalBoundsRadius;
+				[HideInInspector]
+				public float _animatedValue;
 				#endregion
 
 				#region Private Data
@@ -47,8 +51,6 @@ namespace Framework
 						UpdateCachedTransform();
 
 					UpdateAnimator();
-					_currentAnimation.Update(Time.deltaTime);
-					_previousAnimation.Update(Time.deltaTime);
 				}
 				#endregion
 				
@@ -97,7 +99,7 @@ namespace Framework
 				private void Initialise()
 				{
 					_animator = GetComponent<Animator>();
-					_skinnedMeshRenderer = GetComponent<SkinnedMeshRenderer>();
+					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
 
 					AnimatorOverrideController overrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
 
@@ -107,10 +109,8 @@ namespace Framework
 
 					foreach (AnimationClip origClip in overrideController.animationClips)
 					{
-						AnimationClip overrideClip = new AnimationClip();
-						overrideClip.name = origClip.name;
-						overrideClip.wrapMode = origClip.wrapMode;
 						//Override original animation
+						AnimationClip overrideClip = CreateOverrideClip(origClip);
 						anims.Add(new KeyValuePair<AnimationClip, AnimationClip>(origClip, overrideClip));
 						//Cache what gpu animation it corresponds too
 						_animationLookUp[overrideClip] = GetAnimationIndex(origClip);
@@ -118,6 +118,17 @@ namespace Framework
 
 					overrideController.ApplyOverrides(anims);
 					_animator.runtimeAnimatorController = overrideController;
+				}
+
+				private static AnimationClip CreateOverrideClip(AnimationClip origClip)
+				{
+					AnimationClip overrideClip = new AnimationClip
+					{
+						name = origClip.name,
+						wrapMode = origClip.wrapMode
+					};
+					overrideClip.SetCurve("", typeof(GPUAnimator), "_animatedValue", new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(origClip.length, 1f)));
+					return overrideClip;
 				}
 
 				private void UpdateCachedTransform()
@@ -139,7 +150,7 @@ namespace Framework
 							AnimationClip clip = clips[0].clip;
 							int animationIndex = _animationLookUp[clip];
 							GPUAnimations.Animation animation = _animations.GetAnimations()[animationIndex];
-							animationPlayer.Play(this.gameObject, animation, clip.wrapMode);
+							animationPlayer.Play(this.gameObject, animation, clip.wrapMode, 0f);
 						}
 						else
 						{
@@ -148,7 +159,7 @@ namespace Framework
 							
 					}
 
-					animationPlayer._speed = state.speed * state.speedMultiplier;
+					animationPlayer.SetNormalizedTime(state.normalizedTime);
 				}
 
 				private void UpdateAnimator()

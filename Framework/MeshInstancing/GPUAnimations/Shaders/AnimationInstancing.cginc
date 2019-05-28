@@ -86,42 +86,42 @@ half4x4 calcVertexMatrix(float4 boneWeights, half4 boneIDs, int frame)
 
 void calcVertexFromAnimation(float4 boneWeights, half4 boneIDs, float curFrame, inout half4 vertex, inout half3 normal, inout half4 tangent)
 {
-	int preFrame = curFrame;
-	int nextFrame = curFrame + 1.0f;
-	float frameLerp = curFrame - preFrame;
+	int prevFrame = floor(curFrame);
+	int nextFrame = prevFrame + 1;
+	float frameLerp = curFrame - prevFrame;
 	
-	half4x4 localToWorldMatrixPre = calcVertexMatrix(boneWeights, boneIDs, preFrame);
+	half4x4 localToWorldMatrixPre = calcVertexMatrix(boneWeights, boneIDs, prevFrame);
 	half4x4 localToWorldMatrixNext = calcVertexMatrix(boneWeights, boneIDs, nextFrame);
 
 	//Work out vertex pos
-	half4 localPosPre = mul(vertex, localToWorldMatrixPre);
+	half4 localPosPrev = mul(vertex, localToWorldMatrixPre);
 	half4 localPosNext = mul(vertex, localToWorldMatrixNext);
-	vertex = lerp(localPosPre, localPosNext, frameLerp);
+	vertex = lerp(localPosPrev, localPosNext, frameLerp);
 	
 	//Work out normal
-	half3 localNormPre = mul(normal.xyz, (float3x3)localToWorldMatrixPre);
+	half3 localNormPrev = mul(normal.xyz, (float3x3)localToWorldMatrixPre);
 	half3 localNormNext = mul(normal.xyz, (float3x3)localToWorldMatrixNext);
-	normal = normalize(lerp(localNormPre, localNormNext, frameLerp));
+	normal = normalize(lerp(localNormPrev, localNormNext, frameLerp));
 	
 	//Work out tangent
-	half3 localTanPre = mul(tangent.xyz, (float3x3)localToWorldMatrixPre);
+	half3 localTanPrev = mul(tangent.xyz, (float3x3)localToWorldMatrixPre);
 	half3 localTanNext = mul(tangent.xyz, (float3x3)localToWorldMatrixNext);
-	tangent.xyz = normalize(lerp(localTanPre, localTanNext, frameLerp));
+	tangent.xyz = normalize(lerp(localTanPrev, localTanNext, frameLerp));
 }
 
 void calcVertexFromAnimation(float4 boneWeights, half4 boneIDs, float curFrame, inout half4 vertex)
 {
-	int preFrame = curFrame;
-	int nextFrame = curFrame + 1.0f;
-	float frameLerp = curFrame - preFrame;
+	int prevFrame = floor(curFrame);
+	int nextFrame = prevFrame + 1;
+	float frameLerp = curFrame - prevFrame;
 	
-	half4x4 localToWorldMatrixPre = calcVertexMatrix(boneWeights, boneIDs, preFrame);
+	half4x4 localToWorldMatrixPre = calcVertexMatrix(boneWeights, boneIDs, prevFrame);
 	half4x4 localToWorldMatrixNext = calcVertexMatrix(boneWeights, boneIDs, nextFrame);
 
 	//Work out vertex pos
-	half4 localPosPre = mul(vertex, localToWorldMatrixPre);
+	half4 localPosPrev = mul(vertex, localToWorldMatrixPre);
 	half4 localPosNext = mul(vertex, localToWorldMatrixNext);
-	vertex = lerp(localPosPre, localPosNext, frameLerp);
+	vertex = lerp(localPosPrev, localPosNext, frameLerp);
 }
 
 void gpuSkinning(float4 boneWeights, half4 boneIDs, inout half4 vertex, inout half3 normal, inout half4 tangent)
@@ -131,36 +131,35 @@ void gpuSkinning(float4 boneWeights, half4 boneIDs, inout half4 vertex, inout ha
 	float curAnimWeight = _currentAnimationWeight;
 	float preAnimFrame = _previousAnimationFrame;
 #else
-	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationFrame_arr, _currentAnimationFrame);
+	float curAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationFrame_arr, _currentAnimationFrame);
 	float curAnimWeight = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationWeight_arr, _currentAnimationWeight);
 	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_previousAnimationFrame_arr, _previousAnimationFrame);
 #endif
 
 	//Find vertex position for currently playing animation
 	half4 curAnimVertex = vertex;
-	half4 curAnimNormal = normal;
+	half3 curAnimNormal = normal;
 	half4 curAnimTangent = tangent;
 	
 #if _SKIN_POS_ONLY
-	calcVertexFromAnimation(boneWeights, boneIDs, curAnimFrame, curAnimVertex, curAnimNormal, curAnimTangent);
-#else
 	calcVertexFromAnimation(boneWeights, boneIDs, curAnimFrame, curAnimVertex);
+#else
+	calcVertexFromAnimation(boneWeights, boneIDs, curAnimFrame, curAnimVertex, curAnimNormal, curAnimTangent);	
 #endif
 
 	//Find vertex position for previous animation if blending on top of it and lerp current one on top
 	if (curAnimWeight < 1.0)
 	{
 		half4 prevAnimVertex = vertex;
-		
 #if _SKIN_POS_ONLY
-		half4 prevAnimNormal = normal;
+		calcVertexFromAnimation(boneWeights, boneIDs, preAnimFrame, prevAnimVertex);		
+#else
+		half3 prevAnimNormal = normal;
 		half4 prevAnimTangent = tangent;
 		calcVertexFromAnimation(boneWeights, boneIDs, preAnimFrame, prevAnimVertex, prevAnimNormal, prevAnimTangent);
 		
 		curAnimNormal = normalize(lerp(prevAnimNormal, curAnimNormal, curAnimWeight));
 		curAnimTangent = normalize(lerp(prevAnimTangent, curAnimTangent, curAnimWeight));
-#else
-		calcVertexFromAnimation(boneWeights, boneIDs, preAnimFrame, prevAnimVertex);
 #endif	
 		curAnimVertex = lerp(prevAnimVertex, curAnimVertex, curAnimWeight);
 	}

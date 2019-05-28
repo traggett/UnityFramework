@@ -4,6 +4,8 @@ using UnityEngine.Rendering;
 
 namespace Framework
 {
+	using Utils;
+
 	namespace MeshInstancing
 	{
 		public interface IMeshInstance
@@ -24,8 +26,8 @@ namespace Framework
 			public Material[] _materials;
 			public ShadowCastingMode _shadowCastingMode;
 			public bool _recieveShadows;
-			public bool _stripInstanceChildren;
 			public bool _sortByDepth;
+			public LayerProperty _layer;
 			public enum eFrustrumCulling
 			{
 				Off,
@@ -33,7 +35,6 @@ namespace Framework
 				Bounds
 			}
 			public eFrustrumCulling _frustrumCulling;
-			public float _sphereCullingRadius;
 			#endregion
 
 			#region Protected Data
@@ -167,7 +168,7 @@ namespace Framework
 			{
 				for (int i = 0; i < _mesh.subMeshCount; i++)
 				{
-					Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock, _shadowCastingMode, _recieveShadows, this.gameObject.layer);
+					Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock, _shadowCastingMode, _recieveShadows, _layer);
 				}
 			}
 

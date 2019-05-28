@@ -2,6 +2,8 @@ using UnityEngine;
 
 namespace Framework
 {
+	using Utils;
+
 	namespace MeshInstancing
 	{
 		namespace GPUAnimations
@@ -27,7 +29,7 @@ namespace Framework
 				public GPUAnimatorInstance(GameObject instance)
 				{
 					_gameObject = instance;
-					_animator = _gameObject.GetComponent<IGPUAnimatorInstance>();
+					_animator = GameObjectUtils.GetComponent<IGPUAnimatorInstance>(instance, true);
 				}
 
 				#region IMeshInstance
