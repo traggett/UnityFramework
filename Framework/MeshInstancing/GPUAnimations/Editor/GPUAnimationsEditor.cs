@@ -93,27 +93,7 @@ namespace Framework
 									if (!string.IsNullOrEmpty(path))
 									{
 										_currentFileName = path;
-
-										GameObject sampleObject = Instantiate(_animatorObject);
-
-										SkinnedMeshRenderer[] skinnedMeshes = sampleObject.GetComponentsInChildren<SkinnedMeshRenderer>();
-										SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
-										Transform[] bones = skinnedMesh.bones;
-										Matrix4x4[] bindPoses = skinnedMesh.sharedMesh.bindposes;
-
-										if (skinnedMesh.bones.Length > 0)
-										{
-											if (_useAnimator)
-											{
-												Animator animator = GameObjectUtils.GetComponent<Animator>(sampleObject, true);
-												GetAnimationClipsFromAnimator(animator, out AnimationClip[] clips, out string[] animationStateNames);
-												Run(BakeAnimationTexture(sampleObject, bones, bindPoses, clips, animator, animationStateNames));
-											}
-											else
-											{
-												Run(BakeAnimationTexture(sampleObject, bones, bindPoses, _animations));
-											}
-										}
+										Run(BakeAnimationTexture());
 									}
 								}
 							}
@@ -146,8 +126,35 @@ namespace Framework
 					}
 					#endregion
 					
-					private IEnumerator BakeAnimationTexture(GameObject gameObject, Transform[] bones, Matrix4x4[] bindposes, AnimationClip[] animationClips, Animator animator = null, string[] animationStateNames = null)
+					private IEnumerator BakeAnimationTexture()
 					{
+						GameObject gameObject = Instantiate(_animatorObject);
+
+						SkinnedMeshRenderer[] skinnedMeshes = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+						SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
+						Transform[] bones = skinnedMesh.bones;
+						Matrix4x4[] bindposes = skinnedMesh.sharedMesh.bindposes;
+						AnimationClip[] animationClips = _animations;
+						Animator animator = null;
+						string[] animationStateNames = null;
+
+						if (skinnedMesh.bones.Length == 0)
+							yield break;
+
+						//If using animator then get clips and state names from controller
+						if (_useAnimator)
+						{
+							animator = GameObjectUtils.GetComponent<Animator>(gameObject, true);
+
+							if (animator == null)
+								yield break;
+
+							GetAnimationClipsFromAnimator(animator, out animationClips, out animationStateNames);
+
+							if (animationClips.Length == 0)
+								yield break;
+						}
+
 						int numBones = bones.Length;
 						GPUAnimations.Animation[] animations = new GPUAnimations.Animation[animationClips.Length];
 
