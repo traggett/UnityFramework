@@ -19,8 +19,11 @@ namespace Framework
 					public readonly float _fps;
 					public readonly WrapMode _wrapMode;
 					public readonly AnimationEvent[] _events;
+					public readonly bool _hasRootMotion;
+					public readonly Vector3[] _rootMotionVelocities;
+					public readonly Vector3[] _rootMotionAngularVelocities;
 
-					public Animation(string name, int startOffset, int frameCount, float fps, WrapMode wrapMode, AnimationEvent[] events)
+					public Animation(string name, int startOffset, int frameCount, float fps, WrapMode wrapMode, AnimationEvent[] events, bool hasRootMotion = false, Vector3[] rootMotionVelocities = null, Vector3[] rootMotionAngularVelocities = null)
 					{
 						_name = name;
 						_startFrameOffset = startOffset;
@@ -28,6 +31,9 @@ namespace Framework
 						_fps = fps;
 						_wrapMode = wrapMode;
 						_events = events;
+						_hasRootMotion = hasRootMotion;
+						_rootMotionVelocities = rootMotionVelocities;
+						_rootMotionAngularVelocities = rootMotionAngularVelocities;
 					}
 				}
 
@@ -89,7 +95,24 @@ namespace Framework
 							};
 						}
 
-						animations[i] = new Animation(name, startOffset, totalFrames, fps, wrapMode, events);
+						bool hasRootMotion = reader.ReadBoolean();
+
+						Vector3[] rootMotionVelocities = null;
+						Vector3[] rootMotionAngularVelocities = null;
+
+						if (hasRootMotion)
+						{
+							rootMotionVelocities = new Vector3[totalFrames];
+							rootMotionAngularVelocities = new Vector3[totalFrames];
+
+							for (int j = 0; j < totalFrames; j++)
+							{
+								rootMotionVelocities[j] = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+								rootMotionAngularVelocities[j] = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+							}
+						}
+
+						animations[i] = new Animation(name, startOffset, totalFrames, fps, wrapMode, events, hasRootMotion, rootMotionVelocities, rootMotionAngularVelocities);
 					}
 
 					//Read texture

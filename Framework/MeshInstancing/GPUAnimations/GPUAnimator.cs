@@ -52,6 +52,7 @@ namespace Framework
 						UpdateCachedTransform();
 
 					UpdateAnimator();
+					UpdateRootMotion();
 				}
 				#endregion
 				
@@ -142,6 +143,21 @@ namespace Framework
 					return overrideClip;
 				}
 
+				private int GetAnimationIndex(AnimationClip clip)
+				{
+					GPUAnimations.Animation[] animations = _animations.GetAnimations();
+
+					for (int i = 0; i < animations.Length; i++)
+					{
+						if (animations[i]._name == clip.name)
+						{
+							return i;
+						}
+					}
+
+					return -1;
+				}
+
 				private void UpdateCachedTransform()
 				{
 					_worldMatrix = this.transform.localToWorldMatrix;
@@ -220,19 +236,33 @@ namespace Framework
 					}
 				}
 
-				private int GetAnimationIndex(AnimationClip clip)
+				private void UpdateRootMotion()
 				{
-					GPUAnimations.Animation[] animations = _animations.GetAnimations();
-
-					for (int i=0; i< animations.Length; i++)
+					if (_animator.applyRootMotion)
 					{
-						if (animations[i]._name == clip.name)
-						{
-							return i;
-						}
-					}
+						_clipPlayers[_currentPlayerIndex].GetRootMotionVelocities(out Vector3 velocity, out Vector3 angularVelocity);
 
-					return -1;
+						if (_currentAnimationWeight < 1.0f)
+						{
+							_clipPlayers[1 - _currentPlayerIndex].GetRootMotionVelocities(out Vector3 previousPlayerVelocity, out Vector3 previousPlayerAngularVelocity);
+
+							velocity = Vector3.Lerp(previousPlayerVelocity, velocity, _currentAnimationWeight);
+							velocity = Vector3.Lerp(previousPlayerAngularVelocity, angularVelocity, _currentAnimationWeight);
+						}
+
+						Quaternion rotation = this.transform.localRotation;
+						Quaternion delta = Quaternion.Euler(angularVelocity * Time.deltaTime);
+						rotation *= delta;
+
+						Vector3 offset = velocity * Time.deltaTime;
+						offset = rotation * offset;
+
+						Vector3 position = this.transform.localPosition;
+						position += offset;
+
+						this.transform.localPosition = position;
+						this.transform.localRotation = rotation;
+					}
 				}
 				#endregion
 			}

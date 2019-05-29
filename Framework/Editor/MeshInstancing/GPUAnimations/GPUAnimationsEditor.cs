@@ -167,16 +167,24 @@ namespace Framework
 						for (int animIndex = 0; animIndex < animations.Length; animIndex++)
 						{
 							AnimationClip clip = animationClips[animIndex];
-							
+							bool hasRootMotion = animator != null && clip.hasMotionCurves;
+
 							string name = clip.name;
 							int totalFrames = Mathf.FloorToInt(clip.length * clip.frameRate);
 							WrapMode wrapMode = clip.wrapMode;
 							AnimationEvent[] events = clip.events;
-							animations[animIndex] = new GPUAnimations.Animation(name, startOffset, totalFrames, clip.frameRate, wrapMode, events);
-							startOffset += totalFrames;
 
 							//Sample animation
 							boneWorldMatrix[animIndex] = new Matrix4x4[totalFrames][];
+
+							Vector3[] rootMotionVelocities = null;
+							Vector3[] rootMotionAngularVelocities = null;
+
+							if (hasRootMotion)
+							{
+								rootMotionVelocities = new Vector3[totalFrames];
+								rootMotionAngularVelocities = new Vector3[totalFrames];
+							}
 
 							float lastFrame = totalFrames - 1;
 
@@ -207,7 +215,18 @@ namespace Framework
 								{
 									boneWorldMatrix[animIndex][frame][boneIndex] = rootMat * bones[boneIndex].localToWorldMatrix * bindposes[boneIndex];
 								}
+
+								//Save root motion velocities
+								if (hasRootMotion)
+								{
+									rootMotionVelocities[frame] = animator.velocity;
+									rootMotionAngularVelocities[frame] = animator.angularVelocity;
+								}
 							}
+
+							//Create animation
+							animations[animIndex] = new GPUAnimations.Animation(name, startOffset, totalFrames, clip.frameRate, wrapMode, events, hasRootMotion, rootMotionVelocities, rootMotionAngularVelocities);
+							startOffset += totalFrames;
 						}
 
 						//Create and save texture! Work out width!
@@ -290,6 +309,22 @@ namespace Framework
 								writer.Write(animationTexture._animations[i]._events[j].intParameter);
 								//TO DO?
 								//writer.Write(animationTexture._animations[i]._events[j].objectReferenceParameter);
+							}
+
+							writer.Write(animationTexture._animations[i]._hasRootMotion);
+
+							if (animationTexture._animations[i]._hasRootMotion)
+							{
+								for (int j = 0; j < animationTexture._animations[i]._totalFrames; j++)
+								{
+									writer.Write(animationTexture._animations[i]._rootMotionVelocities[j].x);
+									writer.Write(animationTexture._animations[i]._rootMotionVelocities[j].y);
+									writer.Write(animationTexture._animations[i]._rootMotionVelocities[j].z);
+
+									writer.Write(animationTexture._animations[i]._rootMotionAngularVelocities[j].x);
+									writer.Write(animationTexture._animations[i]._rootMotionAngularVelocities[j].y);
+									writer.Write(animationTexture._animations[i]._rootMotionAngularVelocities[j].z);
+								}
 							}
 						}
 
