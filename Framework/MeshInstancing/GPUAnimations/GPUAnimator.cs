@@ -22,10 +22,11 @@ namespace Framework
 				#region Private Data
 				private SkinnedMeshRenderer _skinnedMeshRenderer;
 				private Animator _animator;
-				private GPUAnimationPlayer _currentAnimation;
-				private int _currentAnimationState;
-				private GPUAnimationPlayer _previousAnimation;
-				private int _previousAnimationState;
+
+				private int _currentPlayerIndex;
+				private GPUAnimationPlayer[] _clipPlayers;
+				private int[] _clipPlayerStates;
+
 				private float _currentAnimationWeight;
 				private Matrix4x4 _worldMatrix;
 				private Vector3 _worldPos;
@@ -57,16 +58,17 @@ namespace Framework
 				#region IGPUAnimator
 				public float GetCurrentAnimationFrame()
 				{
-					return _currentAnimation.GetCurrentTexureFrame();
+					return _clipPlayers[_currentPlayerIndex].GetCurrentTexureFrame();
 				}
 
 				public float GetCurrentAnimationWeight()
 				{
 					return _currentAnimationWeight;
 				}
+
 				public float GetPreviousAnimationFrame()
 				{
-					return _previousAnimation.GetCurrentTexureFrame();
+					return _clipPlayers[1 - _currentPlayerIndex].GetCurrentTexureFrame();
 				}
 
 				public float GetSphericalBoundsRadius()
@@ -100,6 +102,11 @@ namespace Framework
 				{
 					_animator = GetComponent<Animator>();
 					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
+
+					_clipPlayers = new GPUAnimationPlayer[2];
+					_clipPlayerStates = new int[2];
+					_currentPlayerIndex = 0;
+					_currentAnimationWeight = 1.0f;
 
 					AnimatorOverrideController overrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
 
@@ -140,53 +147,75 @@ namespace Framework
 					_worldMatrix = this.transform.localToWorldMatrix;
 					_worldPos = this.transform.position;
 					_worldScale = this.transform.lossyScale;
-					_worldBoundsRadius = Mathf.Max(_worldScale.x, _worldScale.y, _worldScale.x) * _sphericalBoundsRadius;
+					_worldBoundsRadius = Mathf.Max(Mathf.Max(_worldScale.x, _worldScale.y), _worldScale.z) * _sphericalBoundsRadius;
 				}
-
-				private void UpdateAnimation(AnimatorStateInfo state, AnimatorClipInfo[] clips, ref GPUAnimationPlayer animationPlayer, ref int stateHash)
+				
+				private void PlayAnimation(AnimatorStateInfo state, AnimatorClipInfo[] clips, int playerIndex)
 				{
-					if (stateHash != state.shortNameHash)
+					if (clips.Length > 0)
 					{
-						stateHash = state.shortNameHash;
-
-						if (clips.Length > 0)
-						{
-							AnimationClip clip = clips[0].clip;
-							int animationIndex = _animationLookUp[clip];
-							GPUAnimations.Animation animation = _animations.GetAnimations()[animationIndex];
-							animationPlayer.Play(this.gameObject, animation, clip.wrapMode, 0f);
-						}
-						else
-						{
-							animationPlayer.Stop();
-						}
-							
+						AnimationClip clip = clips[0].clip;
+						int animationIndex = _animationLookUp[clip];
+						GPUAnimations.Animation animation = _animations.GetAnimations()[animationIndex];
+						_clipPlayers[playerIndex].Play(this.gameObject, animation, clip.wrapMode, 0f);
 					}
-
-					animationPlayer.SetNormalizedTime(state.normalizedTime);
+					else
+					{
+						_clipPlayers[playerIndex].Stop();
+					}
 				}
 
 				private void UpdateAnimator()
 				{
-					AnimatorStateInfo currentState = _animator.GetCurrentAnimatorStateInfo(0);
-					AnimatorClipInfo[] currentClips = _animator.GetCurrentAnimatorClipInfo(0);
-
 					//Check if we're transitioning - TO DO! transition from state to same state seem broken / cause pops
 					if (_animator.IsInTransition(0))
 					{
+						AnimatorStateInfo previousState = _animator.GetCurrentAnimatorStateInfo(0);
 						AnimatorStateInfo nextState = _animator.GetNextAnimatorStateInfo(0);
-						AnimatorClipInfo[] nextClips = _animator.GetNextAnimatorClipInfo(0);
+						AnimatorTransitionInfo transitionInfo = _animator.GetAnimatorTransitionInfo(0);
 
-						UpdateAnimation(nextState, nextClips, ref _currentAnimation, ref _currentAnimationState);
-						UpdateAnimation(currentState, currentClips, ref _previousAnimation, ref _previousAnimationState);
+						//Check current player is playing the next state
+						if (_clipPlayerStates[_currentPlayerIndex] != nextState.fullPathHash)
+						{
+							//If not switch current player index and start animation on player
+							_currentPlayerIndex = 1 - _currentPlayerIndex;
+							_clipPlayerStates[_currentPlayerIndex] = nextState.fullPathHash;
 
-						_currentAnimationWeight = nextClips[0].weight;
+							AnimatorClipInfo[] nextClips = _animator.GetNextAnimatorClipInfo(0);
+							PlayAnimation(nextState, nextClips, _currentPlayerIndex);
+						}
+
+						//Then check previous player is playing the previous state
+						if (_clipPlayerStates[1 - _currentPlayerIndex] != previousState.fullPathHash)
+						{
+							_clipPlayerStates[1 - _currentPlayerIndex] = previousState.fullPathHash;
+
+							AnimatorClipInfo[] previousClips = _animator.GetCurrentAnimatorClipInfo(0);
+							PlayAnimation(previousState, previousClips, 1 - _currentPlayerIndex);
+						}
+
+						//Update times
+						_clipPlayers[_currentPlayerIndex].SetNormalizedTime(nextState.normalizedTime);
+						_clipPlayers[1 - _currentPlayerIndex].SetNormalizedTime(previousState.normalizedTime);
+						_currentAnimationWeight = transitionInfo.normalizedTime;
 					}
 					//Otherwise just update current animation
 					else
 					{
-						UpdateAnimation(currentState, currentClips, ref _currentAnimation, ref _currentAnimationState);
-						_previousAnimation.Stop();
+						AnimatorStateInfo currentState = _animator.GetCurrentAnimatorStateInfo(0);
+
+						if (_clipPlayerStates[_currentPlayerIndex] != currentState.fullPathHash)
+						{
+							_clipPlayerStates[_currentPlayerIndex] = currentState.fullPathHash;
+							AnimatorClipInfo[] currentClips = _animator.GetCurrentAnimatorClipInfo(0);
+							PlayAnimation(currentState, currentClips, _currentPlayerIndex);
+
+							//Stop other player
+							_clipPlayers[1 - _currentPlayerIndex].Stop();
+						}
+						
+						//Update time
+						_clipPlayers[_currentPlayerIndex].SetNormalizedTime(currentState.normalizedTime);
 						_currentAnimationWeight = 1.0f;
 					}
 				}

@@ -40,8 +40,6 @@ namespace Framework
 					GPUAnimatorInstance instance = new GPUAnimatorInstance(instanceGameObject);
 					if (instance._animator != null)
 					{
-						//Disable skinned mesh renderer
-						instance._animator.GetSkinnedMeshRenderer().enabled = false;
 						ActivateInstance(instance);
 					}
 					else

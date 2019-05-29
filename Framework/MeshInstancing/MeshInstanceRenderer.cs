@@ -152,7 +152,7 @@ namespace Framework
 							_renderData[i]._zDist = (cameraPos - position).sqrMagnitude;
 						}
 
-						AddToSortedList(ref _renderData[i]);
+						AddToRenderedList(_renderData[i]);
 					}
 				}
 
@@ -203,19 +203,20 @@ namespace Framework
 				}
 			}
 
-			private void AddToSortedList(ref RenderData renderData)
+			private void AddToRenderedList(RenderData renderData)
 			{
-				int index = 0;
-
 				if (_sortByDepth)
 				{
-					index = FindInsertIndex(renderData._zDist, 0, _renderedObjects.Count);
+					int index = FindDepthIndex(renderData._zDist, 0, _renderedObjects.Count);
+					_renderedObjects.Insert(index, renderData);
 				}
-
-				_renderedObjects.Insert(index, renderData);
+				else
+				{
+					_renderedObjects.Add(renderData);
+				}
 			}
 
-			private int FindInsertIndex(float zDist, int startIndex, int endIndex)
+			private int FindDepthIndex(float zDist, int startIndex, int endIndex)
 			{
 				int searchWidth = endIndex - startIndex;
 				int numSearches = Mathf.Min(kDepthSortSearchNodes, searchWidth);
@@ -237,7 +238,7 @@ namespace Framework
 						//Otherwise its between this and the previous index
 						else
 						{
-							return FindInsertIndex(zDist, prevIndex, currIndex);
+							return FindDepthIndex(zDist, prevIndex, currIndex);
 						}
 					}
 
