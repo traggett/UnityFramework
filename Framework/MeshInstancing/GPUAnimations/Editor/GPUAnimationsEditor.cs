@@ -4,7 +4,10 @@ using UnityEditor;
 
 namespace Framework
 {
+	using Framework.Editor;
+	using System.Collections;
 	using System.Collections.Generic;
+	using UnityEditor.Animations;
 	using Utils;
 
 	namespace MeshInstancing
@@ -13,12 +16,13 @@ namespace Framework
 		{
 			namespace Editor
 			{
-				public class GPUAnimationsEditor : EditorWindow
+				public class GPUAnimationsEditor : UpdatedEditorWindow
 				{
 					protected GameObject _animatorObject;
 					protected SkinnedMeshRenderer[] _skinnedMeshes;
 					protected int _skinnedMeshIndex;
 					protected Mesh _mesh;
+					protected bool _useAnimator;
 					[SerializeField]
 					protected AnimationClip[] _animations;
 					protected string _currentFileName;
@@ -70,12 +74,17 @@ namespace Framework
 								_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
 							}
 
-							//Draw list showing animation clip, 
-							SerializedProperty animationsProperty = so.FindProperty("_animations");
-							EditorGUILayout.PropertyField(animationsProperty, true);
-							so.ApplyModifiedProperties();
+							_useAnimator = EditorGUILayout.Toggle("Sample Animator", _useAnimator);
 
-							if (_skinnedMeshes != null && _animations != null && _animations.Length > 0)
+							if (!_useAnimator)
+							{
+								//Draw list showing animation clip, 
+								SerializedProperty animationsProperty = so.FindProperty("_animations");
+								EditorGUILayout.PropertyField(animationsProperty, true);
+								so.ApplyModifiedProperties();
+							}
+
+							if (_skinnedMeshes != null && (_useAnimator || (_animations != null && _animations.Length > 0)))
 							{
 								if (GUILayout.Button("Generate"))
 								{
@@ -94,11 +103,17 @@ namespace Framework
 
 										if (skinnedMesh.bones.Length > 0)
 										{
-											GPUAnimations animationTexture = CreateAnimationTexture(sampleObject, bones, bindPoses, _animations);
-											SaveAnimationTexture(animationTexture, _currentFileName);
+											if (_useAnimator)
+											{
+												Animator animator = GameObjectUtils.GetComponent<Animator>(sampleObject, true);
+												GetAnimationClipsFromAnimator(animator, out AnimationClip[] clips, out string[] animationStateNames);
+												Run(BakeAnimationTexture(sampleObject, bones, bindPoses, clips, animator, animationStateNames));
+											}
+											else
+											{
+												Run(BakeAnimationTexture(sampleObject, bones, bindPoses, _animations));
+											}
 										}
-
-										DestroyImmediate(sampleObject);
 									}
 								}
 							}
@@ -130,8 +145,8 @@ namespace Framework
 						GUILayout.EndVertical();
 					}
 					#endregion
-
-					private static GPUAnimations CreateAnimationTexture(GameObject gameObject, Transform[] bones, Matrix4x4[] bindposes, AnimationClip[] animationClips)
+					
+					private IEnumerator BakeAnimationTexture(GameObject gameObject, Transform[] bones, Matrix4x4[] bindposes, AnimationClip[] animationClips, Animator animator = null, string[] animationStateNames = null)
 					{
 						int numBones = bones.Length;
 						GPUAnimations.Animation[] animations = new GPUAnimations.Animation[animationClips.Length];
@@ -160,13 +175,24 @@ namespace Framework
 
 							for (int frame = 0; frame < totalFrames; frame++)
 							{
-								float animationTime = Mathf.Lerp(0f, clip.length, frame / lastFrame);
+								float normalisedTime = frame / lastFrame;
 
-								//Sample animation
-								bool wasLegacy = clip.legacy;
-								clip.legacy = true;
-								clip.SampleAnimation(gameObject, animationTime);
-								clip.legacy = wasLegacy;
+								//Sample animation using legacy system
+								if (animator == null)
+								{
+									bool wasLegacy = clip.legacy;
+									clip.legacy = true;
+									clip.SampleAnimation(gameObject, normalisedTime * clip.length);
+									clip.legacy = wasLegacy;
+								}
+								//Using animator, update animator to progress forward with animation
+								else
+								{
+									animator.Play(animationStateNames[animIndex], 0, normalisedTime);
+									animator.Update(0f);
+									yield return null;
+								}
+
 								//Save bone matrices
 								boneWorldMatrix[animIndex][frame] = new Matrix4x4[numBones];
 
@@ -183,7 +209,7 @@ namespace Framework
 
 						if (!CalculateTextureSize(boneWorldMatrix, out textureSize))
 						{
-							return null;
+							yield break;
 						}
 
 						Texture2D texture = new Texture2D(textureSize, textureSize, format, false);
@@ -217,7 +243,11 @@ namespace Framework
 
 						texture.Apply();
 
-						return new GPUAnimations(animations, numBones, texture);
+						GPUAnimations animationTexture = new GPUAnimations(animations, numBones, texture);
+
+						SaveAnimationTexture(animationTexture, _currentFileName);
+
+						DestroyImmediate(gameObject);
 					}
 
 					private static void SaveAnimationTexture(GPUAnimations animationTexture, string fileName)
@@ -480,6 +510,29 @@ namespace Framework
 						}
 
 						return mesh;
+					}
+
+					private static void GetAnimationClipsFromAnimator(Animator animator, out AnimationClip[] animationClips, out string[] animationStateNames)
+					{
+						AnimatorController animatorController = (AnimatorController)animator.runtimeAnimatorController;
+						AnimatorControllerLayer controllerLayer = animatorController.layers[0];
+
+						List<AnimationClip> clips = new List<AnimationClip>();
+						List<string> stateNames = new List<string>();
+
+						foreach (ChildAnimatorState state in controllerLayer.stateMachine.states)
+						{
+							AnimationClip clip = state.state.motion as AnimationClip;
+
+							if (clip != null && !clips.Contains(clip))
+							{
+								clips.Add(clip);
+								stateNames.Add(state.state.name);
+							}
+						}
+
+						animationClips = clips.ToArray();
+						animationStateNames = stateNames.ToArray();
 					}
 				}
 			}
