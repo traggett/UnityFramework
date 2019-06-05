@@ -163,7 +163,7 @@ namespace Framework
 					RenderInstances();
 				}
 			}
-
+			
 			protected virtual void RenderInstances()
 			{
 				for (int i = 0; i < _mesh.subMeshCount; i++)

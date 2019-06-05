@@ -10,7 +10,6 @@ namespace Framework
 			{
 				#region Public Data
 				public GPUAnimationsRef _animationTexture;
-				public GameObject _prefab;
 				#endregion
 
 				#region Private Data
@@ -34,20 +33,17 @@ namespace Framework
 				#endregion
 
 				#region Public Functions
-				public GameObject SpawnInstance()
+				public bool ActivateInstance(GameObject instanceGameObject)
 				{
-					GameObject instanceGameObject = Instantiate(_prefab);
 					GPUAnimatorInstance instance = new GPUAnimatorInstance(instanceGameObject);
+
 					if (instance._animator != null)
 					{
 						ActivateInstance(instance);
-					}
-					else
-					{
-						Destroy(instanceGameObject);
+						return true;
 					}
 
-					return instanceGameObject;
+					return false;
 				}
 				#endregion
 

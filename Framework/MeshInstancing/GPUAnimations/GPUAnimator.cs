@@ -36,13 +36,9 @@ namespace Framework
 				#endregion
 
 				#region MonoBehaviour
-				private void Awake()
-				{
-					Initialise();
-				}
-
 				private void Start()
 				{
+					Initialise();
 					UpdateCachedTransform();
 				}
 

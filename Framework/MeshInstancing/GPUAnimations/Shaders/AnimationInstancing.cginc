@@ -1,6 +1,4 @@
-﻿// Upgrade NOTE: upgraded instancing buffer 'Props' to new syntax.
-
-#ifndef ANIMATION_INSTANCING_INCLUDED
+﻿#ifndef ANIMATION_INSTANCING_INCLUDED
 #define ANIMATION_INSTANCING_INCLUDED
 
 #if !defined(_VERTEX_SKINNING)

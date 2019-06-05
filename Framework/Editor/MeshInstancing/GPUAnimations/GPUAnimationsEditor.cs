@@ -26,7 +26,9 @@ namespace Framework
 					[SerializeField]
 					protected AnimationClip[] _animations;
 					protected string _currentFileName;
+					protected bool _working;
 
+					private static int kPixelsPerBoneMatrix = 4;
 					private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
 
 					#region EditorWindow
@@ -53,6 +55,7 @@ namespace Framework
 						GUILayout.BeginVertical();
 						{
 							EditorGUILayout.LabelField("Generate Animation Texture", EditorStyles.largeLabel);
+							EditorGUILayout.Separator();
 
 							GameObject prefab = EditorGUILayout.ObjectField("Asset to Evaluate", _animatorObject, typeof(GameObject), true) as GameObject;
 							if (prefab != _animatorObject)
@@ -84,7 +87,11 @@ namespace Framework
 								so.ApplyModifiedProperties();
 							}
 
-							if (_skinnedMeshes != null && (_useAnimator || (_animations != null && _animations.Length > 0)))
+							if (_working)
+							{
+								EditorGUILayout.LabelField("Generating Animation Texture", EditorStyles.helpBox);
+							}
+							else if (_skinnedMeshes != null && (_useAnimator || (_animations != null && _animations.Length > 0)))
 							{
 								if (GUILayout.Button("Generate"))
 								{
@@ -107,6 +114,7 @@ namespace Framework
 						GUILayout.BeginVertical();
 						{
 							EditorGUILayout.LabelField("Generate Animation Texture Mesh", EditorStyles.largeLabel);
+							EditorGUILayout.Separator();
 
 							_mesh = EditorGUILayout.ObjectField("Mesh", _mesh, typeof(Mesh), true) as Mesh;
 							if (_mesh != null)
@@ -128,18 +136,15 @@ namespace Framework
 					
 					private IEnumerator BakeAnimationTexture()
 					{
+						_working = true;
+
 						GameObject gameObject = Instantiate(_animatorObject);
 
 						SkinnedMeshRenderer[] skinnedMeshes = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
 						SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
-						Transform[] bones = skinnedMesh.bones;
-						Matrix4x4[] bindposes = skinnedMesh.sharedMesh.bindposes;
 						AnimationClip[] animationClips = _animations;
 						Animator animator = null;
 						string[] animationStateNames = null;
-
-						if (skinnedMesh.bones.Length == 0)
-							yield break;
 
 						//If using animator then get clips and state names from controller
 						if (_useAnimator)
@@ -147,15 +152,37 @@ namespace Framework
 							animator = GameObjectUtils.GetComponent<Animator>(gameObject, true);
 
 							if (animator == null)
+							{
+								DestroyImmediate(gameObject);
+								_working = false;
 								yield break;
+							}
+								
 
 							GetAnimationClipsFromAnimator(animator, out animationClips, out animationStateNames);
 
 							if (animationClips.Length == 0)
+							{
+								DestroyImmediate(gameObject);
+								_working = false;
 								yield break;
+							}
+
+							AnimatorUtility.DeoptimizeTransformHierarchy(animator.gameObject);
 						}
 
+						Transform[] bones = skinnedMesh.bones;
+						Matrix4x4[] bindposes = skinnedMesh.sharedMesh.bindposes;
+
 						int numBones = bones.Length;
+
+						if (numBones == 0)
+						{
+							DestroyImmediate(gameObject);
+							_working = false;
+							yield break;
+						}
+
 						GPUAnimations.Animation[] animations = new GPUAnimations.Animation[animationClips.Length];
 
 						//3d array - animation / frame / bones
@@ -235,6 +262,8 @@ namespace Framework
 
 						if (!CalculateTextureSize(boneWorldMatrix, out textureSize))
 						{
+							DestroyImmediate(gameObject);
+							_working = false;
 							yield break;
 						}
 
@@ -274,6 +303,8 @@ namespace Framework
 						SaveAnimationTexture(animationTexture, _currentFileName);
 
 						DestroyImmediate(gameObject);
+						_working = false;
+						yield break;
 					}
 
 					private static void SaveAnimationTexture(GPUAnimations animationTexture, string fileName)
@@ -343,6 +374,14 @@ namespace Framework
 #endif
 					}
 
+					private static bool CheckTextureSize(int textureSize, int numBones, int totalFrames)
+					{
+						int numBonesPerHeight = textureSize / numBones;
+						int numMatriciesPerWidth = textureSize / kPixelsPerBoneMatrix;
+
+						return numBonesPerHeight * numMatriciesPerWidth >= totalFrames;
+					}
+
 					private static bool CalculateTextureSize(Matrix4x4[][][] boneWorldMatrix, out int textureSize)
 					{
 						int numBones = boneWorldMatrix[0][0].Length;
@@ -353,48 +392,27 @@ namespace Framework
 							numFrames += boneWorldMatrix[i].Length;
 						}
 
-						//Work out how many frames are needed to match the height of bone pixels (four pixels per bone wide
-						int numFramesToMakeASquare = Mathf.CeilToInt(numBones / 4f);
-
-						int width = 0;
-
-						if (numFrames <= numFramesToMakeASquare)
+						int totalPixels = numFrames * numBones * kPixelsPerBoneMatrix;
+						
+						int textureSizeIndex = 0;
+						
+						while (textureSizeIndex < kAllowedTextureSizes.Length)
 						{
-							width = numFramesToMakeASquare * 4;
-						}
-						//Work out what square is needed
-						else
-						{
-							int pow = 2;
+							textureSize = kAllowedTextureSizes[textureSizeIndex];
 
-							while (true)
+							if (CheckTextureSize(textureSize, numBones, numFrames))
 							{
-								float frameCount = numFramesToMakeASquare * Mathf.Pow(2, pow);
-
-								if (frameCount >= numFrames)
-								{
-									width = pow * numFramesToMakeASquare * 4;
-									break;
-								}
-
-								pow++;
-							}
-						}
-
-						for (int i = 0; i < kAllowedTextureSizes.Length; i++)
-						{
-							if (width <= kAllowedTextureSizes[i])
-							{
-								textureSize = kAllowedTextureSizes[i];
 								return true;
 							}
 
+							textureSizeIndex++;
+
 						}
 
-						textureSize = 0;
+						textureSize = -1;
 						return false;
 					}
-
+					
 					private static Color[] ConvertMatricesToColor(Matrix4x4[] boneMatrices)
 					{
 						Color[] colors = new Color[4 * boneMatrices.Length];
@@ -425,79 +443,7 @@ namespace Framework
 
 					private static Mesh CreateMeshWithExtraData(Mesh sourceMesh, int bonesPerVertex = 4)
 					{
-						Mesh mesh = new Mesh();
-
-						//Copy verts
-						{
-							Vector3[] vertices = new Vector3[sourceMesh.vertexCount];
-							for (int i = 0; i < sourceMesh.vertexCount; i++)
-								vertices[i] = sourceMesh.vertices[i];
-
-							mesh.vertices = vertices;
-						}
-
-						//Copy normals
-						{
-							Vector3[] normals = new Vector3[sourceMesh.normals.Length];
-							for (int i = 0; i < sourceMesh.normals.Length; i++)
-								normals[i] = sourceMesh.normals[i];
-
-							mesh.normals = normals;
-						}
-
-						//Copy tangents
-						{
-							Vector4[] tangents = new Vector4[sourceMesh.tangents.Length];
-							for (int i = 0; i < sourceMesh.tangents.Length; i++)
-								tangents[i] = sourceMesh.tangents[i];
-
-							mesh.tangents = tangents;
-						}
-
-						//Copy triangles
-						{
-							int[] triangles = new int[sourceMesh.triangles.Length];
-							for (int i = 0; i < sourceMesh.triangles.Length; i++)
-								triangles[i] = sourceMesh.triangles[i];
-
-							mesh.triangles = triangles;
-						}
-
-						//Copy UVs
-						{
-							Vector2[] uvs = new Vector2[sourceMesh.uv.Length];
-							for (int i = 0; i < sourceMesh.uv.Length; i++)
-								uvs[i] = sourceMesh.uv[i];
-
-							mesh.uv = uvs;
-						}
-
-						//Copy Bone Weights
-						{
-							BoneWeight[] boneWeights = new BoneWeight[sourceMesh.boneWeights.Length];
-							for (int i = 0; i < sourceMesh.boneWeights.Length; i++)
-								boneWeights[i] = sourceMesh.boneWeights[i];
-
-							mesh.boneWeights = boneWeights;
-						}
-
-						//Copy Bindposes
-						{
-							Matrix4x4[] bindposes = new Matrix4x4[sourceMesh.bindposes.Length];
-							for (int i = 0; i < sourceMesh.bindposes.Length; i++)
-								bindposes[i] = sourceMesh.bindposes[i];
-
-							mesh.bindposes = bindposes;
-						}
-
-						//Copy Submesh count
-						mesh.subMeshCount = sourceMesh.subMeshCount;
-
-						//Copy Index Format
-						mesh.indexFormat = sourceMesh.indexFormat;
-
-						//Copy Bounds
-						mesh.bounds = sourceMesh.bounds;
+						Mesh mesh = Instantiate(sourceMesh);
 
 						//Colors and secondary UVs
 						{
