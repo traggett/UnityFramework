@@ -25,10 +25,10 @@ namespace Framework
 					protected bool _useAnimator;
 					[SerializeField]
 					protected AnimationClip[] _animations;
+					protected TextureFormat _textureFormat = TextureFormat.RGBAHalf;
 					protected string _currentFileName;
 					protected bool _working;
 
-					private static int kPixelsPerBoneMatrix = 4;
 					private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
 
 					#region EditorWindow
@@ -77,7 +77,10 @@ namespace Framework
 								_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
 							}
 
+							_textureFormat = (TextureFormat)EditorGUILayout.EnumPopup("Texture Format", _textureFormat);
+
 							_useAnimator = EditorGUILayout.Toggle("Sample Animator", _useAnimator);
+
 
 							if (!_useAnimator)
 							{
@@ -183,6 +186,13 @@ namespace Framework
 							yield break;
 						}
 
+						string[] boneNames = new string[numBones];
+
+						for (int i=0; i<numBones; i++)
+						{
+							boneNames[i] = bones[i].gameObject.name;
+						}
+
 						GPUAnimations.Animation[] animations = new GPUAnimations.Animation[animationClips.Length];
 
 						//3d array - animation / frame / bones
@@ -257,7 +267,6 @@ namespace Framework
 						}
 
 						//Create and save texture! Work out width!
-						TextureFormat format = TextureFormat.RGBAHalf;
 						int textureSize;
 
 						if (!CalculateTextureSize(boneWorldMatrix, out textureSize))
@@ -267,7 +276,7 @@ namespace Framework
 							yield break;
 						}
 
-						Texture2D texture = new Texture2D(textureSize, textureSize, format, false);
+						Texture2D texture = new Texture2D(textureSize, textureSize, _textureFormat, false);
 						texture.filterMode = FilterMode.Point;
 
 						//Loop through animations / frames / bones setting pixels for each bone matrix
@@ -298,7 +307,7 @@ namespace Framework
 
 						texture.Apply();
 
-						GPUAnimations animationTexture = new GPUAnimations(animations, numBones, texture);
+						GPUAnimations animationTexture = new GPUAnimations(animations, boneNames, texture);
 
 						SaveAnimationTexture(animationTexture, _currentFileName);
 
@@ -318,7 +327,12 @@ namespace Framework
 						FileStream file = File.Open(fileName, FileMode.Create);
 						BinaryWriter writer = new BinaryWriter(file);
 
-						writer.Write(animationTexture._numBones);
+						writer.Write(animationTexture._bones.Length);
+						for (int i = 0; i < animationTexture._bones.Length; i++)
+						{
+							writer.Write(animationTexture._bones[i]);
+						}
+
 						writer.Write(animationTexture._animations.Length);
 
 						for (int i = 0; i < animationTexture._animations.Length; i++)
@@ -361,6 +375,8 @@ namespace Framework
 
 						//Write texture!
 						byte[] bytes = animationTexture._texture.GetRawTextureData();
+
+						writer.Write((int)animationTexture._texture.format);
 						writer.Write(animationTexture._texture.width);
 						writer.Write(animationTexture._texture.height);
 						writer.Write(bytes.Length);
@@ -377,7 +393,7 @@ namespace Framework
 					private static bool CheckTextureSize(int textureSize, int numBones, int totalFrames)
 					{
 						int numBonesPerHeight = textureSize / numBones;
-						int numMatriciesPerWidth = textureSize / kPixelsPerBoneMatrix;
+						int numMatriciesPerWidth = textureSize / GPUAnimations.kPixelsPerBoneMatrix;
 
 						return numBonesPerHeight * numMatriciesPerWidth >= totalFrames;
 					}
@@ -392,7 +408,7 @@ namespace Framework
 							numFrames += boneWorldMatrix[i].Length;
 						}
 
-						int totalPixels = numFrames * numBones * kPixelsPerBoneMatrix;
+						int totalPixels = numFrames * numBones * GPUAnimations.kPixelsPerBoneMatrix;
 						
 						int textureSizeIndex = 0;
 						

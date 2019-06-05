@@ -26,7 +26,7 @@ namespace Framework
 					//Set material constants
 					if (_animationTexture != null)
 					{
-						material.SetFloat("_boneCount", _animationTexture._numBones);
+						material.SetFloat("_boneCount", _animationTexture._bones.Length);
 						material.SetTexture("_animationTexture", _animationTexture._texture);
 						material.SetFloat("_animationTextureWidth", _animationTexture._texture.width);
 						material.SetFloat("_animationTextureHeight", _animationTexture._texture.height);
@@ -44,6 +44,26 @@ namespace Framework
 
 					if (_animationTexture != null)
 						return _animationTexture._animations;
+
+					return null;
+				}
+
+				public Texture2D GetTexture()
+				{
+					LoadIfNeeded();
+
+					if (_animationTexture != null)
+						return _animationTexture._texture;
+
+					return null;
+				}
+
+				public string[] GetBoneNames()
+				{
+					LoadIfNeeded();
+
+					if (_animationTexture != null)
+						return _animationTexture._bones;
 
 					return null;
 				}

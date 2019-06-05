@@ -11,6 +11,8 @@ namespace Framework
 		{
 			public class GPUAnimations
 			{
+				public static int kPixelsPerBoneMatrix = 4;
+
 				public struct Animation
 				{
 					public readonly string _name;
@@ -38,13 +40,13 @@ namespace Framework
 				}
 
 				public readonly Animation[] _animations;
-				public readonly int _numBones;
+				public readonly string[] _bones;
 				public readonly Texture2D _texture;
 
-				public GPUAnimations(Animation[] animations, int numBones, Texture2D texture)
+				public GPUAnimations(Animation[] animations, string[] bones, Texture2D texture)
 				{
 					_animations = animations;
-					_numBones = numBones;
+					_bones = bones;
 					_texture = texture;
 				}
 
@@ -65,7 +67,12 @@ namespace Framework
 				{
 					BinaryReader reader = new BinaryReader(new MemoryStream(file.bytes));
 
-					int numBones = reader.ReadInt32();
+					string[] bones = new string[reader.ReadInt32()];
+					for (int i = 0; i < bones.Length; i++)
+					{
+						bones[i] = reader.ReadString();
+					}
+
 					int animCount = reader.ReadInt32();
 
 					Animation[] animations = new Animation[animCount];
@@ -116,8 +123,7 @@ namespace Framework
 					}
 
 					//Read texture
-					TextureFormat format = TextureFormat.RGBAHalf;
-
+					TextureFormat format = (TextureFormat)reader.ReadInt32();
 					int textureWidth = reader.ReadInt32();
 					int textureHeight = reader.ReadInt32();
 					int byteLength = reader.ReadInt32();
@@ -128,7 +134,7 @@ namespace Framework
 					texture.LoadRawTextureData(bytes);
 					texture.Apply();
 
-					return new GPUAnimations(animations, numBones, texture);
+					return new GPUAnimations(animations, bones, texture);
 				}
 			}
 		}
