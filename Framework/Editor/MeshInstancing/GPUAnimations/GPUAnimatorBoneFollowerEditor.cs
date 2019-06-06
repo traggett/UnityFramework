@@ -11,12 +11,14 @@ namespace Framework
 				[CustomEditor(typeof(GPUAnimatorBoneFollower), true)]
 				public class GPUAnimatorBoneFollowerEditor : UnityEditor.Editor
 				{
+					private SerializedProperty _animatorProperty;
 					private SerializedProperty _boneProperty;
 					private SerializedProperty _targetTransformProperty;
 					private SerializedProperty _flagsProperty;
 
 					void OnEnable()
 					{
+						_animatorProperty = serializedObject.FindProperty("_animator");
 						_boneProperty = serializedObject.FindProperty("_boneName");
 						_targetTransformProperty = serializedObject.FindProperty("_targetTransform");
 						_flagsProperty = serializedObject.FindProperty("_flags");
@@ -25,6 +27,9 @@ namespace Framework
 					public override void OnInspectorGUI()
 					{
 						GPUAnimatorBoneFollower boneTracker = target as GPUAnimatorBoneFollower;
+						
+						EditorGUILayout.PropertyField(_animatorProperty);
+						EditorGUILayout.Separator();
 
 						//Need to draw bone name using drop down from tracked bones in bones renderer?
 						EditorGUILayout.PropertyField(_boneProperty);

@@ -7,10 +7,10 @@ namespace Framework
 	{
 		namespace GPUAnimations
 		{
-			[RequireComponent(typeof(GPUAnimatorBase))]
 			public class GPUAnimatorBoneFollower : MonoBehaviour
 			{
 				#region Public Data
+				public GPUAnimatorBase _animator;
 				public string _boneName;
 				public Transform _targetTransform;
 				[Flags]
@@ -24,7 +24,6 @@ namespace Framework
 				#endregion
 
 				#region Private Data
-				private GPUAnimatorBase _animator;
 				private GPUAnimatorRendererBoneTracking _boneTracking;
 				private int _boneIndex;
 				private Vector3 _currentBonePosition;
@@ -35,15 +34,20 @@ namespace Framework
 				#region MonoBehaviour
 				private void Awake()
 				{
-					_animator = GetComponent<GPUAnimatorBase>();
-					
-					if (_animator.GetRenderer() != null)
+					if (_animator != null)
 					{
-						Initialise();
+						if (_animator.GetRenderer() != null)
+						{
+							Initialise();
+						}
+						else
+						{
+							_animator._onInitialise += Initialise;
+						}
 					}
 					else
 					{
-						_animator._onInitialise += Initialise;
+						this.enabled = false;
 					}
 				}
 
