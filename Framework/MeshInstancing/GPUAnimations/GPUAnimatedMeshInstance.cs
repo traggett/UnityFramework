@@ -22,12 +22,12 @@ namespace Framework
 				#region IMeshInstance
 				public bool IsActive()
 				{
-					return _gameObject.activeSelf;
+					return _animator.isActiveAndEnabled;
 				}
 
 				public bool IsValid()
 				{
-					return _gameObject != null;
+					return _animator != null;
 				}
 				
 				public Matrix4x4 GetWorldMatrix()
