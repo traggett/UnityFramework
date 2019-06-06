@@ -1,9 +1,8 @@
+using System;
 using UnityEngine;
 
 namespace Framework
 {
-	using Utils;
-
 	namespace MeshInstancing
 	{
 		namespace GPUAnimations
@@ -11,22 +10,94 @@ namespace Framework
 			public abstract class GPUAnimatorBase : MonoBehaviour
 			{
 				#region Public Data
-				[HideInInspector]
-				public GPUAnimatorRenderer _renderer;
 				public float _sphericalBoundsRadius;
+				public Vector3 _sphericalBoundsCentre;
+				public Action _onInitialise;
+				#endregion
+
+				#region Protected Data
+				protected GPUAnimatorRenderer _renderer;
+				#endregion
+
+				#region Private Data
+				private Matrix4x4 _worldMatrix;
+				private Vector3 _worldPos;
+				private Vector3 _worldScale;
+				private float _worldBoundingSphereRadius;
+				private Vector3 _worldBoundingSphereCentre;
+				#endregion
+
+				#region MonoBehaviour
+				private void LateUpdate()
+				{
+					if (this.transform.hasChanged)
+						UpdateCachedTransform();
+				}
+
+#if UNITY_EDITOR
+				void OnDrawGizmosSelected()
+				{
+					UpdateCachedTransform();
+					Gizmos.color = Color.yellow;
+					Gizmos.DrawWireSphere(_worldBoundingSphereCentre, _worldBoundingSphereRadius);
+				}
+#endif
 				#endregion
 
 				#region Public Interface
-				public abstract void Initialise(GPUAnimatorRenderer renderer);
+				public void Initialise(GPUAnimatorRenderer renderer)
+				{
+					_renderer = renderer;
+					_onInitialise?.Invoke();
+				}
+
+				public GPUAnimatorRenderer GetRenderer()
+				{
+					return _renderer;
+				}
+
+				public Matrix4x4 GetWorldMatrix()
+				{
+					return _worldMatrix;
+				}
+
+				public Vector3 GetWorldPos()
+				{
+					return _worldPos;
+				}
+
+				public Vector3 GetWorldScale()
+				{
+					return _worldScale;
+				}
+				
+				public float GetWorldBoundingSphereRadius()
+				{
+					return _worldBoundingSphereRadius;
+				}
+
+				public Vector3 GetWorldBoundingSphereCentre()
+				{
+					return _worldBoundingSphereCentre;
+				}
+				#endregion
+
+				#region Abstract Interface
 				public abstract float GetCurrentAnimationFrame();
 				public abstract float GetCurrentAnimationWeight();
 				public abstract float GetPreviousAnimationFrame();
+				public abstract Bounds GetBounds();
+				#endregion
 
-				public abstract SkinnedMeshRenderer GetSkinnedMeshRenderer();
-				public abstract float GetSphericalBoundsRadius();
-				public abstract Matrix4x4 GetWorldMatrix();
-				public abstract Vector3 GetWorldPos();
-				public abstract Vector3 GetWorldScale();
+				#region Protected Functions
+				protected void UpdateCachedTransform()
+				{
+					_worldMatrix = this.transform.localToWorldMatrix;
+					_worldPos = this.transform.position;
+					_worldScale = this.transform.lossyScale;
+					_worldBoundingSphereRadius = Mathf.Max(Mathf.Max(_worldScale.x, _worldScale.y), _worldScale.z) * _sphericalBoundsRadius;
+					_worldBoundingSphereCentre = this.transform.TransformPoint(_sphericalBoundsCentre);
+				}
 				#endregion
 			}
 		}

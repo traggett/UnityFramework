@@ -13,11 +13,13 @@ namespace Framework
 				{
 					private SerializedProperty _boneProperty;
 					private SerializedProperty _targetTransformProperty;
+					private SerializedProperty _flagsProperty;
 
 					void OnEnable()
 					{
 						_boneProperty = serializedObject.FindProperty("_boneName");
 						_targetTransformProperty = serializedObject.FindProperty("_targetTransform");
+						_flagsProperty = serializedObject.FindProperty("_flags");
 					}
 
 					public override void OnInspectorGUI()
@@ -31,7 +33,9 @@ namespace Framework
 						//Draw Target Transform
 						EditorGUILayout.PropertyField(_targetTransformProperty);
 						EditorGUILayout.Separator();
-						
+
+						_flagsProperty.intValue = (int)(GPUAnimatorBoneFollower.Flags)EditorGUILayout.EnumFlagsField(_flagsProperty.displayName, (GPUAnimatorBoneFollower.Flags)_flagsProperty.intValue);
+
 						serializedObject.ApplyModifiedProperties();
 					}
 				}

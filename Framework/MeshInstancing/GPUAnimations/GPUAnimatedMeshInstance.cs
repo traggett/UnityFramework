@@ -29,17 +29,7 @@ namespace Framework
 				{
 					return _gameObject != null;
 				}
-
-				public bool AreBoundsInFrustrum(Plane[] cameraFrustrumPlanes)
-				{
-					return GeometryUtility.TestPlanesAABB(cameraFrustrumPlanes, _animator.GetSkinnedMeshRenderer().bounds);
-				}
-
-				public float GetSphericalBoundsRadius()
-				{
-					return _animator.GetSphericalBoundsRadius();
-				}
-
+				
 				public Matrix4x4 GetWorldMatrix()
 				{
 					return _animator.GetWorldMatrix();
@@ -53,6 +43,21 @@ namespace Framework
 				public Vector3 GetWorldScale()
 				{
 					return _animator.GetWorldScale();
+				}
+
+				public float GetWorldBoundingSphereRadius()
+				{
+					return _animator.GetWorldBoundingSphereRadius();
+				}
+
+				public Vector3 GetWorldBoundingSphereCentre()
+				{
+					return _animator.GetWorldBoundingSphereCentre();
+				}
+				
+				public Bounds GetBounds()
+				{
+					return _animator.GetBounds();
 				}
 				#endregion
 			}

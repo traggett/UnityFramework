@@ -12,11 +12,12 @@ namespace Framework
 		{
 			bool IsActive();
 			bool IsValid();
-			bool AreBoundsInFrustrum(Plane[] cameraFrustrumPlanes);
 			Vector3 GetWorldPos();
 			Vector3 GetWorldScale();
 			Matrix4x4 GetWorldMatrix();
-			float GetSphericalBoundsRadius();
+			float GetWorldBoundingSphereRadius();
+			Vector3 GetWorldBoundingSphereCentre();
+			Bounds GetBounds();
 		}
 
 		public abstract class MeshInstanceRenderer<T> : MonoBehaviour where T : IMeshInstance
@@ -132,12 +133,12 @@ namespace Framework
 					//If frustum culling is enabled, check should draw this game object
 					if (rendered && _frustrumCulling == eFrustrumCulling.Bounds)
 					{
-						rendered = _instanceData[i].AreBoundsInFrustrum(planes);
+						rendered = GeometryUtility.TestPlanesAABB(planes, _instanceData[i].GetBounds());
 					}
 					else if (rendered && _frustrumCulling == eFrustrumCulling.Sphere)
 					{
-						Vector3 position = _instanceData[i].GetWorldPos();
-						float radius = _instanceData[i].GetSphericalBoundsRadius();
+						Vector3 position = _instanceData[i].GetWorldBoundingSphereCentre();
+						float radius = _instanceData[i].GetWorldBoundingSphereRadius();
 						rendered = IsSphereInFrustrum(ref planes, ref planeNormals, ref planeDistances, position, radius);
 					}
 

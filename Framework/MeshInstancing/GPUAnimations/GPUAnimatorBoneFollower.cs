@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Framework
@@ -12,6 +13,14 @@ namespace Framework
 				#region Public Data
 				public string _boneName;
 				public Transform _targetTransform;
+				[Flags]
+				public enum Flags
+				{
+					Position = 1,
+					Rotation = 2,
+					Scale = 4,
+				}
+				public Flags _flags = Flags.Position & Flags.Rotation;
 				#endregion
 
 				#region Private Data
@@ -27,18 +36,15 @@ namespace Framework
 				private void Awake()
 				{
 					_animator = GetComponent<GPUAnimatorBase>();
-
-					//TO DO! need to hook into on init in animator base
-					_boneTracking = _animator._renderer.GetComponent<GPUAnimatorRendererBoneTracking>();
-					_boneIndex = -1;
-
-					if (_boneTracking != null)
+					
+					if (_animator.GetRenderer() != null)
 					{
-						_boneIndex = _boneTracking.GetBoneIndex(_boneName);
+						Initialise();
 					}
-
-					if (_boneIndex == -1)
-						this.enabled = false;
+					else
+					{
+						_animator._onInitialise += Initialise;
+					}
 				}
 
 				private void LateUpdate()
@@ -60,32 +66,34 @@ namespace Framework
 				#endregion
 
 				#region Private Functions
+				private void Initialise()
+				{
+					_boneTracking = _animator.GetRenderer().GetComponent<GPUAnimatorRendererBoneTracking>();
+					_boneIndex = -1;
+
+					if (_boneTracking != null)
+					{
+						_boneIndex = _boneTracking.GetBoneIndex(_boneName);
+					}
+
+					if (_boneIndex == -1)
+						this.enabled = false;
+				}
+
 				private void UpdateBoneTransform()
 				{
-					float curFrameWeight = _animator.GetCurrentAnimationWeight();
-					bool lerpingFromPrev = curFrameWeight < 1.0f;
-
-					float curFrame = _animator.GetCurrentAnimationFrame();
-					int prevFrame = Mathf.FloorToInt(curFrame);
-					int nextFrame = prevFrame + 1;
-					float frameLerp = curFrame - prevFrame;
-
+					float curAnimWeight = _animator.GetCurrentAnimationWeight();
 					Matrix4x4 inverseBindPose = _boneTracking.GetInvBindPose(_boneIndex);
 
-					CalcBoneTransform(prevFrame, nextFrame, frameLerp, _boneIndex, ref inverseBindPose, out _currentBonePosition, out _currentBoneRotation, out _currentBoneScale);
+					CalcBoneTransform(_animator.GetCurrentAnimationFrame(), ref inverseBindPose, out _currentBonePosition, out _currentBoneRotation, out _currentBoneScale);
 
-					if (lerpingFromPrev)
+					if (curAnimWeight < 1.0f)
 					{
-						float prevCurFrame = _animator.GetPreviousAnimationFrame();
-						int prevPrevFrame = Mathf.FloorToInt(prevCurFrame);
-						int prevNextFrame = prevPrevFrame + 1;
-						float prevFrameLerp = prevCurFrame - prevPrevFrame;
+						CalcBoneTransform(_animator.GetPreviousAnimationFrame(), ref inverseBindPose, out Vector3 prevPosition, out Quaternion prevRotation, out Vector3 prevScale);
 
-						CalcBoneTransform(prevPrevFrame, prevNextFrame, prevFrameLerp, _boneIndex, ref inverseBindPose, out Vector3 prevPosition, out Quaternion prevRotation, out Vector3 prevScale);
-
-						_currentBonePosition = Vector3.Lerp(prevPosition, _currentBonePosition, curFrameWeight);
-						_currentBoneRotation = Quaternion.Slerp(prevRotation, _currentBoneRotation, curFrameWeight);
-						_currentBoneScale = Vector3.Lerp(prevScale, _currentBoneScale, curFrameWeight);
+						_currentBonePosition = Vector3.Lerp(prevPosition, _currentBonePosition, curAnimWeight);
+						_currentBoneRotation = Quaternion.Slerp(prevRotation, _currentBoneRotation, curAnimWeight);
+						_currentBoneScale = Vector3.Lerp(prevScale, _currentBoneScale, curAnimWeight);
 					}
 
 					//Convert to world space
@@ -96,24 +104,44 @@ namespace Framework
 				
 				}
 
-				private void CalcBoneTransform(int prevFrame, int nextFrame, float frameLerp, int boneIndex, ref Matrix4x4 inverseBindPose, out Vector3 position, out Quaternion rotation, out Vector3 scale)
+				private void CalcBoneTransform(float frame, ref Matrix4x4 inverseBindPose, out Vector3 position, out Quaternion rotation, out Vector3 scale)
 				{
-					//TO DO! improve and get scale working
-					Matrix4x4 prevMatrix = _boneTracking.GetBoneMatrix(boneIndex, prevFrame) * inverseBindPose;
-					Matrix4x4 nextMatrix = _boneTracking.GetBoneMatrix(boneIndex, nextFrame) * inverseBindPose;
+					int prevFrame = Mathf.FloorToInt(frame);
+					int nextFrame = prevFrame + 1;
+					float frameLerp = frame - prevFrame;
 
-					position = Vector3.Lerp(prevMatrix.MultiplyPoint3x4(Vector3.zero), nextMatrix.MultiplyPoint3x4(Vector3.zero), frameLerp);
-					rotation = Quaternion.Slerp(prevMatrix.rotation, nextMatrix.rotation, frameLerp);
-					scale = Vector3.one;
+					//TO DO! improve and get scale working
+					Matrix4x4 prevMatrix = _boneTracking.GetBoneMatrix(_boneIndex, prevFrame) * inverseBindPose;
+					Matrix4x4 nextMatrix = _boneTracking.GetBoneMatrix(_boneIndex, nextFrame) * inverseBindPose;
+
+					if ((_flags & Flags.Position) != 0)
+						position = Vector3.Lerp(prevMatrix.MultiplyPoint3x4(Vector3.zero), nextMatrix.MultiplyPoint3x4(Vector3.zero), frameLerp);
+					else
+						position = Vector3.zero;
+
+					if ((_flags & Flags.Rotation) != 0)
+						rotation = Quaternion.Slerp(prevMatrix.rotation, nextMatrix.rotation, frameLerp);
+					else
+						rotation = Quaternion.identity;
+
+					if ((_flags & Flags.Scale) != 0)
+						scale = Vector3.one;
+					else
+						scale = Vector3.one;
 				}
 
 				private void UpdateTargetTransform()
 				{
 					if (_targetTransform != null)
 					{
-						_targetTransform.position = _currentBonePosition;
-						_targetTransform.rotation = _currentBoneRotation;
-						_targetTransform.localScale = _currentBoneScale;
+						if ((_flags & Flags.Position) != 0)
+							_targetTransform.position = _currentBonePosition;
+
+						if ((_flags & Flags.Rotation) != 0)
+							_targetTransform.rotation = _currentBoneRotation;
+
+						if ((_flags & Flags.Scale) != 0)
+							_targetTransform.localScale = _currentBoneScale;
 					}
 				}
 				#endregion

@@ -24,12 +24,8 @@ namespace Framework
 				private int _currentPlayerIndex;
 				private GPUAnimationPlayer[] _clipPlayers;
 				private int[] _clipPlayerStates;
-
 				private float _currentAnimationWeight;
-				private Matrix4x4 _worldMatrix;
-				private Vector3 _worldPos;
-				private Vector3 _worldScale;
-				private float _worldBoundsRadius;
+
 				private Dictionary<AnimationClip, int> _animationLookUp;
 				#endregion
 
@@ -41,23 +37,46 @@ namespace Framework
 					_clipPlayers = new GPUAnimationPlayer[2];
 					_clipPlayerStates = new int[2];
 
+					_onInitialise += Initialise;
+
 					UpdateCachedTransform();
 				}
 
 				private void Update()
 				{
-					if (this.transform.hasChanged)
-						UpdateCachedTransform();
-
 					UpdateAnimator();
 					UpdateRootMotion();
 				}
 				#endregion
 
 				#region GPUAnimatorBase
-				public override void Initialise(GPUAnimatorRenderer renderer)
+				public override float GetCurrentAnimationFrame()
 				{
-					_renderer = renderer;
+					return _clipPlayers[_currentPlayerIndex].GetCurrentTexureFrame();
+				}
+
+				public override float GetCurrentAnimationWeight()
+				{
+					return _currentAnimationWeight;
+				}
+
+				public override float GetPreviousAnimationFrame()
+				{
+					return _clipPlayers[1 - _currentPlayerIndex].GetCurrentTexureFrame();
+				}
+
+				public override Bounds GetBounds()
+				{
+					if (_skinnedMeshRenderer != null)
+						return _skinnedMeshRenderer.bounds;
+
+					return new Bounds();
+				}
+				#endregion
+
+				#region Private Functions
+				private void Initialise()
+				{
 					_clipPlayers[0].Stop();
 					_clipPlayers[1].Stop();
 					_currentPlayerIndex = 0;
@@ -82,48 +101,6 @@ namespace Framework
 					_animator.runtimeAnimatorController = overrideController;
 				}
 
-				public override float GetCurrentAnimationFrame()
-				{
-					return _clipPlayers[_currentPlayerIndex].GetCurrentTexureFrame();
-				}
-
-				public override float GetCurrentAnimationWeight()
-				{
-					return _currentAnimationWeight;
-				}
-
-				public override float GetPreviousAnimationFrame()
-				{
-					return _clipPlayers[1 - _currentPlayerIndex].GetCurrentTexureFrame();
-				}
-
-				public override float GetSphericalBoundsRadius()
-				{
-					return _worldBoundsRadius;
-				}
-
-				public override Matrix4x4 GetWorldMatrix()
-				{
-					return _worldMatrix;
-				}
-
-				public override Vector3 GetWorldPos()
-				{
-					return _worldPos;
-				}
-
-				public override Vector3 GetWorldScale()
-				{
-					return _worldScale;
-				}
-
-				public override SkinnedMeshRenderer GetSkinnedMeshRenderer()
-				{
-					return _skinnedMeshRenderer;
-				}
-				#endregion
-
-				#region Private Functions
 				private static AnimationClip CreateOverrideClip(AnimationClip origClip)
 				{
 					AnimationClip overrideClip = new AnimationClip
@@ -152,14 +129,6 @@ namespace Framework
 					}
 
 					return -1;
-				}
-
-				private void UpdateCachedTransform()
-				{
-					_worldMatrix = this.transform.localToWorldMatrix;
-					_worldPos = this.transform.position;
-					_worldScale = this.transform.lossyScale;
-					_worldBoundsRadius = Mathf.Max(Mathf.Max(_worldScale.x, _worldScale.y), _worldScale.z) * _sphericalBoundsRadius;
 				}
 				
 				private void PlayAnimation(AnimatorStateInfo state, AnimatorClipInfo[] clips, int playerIndex)
