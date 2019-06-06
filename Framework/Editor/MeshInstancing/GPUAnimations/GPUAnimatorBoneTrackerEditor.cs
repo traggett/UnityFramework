@@ -17,7 +17,7 @@ namespace Framework
 					private ReorderableList _trackedBonesList;
 					private ReorderableList _boneFollowersList;
 					private SerializedProperty _meshProperty;
-					private GPUAnimator _animator;
+					private GPUAnimatorInstanceRenderer _renderer;
 
 					void OnEnable()
 					{
@@ -25,7 +25,7 @@ namespace Framework
 
 						_meshProperty = serializedObject.FindProperty("_referenceMesh");
 
-						_animator = boneTracker.GetComponent<GPUAnimator>();
+						_renderer = boneTracker.GetComponent<GPUAnimatorInstanceRenderer>();
 
 						_trackedBonesList = new ReorderableList(new GPUAnimatorBoneTracker.TrackedBone[0], typeof(GPUAnimatorBoneTracker.TrackedBone), false, true, true, true)
 						{
@@ -104,7 +104,7 @@ namespace Framework
 
 						EditorGUI.LabelField(rect, new GUIContent("Bone Name"));
 
-						string[] boneNames = _animator._animations.GetBoneNames();
+						string[] boneNames = _renderer._animationTexture.GetBoneNames();
 
 						if (boneNames != null && boneNames.Length > 0)
 						{

@@ -167,11 +167,6 @@ void gpuSkinning(float4 boneWeights, half4 boneIDs, inout half4 vertex, inout ha
 #endif
 }
 
-void followBone(half boneID, inout half4 vertex, inout half3 normal, inout half4 tangent)
-{
-	//Look up bone matrix, apply matrix to vertex, normal and tangent?
-}
-
 #define APPLY_VERTEX_SKINNING(vertex, boneWeights, boneIDs, normal, tangent) \
 	gpuSkinning(boneWeights, boneIDs, vertex, normal, tangent);
 

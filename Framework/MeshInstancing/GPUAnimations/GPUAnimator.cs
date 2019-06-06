@@ -13,7 +13,7 @@ namespace Framework
 			public class GPUAnimator : MonoBehaviour, IGPUAnimatorInstance
 			{
 				#region Public Data
-				public GPUAnimationsRef _animations;
+				public GPUAnimatorInstanceRenderer _renderer;
 				public float _sphericalBoundsRadius;
 				[HideInInspector]
 				public float _animatedValue;
@@ -141,7 +141,7 @@ namespace Framework
 
 				private int GetAnimationIndex(AnimationClip clip)
 				{
-					GPUAnimations.Animation[] animations = _animations.GetAnimations();
+					GPUAnimations.Animation[] animations = _renderer._animationTexture.GetAnimations();
 
 					for (int i = 0; i < animations.Length; i++)
 					{
@@ -168,7 +168,7 @@ namespace Framework
 					{
 						AnimationClip clip = clips[0].clip;
 						int animationIndex = _animationLookUp[clip];
-						GPUAnimations.Animation animation = _animations.GetAnimations()[animationIndex];
+						GPUAnimations.Animation animation = _renderer._animationTexture.GetAnimations()[animationIndex];
 						_clipPlayers[playerIndex].Play(this.gameObject, animation, clip.wrapMode, 0f);
 					}
 					else

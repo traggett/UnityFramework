@@ -7,7 +7,7 @@ namespace Framework
 	{
 		namespace GPUAnimations
 		{
-			[RequireComponent(typeof(GPUAnimator))]
+			[RequireComponent(typeof(GPUAnimatorInstanceRenderer))]
 			public class GPUAnimatorBoneTracker: MonoBehaviour
 			{
 				#region Public Data
@@ -38,14 +38,14 @@ namespace Framework
 				#endregion
 
 				#region Private Data
-				private GPUAnimator _animator;
+				private GPUAnimatorInstanceRenderer _renderer;
 				private Matrix4x4[,] _cachedBoneMatrices;
 				#endregion
 
 				#region MonoBehaviour
 				private void Awake()
 				{
-					_animator = GetComponent<GPUAnimator>();
+					_renderer = GetComponent<GPUAnimatorInstanceRenderer>();
 					CacheBoneData();
 				}
 
@@ -87,9 +87,9 @@ namespace Framework
 				#region Private Functions
 				private void CacheBoneData()
 				{
-					Texture2D texture = _animator._animations.GetTexture();
-					GPUAnimations.Animation[] animations = _animator._animations.GetAnimations();
-					string[] boneNames = _animator._animations.GetBoneNames();
+					Texture2D texture = _renderer._animationTexture.GetTexture();
+					GPUAnimations.Animation[] animations = _renderer._animationTexture.GetAnimations();
+					string[] boneNames = _renderer._animationTexture.GetBoneNames();
 
 					int numBones = boneNames.Length;
 					int totalFrames = 0;
@@ -161,6 +161,7 @@ namespace Framework
 
 				private void UpdateTrackedBones()
 				{
+					/*
 					if (_trackedBones.Length > 0)
 					{
 						float curFrameWeight = _animator.GetCurrentAnimationWeight();
@@ -200,7 +201,7 @@ namespace Framework
 							_trackedBones[i]._currentPosition = this.transform.TransformPoint(_trackedBones[i]._currentPosition);
 							_trackedBones[i]._currentRotation = this.transform.rotation * _trackedBones[i]._currentRotation;
 						}
-					}
+					}*/
 				}
 
 				private void CalcBoneTransform(int prevFrame, int nextFrame, float frameLerp, int boneIndex, ref Matrix4x4 inverseBindPose, out Vector3 position, out Quaternion rotation)
