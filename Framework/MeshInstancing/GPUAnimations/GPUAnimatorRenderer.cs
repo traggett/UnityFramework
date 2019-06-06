@@ -6,7 +6,7 @@ namespace Framework
 	{
 		namespace GPUAnimations
 		{
-			public class GPUAnimatorInstanceRenderer : MeshInstanceRenderer<GPUAnimatorInstance>
+			public class GPUAnimatorRenderer : MeshInstanceRenderer<GPUAnimatedMeshInstance>
 			{
 				#region Public Data
 				public GPUAnimationsRef _animationTexture;
@@ -35,10 +35,11 @@ namespace Framework
 				#region Public Functions
 				public bool ActivateInstance(GameObject instanceGameObject)
 				{
-					GPUAnimatorInstance instance = new GPUAnimatorInstance(instanceGameObject);
+					GPUAnimatedMeshInstance instance = new GPUAnimatedMeshInstance(instanceGameObject);
 
 					if (instance._animator != null)
 					{
+						instance._animator.Initialise(this);
 						ActivateInstance(instance);
 						return true;
 					}
@@ -68,7 +69,7 @@ namespace Framework
 					int index = 0;
 					foreach (RenderData renderData in _renderedObjects)
 					{
-						IGPUAnimatorInstance animator = _instanceData[renderData._index]._animator;
+						GPUAnimatorBase animator = _instanceData[renderData._index]._animator;
 						_currentAnimationFrames[index] = animator.GetCurrentAnimationFrame();
 						_currentAnimationWeights[index] = animator.GetCurrentAnimationWeight();
 						_previousAnimationFrames[index] = animator.GetPreviousAnimationFrame();

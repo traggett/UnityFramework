@@ -8,28 +8,15 @@ namespace Framework
 	{
 		namespace GPUAnimations
 		{
-			public interface IGPUAnimatorInstance
-			{
-				float GetCurrentAnimationFrame();
-				float GetCurrentAnimationWeight();
-				float GetPreviousAnimationFrame();
-
-				SkinnedMeshRenderer GetSkinnedMeshRenderer();
-				float GetSphericalBoundsRadius();
-				Matrix4x4 GetWorldMatrix();
-				Vector3 GetWorldPos();
-				Vector3 GetWorldScale();
-			}
-
-			public struct GPUAnimatorInstance : IMeshInstance
+			public struct GPUAnimatedMeshInstance : IMeshInstance
 			{
 				public readonly GameObject _gameObject;
-				public readonly IGPUAnimatorInstance _animator;
+				public readonly GPUAnimatorBase _animator;
 
-				public GPUAnimatorInstance(GameObject instance)
+				public GPUAnimatedMeshInstance(GameObject instance)
 				{
 					_gameObject = instance;
-					_animator = GameObjectUtils.GetComponent<IGPUAnimatorInstance>(instance, true);
+					_animator = GameObjectUtils.GetComponent<GPUAnimatorBase>(instance, true);
 				}
 
 				#region IMeshInstance

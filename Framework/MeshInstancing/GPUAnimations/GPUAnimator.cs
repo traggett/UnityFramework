@@ -10,11 +10,9 @@ namespace Framework
 		namespace GPUAnimations
 		{
 			[RequireComponent(typeof(Animator))]
-			public class GPUAnimator : MonoBehaviour, IGPUAnimatorInstance
+			public class GPUAnimator : GPUAnimatorBase
 			{
 				#region Public Data
-				public GPUAnimatorInstanceRenderer _renderer;
-				public float _sphericalBoundsRadius;
 				[HideInInspector]
 				public float _animatedValue;
 				#endregion
@@ -36,9 +34,13 @@ namespace Framework
 				#endregion
 
 				#region MonoBehaviour
-				private void Start()
+				private void Awake()
 				{
-					Initialise();
+					_animator = GetComponent<Animator>();
+					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
+					_clipPlayers = new GPUAnimationPlayer[2];
+					_clipPlayerStates = new int[2];
+
 					UpdateCachedTransform();
 				}
 
@@ -51,57 +53,13 @@ namespace Framework
 					UpdateRootMotion();
 				}
 				#endregion
-				
-				#region IGPUAnimator
-				public float GetCurrentAnimationFrame()
-				{
-					return _clipPlayers[_currentPlayerIndex].GetCurrentTexureFrame();
-				}
 
-				public float GetCurrentAnimationWeight()
+				#region GPUAnimatorBase
+				public override void Initialise(GPUAnimatorRenderer renderer)
 				{
-					return _currentAnimationWeight;
-				}
-
-				public float GetPreviousAnimationFrame()
-				{
-					return _clipPlayers[1 - _currentPlayerIndex].GetCurrentTexureFrame();
-				}
-
-				public float GetSphericalBoundsRadius()
-				{
-					return _worldBoundsRadius;
-				}
-
-				public Matrix4x4 GetWorldMatrix()
-				{
-					return _worldMatrix;
-				}
-
-				public Vector3 GetWorldPos()
-				{
-					return _worldPos;
-				}
-
-				public Vector3 GetWorldScale()
-				{
-					return _worldScale;
-				}
-
-				public SkinnedMeshRenderer GetSkinnedMeshRenderer()
-				{
-					return _skinnedMeshRenderer;
-				}
-				#endregion
-
-				#region Private Functions
-				private void Initialise()
-				{
-					_animator = GetComponent<Animator>();
-					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
-
-					_clipPlayers = new GPUAnimationPlayer[2];
-					_clipPlayerStates = new int[2];
+					_renderer = renderer;
+					_clipPlayers[0].Stop();
+					_clipPlayers[1].Stop();
 					_currentPlayerIndex = 0;
 					_currentAnimationWeight = 1.0f;
 
@@ -124,6 +82,48 @@ namespace Framework
 					_animator.runtimeAnimatorController = overrideController;
 				}
 
+				public override float GetCurrentAnimationFrame()
+				{
+					return _clipPlayers[_currentPlayerIndex].GetCurrentTexureFrame();
+				}
+
+				public override float GetCurrentAnimationWeight()
+				{
+					return _currentAnimationWeight;
+				}
+
+				public override float GetPreviousAnimationFrame()
+				{
+					return _clipPlayers[1 - _currentPlayerIndex].GetCurrentTexureFrame();
+				}
+
+				public override float GetSphericalBoundsRadius()
+				{
+					return _worldBoundsRadius;
+				}
+
+				public override Matrix4x4 GetWorldMatrix()
+				{
+					return _worldMatrix;
+				}
+
+				public override Vector3 GetWorldPos()
+				{
+					return _worldPos;
+				}
+
+				public override Vector3 GetWorldScale()
+				{
+					return _worldScale;
+				}
+
+				public override SkinnedMeshRenderer GetSkinnedMeshRenderer()
+				{
+					return _skinnedMeshRenderer;
+				}
+				#endregion
+
+				#region Private Functions
 				private static AnimationClip CreateOverrideClip(AnimationClip origClip)
 				{
 					AnimationClip overrideClip = new AnimationClip
