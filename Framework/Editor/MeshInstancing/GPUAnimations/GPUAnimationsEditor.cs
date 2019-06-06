@@ -223,12 +223,26 @@ namespace Framework
 								rootMotionAngularVelocities = new Vector3[totalFrames];
 							}
 
+							//Needed to prevent first frame pop?
+							if (animator != null)
+							{
+								animator.Play(animationStateNames[animIndex]);
+								animator.Update(0f);
+								yield return null;
+								animator.Play(animationStateNames[animIndex], 0, 0f);
+								animator.Update(0f);
+								yield return null;
+								animator.Play(animationStateNames[animIndex], 0, 0f);
+								animator.Update(0f);
+								yield return null;
+							}
+
 							float lastFrame = totalFrames - 1;
 
 							for (int frame = 0; frame < totalFrames; frame++)
 							{
 								float normalisedTime = frame / lastFrame;
-
+								
 								//Sample animation using legacy system
 								if (animator == null)
 								{
