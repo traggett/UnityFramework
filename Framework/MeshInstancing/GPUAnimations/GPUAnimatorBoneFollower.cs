@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Framework
 {
+	using Utils;
+
 	namespace MeshInstancing
 	{
 		namespace GPUAnimations
@@ -26,9 +28,9 @@ namespace Framework
 				#region Private Data
 				private GPUAnimatorRendererBoneTracking _boneTracking;
 				private int _boneIndex;
-				private Vector3 _currentBonePosition;
-				private Quaternion _currentBoneRotation;
-				private Vector3 _currentBoneScale;
+				private Vector3 _worldBonePosition;
+				private Quaternion _worldBoneRotation;
+				private Vector3 _worldBoneScale;
 				#endregion
 
 				#region MonoBehaviour
@@ -60,12 +62,17 @@ namespace Framework
 				#region Public Interface
 				public Vector3 GetBoneWorldPosition()
 				{
-					return _currentBonePosition;
+					return _worldBonePosition;
 				}
 
 				public Quaternion GetBoneWorldRotation()
 				{
-					return _currentBoneRotation;
+					return _worldBoneRotation;
+				}
+
+				public Vector3 GetBoneLossyScale()
+				{
+					return _worldBoneScale;
 				}
 				#endregion
 
@@ -74,6 +81,9 @@ namespace Framework
 				{
 					_boneTracking = _animator.GetRenderer().GetComponent<GPUAnimatorRendererBoneTracking>();
 					_boneIndex = -1;
+					_worldBonePosition = Vector3.zero;
+					_worldBoneRotation = Quaternion.identity;
+					_worldBonePosition = Vector3.one;
 
 					if (_boneTracking != null)
 					{
@@ -86,26 +96,33 @@ namespace Framework
 
 				private void UpdateBoneTransform()
 				{
+					//Work out local space bone transform
 					float curAnimWeight = _animator.GetCurrentAnimationWeight();
 					Matrix4x4 inverseBindPose = _boneTracking.GetInvBindPose(_boneIndex);
 
-					CalcBoneTransform(_animator.GetCurrentAnimationFrame(), ref inverseBindPose, out _currentBonePosition, out _currentBoneRotation, out _currentBoneScale);
+					CalcBoneTransform(_animator.GetCurrentAnimationFrame(), ref inverseBindPose, out Vector3 localPosition, out Quaternion localRotation, out Vector3 localScale);
 
 					if (curAnimWeight < 1.0f)
 					{
-						CalcBoneTransform(_animator.GetPreviousAnimationFrame(), ref inverseBindPose, out Vector3 prevPosition, out Quaternion prevRotation, out Vector3 prevScale);
+						CalcBoneTransform(_animator.GetPreviousAnimationFrame(), ref inverseBindPose, out Vector3 prevLocalPosition, out Quaternion prevLocalRotation, out Vector3 prevLocalScale);
 
-						_currentBonePosition = Vector3.Lerp(prevPosition, _currentBonePosition, curAnimWeight);
-						_currentBoneRotation = Quaternion.Slerp(prevRotation, _currentBoneRotation, curAnimWeight);
-						_currentBoneScale = Vector3.Lerp(prevScale, _currentBoneScale, curAnimWeight);
+						if ((_flags & Flags.Position) != 0)
+							localPosition = Vector3.Lerp(prevLocalPosition, localPosition, curAnimWeight);
+						if ((_flags & Flags.Rotation) != 0)
+							localRotation = Quaternion.Slerp(prevLocalRotation, localRotation, curAnimWeight);
+						if ((_flags & Flags.Scale) != 0)
+							localScale = Vector3.Lerp(prevLocalScale, localScale, curAnimWeight);
 					}
 
 					//Convert to world space
-					_currentBonePosition = _animator.transform.TransformPoint(_currentBonePosition);
-					_currentBoneRotation = _animator.transform.rotation * _currentBoneRotation;
+					if ((_flags & Flags.Position) != 0)
+						_worldBonePosition = _animator.transform.TransformPoint(localPosition);
+					if ((_flags & Flags.Rotation) != 0)
+						_worldBoneRotation = _animator.transform.rotation * localRotation;
+					if ((_flags & Flags.Scale) != 0)
+						_worldBoneScale = Vector3.Scale(_animator.transform.lossyScale, localScale);
 
 					UpdateTargetTransform();
-				
 				}
 
 				private void CalcBoneTransform(float frame, ref Matrix4x4 inverseBindPose, out Vector3 position, out Quaternion rotation, out Vector3 scale)
@@ -128,6 +145,7 @@ namespace Framework
 					else
 						rotation = Quaternion.identity;
 
+					//TO DO!
 					if ((_flags & Flags.Scale) != 0)
 						scale = Vector3.one;
 					else
@@ -139,13 +157,13 @@ namespace Framework
 					if (_targetTransform != null)
 					{
 						if ((_flags & Flags.Position) != 0)
-							_targetTransform.position = _currentBonePosition;
+							_targetTransform.position = _worldBonePosition;
 
 						if ((_flags & Flags.Rotation) != 0)
-							_targetTransform.rotation = _currentBoneRotation;
+							_targetTransform.rotation = _worldBoneRotation;
 
 						if ((_flags & Flags.Scale) != 0)
-							_targetTransform.localScale = _currentBoneScale;
+							GameObjectUtils.SetTransformWorldScale(_targetTransform, _worldBoneScale);
 					}
 				}
 				#endregion

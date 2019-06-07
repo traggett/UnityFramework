@@ -162,6 +162,21 @@ namespace Framework
 				}
 			}
 
+			public static void SetTransformWorldScale(Transform transform, Vector3 worldScale)
+			{
+				if (transform.parent != null)
+				{
+					Vector3 parentScale = transform.parent.lossyScale;
+					transform.localScale = new Vector3(parentScale.x != 0f ? worldScale.x / parentScale.x : worldScale.x,
+											parentScale.y != 0f ? worldScale.y / parentScale.y : worldScale.y,
+											parentScale.z != 0f ? worldScale.z / parentScale.z : worldScale.z);
+				}
+				else
+				{
+					transform.localScale = worldScale;
+				}
+			}
+
 			public static void SetLayerRecursively(GameObject obj, int newLayer)
 			{
 				if (null == obj)
