@@ -17,6 +17,7 @@ namespace Framework
 				#endregion
 
 				#region Private Data
+				private static Avatar _dummyAvatar;
 				private Animator _animator;
 				private SkinnedMeshRenderer _skinnedMeshRenderer;			
 
@@ -85,7 +86,7 @@ namespace Framework
 					_currentAnimationWeight = 1.0f;
 
 					_animator.runtimeAnimatorController = _renderer.GetOverrideControllerForAnimator(_animator);
-					_animator.avatar = null;
+					_animator.avatar = GetDummyAvatar();
 				}
 				
 				private void PlayAnimation(AnimatorStateInfo state, AnimatorClipInfo[] clips, int playerIndex)
@@ -184,6 +185,19 @@ namespace Framework
 						this.transform.localPosition = position;
 						this.transform.localRotation = rotation;
 					}
+				}
+
+				private static Avatar GetDummyAvatar()
+				{
+					if (_dummyAvatar == null)
+					{
+						GameObject temp = new GameObject();
+						_dummyAvatar = AvatarBuilder.BuildGenericAvatar(temp, "");
+						_dummyAvatar.name = "GPU Animated Avatar";
+						Destroy(temp);
+					}
+				
+					return _dummyAvatar;
 				}
 				#endregion
 			}

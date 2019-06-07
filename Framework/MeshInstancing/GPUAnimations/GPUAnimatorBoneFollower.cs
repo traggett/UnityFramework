@@ -96,6 +96,9 @@ namespace Framework
 
 				private void UpdateBoneTransform()
 				{
+					if (_boneTracking == null)
+						return;
+
 					//Work out local space bone transform
 					float curAnimWeight = _animator.GetCurrentAnimationWeight();
 					Matrix4x4 inverseBindPose = _boneTracking.GetInvBindPose(_boneIndex);
