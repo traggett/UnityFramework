@@ -81,8 +81,8 @@ namespace Framework
 					_clipPlayers[1].Stop();
 					_currentPlayerIndex = 0;
 					_currentAnimationWeight = 1.0f;
-					
-					_animator.runtimeAnimatorController = new GPUAnimatorOverrideController(_animator.runtimeAnimatorController, _renderer._animationTexture.GetAnimations());
+
+					_animator.runtimeAnimatorController = _renderer.GetOverrideControllerForAnimator(_animator);
 					_animator.avatar = null;
 				}
 				

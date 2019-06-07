@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Framework
@@ -16,6 +17,8 @@ namespace Framework
 				private float[] _currentAnimationFrames;
 				private float[] _previousAnimationFrames;
 				private float[] _currentAnimationWeights;
+
+				private Dictionary<RuntimeAnimatorController, GPUAnimatorOverrideController> _animatorOverrideControllers = new Dictionary<RuntimeAnimatorController, GPUAnimatorOverrideController>();
 				#endregion
 
 				#region MonoBehaviour
@@ -45,6 +48,19 @@ namespace Framework
 					}
 
 					return false;
+				}
+
+				public GPUAnimatorOverrideController GetOverrideControllerForAnimator(Animator animator)
+				{
+					GPUAnimatorOverrideController overrideController;
+
+					if (!_animatorOverrideControllers.TryGetValue(animator.runtimeAnimatorController, out overrideController))
+					{
+						overrideController = new GPUAnimatorOverrideController(animator.runtimeAnimatorController, _animationTexture.GetAnimations());
+						_animatorOverrideControllers[animator.runtimeAnimatorController] = overrideController;
+					}
+
+					return overrideController;
 				}
 				#endregion
 
