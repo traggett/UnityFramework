@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Framework
@@ -18,15 +17,13 @@ namespace Framework
 				#endregion
 
 				#region Private Data
-				private SkinnedMeshRenderer _skinnedMeshRenderer;
 				private Animator _animator;
+				private SkinnedMeshRenderer _skinnedMeshRenderer;			
 
 				private int _currentPlayerIndex;
 				private GPUAnimationPlayer[] _clipPlayers;
 				private int[] _clipPlayerStates;
 				private float _currentAnimationWeight;
-
-				private Dictionary<AnimationClip, int> _animationLookUp;
 				#endregion
 
 				#region MonoBehaviour
@@ -44,8 +41,11 @@ namespace Framework
 
 				private void Update()
 				{
-					UpdateAnimator();
-					UpdateRootMotion();
+					if (_renderer != null)
+					{
+						UpdateAnimator();
+						UpdateRootMotion();
+					}
 				}
 				#endregion
 
@@ -81,54 +81,9 @@ namespace Framework
 					_clipPlayers[1].Stop();
 					_currentPlayerIndex = 0;
 					_currentAnimationWeight = 1.0f;
-
-					AnimatorOverrideController overrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
-
-					_animationLookUp = new Dictionary<AnimationClip, int>();
-
-					List<KeyValuePair<AnimationClip, AnimationClip>> anims = new List<KeyValuePair<AnimationClip, AnimationClip>>();
-
-					foreach (AnimationClip origClip in overrideController.animationClips)
-					{
-						//Override original animation
-						AnimationClip overrideClip = CreateOverrideClip(origClip);
-						anims.Add(new KeyValuePair<AnimationClip, AnimationClip>(origClip, overrideClip));
-						//Cache what gpu animation it corresponds too
-						_animationLookUp[overrideClip] = GetAnimationIndex(origClip);
-					}
-
-					overrideController.ApplyOverrides(anims);
-					_animator.runtimeAnimatorController = overrideController;
-				}
-
-				private static AnimationClip CreateOverrideClip(AnimationClip origClip)
-				{
-					AnimationClip overrideClip = new AnimationClip
-					{
-						name = origClip.name,
-						wrapMode = origClip.wrapMode,
-						legacy = true
-					};
-
-					overrideClip.SetCurve("", typeof(GPUAnimator), "_animatedValue", new AnimationCurve(new Keyframe(origClip.length, 0f)));
-					overrideClip.legacy = false;
-
-					return overrideClip;
-				}
-
-				private int GetAnimationIndex(AnimationClip clip)
-				{
-					GPUAnimations.Animation[] animations = _renderer._animationTexture.GetAnimations();
-
-					for (int i = 0; i < animations.Length; i++)
-					{
-						if (animations[i]._name == clip.name)
-						{
-							return i;
-						}
-					}
-
-					return -1;
+					
+					_animator.runtimeAnimatorController = new GPUAnimatorOverrideController(_animator.runtimeAnimatorController, _renderer._animationTexture.GetAnimations());
+					_animator.avatar = null;
 				}
 				
 				private void PlayAnimation(AnimatorStateInfo state, AnimatorClipInfo[] clips, int playerIndex)
@@ -136,8 +91,7 @@ namespace Framework
 					if (clips.Length > 0)
 					{
 						AnimationClip clip = clips[0].clip;
-						int animationIndex = _animationLookUp[clip];
-						GPUAnimations.Animation animation = _renderer._animationTexture.GetAnimations()[animationIndex];
+						GPUAnimations.Animation animation = ((GPUAnimatorOverrideController)_animator.runtimeAnimatorController).GetAnimation(clip);
 						_clipPlayers[playerIndex].Play(this.gameObject, animation, clip.wrapMode, 0f);
 					}
 					else

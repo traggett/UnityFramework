@@ -69,11 +69,11 @@ namespace Framework
 					float columnWidth = rect.width / 3f;
 					rect.width = columnWidth;
 
-					GPUAnimations.GPUAnimations.Animation[] animations = particleSystem._animationTexture.GetAnimations();
+					GPUAnimations.GPUAnimations animations = particleSystem._animationTexture.GetAnimations();
 
-					GUIContent[] animNames = new GUIContent[animations.Length];
+					GUIContent[] animNames = new GUIContent[animations._animations.Length];
 					for (int i = 0; i < animNames.Length; i++)
-						animNames[i] = new GUIContent(animations[i]._name);
+						animNames[i] = new GUIContent(animations._animations[i]._name);
 
 					animation._animationIndex = EditorGUI.Popup(rect, animation._animationIndex, animNames);
 

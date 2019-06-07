@@ -181,8 +181,8 @@ namespace Framework
 
 			private GPUAnimations.GPUAnimations.Animation GetAnimation(int index)
 			{
-				GPUAnimations.GPUAnimations.Animation[] animations = _animationTexture.GetAnimations();
-				GPUAnimations.GPUAnimations.Animation animation = animations[Mathf.Clamp(index, 0, animations.Length)];
+				GPUAnimations.GPUAnimations animations = _animationTexture.GetAnimations();
+				GPUAnimations.GPUAnimations.Animation animation = animations._animations[Mathf.Clamp(index, 0, animations._animations.Length)];
 				return animation;
 			}			
 			#endregion

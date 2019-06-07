@@ -39,7 +39,7 @@ namespace Framework
 				#region Public Interface
 				public int GetBoneIndex(string boneName)
 				{
-					string[] boneNames = _renderer._animationTexture.GetBoneNames();
+					string[] boneNames = _renderer._animationTexture.GetAnimations()._bones;
 
 					for (int i = 0; i < boneNames.Length; i++)
 					{
@@ -72,22 +72,20 @@ namespace Framework
 				#region Private Functions
 				private void CacheBoneData()
 				{
-					Texture2D texture = _renderer._animationTexture.GetTexture();
-					GPUAnimations.Animation[] animations = _renderer._animationTexture.GetAnimations();
-					string[] boneNames = _renderer._animationTexture.GetBoneNames();
-
-					int numBones = boneNames.Length;
+					GPUAnimations animations = _renderer._animationTexture.GetAnimations();
+					
+					int numBones = animations._bones.Length;
 					int totalFrames = 0;
 
-					for (int i = 0; i < animations.Length; i++)
+					for (int i = 0; i < animations._animations.Length; i++)
 					{
-						totalFrames += animations[i]._totalFrames;
+						totalFrames += animations._animations[i]._totalFrames;
 					}
 
 					_cachedBoneMatrices = new Matrix4x4[numBones, totalFrames];
 
 
-					int framesPerRow = texture.width / GPUAnimations.kPixelsPerBoneMatrix;
+					int framesPerRow = animations._texture.width / GPUAnimations.kPixelsPerBoneMatrix;
 
 					for (int i = 0; i < _trackedBones.Length; i++)
 					{
@@ -99,9 +97,9 @@ namespace Framework
 
 							int textureFrame = 0;
 
-							foreach (GPUAnimations.Animation animation in animations)
+							for (int j = 0; j < animations._animations.Length; j++)
 							{
-								for (; textureFrame < animation._startFrameOffset + animation._totalFrames; textureFrame++)
+								for (; textureFrame < animations._animations[j]._startFrameOffset + animations._animations[j]._totalFrames; textureFrame++)
 								{
 									//what row is our frame?
 									int row = textureFrame / framesPerRow;
@@ -113,7 +111,7 @@ namespace Framework
 									int pixelX = (col * GPUAnimations.kPixelsPerBoneMatrix);
 									int pixelY = (row * numBones) + _trackedBones[i]._boneIndex;
 
-									Color[] pixels = texture.GetPixels(pixelX, pixelY, 4, 1, 0);
+									Color[] pixels = animations._texture.GetPixels(pixelX, pixelY, 4, 1, 0);
 
 									_cachedBoneMatrices[_trackedBones[i]._boneIndex, textureFrame] = CalcMatrixFromPixels(pixels);
 								}

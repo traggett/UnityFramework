@@ -19,6 +19,13 @@ namespace Framework
 				private GPUAnimations _animationTexture;
 				#endregion
 
+				#region Public Interface
+				public GPUAnimations GetAnimations()
+				{
+					LoadIfNeeded();
+					return _animationTexture;
+				}
+
 				public void SetMaterialProperties(Material material)
 				{
 					LoadIfNeeded();
@@ -38,43 +45,15 @@ namespace Framework
 					return _asset != null;
 				}
 
-				public GPUAnimations.Animation[] GetAnimations()
-				{
-					LoadIfNeeded();
-
-					if (_animationTexture != null)
-						return _animationTexture._animations;
-
-					return null;
-				}
-
-				public Texture2D GetTexture()
-				{
-					LoadIfNeeded();
-
-					if (_animationTexture != null)
-						return _animationTexture._texture;
-
-					return null;
-				}
-
-				public string[] GetBoneNames()
-				{
-					LoadIfNeeded();
-
-					if (_animationTexture != null)
-						return _animationTexture._bones;
-
-					return null;
-				}
-
 #if UNITY_EDITOR
 				public void UnloadTexture()
 				{
 					_animationTexture = null;
 				}
 #endif
+				#endregion
 
+				#region Private Functions
 				private void LoadIfNeeded()
 				{
 					if (_animationTexture == null && _asset != null)
@@ -82,6 +61,7 @@ namespace Framework
 						_animationTexture = GPUAnimations.LoadFromFile(_asset);
 					}
 				}
+				#endregion
 			}
 		}
 	}

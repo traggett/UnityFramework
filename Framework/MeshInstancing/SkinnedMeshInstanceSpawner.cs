@@ -418,7 +418,7 @@ namespace Framework
 
 			private GPUAnimations.GPUAnimations.Animation GetAnimation(int index)
 			{
-				return _animationTexture.GetAnimations()[index];
+				return _animationTexture.GetAnimations()._animations[index];
 			}
 
 			private void FillTransformMatricies()

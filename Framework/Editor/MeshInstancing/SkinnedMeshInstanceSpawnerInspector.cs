@@ -74,11 +74,11 @@ namespace Framework
 
 					if (spawner._animationTexture.IsValid())
 					{
-						GPUAnimations.GPUAnimations.Animation[] animations = spawner._animationTexture.GetAnimations();
+						GPUAnimations.GPUAnimations animations = spawner._animationTexture.GetAnimations();
 
-						GUIContent[] animNames = new GUIContent[animations.Length];
+						GUIContent[] animNames = new GUIContent[animations._animations.Length];
 						for (int i = 0; i < animNames.Length; i++)
-							animNames[i] = new GUIContent(animations[i]._name);
+							animNames[i] = new GUIContent(animations._animations[i]._name);
 
 						animation._animationIndex = EditorGUI.Popup(rect, animation._animationIndex, animNames);
 					}

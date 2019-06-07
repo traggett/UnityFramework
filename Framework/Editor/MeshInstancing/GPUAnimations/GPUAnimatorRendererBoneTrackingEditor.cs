@@ -65,29 +65,37 @@ namespace Framework
 					{
 						GPUAnimatorRendererBoneTracking.TrackedBone trackedBone = (GPUAnimatorRendererBoneTracking.TrackedBone)_trackedBonesList.list[index];
 
-						float columnWidth = rect.width / 2f;
-						rect.width = columnWidth;
+						GPUAnimations animations = _renderer._animationTexture.GetAnimations();
 
-
-						EditorGUI.LabelField(rect, new GUIContent("Bone Name"));
-
-						string[] boneNames = _renderer._animationTexture.GetBoneNames();
-
-						if (boneNames != null && boneNames.Length > 0)
+						if (animations != null)
 						{
-							int boneIndex = 0;
+							float columnWidth = rect.width / 2f;
+							rect.width = columnWidth;
 
-							for (int i = 0; i < boneNames.Length; i++)
+							EditorGUI.LabelField(rect, new GUIContent("Bone Name"));
+
+							string[] boneNames = animations._bones;
+
+							if (boneNames != null && boneNames.Length > 0)
 							{
-								if (boneNames[i] == trackedBone._bone)
-									boneIndex = i;
+								int boneIndex = 0;
+
+								for (int i = 0; i < boneNames.Length; i++)
+								{
+									if (boneNames[i] == trackedBone._bone)
+										boneIndex = i;
+								}
+
+								rect.x += rect.width;
+								boneIndex = EditorGUI.Popup(rect, boneIndex, boneNames);
+								trackedBone._bone = boneNames[boneIndex];
+
+								_trackedBonesList.list[index] = trackedBone;
 							}
-
-							rect.x += rect.width;
-							boneIndex = EditorGUI.Popup(rect, boneIndex, boneNames);
-							trackedBone._bone = boneNames[boneIndex];
-
-							_trackedBonesList.list[index] = trackedBone;
+						}
+						else
+						{
+							EditorGUI.LabelField(rect, new GUIContent("Invalid GPU Animation Asset"));
 						}
 					}
 				}
