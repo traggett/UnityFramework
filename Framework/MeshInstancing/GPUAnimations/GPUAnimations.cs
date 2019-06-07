@@ -25,7 +25,7 @@ namespace Framework
 					public readonly Vector3[] _rootMotionVelocities;
 					public readonly Vector3[] _rootMotionAngularVelocities;
 
-					public Animation(string name, int startOffset, int frameCount, float fps, WrapMode wrapMode, AnimationEvent[] events, bool hasRootMotion = false, Vector3[] rootMotionVelocities = null, Vector3[] rootMotionAngularVelocities = null)
+					public Animation(string name, int startOffset, int frameCount, float fps, WrapMode wrapMode, AnimationEvent[] events, bool hasRootMotion, Vector3[] rootMotionVelocities, Vector3[] rootMotionAngularVelocities)
 					{
 						_name = name;
 						_startFrameOffset = startOffset;
@@ -37,6 +37,8 @@ namespace Framework
 						_rootMotionVelocities = rootMotionVelocities;
 						_rootMotionAngularVelocities = rootMotionAngularVelocities;
 					}
+
+					public static readonly Animation kInvalid = new Animation(string.Empty, 0, 0, 0f, WrapMode.Default, new AnimationEvent[0], false, new Vector3[0], new Vector3[0]);
 				}
 
 				public readonly Animation[] _animations;

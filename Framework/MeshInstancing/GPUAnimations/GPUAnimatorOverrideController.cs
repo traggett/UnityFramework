@@ -15,8 +15,11 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public GPUAnimatorOverrideController(RuntimeAnimatorController controller, GPUAnimations animations)
+				public GPUAnimatorOverrideController(RuntimeAnimatorController controller, GPUAnimations animations) : base(controller)
 				{
+					this.name = controller.name + " (GPU Animated)";
+
+					_animations = animations;
 					_animationLookUp = new Dictionary<AnimationClip, int>();
 
 					List<KeyValuePair<AnimationClip, AnimationClip>> anims = new List<KeyValuePair<AnimationClip, AnimationClip>>();
@@ -37,10 +40,10 @@ namespace Framework
 				{
 					int animationIndex = _animationLookUp[clip];
 
-					if (animationIndex > 0 && animationIndex < _animations._animations.Length)
+					if (0 <= animationIndex && animationIndex < _animations._animations.Length)
 						return _animations._animations[animationIndex];
 
-					return new GPUAnimations.Animation();
+					return GPUAnimations.Animation.kInvalid;
 				}
 				#endregion
 
