@@ -28,6 +28,11 @@ namespace Framework
 				#endregion
 
 				#region MonoBehaviour
+				private void Awake()
+				{
+					UpdateCachedTransform();
+				}
+
 				private void LateUpdate()
 				{
 					if (this.transform.hasChanged)

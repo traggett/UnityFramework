@@ -33,6 +33,8 @@ namespace Framework
 					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
 					_clipPlayers = new GPUAnimationPlayer[2];
 					_clipPlayerStates = new int[2];
+					_currentPlayerIndex = 0;
+					_currentAnimationWeight = 1.0f;
 
 					_onInitialise += Initialise;
 
@@ -92,7 +94,7 @@ namespace Framework
 					{
 						AnimationClip clip = clips[0].clip;
 						GPUAnimations.Animation animation = ((GPUAnimatorOverrideController)_animator.runtimeAnimatorController).GetAnimation(clip);
-						_clipPlayers[playerIndex].Play(this.gameObject, animation, clip.wrapMode, 0f);
+						_clipPlayers[playerIndex].Play(this.gameObject, animation, 0f);
 					}
 					else
 					{

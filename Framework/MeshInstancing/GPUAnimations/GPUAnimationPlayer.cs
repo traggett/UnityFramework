@@ -14,19 +14,17 @@ namespace Framework
 
 				#region Private Data
 				private GPUAnimations.Animation _animation;
-				private WrapMode _wrapMode;
 				private float _frame;
 				private GameObject _gameObject;
 				#endregion
 
 				#region Public Interface
-				public void Play(GameObject gameObject, GPUAnimations.Animation animation, WrapMode wrapMode = WrapMode.Default, float speed = 1.0f)
+				public void Play(GameObject gameObject, GPUAnimations.Animation animation, float speed = 1.0f)
 				{
 					_gameObject = gameObject;
 					_animation = animation;
 					_frame = 0f;
 					_speed = speed;
-					_wrapMode = wrapMode;
 				}
 
 				public void Stop()
@@ -65,7 +63,7 @@ namespace Framework
 
 						if (_frame > _animation._totalFrames - 1)
 						{
-							switch (_wrapMode)
+							switch (_animation._wrapMode)
 							{
 								case WrapMode.Clamp:
 								case WrapMode.ClampForever:
