@@ -1,9 +1,10 @@
 {
     "name": "UnityFrameworkEditor",
     "references": [
-        "UnityFramework"
+        "UnityFramework",
+        "Unity.Timeline.Editor",
+        "Unity.Timeline"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
@@ -12,5 +13,6 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": []
 }

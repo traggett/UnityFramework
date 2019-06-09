@@ -133,8 +133,8 @@ namespace Framework
 						}
 
 						//Update times
-						_clipPlayers[_currentPlayerIndex].SetNormalizedTime(nextState.normalizedTime);
-						_clipPlayers[1 - _currentPlayerIndex].SetNormalizedTime(previousState.normalizedTime);
+						_clipPlayers[_currentPlayerIndex].SetNormalizedTime(nextState.normalizedTime, true);
+						_clipPlayers[1 - _currentPlayerIndex].SetNormalizedTime(previousState.normalizedTime, true);
 						_currentAnimationWeight = transitionInfo.normalizedTime;
 					}
 					//Otherwise just update current animation
@@ -153,7 +153,7 @@ namespace Framework
 						}
 						
 						//Update time
-						_clipPlayers[_currentPlayerIndex].SetNormalizedTime(currentState.normalizedTime);
+						_clipPlayers[_currentPlayerIndex].SetNormalizedTime(currentState.normalizedTime, true);
 						_currentAnimationWeight = 1.0f;
 					}
 				}

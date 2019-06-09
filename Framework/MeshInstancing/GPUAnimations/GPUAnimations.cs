@@ -38,6 +38,12 @@ namespace Framework
 						_rootMotionAngularVelocities = rootMotionAngularVelocities;
 					}
 
+
+					public float GetLength()
+					{
+						return _totalFrames * _fps;
+					}
+
 					public static readonly Animation kInvalid = new Animation(string.Empty, 0, 0, 0f, WrapMode.Default, new AnimationEvent[0], false, new Vector3[0], new Vector3[0]);
 				}
 

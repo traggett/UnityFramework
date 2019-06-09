@@ -13,14 +13,20 @@ namespace Framework
 				#region Public Data
 				public WrapMode _wrapMode;
 				public string _clip;
-				//public AnimationState this[string name] { get; }
+				public GPUAnimationState this[string name]
+				{
+					get
+					{
+						return GetAnimationState(name);
+					}
+				}
 				#endregion
 
 				#region Private Data
 				private SkinnedMeshRenderer _skinnedMeshRenderer;
-				private float _currentAnimationWeight;
-				private GPUAnimationPlayer[] _clipPlayers;
-
+				private GPUAnimationState _primaryAnimationState;
+				private GPUAnimationState _secondaryAnimationState;
+				
 				private GPUAnimationState[] _animationStates;
 
 				private string _queuedAnimation;
@@ -29,6 +35,7 @@ namespace Framework
 				private GPUAnimationState _crossFadedAnimation;
 				private int _crossFadeAnimationIndex;
 				private float _crossFadeLength;
+				private string _crossFadedQueuedAnimation;
 				private QueueMode _crossFadedAnimationQueueMode;
 				#endregion
 
@@ -36,10 +43,10 @@ namespace Framework
 				private void Awake()
 				{
 					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
-					_clipPlayers = new GPUAnimationPlayer[2];
 					_animationStates = new GPUAnimationState[0];
-					_currentAnimationWeight = 1.0f;
-
+					_primaryAnimationState = null;
+					_secondaryAnimationState = null;
+					
 					_onInitialise += Initialise;
 
 					UpdateCachedTransform();
@@ -63,15 +70,14 @@ namespace Framework
 					CancelCrossFade();
 					StopAll();
 
-					int animIndex = GetAnimationIndex(animation);
+					GPUAnimationState animState = GetAnimationState(animation);
 
-					if (animIndex != -1)
+					if (animState != null)
 					{
-						_animationStates[animIndex].Enabled = true;
-						_animationStates[animIndex].Time = 0.0f;
-						_animationStates[animIndex].Weight = 1.0f;
-
-						_currentAnimationWeight = 1.0f;
+						animState.CancelBlend();
+						animState.Enabled = true;
+						animState.Time = 0.0f;
+						animState.Weight = 1.0f;
 						return true;
 					}
 					else
@@ -95,17 +101,25 @@ namespace Framework
 					CancelQueue();
 
 					_crossFadeAnimationIndex = GetAnimationIndex(animation);
+					_crossFadedQueuedAnimation = string.Empty;
 
 					if (_crossFadeAnimationIndex != -1)
 					{
 						GPUAnimations animations = _renderer._animationTexture.GetAnimations();
-						_crossFadedAnimation = new GPUAnimationState(animations._animations[_crossFadeAnimationIndex])
+						_crossFadedAnimation = new GPUAnimationState(this, animations._animations[_crossFadeAnimationIndex])
 						{
 							Enabled = true,
 							Time = 0.0f,
 							Weight = 0.0f
 						};
 						_crossFadeLength = fadeLength;
+
+						_crossFadedAnimation.BlendWeightTo(1.0f, fadeLength);
+						
+						for (int i = 0; i < _animationStates.Length; i++)
+						{
+							_animationStates[i].BlendWeightTo(0.0f, fadeLength);
+						}
 					}
 					else
 					{
@@ -119,36 +133,34 @@ namespace Framework
 				{
 					CancelQueue();
 
-					_crossFadeAnimationIndex = GetAnimationIndex(animation);
+					_crossFadedQueuedAnimation = animation;
+					_crossFadedAnimationQueueMode = queue;
+					_crossFadedAnimation = null;
 
-					if (_crossFadeAnimationIndex != -1)
-					{
-						GPUAnimations animations = _renderer._animationTexture.GetAnimations();
-						_crossFadedAnimation = new GPUAnimationState(animations._animations[_crossFadeAnimationIndex])
-						{
-							Enabled = false,
-							Time = 0.0f,
-							Weight = 0.0f
-						};
-						_crossFadeLength = fadeLength;
-						_crossFadedAnimationQueueMode = queue;
-					}
-					else
-					{
-						_crossFadedAnimation = null;
-					}
-
+					//TO DO! return valid state??
 					return _crossFadedAnimation;
 				}
 
 				public void Blend(string animation, float targetWeight = 1.0f, float fadeLength = 0.3f)
 				{
-					//blends anim weight to target over time
+					GPUAnimationState state = GetAnimationState(animation);
+
+					if (state != null)
+					{
+						state.BlendWeightTo(targetWeight, fadeLength);
+					}
 				}
 
 				public bool IsPlaying(string animation)
 				{
-					return true;
+					GPUAnimationState state = GetAnimationState(animation);
+
+					if (state != null)
+					{
+						return state.Enabled;
+					}
+
+					return false;
 				}
 
 				public void Rewind(string animation)
@@ -174,17 +186,17 @@ namespace Framework
 				#region GPUAnimatorBase
 				public override float GetCurrentAnimationFrame()
 				{
-					return _clipPlayers[0].GetCurrentTexureFrame();
+					return _primaryAnimationState != null ? _primaryAnimationState.GetCurrentTexureFrame() : 0.0f;
 				}
 
 				public override float GetCurrentAnimationWeight()
 				{
-					return _currentAnimationWeight;
+					return _primaryAnimationState != null ? _primaryAnimationState.Weight : 1.0f;
 				}
 
 				public override float GetPreviousAnimationFrame()
 				{
-					return _clipPlayers[1].GetCurrentTexureFrame();
+					return _secondaryAnimationState != null ? _secondaryAnimationState.GetCurrentTexureFrame() : 0.0f;
 				}
 
 				public override Bounds GetBounds()
@@ -199,17 +211,22 @@ namespace Framework
 				#region Private Functions
 				private void Initialise()
 				{
-					_clipPlayers[0].Stop();
-					_clipPlayers[1].Stop();
-					_currentAnimationWeight = 1.0f;
-
-					//Create animation states for all animations
 					GPUAnimations animations = _renderer._animationTexture.GetAnimations();
 					_animationStates = new GPUAnimationState[animations._animations.Length];
 					
 					for (int i=0; i< animations._animations.Length; i++)
 					{
-						_animationStates[i] = new GPUAnimationState(animations._animations[i]);
+						_animationStates[i] = new GPUAnimationState(this, animations._animations[i]);
+					}
+
+					_primaryAnimationState = GetAnimationState(_clip);
+					_secondaryAnimationState = null;
+
+					if (_primaryAnimationState != null)
+					{
+						_primaryAnimationState.Enabled = true;
+						_primaryAnimationState.Time = 0.0f;
+						_primaryAnimationState.Weight = 1.0f;
 					}
 				}
 
@@ -217,15 +234,7 @@ namespace Framework
 				{
 					for (int i = 0; i < _animationStates.Length; i++)
 					{
-						if (_animationStates[i].Enabled)
-						{
-							_animationStates[i].Time += Time.deltaTime * _animationStates[i].Speed;
-						}
-					}
-
-					if (_crossFadedAnimation.Enabled)
-					{
-						_crossFadedAnimation.Time += Time.deltaTime * _crossFadedAnimation.Speed;
+						_animationStates[i].Update(Time.deltaTime);
 					}
 
 					UpdateQueuedAnimation();
@@ -235,48 +244,23 @@ namespace Framework
 
 				private void UpdatePlayers()
 				{
-					GPUAnimationState primaryState = _crossFadedAnimation;
-					GPUAnimationState secondaryState = null;
+					_primaryAnimationState = _crossFadedAnimation;
+					_secondaryAnimationState = null;
 
 					for (int i = 0; i < _animationStates.Length; i++)
 					{
 						if (_animationStates[i].Enabled)
 						{
-							if (primaryState == null || _animationStates[i].Weight > primaryState.Weight)
+							if (_primaryAnimationState == null || _animationStates[i].Weight > _primaryAnimationState.Weight)
 							{
-								secondaryState = primaryState;
-								primaryState = _animationStates[i];
+								_secondaryAnimationState = _primaryAnimationState;
+								_primaryAnimationState = _animationStates[i];
 							}
-							else if (secondaryState == null || _animationStates[i].Weight > secondaryState.Weight)
+							else if (_secondaryAnimationState == null || _animationStates[i].Weight > _secondaryAnimationState.Weight)
 							{
-								secondaryState = _animationStates[i];
+								_secondaryAnimationState = _animationStates[i];
 							}
 						}
-					}
-
-					//TO DO! should only trigger animation events on players that were playing same anim last frame???
-					//Or have players for all states? so anim events happen???
-					//Then return two?
-					if (primaryState != null)
-					{
-						_clipPlayers[0].Play(this.gameObject, primaryState._animation, 0.0f);
-						_clipPlayers[0].SetNormalizedTime(primaryState.NormalizedTime);
-						_currentAnimationWeight = primaryState.Weight;
-					}
-					else
-					{
-						_clipPlayers[0].Stop();
-						_currentAnimationWeight = 1.0f;
-					}
-
-					if (secondaryState != null)
-					{
-						_clipPlayers[1].Play(this.gameObject, secondaryState._animation, 0.0f);
-						_clipPlayers[1].SetNormalizedTime(secondaryState.NormalizedTime);
-					}
-					else
-					{
-						_clipPlayers[1].Stop();
 					}
 				}
 
@@ -284,7 +268,7 @@ namespace Framework
 				{
 					for (int i = 0; i < _animationStates.Length; i++)
 					{
-						if (_animationStates[i]._animation._name == animationName)
+						if (_animationStates[i].Name == animationName)
 							return _animationStates[i];
 					}
 
@@ -345,44 +329,20 @@ namespace Framework
 
 				private void UpdateCrossFadedAnimation()
 				{
-					if (_crossFadedAnimation != null)
+					//Wait for queued animations
+					if (!string.IsNullOrEmpty(_crossFadedQueuedAnimation) && AreAnimationsFinished(_crossFadedAnimationQueueMode))
 					{
-						if (!_crossFadedAnimation.Enabled && AreAnimationsFinished(_crossFadedAnimationQueueMode))
-						{
-							_crossFadedAnimation.Enabled = true;
-						}
+						CrossFade(_crossFadedQueuedAnimation, _crossFadeLength);
+					}
 
-						if (_crossFadedAnimation.Enabled)
-						{
-							//Fade up cross fade animation
-							if (_crossFadeLength > 0.0f)
-							{
-								_crossFadedAnimation.Weight += Time.deltaTime / _crossFadeLength;
-							}
-							else
-							{
-								_crossFadedAnimation.Weight = 1.0f;
-							}
+					if (_crossFadedAnimation != null && _crossFadedAnimation.Enabled && _crossFadedAnimation.Weight >= 1.0f)
+					{
+						//Once faded in set crossfaded state data on orig state
+						_animationStates[_crossFadeAnimationIndex].Time = _crossFadedAnimation.Time;
+						_animationStates[_crossFadeAnimationIndex].Speed = _crossFadedAnimation.Speed;
+						_animationStates[_crossFadeAnimationIndex].Weight = 1.0f;
 
-							//Lerp down others
-							for (int i = 0; i < _animationStates.Length; i++)
-							{
-								if (_animationStates[i].Enabled)
-								{
-									_animationStates[i].Weight = Mathf.Lerp(_animationStates[i].Weight, 0.0f, _crossFadedAnimation.Weight);
-								}
-							}
-
-							//Once faded in set crossfaded state data on orig state
-							if (_crossFadedAnimation.Weight >= 1.0f)
-							{
-								_animationStates[_crossFadeAnimationIndex].Time = _crossFadedAnimation.Time;
-								_animationStates[_crossFadeAnimationIndex].Speed = _crossFadedAnimation.Speed;
-								_animationStates[_crossFadeAnimationIndex].Weight = 1.0f;
-
-								_crossFadedAnimation = null;
-							}
-						}
+						_crossFadedAnimation = null;
 					}
 				}
 
@@ -394,6 +354,7 @@ namespace Framework
 				private void CancelCrossFade()
 				{
 					_crossFadedAnimation = null;
+					_crossFadedQueuedAnimation = string.Empty;
 				}
 				#endregion
 			}

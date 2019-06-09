@@ -2,73 +2,151 @@ using UnityEngine;
 
 namespace Framework
 {
-	using Utils;
-
 	namespace MeshInstancing
 	{
 		namespace GPUAnimations
 		{
 			public sealed class GPUAnimationState : TrackedReference
 			{
-				public readonly GPUAnimations.Animation _animation;
-				
-				private float _time;
-				private float _normalizedTime;
-
+				#region Public Data
 				public bool Enabled { get; set; }
 				public float Weight { get; set; }
-				public WrapMode WrapMode { get; set; }
+				public WrapMode WrapMode
+				{
+					get
+					{
+						return _player._wrapMode;
+					}
+					set
+					{
+						_player._wrapMode = value;
+					}
+				}
+				public string Name
+				{
+					get
+					{
+						return _player.GetAnimation()._name;
+					}
+				}
 				public float Length
 				{
 					get
 					{
-						return _animation._totalFrames * _animation._fps;
+						return _player.GetAnimation().GetLength();
 					}
 				}
 				public float Time
 				{
 					get
 					{
-						return _time;
+						return _player.GetCurrentTime();
 					}
 					set
 					{
-						_time = value;
-						_normalizedTime = _time / this.Length;
+						_player.SetCurrentTime(value);
 					}
 				}
 				public float NormalizedTime
 				{
 					get
 					{
-						return _normalizedTime;
+						return _player.GetNormalizedTime();
 					}
 					set
 					{
-						_normalizedTime = value;
-						_time = _normalizedTime * this.Length;
+						_player.SetNormalizedTime(value);
 					}
 				}
-				public float Speed { get; set; }
+				public float Speed
+				{
+					get
+					{
+						return _player._speed;
+					}
+					set
+					{
+						_player._speed = value;
+					}
+				}
 				public float NormalizedSpeed
 				{
 					get
 					{
-						return 1.0f / (this.Speed * this.Length);
+						return _player.GetNormalizedSpeed();
 					}
 					set
 					{
-						Speed = value / this.Length;
+						_player.SetNormalizedSpeed(value);
 					}
 				}
-				
-				public GPUAnimationState(GPUAnimations.Animation animation)
+				#endregion
+
+				#region Private Data
+				private GPUAnimationPlayer _player;
+				private bool _fading;
+				private float _targetWeight;
+				private float _fromWeight;
+				private float _fadeSpeed;
+				private float _fadeLerp;
+				#endregion
+
+				#region Public Interface
+				public GPUAnimationState(GPUAnimation animationComponent, GPUAnimations.Animation animation)
 				{
-					_animation = animation;
-					Time = 0.0f;
-					Speed = 1.0f;
-					WrapMode = _animation._wrapMode;
+					_player.Play(animationComponent.gameObject, animation, animation._wrapMode);
 				}
+
+				public void Update(float deltaTime)
+				{
+					if (Enabled)
+					{
+						_player.Update(deltaTime);
+					}
+
+					if (_fading)
+					{
+						_fadeLerp += _fadeSpeed * deltaTime;
+
+						if (_fadeLerp >= 1.0f)
+						{
+							Weight = _targetWeight;
+							_fading = false;
+						}
+						else
+						{
+							Weight = Mathf.Lerp(_fromWeight, _targetWeight, _fadeLerp);
+						}
+					}
+				}
+
+				public float GetCurrentTexureFrame()
+				{
+					return _player.GetCurrentTexureFrame();
+				}
+
+				public void BlendWeightTo(float targetWeight = 1.0f, float fadeLength = 0.3f)
+				{
+					_fading = fadeLength > 0.0f;
+
+					if (_fading)
+					{
+						_targetWeight = targetWeight;
+						_fromWeight = Weight;
+						_fadeSpeed = 1.0f / fadeLength;
+						_fadeLerp = 0.0f;
+					}
+					else
+					{
+						Weight = targetWeight;
+					}
+				}
+
+				public void CancelBlend()
+				{
+					_fading = false;
+				}
+				#endregion
 			}
 		}
     }
