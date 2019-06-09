@@ -11,9 +11,9 @@ namespace Framework
 			public class GPUAnimation : GPUAnimatorBase
 			{
 				#region Public Data
-				public WrapMode _wrapMode;
 				public string _defaultAnimation;
 				public bool _playAutomatically;
+				public WrapMode _wrapMode;
 				public GPUAnimationState this[string name]
 				{
 					get
@@ -34,7 +34,6 @@ namespace Framework
 				private QueueMode _queuedAnimationMode;
 
 				private GPUAnimationState _crossFadedAnimation;
-				private int _crossFadeAnimationIndex;
 				private float _crossFadeLength;
 				private string _crossFadedQueuedAnimation;
 				private QueueMode _crossFadedAnimationQueueMode;
@@ -78,6 +77,10 @@ namespace Framework
 						animState.Enabled = true;
 						animState.Time = 0.0f;
 						animState.Weight = 1.0f;
+
+						if (_wrapMode != WrapMode.Default)
+							animState.WrapMode = _wrapMode;
+
 						return true;
 					}
 					else
@@ -100,18 +103,21 @@ namespace Framework
 				{
 					CancelQueue();
 
-					_crossFadeAnimationIndex = GetAnimationIndex(animation);
+					GPUAnimationState animState = GetAnimationState(animation);
 					_crossFadedQueuedAnimation = string.Empty;
 
-					if (_crossFadeAnimationIndex != -1)
+					if (animState != null)
 					{
 						GPUAnimations animations = _renderer._animationTexture.GetAnimations();
-						_crossFadedAnimation = new GPUAnimationState(animations._animations[_crossFadeAnimationIndex])
+						_crossFadedAnimation = new GPUAnimationState(animState.GetAnimation())
 						{
 							Enabled = true,
 							Weight = 0.0f
 						};
 						_crossFadeLength = fadeLength;
+
+						if (_wrapMode != WrapMode.Default)
+							_crossFadedAnimation.WrapMode = _wrapMode;
 
 						_crossFadedAnimation.BlendWeightTo(1.0f, fadeLength);
 						
@@ -273,21 +279,6 @@ namespace Framework
 
 					return null;
 				}
-
-				private int GetAnimationIndex(string animationName)
-				{
-					GPUAnimations animations = _renderer._animationTexture.GetAnimations();
-
-					for (int i=0; i< animations._animations.Length; i++)
-					{
-						if (animations._animations[i]._name == animationName)
-						{
-							return i;
-						}
-					}
-					
-					return -1;
-				}
 				
 				private void StopAll()
 				{
@@ -328,7 +319,6 @@ namespace Framework
 
 				private void UpdateCrossFadedAnimation()
 				{
-					//Wait for queued animations
 					if (!string.IsNullOrEmpty(_crossFadedQueuedAnimation) && AreAnimationsFinished(_crossFadedAnimationQueueMode))
 					{
 						CrossFade(_crossFadedQueuedAnimation, _crossFadeLength);
@@ -336,10 +326,16 @@ namespace Framework
 
 					if (_crossFadedAnimation != null && _crossFadedAnimation.Enabled && _crossFadedAnimation.Weight >= 1.0f)
 					{
-						//Once faded in set crossfaded state data on orig state
-						_animationStates[_crossFadeAnimationIndex].Time = _crossFadedAnimation.Time;
-						_animationStates[_crossFadeAnimationIndex].Speed = _crossFadedAnimation.Speed;
-						_animationStates[_crossFadeAnimationIndex].Weight = 1.0f;
+						for (int i=0; i<_animationStates.Length; i++)
+						{
+							if (_animationStates[i].Name == _crossFadedAnimation.Name)
+							{
+								_animationStates[i].Time = _crossFadedAnimation.Time;
+								_animationStates[i].Speed = _crossFadedAnimation.Speed;
+								_animationStates[i].Weight = 1.0f;
+								break;
+							}
+						}
 
 						_crossFadedAnimation = null;
 					}

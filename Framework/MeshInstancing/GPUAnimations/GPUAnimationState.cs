@@ -146,6 +146,11 @@ namespace Framework
 				{
 					_fading = false;
 				}
+
+				public GPUAnimations.Animation GetAnimation()
+				{
+					return _player.GetAnimation();
+				}
 				#endregion
 			}
 		}
