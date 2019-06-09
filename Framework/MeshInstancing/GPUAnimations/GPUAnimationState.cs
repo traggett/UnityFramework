@@ -15,11 +15,11 @@ namespace Framework
 				{
 					get
 					{
-						return _player._wrapMode;
+						return _player.GetWrapMode();
 					}
 					set
 					{
-						_player._wrapMode = value;
+						_player.SetWrapMode(value);
 					}
 				}
 				public string Name
@@ -33,7 +33,7 @@ namespace Framework
 				{
 					get
 					{
-						return _player.GetAnimation().GetLength();
+						return _player.GetAnimation()._length;
 					}
 				}
 				public float Time
@@ -62,11 +62,11 @@ namespace Framework
 				{
 					get
 					{
-						return _player._speed;
+						return _player.GetSpeed();
 					}
 					set
 					{
-						_player._speed = value;
+						_player.SetSpeed(value);
 					}
 				}
 				public float NormalizedSpeed
@@ -83,7 +83,7 @@ namespace Framework
 				#endregion
 
 				#region Private Data
-				private GPUAnimationPlayer _player;
+				private readonly GPUAnimationPlayer _player;
 				private bool _fading;
 				private float _targetWeight;
 				private float _fromWeight;
@@ -92,9 +92,9 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public GPUAnimationState(GPUAnimation animationComponent, GPUAnimations.Animation animation)
+				public GPUAnimationState(GPUAnimations.Animation animation)
 				{
-					_player.Play(animationComponent.gameObject, animation, animation._wrapMode);
+					_player = new GPUAnimationPlayer(animation, animation._wrapMode);
 				}
 
 				public void Update(float deltaTime)

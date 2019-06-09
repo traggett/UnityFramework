@@ -12,7 +12,8 @@ namespace Framework
 			{
 				#region Public Data
 				public WrapMode _wrapMode;
-				public string _clip;
+				public string _defaultAnimation;
+				public bool _playAutomatically;
 				public GPUAnimationState this[string name]
 				{
 					get
@@ -61,7 +62,7 @@ namespace Framework
 				#region Public Interface
 				public bool Play(PlayMode mode = PlayMode.StopSameLayer)
 				{
-					return Play(_clip, mode);
+					return Play(_defaultAnimation, mode);
 				}
 
 				public bool Play(string animation, PlayMode mode = PlayMode.StopSameLayer)
@@ -74,7 +75,6 @@ namespace Framework
 
 					if (animState != null)
 					{
-						animState.CancelBlend();
 						animState.Enabled = true;
 						animState.Time = 0.0f;
 						animState.Weight = 1.0f;
@@ -106,10 +106,9 @@ namespace Framework
 					if (_crossFadeAnimationIndex != -1)
 					{
 						GPUAnimations animations = _renderer._animationTexture.GetAnimations();
-						_crossFadedAnimation = new GPUAnimationState(this, animations._animations[_crossFadeAnimationIndex])
+						_crossFadedAnimation = new GPUAnimationState(animations._animations[_crossFadeAnimationIndex])
 						{
 							Enabled = true,
-							Time = 0.0f,
 							Weight = 0.0f
 						};
 						_crossFadeLength = fadeLength;
@@ -216,16 +215,15 @@ namespace Framework
 					
 					for (int i=0; i< animations._animations.Length; i++)
 					{
-						_animationStates[i] = new GPUAnimationState(this, animations._animations[i]);
+						_animationStates[i] = new GPUAnimationState(animations._animations[i]);
 					}
 
-					_primaryAnimationState = GetAnimationState(_clip);
+					_primaryAnimationState = GetAnimationState(_defaultAnimation);
 					_secondaryAnimationState = null;
 
-					if (_primaryAnimationState != null)
+					if (_primaryAnimationState != null && _playAutomatically)
 					{
 						_primaryAnimationState.Enabled = true;
-						_primaryAnimationState.Time = 0.0f;
 						_primaryAnimationState.Weight = 1.0f;
 					}
 				}
@@ -244,6 +242,7 @@ namespace Framework
 
 				private void UpdatePlayers()
 				{
+					//Work out what animation state has the highest and second highest weight
 					_primaryAnimationState = _crossFadedAnimation;
 					_secondaryAnimationState = null;
 

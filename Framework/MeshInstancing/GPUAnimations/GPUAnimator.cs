@@ -80,8 +80,8 @@ namespace Framework
 				#region Private Functions
 				private void Initialise()
 				{
-					_clipPlayers[0].Stop();
-					_clipPlayers[1].Stop();
+					_clipPlayers[0] = new GPUAnimationPlayer();
+					_clipPlayers[1] = new GPUAnimationPlayer();
 					_currentPlayerIndex = 0;
 					_currentAnimationWeight = 1.0f;
 
@@ -95,11 +95,11 @@ namespace Framework
 					{
 						AnimationClip clip = clips[0].clip;
 						GPUAnimations.Animation animation = ((GPUAnimatorOverrideController)_animator.runtimeAnimatorController).GetAnimation(clip);
-						_clipPlayers[playerIndex].Play(this.gameObject, animation, 0f);
+						_clipPlayers[playerIndex] = new GPUAnimationPlayer(animation, animation._wrapMode, 0.0f);
 					}
 					else
 					{
-						_clipPlayers[playerIndex].Stop();
+						_clipPlayers[playerIndex] = new GPUAnimationPlayer();
 					}
 				}
 
@@ -149,7 +149,7 @@ namespace Framework
 							PlayAnimation(currentState, currentClips, _currentPlayerIndex);
 
 							//Stop other player
-							_clipPlayers[1 - _currentPlayerIndex].Stop();
+							_clipPlayers[1 - _currentPlayerIndex] = new GPUAnimationPlayer();
 						}
 						
 						//Update time

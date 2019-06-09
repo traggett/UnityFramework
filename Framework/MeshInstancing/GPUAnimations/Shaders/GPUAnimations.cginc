@@ -1,11 +1,12 @@
-﻿#ifndef ANIMATION_INSTANCING_INCLUDED
-#define ANIMATION_INSTANCING_INCLUDED
+﻿#ifndef GPU_ANIMATION_INCLUDED
+#define GPU_ANIMATION_INCLUDED
 
-#if !defined(_VERTEX_SKINNING)
+#if !defined(_GPU_ANIMATION)
 
-#define APPLY_VERTEX_SKINNING(vertex, boneWeights, boneIDs, normal, tangent)
+#define GPU_ANIMATION_DATA(boneIdx, boneWeightIdx)
+#define GPU_ANIMATE(vertex, boneWeights, boneIDs, normal, tangent)
 
-#else // _VERTEX_SKINNING
+#else // _GPU_ANIMATION
 
 //Dont bother with normals / tangents during a shadowcaster pass
 #if defined(UNITY_PASS_SHADOWCASTER)
@@ -36,7 +37,7 @@ UNITY_INSTANCING_BUFFER_END(Props)
 //fixed number of pixels 
 static const uint pixelsPerFrame = 4;
 
-half4x4 loadAnimationInstanceMatrixFromTexture(float4 uv, float boneIndex)
+half4x4 readBoneMatrixFromTexture(float4 uv, float boneIndex)
 {
 	//Shift UVs down for correct bone
 	uv.y += boneIndex / _animationTextureHeight;
@@ -86,13 +87,13 @@ half4x4 calcVertexMatrix(float4 boneWeights, half4 boneIDs, int frame)
 	uv.z = 0;
 	uv.w = 0;
 
-	half4x4 localToWorldMatrix = loadAnimationInstanceMatrixFromTexture(uv, boneIDs.x) * boneWeights.x;
+	half4x4 localToWorldMatrix = readBoneMatrixFromTexture(uv, boneIDs.x) * boneWeights.x;
 	if (boneWeights.y > 0.0f)
-		localToWorldMatrix = localToWorldMatrix + loadAnimationInstanceMatrixFromTexture(uv, boneIDs.y) * boneWeights.y;
+		localToWorldMatrix = localToWorldMatrix + readBoneMatrixFromTexture(uv, boneIDs.y) * boneWeights.y;
 	if (boneWeights.z > 0.0f)
-		localToWorldMatrix = localToWorldMatrix + loadAnimationInstanceMatrixFromTexture(uv, boneIDs.z) * boneWeights.z;
+		localToWorldMatrix = localToWorldMatrix + readBoneMatrixFromTexture(uv, boneIDs.z) * boneWeights.z;
 	if (boneWeights.w > 0.0f)
-		localToWorldMatrix = localToWorldMatrix + loadAnimationInstanceMatrixFromTexture(uv, boneIDs.w) * boneWeights.w;
+		localToWorldMatrix = localToWorldMatrix + readBoneMatrixFromTexture(uv, boneIDs.w) * boneWeights.w;
 		
 	return localToWorldMatrix;
 }
@@ -124,7 +125,7 @@ void calcVertexFromAnimation(float4 boneWeights, half4 boneIDs, float curFrame, 
 #endif
 }
 
-void gpuSkinning(float4 boneWeights, half4 boneIDs, inout half4 vertex, inout half3 normal, inout half4 tangent)
+void applyGPUAnimations(float4 boneWeights, half4 boneIDs, inout half4 vertex, inout half3 normal, inout half4 tangent)
 {
 #if (SHADER_TARGET < 30 || SHADER_API_GLES)
 	float curAnimFrame = _currentAnimationFrame;
@@ -167,9 +168,13 @@ void gpuSkinning(float4 boneWeights, half4 boneIDs, inout half4 vertex, inout ha
 #endif
 }
 
-#define APPLY_VERTEX_SKINNING(vertex, boneWeights, boneIDs, normal, tangent) \
-	gpuSkinning(boneWeights, boneIDs, vertex, normal, tangent);
+#define GPU_ANIMATION_DATA(boneIdx, boneWeightIdx) \
+	float4 boneWeights : TEXCOORD##boneIdx; \
+	half4 boneIDs : TEXCOORD##boneWeightIdx;
+	
+#define GPU_ANIMATE(input) \
+	applyGPUAnimations(input.boneWeights, input.boneIDs, input.vertex, input.normal, input.tangent);
 
-#endif // _VERTEX_SKINNING
+#endif // _GPU_ANIMATION
 
-#endif // ANIMATION_INSTANCING_INCLUDED
+#endif // GPU_ANIMATION_INCLUDED

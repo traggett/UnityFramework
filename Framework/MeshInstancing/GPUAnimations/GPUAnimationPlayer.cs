@@ -8,67 +8,53 @@ namespace Framework
 		{
 			public struct GPUAnimationPlayer
 			{
-				#region Public Data
-				public float _speed;
-				public WrapMode _wrapMode;
-				#endregion
-
 				#region Private Data
-				private GPUAnimations.Animation _animation;
+				private readonly GPUAnimations.Animation _animation;
 				private float _frame;
 				private float _loops;
-				private GameObject _gameObject;
+				private float _speed;
+				private WrapMode _wrapMode;
 				#endregion
 
 				#region Public Interface
-				public void Play(GameObject gameObject, GPUAnimations.Animation animation, WrapMode wrapMode = WrapMode.Default, float speed = 1.0f)
+				public GPUAnimationPlayer(GPUAnimations.Animation animation, WrapMode wrapMode = WrapMode.Default, float speed = 1.0f)
 				{
-					_gameObject = gameObject;
 					_animation = animation;
 					_wrapMode = wrapMode;
 					_speed = speed;
 					_frame = 0f;
 					_loops = 0f;
 				}
-
-				public void Stop()
+				
+				public void Update(float deltaTime, GameObject eventListener = null)
 				{
-					_gameObject = null;
-				}
-
-				public void Update(float deltaTime)
-				{
-					if (_gameObject != null && deltaTime > 0f && _speed > 0f)
+					if (_animation._totalFrames > 0 && deltaTime > 0f && _speed > 0f)
 					{
 						float prevFrame = _frame;
+						
+						_frame += deltaTime * _animation._fps * _speed * GetPlaybackDirection();
 
-						_frame += deltaTime * _animation._fps * _speed;
+						if (eventListener != null)
+							GPUAnimations.CheckForEvents(eventListener, _animation, prevFrame, _frame);
 
-						GPUAnimations.CheckForEvents(_gameObject, _animation, prevFrame, _frame);
+						int maxFrame = _animation._totalFrames - 1;
 
-						if (_frame > _animation._totalFrames - 1)
+						if (_frame > maxFrame || _frame < 0)
 						{
 							switch (_wrapMode)
 							{
 								case WrapMode.Clamp:
 								case WrapMode.ClampForever:
 									{
-										_frame = _animation._totalFrames - 1;
+										_frame = maxFrame;
 									}
 									break;
-
 								case WrapMode.PingPong:
-									{
-										//TO DO! speed should reverse
-										_loops += 1.0f;
-									}
-									break;
-
 								case WrapMode.Loop:
 								case WrapMode.Default:
 								default:
 									{
-										_frame -= (_animation._totalFrames - 1);
+										_frame = _frame < 0 ? _frame + maxFrame : _frame - maxFrame;
 										_loops += 1.0f;
 									}
 									break;
@@ -113,42 +99,73 @@ namespace Framework
 					}
 				}
 
+				public WrapMode GetWrapMode()
+				{
+					return _wrapMode;
+				}
+
+				public void SetWrapMode(WrapMode wrapMode)
+				{
+					_wrapMode = wrapMode;
+				}
+
 				public float GetCurrentTime()
 				{
 					return _loops + _frame * _animation._fps;
 				}
 
-				public void SetCurrentTime(float time)
+				public void SetCurrentTime(float time, bool checkForEvents = false, GameObject eventListener = null)
 				{
-					float normalised = time / _animation.GetLength();
-					_loops = Mathf.Floor(normalised);
-					_frame = (normalised - _loops) * _animation._totalFrames;
+					float normalizedTime = time / _animation._length;
+					SetNormalizedTime(normalizedTime, checkForEvents, eventListener);
 				}
 
 				public float GetNormalizedTime()
 				{
-					return GetCurrentTime() / _animation.GetLength();
+					return _frame / _animation._totalFrames;
 				}
 
-				public void SetNormalizedTime(float normalizedTime, bool checkForEvents = false)
+				public void SetNormalizedTime(float normalizedTime, bool checkForEvents = false, GameObject eventListener = null)
 				{
 					_loops = Mathf.Floor(normalizedTime);
 
 					float prevFrame = _frame;
 					_frame = (normalizedTime - _loops) * _animation._totalFrames;
 					
-					if (checkForEvents && _gameObject != null)
-						GPUAnimations.CheckForEvents(_gameObject, _animation, prevFrame, _frame);
+					if (checkForEvents && eventListener != null)
+						GPUAnimations.CheckForEvents(eventListener, _animation, prevFrame, _frame);
+				}
+
+				public float GetSpeed()
+				{
+					return _speed;
+				}
+
+				public void SetSpeed(float speed)
+				{
+					_speed = speed;
 				}
 
 				public float GetNormalizedSpeed()
 				{
-					return 1.0f / (_speed * _animation.GetLength());
+					return 1.0f / (_speed * _animation._length);
 				}
 
 				public void SetNormalizedSpeed(float normalizedSpeed)
 				{
-					_speed = normalizedSpeed / _animation.GetLength();
+					_speed = normalizedSpeed / _animation._length;
+				}
+				#endregion
+
+				#region Private Functions
+				private float GetPlaybackDirection()
+				{
+					if (_wrapMode == WrapMode.PingPong)
+					{
+						return Mathf.FloorToInt(_loops) % 2 == (_loops > 0.0f ? 1 : 0) ? -1.0f : 1.0f;
+					}
+
+					return 1.0f;
 				}
 				#endregion
 			}

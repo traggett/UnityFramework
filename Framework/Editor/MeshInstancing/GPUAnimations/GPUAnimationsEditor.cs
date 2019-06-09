@@ -1,12 +1,12 @@
 ﻿using System.IO;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
 namespace Framework
 {
 	using Framework.Editor;
-	using System.Collections;
-	using System.Collections.Generic;
 	using UnityEditor.Animations;
 	using Utils;
 
@@ -16,24 +16,28 @@ namespace Framework
 		{
 			namespace Editor
 			{
-				public class GPUAnimationsEditor : UpdatedEditorWindow
+				public sealed class GPUAnimationsEditor : UpdatedEditorWindow
 				{
-					protected GameObject _animatorObject;
-					protected SkinnedMeshRenderer[] _skinnedMeshes;
-					protected int _skinnedMeshIndex;
-					protected Mesh _mesh;
-					protected bool _useAnimator;
+					#region Private Data
+					private bool _working;
+
+					private GameObject _evaluatedObject;
+					private SkinnedMeshRenderer[] _skinnedMeshes;
+					private int _skinnedMeshIndex;
+					private bool _useAnimator;
 					[SerializeField]
-					protected AnimationClip[] _animations;
-					protected TextureFormat _textureFormat = TextureFormat.RGBAHalf;
-					protected string _currentFileName;
-					protected bool _working;
+					private AnimationClip[] _animations;
+
+					private Mesh _mesh;
+					private TEXCOORD _boneIdChanel = TEXCOORD.TEXCOORD2;
+					private TEXCOORD _boneWeightChannel = TEXCOORD.TEXCOORD3;
 
 					private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
+					#endregion
 
 					#region EditorWindow
 					[MenuItem("GPU Skinning/Animation Texture Generator", false)]
-					static void MakeWindow()
+					private static void MakeWindow()
 					{
 						GPUAnimationsEditor window = GetWindow(typeof(GPUAnimationsEditor)) as GPUAnimationsEditor;
 					}
@@ -57,15 +61,15 @@ namespace Framework
 							EditorGUILayout.LabelField("Generate Animation Texture", EditorStyles.largeLabel);
 							EditorGUILayout.Separator();
 
-							GameObject prefab = EditorGUILayout.ObjectField("Asset to Evaluate", _animatorObject, typeof(GameObject), true) as GameObject;
-							if (prefab != _animatorObject)
+							GameObject prefab = EditorGUILayout.ObjectField("Asset to Evaluate", _evaluatedObject, typeof(GameObject), true) as GameObject;
+							if (prefab != _evaluatedObject)
 							{
-								_animatorObject = prefab;
+								_evaluatedObject = prefab;
 								_skinnedMeshes = prefab != null ? prefab.GetComponentsInChildren<SkinnedMeshRenderer>() : new SkinnedMeshRenderer[0];
 								_skinnedMeshIndex = 0;
 							}
 
-							if (_animatorObject != null && _skinnedMeshes != null && _skinnedMeshes.Length > 0)
+							if (_evaluatedObject != null && _skinnedMeshes != null && _skinnedMeshes.Length > 0)
 							{
 								string[] skinnedMeshes = new string[_skinnedMeshes.Length];
 
@@ -76,8 +80,6 @@ namespace Framework
 
 								_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
 							}
-
-							_textureFormat = (TextureFormat)EditorGUILayout.EnumPopup("Texture Format", _textureFormat);
 
 							_useAnimator = EditorGUILayout.Toggle("Sample Animator", _useAnimator);
 
@@ -98,12 +100,11 @@ namespace Framework
 							{
 								if (GUILayout.Button("Generate"))
 								{
-									string path = EditorUtility.SaveFilePanelInProject("Save Animation Texture", Path.GetFileNameWithoutExtension(_currentFileName), "bytes", "Please enter a file name to save the animation texture to");
+									string path = EditorUtility.SaveFilePanelInProject("Save Animation Texture", Path.GetFileNameWithoutExtension(""), "bytes", "Please enter a file name to save the animation texture to");
 
 									if (!string.IsNullOrEmpty(path))
 									{
-										_currentFileName = path;
-										Run(BakeAnimationTexture());
+										Run(BakeAnimationTexture(path));
 									}
 								}
 							}
@@ -120,6 +121,10 @@ namespace Framework
 							EditorGUILayout.Separator();
 
 							_mesh = EditorGUILayout.ObjectField("Mesh", _mesh, typeof(Mesh), true) as Mesh;
+
+							_boneIdChanel = (TEXCOORD)EditorGUILayout.EnumPopup("Bone IDs UV Channel", _boneIdChanel);
+							_boneWeightChannel = (TEXCOORD)EditorGUILayout.EnumPopup("Bone Weights UV Channel", _boneWeightChannel);
+
 							if (_mesh != null)
 							{
 								if (GUILayout.Button("Generate Animated Texture Ready Mesh"))
@@ -128,7 +133,7 @@ namespace Framework
 
 									if (!string.IsNullOrEmpty(path))
 									{
-										AddMeshForAnimations(_mesh, path);
+										CreateMeshForAnimations(_mesh, _boneIdChanel, _boneWeightChannel, path);
 									}
 								}
 							}
@@ -136,12 +141,13 @@ namespace Framework
 						GUILayout.EndVertical();
 					}
 					#endregion
-					
-					private IEnumerator BakeAnimationTexture()
+
+					#region Private Functions
+					private IEnumerator BakeAnimationTexture(string path)
 					{
 						_working = true;
 
-						GameObject gameObject = Instantiate(_animatorObject);
+						GameObject gameObject = Instantiate(_evaluatedObject);
 
 						SkinnedMeshRenderer[] skinnedMeshes = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
 						SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
@@ -290,7 +296,7 @@ namespace Framework
 							yield break;
 						}
 
-						Texture2D texture = new Texture2D(textureSize, textureSize, _textureFormat, false);
+						Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBAHalf, false);
 						texture.filterMode = FilterMode.Point;
 
 						//Loop through animations / frames / bones setting pixels for each bone matrix
@@ -323,7 +329,7 @@ namespace Framework
 
 						GPUAnimations animationTexture = new GPUAnimations(animations, boneNames, texture);
 
-						SaveAnimationTexture(animationTexture, _currentFileName);
+						SaveAnimationTexture(animationTexture, path);
 
 						DestroyImmediate(gameObject);
 						_working = false;
@@ -459,77 +465,7 @@ namespace Framework
 
 						return colors;
 					}
-
-					private static void AddMeshForAnimations(Mesh sourceMesh, string path)
-					{
-						Mesh mesh = CreateMeshWithExtraData(sourceMesh);
-						mesh.UploadMeshData(true);
-
-						string assetPath = FileUtil.GetProjectRelativePath(path);
-
-						AssetDatabase.CreateAsset(mesh, assetPath);
-						AssetDatabase.SaveAssets();
-					}
-
-					private static Mesh CreateMeshWithExtraData(Mesh sourceMesh, int bonesPerVertex = 4)
-					{
-						Mesh mesh = Instantiate(sourceMesh);
-
-						//Colors and secondary UVs
-						{
-							Color[] colors = new Color[sourceMesh.vertexCount];
-							List<Vector4> uv2 = new List<Vector4>();
-
-							for (int i = 0; i != mesh.vertexCount; ++i)
-							{
-								BoneWeight weight = mesh.boneWeights[i];
-
-								colors[i].r = weight.weight0;
-								colors[i].g = weight.weight1;
-								colors[i].b = weight.weight2;
-								colors[i].a = weight.weight3;
-
-								Vector4 boneIds;
-
-								boneIds.x = weight.boneIndex0;
-								boneIds.y = weight.boneIndex1;
-								boneIds.z = weight.boneIndex2;
-								boneIds.w = weight.boneIndex3;
-
-								if (bonesPerVertex == 3)
-								{
-									float rate = 1.0f / (weight.boneIndex0 + weight.boneIndex1 + weight.boneIndex2);
-									colors[i].r = colors[i].r * rate;
-									colors[i].g = colors[i].g * rate;
-									colors[i].b = colors[i].b * rate;
-									colors[i].a = -0.1f;
-								}
-								else if (bonesPerVertex == 2)
-								{
-									float rate = 1.0f / (weight.boneIndex0 + weight.boneIndex1);
-									colors[i].r = colors[i].r * rate;
-									colors[i].g = colors[i].g * rate;
-									colors[i].b = -0.1f;
-									colors[i].a = -0.1f;
-								}
-								else if (bonesPerVertex == 1)
-								{
-									colors[i].r = 1.0f;
-									colors[i].g = -0.1f;
-									colors[i].b = -0.1f;
-									colors[i].a = -0.1f;
-								}
-
-								uv2.Add(boneIds);
-							}
-
-							mesh.colors = colors;
-							mesh.SetUVs(2, uv2);
-						}
-
-						return mesh;
-					}
-
+					
 					private static void GetAnimationClipsFromAnimator(Animator animator, out AnimationClip[] animationClips, out string[] animationStateNames)
 					{
 						AnimatorController animatorController = (AnimatorController)animator.runtimeAnimatorController;
@@ -552,6 +488,81 @@ namespace Framework
 						animationClips = clips.ToArray();
 						animationStateNames = stateNames.ToArray();
 					}
+
+					private static void CreateMeshForAnimations(Mesh sourceMesh, TEXCOORD boneIdChannel, TEXCOORD boneWeightChannel, string path)
+					{
+						Mesh mesh = CreateMeshWithExtraData(sourceMesh, boneIdChannel, boneWeightChannel);
+						mesh.UploadMeshData(true);
+
+						string assetPath = FileUtil.GetProjectRelativePath(path);
+
+						AssetDatabase.CreateAsset(mesh, assetPath);
+						AssetDatabase.SaveAssets();
+					}
+
+					private static Mesh CreateMeshWithExtraData(Mesh sourceMesh, TEXCOORD boneIdsUVChanel, TEXCOORD boneWeightsUVChanel, int bonesPerVertex = 4)
+					{
+						Mesh mesh = Instantiate(sourceMesh);
+
+						//Add bone IDs and weights as texture data
+						{
+							List<Vector4> boneIdsData = new List<Vector4>();
+							List<Vector4> boneWeightsData = new List<Vector4>();
+
+							for (int i = 0; i != mesh.vertexCount; ++i)
+							{
+								BoneWeight weight = mesh.boneWeights[i];
+
+								Vector4 boneIds;
+
+								boneIds.x = weight.boneIndex0;
+								boneIds.y = weight.boneIndex1;
+								boneIds.z = weight.boneIndex2;
+								boneIds.w = weight.boneIndex3;
+
+								boneIdsData.Add(boneIds);
+
+								Vector4 boneWeights;
+
+								boneWeights.x = weight.weight0;
+								boneWeights.y = weight.weight1;
+								boneWeights.z = weight.weight2;
+								boneWeights.w = weight.weight3;
+
+								if (bonesPerVertex == 3)
+								{
+									float rate = 1.0f / (weight.boneIndex0 + weight.boneIndex1 + weight.boneIndex2);
+									boneWeights.x = boneWeights.x * rate;
+									boneWeights.y = boneWeights.y * rate;
+									boneWeights.z = boneWeights.z * rate;
+									boneWeights.w = -0.1f;
+								}
+								else if (bonesPerVertex == 2)
+								{
+									float rate = 1.0f / (weight.boneIndex0 + weight.boneIndex1);
+									boneWeights.x = boneWeights.x * rate;
+									boneWeights.y = boneWeights.y * rate;
+									boneWeights.z = -0.1f;
+									boneWeights.w = -0.1f;
+								}
+								else if (bonesPerVertex == 1)
+								{
+									boneWeights.x = 1.0f;
+									boneWeights.y = -0.1f;
+									boneWeights.z = -0.1f;
+									boneWeights.w = -0.1f;
+								}
+
+								boneWeightsData.Add(boneWeights);
+							}
+
+							mesh.SetUVs((int)boneIdsUVChanel, boneIdsData);
+							mesh.SetUVs((int)boneWeightsUVChanel, boneWeightsData);
+						}
+
+						return mesh;
+					}
+					#endregion
 				}
 			}
 		}

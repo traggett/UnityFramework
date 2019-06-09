@@ -5,6 +5,26 @@ namespace Framework
 {
 	namespace Utils
 	{
+		public enum TEXCOORD : int
+		{
+			TEXCOORD0,
+			TEXCOORD1,
+			TEXCOORD2,
+			TEXCOORD3,
+			TEXCOORD4,
+			TEXCOORD5,
+			TEXCOORD6,
+			TEXCOORD7,
+			TEXCOORD8,
+			TEXCOORD9,
+			TEXCOORD10,
+			TEXCOORD11,
+			TEXCOORD12,
+			TEXCOORD13,
+			TEXCOORD14,
+			TEXCOORD15
+		}
+
 		public static class GraphicsUtils
 		{
 			private static Material _basicBlitMaterial;
