@@ -207,7 +207,8 @@ namespace Framework
 						(assembly.FullName == "Assembly-CSharp-Editor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
 						(assembly.FullName == "Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
 						(assembly.FullName == "Assembly-CSharp-Editor-firstpass, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
-						(assembly.FullName == "UnityFramework, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"))
+						(assembly.FullName == "UnityFramework, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
+						(assembly.FullName == "UnityFrameworkEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"))
 					{
 						serializableAssemblies.Add(assembly);
 					}

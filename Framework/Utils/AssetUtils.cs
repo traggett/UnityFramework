@@ -20,6 +20,23 @@ namespace Framework
 				return Application.dataPath.Substring(0, Application.dataPath.Length - "Assets".Length);
 			}
 
+			public static string GetAppllicationPath(string filePath)
+			{
+				string assetPath = filePath;
+
+				if (!string.IsNullOrEmpty(assetPath))
+				{
+					string appPath = GetAppllicationPath();
+
+					if (assetPath.StartsWith(appPath))
+					{
+						assetPath = assetPath.Substring(appPath.Length);
+					}
+				}
+
+				return assetPath;
+			}
+
 			public static string GetAssetPath(string filePath)
 			{
 				string assetPath = filePath;

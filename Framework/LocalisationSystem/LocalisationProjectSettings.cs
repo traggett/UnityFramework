@@ -7,6 +7,7 @@ namespace Framework
 		public class LocalisationProjectSettings : CustomProjectSettings<LocalisationProjectSettings>
 		{
 			#region Public Data
+			public string _assetBundle;
 			public string _localisationFolder;
 			#endregion
 		}
