@@ -27,6 +27,7 @@ namespace Framework
 
 				#region Private Data
 				private GPUAnimatorRenderer _renderer;
+				private int _totalFrames;
 				#endregion
 
 				#region MonoBehaviour
@@ -66,14 +67,17 @@ namespace Framework
 
 				public Matrix4x4 GetBoneMatrix(int boneIndex, int frame)
 				{
-					for (int i = 0; i < _trackedBones.Length; i++)
+					if (frame < _totalFrames)
 					{
-						if (_trackedBones[i]._boneIndex == boneIndex)
+						for (int i = 0; i < _trackedBones.Length; i++)
 						{
-							return _trackedBones[i]._cachedBoneMatrices[frame];
+							if (_trackedBones[i]._boneIndex == boneIndex)
+							{
+								return _trackedBones[i]._cachedBoneMatrices[frame];
+							}
 						}
 					}
-
+					
 					return Matrix4x4.identity;
 				}
 				#endregion
@@ -84,11 +88,11 @@ namespace Framework
 					GPUAnimations animations = _renderer._animationTexture.GetAnimations();
 					
 					int numBones = animations._bones.Length;
-					int totalFrames = 0;
+					_totalFrames = 0;
 
 					for (int i = 0; i < animations._animations.Length; i++)
 					{
-						totalFrames += animations._animations[i]._totalFrames;
+						_totalFrames += animations._animations[i]._totalFrames;
 					}
 					
 					int framesPerRow = animations._texture.width / GPUAnimations.kPixelsPerBoneMatrix;
@@ -99,7 +103,7 @@ namespace Framework
 						
 						if (_trackedBones[i]._boneIndex != -1)
 						{
-							_trackedBones[i]._cachedBoneMatrices = new Matrix4x4[totalFrames];
+							_trackedBones[i]._cachedBoneMatrices = new Matrix4x4[_totalFrames];
 
 							_trackedBones[i]._inverseBindPose = _renderer._mesh.bindposes[_trackedBones[i]._boneIndex].inverse;
 
