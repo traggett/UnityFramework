@@ -52,9 +52,7 @@ namespace Framework
 
 				public GPUAnimatorOverrideController GetOverrideControllerForAnimator(Animator animator)
 				{
-					GPUAnimatorOverrideController overrideController;
-
-					if (!_animatorOverrideControllers.TryGetValue(animator.runtimeAnimatorController, out overrideController))
+					if (!_animatorOverrideControllers.TryGetValue(animator.runtimeAnimatorController, out GPUAnimatorOverrideController overrideController))
 					{
 						overrideController = new GPUAnimatorOverrideController(animator.runtimeAnimatorController, _animationTexture.GetAnimations());
 						_animatorOverrideControllers[animator.runtimeAnimatorController] = overrideController;
@@ -69,9 +67,9 @@ namespace Framework
 				{
 					base.Initialise();
 
-					_currentAnimationFrames = new float[kMaxMeshes];
-					_previousAnimationFrames = new float[kMaxMeshes];
-					_currentAnimationWeights = new float[kMaxMeshes];
+					_currentAnimationFrames = new float[_maxMeshes];
+					_previousAnimationFrames = new float[_maxMeshes];
+					_currentAnimationWeights = new float[_maxMeshes];
 
 					for (int i = 0; i < _materials.Length; i++)
 					{
@@ -81,7 +79,6 @@ namespace Framework
 
 				protected override void UpdateProperties()
 				{
-					//Update transforms and animation data
 					int index = 0;
 					foreach (RenderData renderData in _renderedObjects)
 					{

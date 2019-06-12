@@ -23,6 +23,8 @@ namespace Framework
 		public abstract class MeshInstanceRenderer<T> : MonoBehaviour where T : IMeshInstance
 		{
 			#region Public Data
+			[Range(1, 1023)]
+			public int _maxMeshes = 1023;
 			public Mesh _mesh;
 			public Material[] _materials;
 			public ShadowCastingMode _shadowCastingMode;
@@ -39,7 +41,6 @@ namespace Framework
 			#endregion
 
 			#region Protected Data
-			protected static readonly int kMaxMeshes = 1023;
 			protected T[] _instanceData;
 			protected MaterialPropertyBlock _propertyBlock;
 			protected class RenderData
@@ -85,12 +86,12 @@ namespace Framework
 			protected virtual void Initialise()
 			{
 				//Init data
-				_renderedObjects = new List<RenderData>(kMaxMeshes);
-				_instanceData = new T[kMaxMeshes];
-				_renderData = new RenderData[kMaxMeshes];
+				_renderedObjects = new List<RenderData>(_maxMeshes);
+				_instanceData = new T[_maxMeshes];
+				_renderData = new RenderData[_maxMeshes];
 				for (int i = 0; i < _renderData.Length; i++)
 					_renderData[i] = new RenderData();
-				_renderedObjectTransforms = new Matrix4x4[kMaxMeshes];
+				_renderedObjectTransforms = new Matrix4x4[_maxMeshes];
 
 				_propertyBlock = new MaterialPropertyBlock();
 			}
