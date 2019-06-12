@@ -29,9 +29,9 @@ namespace Framework
 					private AnimationClip[] _animations;
 
 					private Mesh _mesh;
-					private TEXCOORD _boneIdChanel = TEXCOORD.TEXCOORD2;
-					private TEXCOORD _boneWeightChannel = TEXCOORD.TEXCOORD3;
-
+					private TEXCOORD _boneIdChanel = TEXCOORD.TEXCOORD3;
+					private TEXCOORD _boneWeightChannel = TEXCOORD.TEXCOORD4;
+					
 					private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
 					#endregion
 

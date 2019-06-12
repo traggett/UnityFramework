@@ -113,7 +113,7 @@ namespace Framework
 				{
 					return _loops + _frame * _animation._fps;
 				}
-
+				
 				public void SetCurrentTime(float time, bool checkForEvents = false, GameObject eventListener = null)
 				{
 					float normalizedTime = time / _animation._length;
@@ -124,13 +124,13 @@ namespace Framework
 				{
 					return _frame / _animation._totalFrames;
 				}
-
+				
 				public void SetNormalizedTime(float normalizedTime, bool checkForEvents = false, GameObject eventListener = null)
 				{
 					_loops = Mathf.Floor(normalizedTime);
 
 					float prevFrame = _frame;
-					_frame = (normalizedTime - _loops) * _animation._totalFrames;
+					_frame = (normalizedTime - _loops) * (_animation._totalFrames - 1);
 					
 					if (checkForEvents && eventListener != null)
 						GPUAnimations.CheckForEvents(eventListener, _animation, prevFrame, _frame);

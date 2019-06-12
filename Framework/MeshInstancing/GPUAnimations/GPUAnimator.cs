@@ -20,7 +20,7 @@ namespace Framework
 				private static Avatar _dummyAvatar;
 				private Animator _animator;
 				private SkinnedMeshRenderer _skinnedMeshRenderer;			
-
+				
 				private int _currentPlayerIndex;
 				private GPUAnimationPlayer[] _clipPlayers;
 				private int[] _clipPlayerStates;
