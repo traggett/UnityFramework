@@ -6,7 +6,7 @@ namespace Framework
 	{
 		namespace GPUAnimations
 		{
-			public sealed class GPUAnimationState : TrackedReference
+			public sealed class GPUAnimationState
 			{
 				#region Public Data
 				public bool Enabled { get; set; }
@@ -83,7 +83,7 @@ namespace Framework
 				#endregion
 
 				#region Private Data
-				private readonly GPUAnimationPlayer _player;
+				private GPUAnimationPlayer _player;
 				private bool _fading;
 				private float _targetWeight;
 				private float _fromWeight;
