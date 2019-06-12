@@ -30,9 +30,9 @@ namespace Framework
 					return _animator != null;
 				}
 				
-				public Matrix4x4 GetWorldMatrix()
+				public void GetWorldMatrix(out Matrix4x4 matrix)
 				{
-					return _animator.GetWorldMatrix();
+					matrix = _animator.GetWorldMatrix();
 				}
 
 				public Vector3 GetWorldPos()

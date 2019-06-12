@@ -14,7 +14,7 @@ namespace Framework
 			bool IsValid();
 			Vector3 GetWorldPos();
 			Vector3 GetWorldScale();
-			Matrix4x4 GetWorldMatrix();
+			void GetWorldMatrix(out Matrix4x4 matrix);
 			float GetWorldBoundingSphereRadius();
 			Vector3 GetWorldBoundingSphereCentre();
 			Bounds GetBounds();
@@ -43,10 +43,9 @@ namespace Framework
 			#region Protected Data
 			protected T[] _instanceData;
 			protected MaterialPropertyBlock _propertyBlock;
-			protected class RenderData
+			protected struct RenderData
 			{
 				public int _index;
-				public Matrix4x4 _transform;
 				public float _zDist;
 			}
 			protected List<RenderData> _renderedObjects;
@@ -56,6 +55,9 @@ namespace Framework
 			#region Private Data
 			private static readonly int kDepthSortSearchNodes = 8;
 			private RenderData[] _renderData;
+			private Plane[] _frustumPlanes;
+			private Vector3[] _frustumPlaneNormals;
+			private float[] _frustumPlaneDistances;
 			#endregion
 
 			#region Monobehaviour
@@ -94,6 +96,10 @@ namespace Framework
 				_renderedObjectTransforms = new Matrix4x4[_maxMeshes];
 
 				_propertyBlock = new MaterialPropertyBlock();
+
+				_frustumPlanes = new Plane[6];
+				_frustumPlaneNormals = new Vector3[6];
+				_frustumPlaneDistances = new float[6];
 			}
 
 			protected void Render(Camera camera)
@@ -103,26 +109,18 @@ namespace Framework
 
 				//Find list of rendered objects
 				_renderedObjects.Clear();
-
-				Plane[] planes = null;
-				Vector3[] planeNormals = null;
-				float[] planeDistances = null;
-
 				Vector3 cameraPos = camera.transform.position;
 
 				if (_frustrumCulling != eFrustrumCulling.Off)
 				{
-					planes = GeometryUtility.CalculateFrustumPlanes(camera);
+					GeometryUtility.CalculateFrustumPlanes(camera, _frustumPlanes);
 
 					if (_frustrumCulling == eFrustrumCulling.Sphere)
 					{
-						planeNormals = new Vector3[planes.Length];
-						planeDistances = new float[planes.Length];
-
-						for (int i = 0; i < planes.Length; i++)
+						for (int i = 0; i < _frustumPlanes.Length; i++)
 						{
-							planeNormals[i] = planes[i].normal;
-							planeDistances[i] = planes[i].distance;
+							_frustumPlaneNormals[i] = _frustumPlanes[i].normal;
+							_frustumPlaneDistances[i] = _frustumPlanes[i].distance;
 						}
 					}
 				}
@@ -134,23 +132,22 @@ namespace Framework
 					//If frustum culling is enabled, check should draw this game object
 					if (rendered && _frustrumCulling == eFrustrumCulling.Bounds)
 					{
-						rendered = GeometryUtility.TestPlanesAABB(planes, _instanceData[i].GetBounds());
+						rendered = GeometryUtility.TestPlanesAABB(_frustumPlanes, _instanceData[i].GetBounds());
 					}
 					else if (rendered && _frustrumCulling == eFrustrumCulling.Sphere)
 					{
 						Vector3 position = _instanceData[i].GetWorldBoundingSphereCentre();
 						float radius = _instanceData[i].GetWorldBoundingSphereRadius();
-						rendered = IsSphereInFrustrum(ref planes, ref planeNormals, ref planeDistances, position, radius);
+						rendered = IsSphereInFrustrum(ref _frustumPlanes, ref _frustumPlaneNormals, ref _frustumPlaneDistances, position, radius);
 					}
 
 					if (rendered)
 					{
 						_renderData[i]._index = i;
-						_renderData[i]._transform = _instanceData[i].GetWorldMatrix();
-
+						
 						if (_sortByDepth)
 						{
-							Vector3 position = new Vector3(_renderData[i]._transform.m03, _renderData[i]._transform.m13, _renderData[i]._transform.m23);
+							Vector3 position = _instanceData[i].GetWorldPos();
 							_renderData[i]._zDist = (cameraPos - position).sqrMagnitude;
 						}
 
@@ -199,9 +196,11 @@ namespace Framework
 			
 			private void FillTransformMatricies()
 			{
-				for (int i = 0; i < _renderedObjects.Count; i++)
+				int numRenderedObjects = _renderedObjects.Count;
+
+				for (int i = 0; i < numRenderedObjects; i++)
 				{
-					_renderedObjectTransforms[i] = _renderedObjects[i]._transform;
+					_instanceData[_renderedObjects[i]._index].GetWorldMatrix(out _renderedObjectTransforms[i]);
 				}
 			}
 

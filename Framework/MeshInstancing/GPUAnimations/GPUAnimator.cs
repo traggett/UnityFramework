@@ -36,7 +36,7 @@ namespace Framework
 
 				private void Update()
 				{
-					if (_renderer != null)
+					if (_initialised)
 					{
 						UpdateAnimator();
 						UpdateRootMotion();

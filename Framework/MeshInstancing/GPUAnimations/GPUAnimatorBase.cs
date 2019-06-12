@@ -17,6 +17,7 @@ namespace Framework
 
 				#region Protected Data
 				protected GPUAnimatorRenderer _renderer;
+				protected bool _initialised;
 				#endregion
 
 				#region Private Data
@@ -31,6 +32,7 @@ namespace Framework
 				private void Awake()
 				{
 					UpdateCachedTransform();
+					_initialised = false;
 				}
 
 				private void LateUpdate()
@@ -52,6 +54,7 @@ namespace Framework
 				#region Public Interface
 				public void Initialise(GPUAnimatorRenderer renderer)
 				{
+					_initialised = true;
 					_renderer = renderer;
 					_onInitialise?.Invoke();
 				}

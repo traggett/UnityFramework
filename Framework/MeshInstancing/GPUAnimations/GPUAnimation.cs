@@ -238,7 +238,7 @@ namespace Framework
 				{
 					for (int i = 0; i < _animationStates.Length; i++)
 					{
-						_animationStates[i].Update(Time.deltaTime);
+						_animationStates[i].Update(Time.deltaTime, true, this.gameObject);
 					}
 
 					UpdateQueuedAnimation();

@@ -97,11 +97,11 @@ namespace Framework
 					_player = new GPUAnimationPlayer(animation, animation._wrapMode);
 				}
 
-				public void Update(float deltaTime)
+				public void Update(float deltaTime, bool checkForEvents = false, GameObject eventListener = null)
 				{
 					if (Enabled)
 					{
-						_player.Update(deltaTime);
+						_player.Update(deltaTime, checkForEvents, eventListener);
 					}
 
 					if (_fading)

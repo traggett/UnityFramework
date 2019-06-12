@@ -53,20 +53,20 @@ namespace Framework
 						AnimatorTransitionInfo transitionInfo = _animator.GetAnimatorTransitionInfo(_layer);
 
 						//Check current player is playing the next state
-						if (_clipPlayerStates[_currentPlayerIndex] != nextState.fullPathHash)
+						if (_clipPlayerStates[_currentPlayerIndex] != nextState.shortNameHash)
 						{
 							//If not switch current player index and start animation on player
 							_currentPlayerIndex = 1 - _currentPlayerIndex;
-							_clipPlayerStates[_currentPlayerIndex] = nextState.fullPathHash;
+							_clipPlayerStates[_currentPlayerIndex] = nextState.shortNameHash;
 
 							AnimatorClipInfo[] nextClips = _animator.GetNextAnimatorClipInfo(_layer);
 							PlayAnimation(nextState, nextClips, _currentPlayerIndex);
 						}
 
 						//Then check previous player is playing the previous state
-						if (_clipPlayerStates[1 - _currentPlayerIndex] != previousState.fullPathHash)
+						if (_clipPlayerStates[1 - _currentPlayerIndex] != previousState.shortNameHash)
 						{
-							_clipPlayerStates[1 - _currentPlayerIndex] = previousState.fullPathHash;
+							_clipPlayerStates[1 - _currentPlayerIndex] = previousState.shortNameHash;
 
 							AnimatorClipInfo[] previousClips = _animator.GetCurrentAnimatorClipInfo(_layer);
 							PlayAnimation(previousState, previousClips, 1 - _currentPlayerIndex);
@@ -82,9 +82,9 @@ namespace Framework
 					{
 						AnimatorStateInfo currentState = _animator.GetCurrentAnimatorStateInfo(_layer);
 
-						if (_clipPlayerStates[_currentPlayerIndex] != currentState.fullPathHash)
+						if (_clipPlayerStates[_currentPlayerIndex] != currentState.shortNameHash)
 						{
-							_clipPlayerStates[_currentPlayerIndex] = currentState.fullPathHash;
+							_clipPlayerStates[_currentPlayerIndex] = currentState.shortNameHash;
 							AnimatorClipInfo[] currentClips = _animator.GetCurrentAnimatorClipInfo(_layer);
 							PlayAnimation(currentState, currentClips, _currentPlayerIndex);
 

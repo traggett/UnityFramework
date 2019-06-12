@@ -26,7 +26,7 @@ namespace Framework
 					_loops = 0f;
 				}
 				
-				public void Update(float deltaTime, GameObject eventListener = null)
+				public void Update(float deltaTime, bool checkForEvents = false, GameObject eventListener = null)
 				{
 					if (_animation._totalFrames > 0 && deltaTime > 0f && _speed > 0f)
 					{
@@ -34,7 +34,7 @@ namespace Framework
 						
 						_frame += deltaTime * _animation._fps * _speed * GetPlaybackDirection();
 
-						if (eventListener != null)
+						if (checkForEvents)
 							GPUAnimations.CheckForEvents(eventListener, _animation, prevFrame, _frame);
 
 						int maxFrame = _animation._totalFrames - 1;
@@ -132,7 +132,7 @@ namespace Framework
 					float prevFrame = _frame;
 					_frame = (normalizedTime - _loops) * (_animation._totalFrames - 1);
 					
-					if (checkForEvents && eventListener != null)
+					if (checkForEvents)
 						GPUAnimations.CheckForEvents(eventListener, _animation, prevFrame, _frame);
 				}
 
