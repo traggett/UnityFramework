@@ -49,7 +49,7 @@ namespace Framework
 					
 					_onInitialise += Initialise;
 
-					UpdateCachedTransform();
+					CachedTransformData(this.transform);
 				}
 
 				private void Update()

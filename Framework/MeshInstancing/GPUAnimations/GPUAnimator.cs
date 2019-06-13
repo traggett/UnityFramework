@@ -31,7 +31,7 @@ namespace Framework
 					_baseLayer = new GPUAnimatorLayer(_animator, 0);
 					_onInitialise += Initialise;
 
-					UpdateCachedTransform();
+					CachedTransformData(this.transform);
 				}
 
 				private void Update()

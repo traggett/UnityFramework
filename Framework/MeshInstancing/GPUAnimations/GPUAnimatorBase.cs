@@ -33,20 +33,25 @@ namespace Framework
 				#region MonoBehaviour
 				private void Awake()
 				{
-					UpdateCachedTransform();
+					CachedTransformData(this.transform);
 					_initialised = false;
 				}
 
 				private void LateUpdate()
 				{
-					if (this.transform.hasChanged)
-						UpdateCachedTransform();
+					Transform transform = this.transform;
+
+					if (transform.hasChanged)
+					{
+						CachedTransformData(transform);
+						transform.hasChanged = false;
+					}
 				}
 
 #if UNITY_EDITOR
 				void OnDrawGizmosSelected()
 				{
-					UpdateCachedTransform();
+					CachedTransformData(this.transform);
 					Gizmos.color = Color.yellow;
 					Gizmos.DrawWireSphere(_worldBoundingSphereCentre, _worldBoundingSphereRadius);
 				}
@@ -100,11 +105,11 @@ namespace Framework
 				#endregion
 
 				#region Protected Functions
-				protected void UpdateCachedTransform()
+				protected void CachedTransformData(Transform transform)
 				{
-					_worldMatrix = this.transform.localToWorldMatrix;
+					_worldMatrix = transform.localToWorldMatrix;
 					_worldPos = MathUtils.GetPosition(ref _worldMatrix);
-					_worldScale = this.transform.lossyScale;
+					_worldScale = transform.lossyScale;
 					_worldBoundingSphereRadius = Mathf.Max(Mathf.Max(_worldScale.x, _worldScale.y), _worldScale.z) * _sphericalBoundsRadius;
 					_worldBoundingSphereCentre = _worldMatrix.MultiplyPoint3x4(_sphericalBoundsCentre);
 				}
