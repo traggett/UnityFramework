@@ -18,8 +18,6 @@ namespace Framework
 					[NonSerialized]
 					public int _boneIndex;
 					[NonSerialized]
-					public Matrix4x4 _inverseBindPose;
-					[NonSerialized]
 					public Matrix4x4[] _cachedBoneMatrices;
 				}
 				public TrackedBone[] _trackedBones = new TrackedBone[0];
@@ -54,31 +52,57 @@ namespace Framework
 					return -1;
 				}
 
-				public Matrix4x4 GetInvBindPose(int boneIndex)
+				public bool GetBoneTransform(int boneIndex, float frame, GPUAnimatorBoneFollower.Flags flags, out Vector3 position, out Quaternion rotation, out Vector3 scale)
 				{
-					for (int i=0; i<_trackedBones.Length; i++)
-					{
-						if (_trackedBones[i]._boneIndex == boneIndex)
-							return _trackedBones[i]._inverseBindPose;
-					}
+					int trackedBoneIndex = GetTrackedBoneIndex(boneIndex);
 
-					return Matrix4x4.identity;
-				}
-
-				public Matrix4x4 GetBoneMatrix(int boneIndex, int frame)
-				{
-					if (frame < _totalFrames)
+					if (trackedBoneIndex != -1)
 					{
-						for (int i = 0; i < _trackedBones.Length; i++)
+						int prevFrame = Mathf.FloorToInt(frame);
+						int nextFrame = Math.Min(prevFrame + 1, _totalFrames - 1);
+						float frameLerp = frame - prevFrame;
+
+						//TO DO! improve and get scale working
+						if ((flags & GPUAnimatorBoneFollower.Flags.Position) != 0)
 						{
-							if (_trackedBones[i]._boneIndex == boneIndex)
-							{
-								return _trackedBones[i]._cachedBoneMatrices[frame];
-							}
+							Vector3 prevFramePos = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].MultiplyPoint3x4(Vector3.zero);
+							Vector3 nextFramePos = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].MultiplyPoint3x4(Vector3.zero);
+							position = Vector3.Lerp(prevFramePos, nextFramePos, frameLerp);
 						}
+						else
+						{
+							position = Vector3.zero;
+						}
+
+						if ((flags & GPUAnimatorBoneFollower.Flags.Rotation) != 0)
+						{
+							//Instead lerp forward / ups??? then build rotation matrix
+
+							Quaternion prevFrameRot = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].rotation;
+							Quaternion nextFrameRot = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].rotation;
+							rotation = Quaternion.Slerp(prevFrameRot, nextFrameRot, frameLerp);
+						}				
+						else
+						{
+							rotation = Quaternion.identity;
+						}
+						
+						//TO DO!
+						if ((flags & GPUAnimatorBoneFollower.Flags.Scale) != 0)
+							scale = Vector3.one;
+						else
+							scale = Vector3.one;
+
+						return true;
 					}
-					
-					return Matrix4x4.identity;
+					else
+					{
+						position = Vector3.zero;
+						rotation = Quaternion.identity;
+						scale = Vector3.one;
+
+						return false;
+					}
 				}
 				#endregion
 
@@ -105,7 +129,7 @@ namespace Framework
 						{
 							_trackedBones[i]._cachedBoneMatrices = new Matrix4x4[_totalFrames];
 
-							_trackedBones[i]._inverseBindPose = _renderer._mesh.bindposes[_trackedBones[i]._boneIndex].inverse;
+							Matrix4x4 inverseBindPose = _renderer._mesh.bindposes[_trackedBones[i]._boneIndex].inverse;
 
 							int textureFrame = 0;
 
@@ -125,7 +149,7 @@ namespace Framework
 
 									Color[] pixels = animations._texture.GetPixels(pixelX, pixelY, 4, 1, 0);
 
-									_trackedBones[i]._cachedBoneMatrices[textureFrame] = CalcMatrixFromPixels(pixels);
+									_trackedBones[i]._cachedBoneMatrices[textureFrame] = CalcMatrixFromPixels(pixels) * inverseBindPose;
 								}
 							}
 						}
@@ -142,6 +166,19 @@ namespace Framework
 					matrix.SetRow(3, pixels[3]);
 
 					return matrix;
+				}
+
+				private int GetTrackedBoneIndex(int boneIndex)
+				{
+					for (int i = 0; i < _trackedBones.Length; i++)
+					{
+						if (_trackedBones[i]._boneIndex == boneIndex)
+						{
+							return i;
+						}
+					}
+
+					return -1;
 				}
 				#endregion
 			}

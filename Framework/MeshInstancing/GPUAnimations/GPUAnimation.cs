@@ -123,7 +123,7 @@ namespace Framework
 						
 						for (int i = 0; i < _animationStates.Length; i++)
 						{
-							_animationStates[i].BlendWeightTo(0.0f, fadeLength);
+							_animationStates[i].BlendWeightTo(0.0f, fadeLength, true);
 						}
 					}
 					else

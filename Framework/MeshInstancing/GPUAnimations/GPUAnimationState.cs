@@ -89,6 +89,7 @@ namespace Framework
 				private float _fromWeight;
 				private float _fadeSpeed;
 				private float _fadeLerp;
+				private bool _disableAfterFade;
 				#endregion
 
 				#region Public Interface
@@ -112,6 +113,11 @@ namespace Framework
 						{
 							Weight = _targetWeight;
 							_fading = false;
+
+							if (_disableAfterFade)
+							{
+								Enabled = false;
+							}
 						}
 						else
 						{
@@ -125,7 +131,7 @@ namespace Framework
 					return _player.GetCurrentTexureFrame();
 				}
 
-				public void BlendWeightTo(float targetWeight = 1.0f, float fadeLength = 0.3f)
+				public void BlendWeightTo(float targetWeight = 1.0f, float fadeLength = 0.3f, bool disableOnFade = false)
 				{
 					_fading = fadeLength > 0.0f;
 
@@ -135,6 +141,7 @@ namespace Framework
 						_fromWeight = Weight;
 						_fadeSpeed = 1.0f / fadeLength;
 						_fadeLerp = 0.0f;
+						_disableAfterFade = disableOnFade;
 					}
 					else
 					{

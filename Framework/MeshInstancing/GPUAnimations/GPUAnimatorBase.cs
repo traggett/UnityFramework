@@ -3,6 +3,8 @@ using UnityEngine;
 
 namespace Framework
 {
+	using Maths;
+
 	namespace MeshInstancing
 	{
 		namespace GPUAnimations
@@ -101,10 +103,10 @@ namespace Framework
 				protected void UpdateCachedTransform()
 				{
 					_worldMatrix = this.transform.localToWorldMatrix;
-					_worldPos = this.transform.position;
+					_worldPos = MathUtils.GetPosition(ref _worldMatrix);
 					_worldScale = this.transform.lossyScale;
 					_worldBoundingSphereRadius = Mathf.Max(Mathf.Max(_worldScale.x, _worldScale.y), _worldScale.z) * _sphericalBoundsRadius;
-					_worldBoundingSphereCentre = this.transform.TransformPoint(_sphericalBoundsCentre);
+					_worldBoundingSphereCentre = _worldMatrix.MultiplyPoint3x4(_sphericalBoundsCentre);
 				}
 				#endregion
 			}
