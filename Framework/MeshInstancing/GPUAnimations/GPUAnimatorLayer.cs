@@ -9,11 +9,11 @@ namespace Framework
 			public struct GPUAnimatorLayer
 			{
 				#region Private Data	
-				private Animator _animator;
-				private int _layer;
+				private readonly Animator _animator;
+				private readonly int _layer;
+				private readonly GPUAnimationPlayer[] _clipPlayers;
+				private readonly int[] _clipPlayerStates;
 				private int _currentPlayerIndex;
-				private GPUAnimationPlayer[] _clipPlayers;
-				private int[] _clipPlayerStates;
 				private float _currentAnimationWeight;
 				#endregion
 

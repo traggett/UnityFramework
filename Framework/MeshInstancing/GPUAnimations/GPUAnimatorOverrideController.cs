@@ -54,10 +54,12 @@ namespace Framework
 					{
 						name = origClip.name,
 						wrapMode = origClip.wrapMode,
-						legacy = true
+						legacy = true,
+						frameRate = origClip.frameRate,
+						localBounds = origClip.localBounds,
 					};
 
-					overrideClip.SetCurve("", typeof(GPUAnimator), "_animatedValue", new AnimationCurve(new Keyframe(origClip.length, 0f)));
+					overrideClip.SetCurve("", typeof(GPUAnimator), "_animatedValue", new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(origClip.length, 0f)));
 					overrideClip.legacy = false;
 
 					return overrideClip;
