@@ -37,7 +37,7 @@ namespace Framework
 						_hasRootMotion = hasRootMotion;
 						_rootMotionVelocities = rootMotionVelocities;
 						_rootMotionAngularVelocities = rootMotionAngularVelocities;
-						_length = _totalFrames * _fps;
+						_length = _totalFrames / _fps;
 					}
 
 					public static readonly Animation kInvalid = new Animation(string.Empty, 0, 0, 0f, WrapMode.Default, new AnimationEvent[0], false, new Vector3[0], new Vector3[0]);

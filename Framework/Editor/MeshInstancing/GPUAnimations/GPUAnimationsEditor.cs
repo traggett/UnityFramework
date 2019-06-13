@@ -83,7 +83,6 @@ namespace Framework
 
 							_useAnimator = EditorGUILayout.Toggle("Sample Animator", _useAnimator);
 
-
 							if (!_useAnimator)
 							{
 								//Draw list showing animation clip, 
@@ -178,6 +177,7 @@ namespace Framework
 							}
 
 							AnimatorUtility.DeoptimizeTransformHierarchy(animator.gameObject);
+							animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 						}
 
 						Transform[] bones = skinnedMesh.bones;
@@ -213,20 +213,21 @@ namespace Framework
 							bool hasRootMotion = animator != null && clip.hasMotionCurves;
 
 							string name = clip.name;
-							int totalFrames = Mathf.FloorToInt(clip.length * clip.frameRate);
+							int totalFrames = Mathf.Max(Mathf.FloorToInt(clip.length * clip.frameRate), 1);
+							int totalSamples = totalFrames + 1;
 							WrapMode wrapMode = clip.wrapMode;
 							AnimationEvent[] events = clip.events;
 
 							//Sample animation
-							boneWorldMatrix[animIndex] = new Matrix4x4[totalFrames][];
+							boneWorldMatrix[animIndex] = new Matrix4x4[totalSamples][];
 
 							Vector3[] rootMotionVelocities = null;
 							Vector3[] rootMotionAngularVelocities = null;
 
 							if (hasRootMotion)
 							{
-								rootMotionVelocities = new Vector3[totalFrames];
-								rootMotionAngularVelocities = new Vector3[totalFrames];
+								rootMotionVelocities = new Vector3[totalSamples];
+								rootMotionAngularVelocities = new Vector3[totalSamples];
 							}
 
 							//Needed to prevent first frame pop?
@@ -242,12 +243,10 @@ namespace Framework
 								animator.Update(0f);
 								yield return null;
 							}
-
-							float lastFrame = totalFrames - 1;
-
-							for (int frame = 0; frame < totalFrames; frame++)
+							
+							for (int i = 0; i < totalSamples; i++)
 							{
-								float normalisedTime = frame / lastFrame;
+								float normalisedTime = i / (float)totalFrames;
 								
 								//Sample animation using legacy system
 								if (animator == null)
@@ -266,24 +265,24 @@ namespace Framework
 								}
 
 								//Save bone matrices
-								boneWorldMatrix[animIndex][frame] = new Matrix4x4[numBones];
+								boneWorldMatrix[animIndex][i] = new Matrix4x4[numBones];
 
 								for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
 								{
-									boneWorldMatrix[animIndex][frame][boneIndex] = rootMat * bones[boneIndex].localToWorldMatrix * bindposes[boneIndex];
+									boneWorldMatrix[animIndex][i][boneIndex] = rootMat * bones[boneIndex].localToWorldMatrix * bindposes[boneIndex];
 								}
 
 								//Save root motion velocities
 								if (hasRootMotion)
 								{
-									rootMotionVelocities[frame] = animator.velocity;
-									rootMotionAngularVelocities[frame] = animator.angularVelocity;
+									rootMotionVelocities[i] = animator.velocity;
+									rootMotionAngularVelocities[i] = animator.angularVelocity;
 								}
 							}
 
 							//Create animation
 							animations[animIndex] = new GPUAnimations.Animation(name, startOffset, totalFrames, clip.frameRate, wrapMode, events, hasRootMotion, rootMotionVelocities, rootMotionAngularVelocities);
-							startOffset += totalFrames;
+							startOffset += totalSamples;
 						}
 
 						//Create and save texture! Work out width!

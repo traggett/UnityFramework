@@ -25,7 +25,7 @@ namespace Framework
 
 				#region Private Data
 				private GPUAnimatorRenderer _renderer;
-				private int _totalFrames;
+				private int _totalSamples;
 				#endregion
 
 				#region MonoBehaviour
@@ -59,7 +59,7 @@ namespace Framework
 					if (trackedBoneIndex != -1)
 					{
 						int prevFrame = Mathf.FloorToInt(frame);
-						int nextFrame = Math.Min(prevFrame + 1, _totalFrames - 1);
+						int nextFrame = Math.Min(prevFrame + 1, _totalSamples - 1);
 						float frameLerp = frame - prevFrame;
 						
 						if ((flags & GPUAnimatorBoneFollower.Flags.Position) != 0)
@@ -121,11 +121,11 @@ namespace Framework
 					GPUAnimations animations = _renderer._animationTexture.GetAnimations();
 					
 					int numBones = animations._bones.Length;
-					_totalFrames = 0;
+					_totalSamples = 0;
 
 					for (int i = 0; i < animations._animations.Length; i++)
 					{
-						_totalFrames += animations._animations[i]._totalFrames;
+						_totalSamples += animations._animations[i]._totalFrames + 1;
 					}
 					
 					int framesPerRow = animations._texture.width / GPUAnimations.kPixelsPerBoneMatrix;
@@ -136,7 +136,7 @@ namespace Framework
 						
 						if (_trackedBones[i]._boneIndex != -1)
 						{
-							_trackedBones[i]._cachedBoneMatrices = new Matrix4x4[_totalFrames];
+							_trackedBones[i]._cachedBoneMatrices = new Matrix4x4[_totalSamples];
 
 							Matrix4x4 inverseBindPose = _renderer._mesh.bindposes[_trackedBones[i]._boneIndex].inverse;
 
@@ -144,7 +144,7 @@ namespace Framework
 
 							for (int j = 0; j < animations._animations.Length; j++)
 							{
-								for (; textureFrame < animations._animations[j]._startFrameOffset + animations._animations[j]._totalFrames; textureFrame++)
+								for (; textureFrame < animations._animations[j]._startFrameOffset + animations._animations[j]._totalFrames + 1; textureFrame++)
 								{
 									//what row is our frame?
 									int row = textureFrame / framesPerRow;

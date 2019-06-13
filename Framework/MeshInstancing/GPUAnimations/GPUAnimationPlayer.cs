@@ -36,17 +36,15 @@ namespace Framework
 
 						if (checkForEvents)
 							GPUAnimations.CheckForEvents(eventListener, _animation, prevFrame, _frame);
-
-						int maxFrame = _animation._totalFrames - 1;
-
-						if (_frame > maxFrame || _frame < 0)
+						
+						if (_frame > _animation._totalFrames || _frame < 0)
 						{
 							switch (_wrapMode)
 							{
 								case WrapMode.Clamp:
 								case WrapMode.ClampForever:
 									{
-										_frame = maxFrame;
+										_frame = _animation._totalFrames;
 									}
 									break;
 								case WrapMode.PingPong:
@@ -54,7 +52,7 @@ namespace Framework
 								case WrapMode.Default:
 								default:
 									{
-										_frame = _frame < 0 ? _frame + maxFrame : _frame - maxFrame;
+										_frame = _frame < 0 ? _frame + _animation._totalFrames : _frame - _animation._totalFrames;
 										_loops += 1.0f;
 									}
 									break;
@@ -80,7 +78,7 @@ namespace Framework
 						int preSampleFrame = Mathf.FloorToInt(_frame);
 						int nextSampleFrame = preSampleFrame + 1;
 
-						if (nextSampleFrame > _animation._totalFrames - 1)
+						if (nextSampleFrame > _animation._totalFrames)
 						{
 							velocity = _animation._rootMotionVelocities[preSampleFrame];
 							angularVelocity = _animation._rootMotionAngularVelocities[preSampleFrame];
@@ -111,7 +109,7 @@ namespace Framework
 
 				public float GetCurrentTime()
 				{
-					return _loops + _frame * _animation._fps;
+					return GetNormalizedTime() * _animation._length;
 				}
 				
 				public void SetCurrentTime(float time, bool checkForEvents = false, GameObject eventListener = null)
@@ -122,15 +120,17 @@ namespace Framework
 
 				public float GetNormalizedTime()
 				{
-					return _frame / _animation._totalFrames;
+					return _loops + (_frame / _animation._totalFrames);
 				}
 				
 				public void SetNormalizedTime(float normalizedTime, bool checkForEvents = false, GameObject eventListener = null)
 				{
-					_loops = Mathf.Floor(normalizedTime);
-
 					float prevFrame = _frame;
-					_frame = (normalizedTime - _loops) * (_animation._totalFrames - 1);
+
+					_loops = Mathf.Floor(normalizedTime);
+					float fraction = normalizedTime - _loops;
+
+					_frame = fraction * _animation._totalFrames;
 					
 					if (checkForEvents)
 						GPUAnimations.CheckForEvents(eventListener, _animation, prevFrame, _frame);
