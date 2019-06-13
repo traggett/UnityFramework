@@ -77,7 +77,7 @@ namespace Framework
 					}
 				}
 
-				protected override void UpdateProperties()
+				protected override void UpdateProperties(int numRenderedObjects)
 				{
 					int index = 0;
 					foreach (RenderData renderData in _renderedObjects)

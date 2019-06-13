@@ -155,23 +155,25 @@ namespace Framework
 					}
 				}
 
+				int numRenderedObjects = _renderedObjects.Count;
+
 				if (_renderedObjects.Count > 0)
 				{
-					FillTransformMatricies();
-					UpdateProperties();
-					RenderInstances();
+					FillTransformMatricies(numRenderedObjects);
+					UpdateProperties(numRenderedObjects);
+					RenderInstances(numRenderedObjects);
 				}
 			}
 			
-			protected virtual void RenderInstances()
+			protected virtual void RenderInstances(int numRenderedObjects)
 			{
 				for (int i = 0; i < _mesh.subMeshCount; i++)
 				{
-					Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, _renderedObjects.Count, _propertyBlock, _shadowCastingMode, _recieveShadows, _layer);
+					Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, numRenderedObjects, _propertyBlock, _shadowCastingMode, _recieveShadows, _layer);
 				}
 			}
 
-			protected virtual void UpdateProperties()
+			protected virtual void UpdateProperties(int numRenderedObjects)
 			{
 			}
 
@@ -194,10 +196,8 @@ namespace Framework
 				return GeometryUtility.TestPlanesAABB(cameraFrustrumPlanes, bounds);
 			}
 			
-			private void FillTransformMatricies()
+			private void FillTransformMatricies(int numRenderedObjects)
 			{
-				int numRenderedObjects = _renderedObjects.Count;
-
 				for (int i = 0; i < numRenderedObjects; i++)
 				{
 					_instanceData[_renderedObjects[i]._index].GetWorldMatrix(out _renderedObjectTransforms[i]);
