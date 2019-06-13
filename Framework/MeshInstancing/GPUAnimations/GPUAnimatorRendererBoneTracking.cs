@@ -61,8 +61,7 @@ namespace Framework
 						int prevFrame = Mathf.FloorToInt(frame);
 						int nextFrame = Math.Min(prevFrame + 1, _totalFrames - 1);
 						float frameLerp = frame - prevFrame;
-
-						//TO DO! improve and get scale working
+						
 						if ((flags & GPUAnimatorBoneFollower.Flags.Position) != 0)
 						{
 							Vector3 prevFramePos = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].MultiplyPoint3x4(Vector3.zero);
@@ -76,22 +75,32 @@ namespace Framework
 
 						if ((flags & GPUAnimatorBoneFollower.Flags.Rotation) != 0)
 						{
-							//Instead lerp forward / ups??? then build rotation matrix
+							Vector3 prevForward = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].MultiplyVector(Vector3.forward);
+							Vector3 prevUp = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].MultiplyVector(Vector3.up);
 
-							Quaternion prevFrameRot = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].rotation;
-							Quaternion nextFrameRot = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].rotation;
-							rotation = Quaternion.Slerp(prevFrameRot, nextFrameRot, frameLerp);
+							Vector3 nextForward = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].MultiplyVector(Vector3.forward);
+							Vector3 nextUp = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].MultiplyVector(Vector3.up);
+
+							Vector3 forward = Vector3.Lerp(prevForward, nextForward, frameLerp);
+							Vector3 up = Vector3.Lerp(prevUp, nextUp, frameLerp);
+
+							rotation = Quaternion.LookRotation(forward, up);
 						}				
 						else
 						{
 							rotation = Quaternion.identity;
 						}
 						
-						//TO DO!
 						if ((flags & GPUAnimatorBoneFollower.Flags.Scale) != 0)
-							scale = Vector3.one;
+						{
+							Vector3 prevScale = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].lossyScale;
+							Vector3 nextScale = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].lossyScale;
+							scale = Vector3.Lerp(prevScale, nextScale, frameLerp);
+						}
 						else
+						{
 							scale = Vector3.one;
+						}
 
 						return true;
 					}
