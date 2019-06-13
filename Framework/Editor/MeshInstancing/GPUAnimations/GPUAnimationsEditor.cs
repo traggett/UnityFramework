@@ -3,11 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.Animations;
 
 namespace Framework
 {
-	using Framework.Editor;
-	using UnityEditor.Animations;
+	using Editor;
+
 	using Utils;
 
 	namespace MeshInstancing
@@ -285,18 +286,18 @@ namespace Framework
 							startOffset += totalSamples;
 						}
 
-						//Create and save texture! Work out width!
-						int textureSize;
-
-						if (!CalculateTextureSize(boneWorldMatrix, out textureSize))
+						//Create and save texture
+						if (!CalculateTextureSize(boneWorldMatrix, out int textureSize))
 						{
 							DestroyImmediate(gameObject);
 							_working = false;
 							yield break;
 						}
 
-						Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBAHalf, false);
-						texture.filterMode = FilterMode.Point;
+						Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBAHalf, false)
+						{
+							filterMode = FilterMode.Point
+						};
 
 						//Loop through animations / frames / bones setting pixels for each bone matrix
 						int pixelx = 0;

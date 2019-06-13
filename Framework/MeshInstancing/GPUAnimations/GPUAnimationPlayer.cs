@@ -11,7 +11,7 @@ namespace Framework
 				#region Private Data
 				private readonly GPUAnimations.Animation _animation;
 				private float _frame;
-				private float _loops;
+				private int _loops;
 				private float _speed;
 				private WrapMode _wrapMode;
 				#endregion
@@ -23,7 +23,7 @@ namespace Framework
 					_wrapMode = wrapMode;
 					_speed = speed;
 					_frame = 0f;
-					_loops = 0f;
+					_loops = 0;
 				}
 				
 				public void Update(float deltaTime, bool checkForEvents = false, GameObject eventListener = null)
@@ -53,7 +53,7 @@ namespace Framework
 								default:
 									{
 										_frame = _frame < 0 ? _frame + _animation._totalFrames : _frame - _animation._totalFrames;
-										_loops += 1.0f;
+										_loops++;
 									}
 									break;
 							}
@@ -127,7 +127,7 @@ namespace Framework
 				{
 					float prevFrame = _frame;
 
-					_loops = Mathf.Floor(normalizedTime);
+					_loops = Mathf.FloorToInt(normalizedTime);
 					float fraction = normalizedTime - _loops;
 
 					_frame = fraction * _animation._totalFrames;
@@ -162,7 +162,7 @@ namespace Framework
 				{
 					if (_wrapMode == WrapMode.PingPong)
 					{
-						return Mathf.FloorToInt(_loops) % 2 == (_loops > 0.0f ? 1 : 0) ? -1.0f : 1.0f;
+						return _loops % 2 == (_loops > 0 ? 1 : 0) ? -1.0f : 1.0f;
 					}
 
 					return 1.0f;
