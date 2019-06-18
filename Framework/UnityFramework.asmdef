@@ -1,6 +1,8 @@
 {
     "name": "UnityFramework",
-    "references": [],
+    "references": [
+        "Unity.Timeline"
+    ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -8,5 +10,6 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": []
 }

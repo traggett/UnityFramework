@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -46,35 +47,53 @@ namespace Framework
 					//...get from UI graphic
 					if (_materialIndex == MaterialRef.kGraphicMaterialIndex)
 					{
-						if (_graphic != null && _graphic.material != null)
+						if (_graphic != null)
 						{
-
 #if UNITY_EDITOR
 							if (!Application.isPlaying)
 							{
-								Debug.LogError("Trying to instantiate a material in the editor, if you want to modify a material in editor use a shared material instead.");
-								return null;
+								//Debug.LogError("Trying to instantiate a material in the editor, if you want to modify a material in editor use a shared material instead.");
+								//return null;
+								return _graphic.materialForRendering;
 							}
 #endif
 							//Make instance of this material
-							_graphic.material = new Material(_graphic.material);
-							_graphic.material.name = _graphic.material.name + " (Instance)";
-							_material = _graphic.material;
+							if (_graphic.material != null)
+							{
+								_graphic.material = new Material(_graphic.material);
+								_graphic.material.name = _graphic.material.name + " (Instance)";
+								_material = _graphic.material;
+							}
 						}
 					}
 					//...get from renderer / index
 					else if (_materialIndex != -1)
 					{
-						if (_renderer != null && 0 <= _materialIndex && _materialIndex < _renderer.sharedMaterials.Length)
+						int numMaterials = _renderer.sharedMaterials.Length;
+
+						if (_renderer != null && 0 <= _materialIndex && _materialIndex < numMaterials)
 						{
 #if UNITY_EDITOR
 							if (!Application.isPlaying)
 							{
-								Debug.LogError("Trying to instantiate a material in the editor, if you want to modify a material in editor use a shared material instead.");
-								return null;
+								//Debug.LogError("Trying to instantiate a material in the editor, if you want to modify a material in editor use a shared material instead.");
+								//return null;
+								return _renderer.sharedMaterials[_materialIndex];
 							}
 #endif
-							_material = _renderer.materials[_materialIndex];
+							
+							//Check if list is already instantiated
+							List<Material> materials = new List<Material>(numMaterials);
+							_renderer.GetMaterials(materials);
+
+							if (materials.Count < numMaterials)
+							{
+								_material = _renderer.materials[_materialIndex];
+							}
+							else
+							{
+								_material = materials[_materialIndex];
+							}
 						}
 					}
 				}
