@@ -123,18 +123,9 @@ void calcVertexFromAnimation(float4 boneIDs, float4 boneWeights, float curFrame,
 #endif
 }
 
-void applyGPUAnimations(float4 boneIDs, float4 boneWeights, inout half4 vertex, inout half3 normal, inout half4 tangent)
-{
-#if (SHADER_TARGET < 30 || SHADER_API_GLES)
-	float curAnimFrame = _currentAnimationFrame;
-	float curAnimWeight = _currentAnimationWeight;
-	float preAnimFrame = _previousAnimationFrame;
-#else
-	float curAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationFrame_arr, _currentAnimationFrame);
-	float curAnimWeight = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationWeight_arr, _currentAnimationWeight);
-	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_previousAnimationFrame_arr, _previousAnimationFrame);
-#endif
 
+void calcBlendedAnimations(float4 boneIDs, float4 boneWeights, float curAnimFrame, float curAnimWeight, float preAnimFrame, inout half4 vertex, inout half3 normal, inout half4 tangent)
+{
 	//Find vertex position for currently playing animation
 	half4 curAnimVertex = vertex;
 	half3 curAnimNormal = normal;
@@ -164,6 +155,24 @@ void applyGPUAnimations(float4 boneIDs, float4 boneWeights, inout half4 vertex, 
 	normal = normalize(curAnimNormal);
 	tangent.xyz = normalize(curAnimTangent);
 #endif
+}
+
+void applyGPUAnimations(float4 boneIDs, float4 boneWeights, inout half4 vertex, inout half3 normal, inout half4 tangent)
+{
+#if (SHADER_TARGET < 30 || SHADER_API_GLES)
+	float curAnimFrame = _currentAnimationFrame;
+	float curAnimWeight = _currentAnimationWeight;
+	float preAnimFrame = _previousAnimationFrame;
+#else
+	float curAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationFrame_arr, _currentAnimationFrame);
+	float curAnimWeight = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationWeight_arr, _currentAnimationWeight);
+	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_previousAnimationFrame_arr, _previousAnimationFrame);
+#endif
+
+	//Base Layer
+	calcBlendedAnimations(boneIDs, boneWeights, curAnimFrame, curAnimWeight, preAnimFrame, vertex, normal, tangent);
+	
+	//if multi layers are supported, get 2nd layer params, check its weight is less than 1, calc both layers
 }
 
 #define GPU_ANIMATION_DATA(boneIdsIdx, boneWeightsIdx) \
