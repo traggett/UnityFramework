@@ -28,18 +28,10 @@ namespace Framework
 				private int _totalSamples;
 				#endregion
 
-				#region MonoBehaviour
-				private void Awake()
-				{
-					_renderer = GetComponent<GPUAnimatorRenderer>();
-					CacheBoneData();
-				}
-				#endregion
-
 				#region Public Interface
 				public int GetBoneIndex(string boneName)
 				{
-					string[] boneNames = _renderer._animationTexture.GetAnimations()._bones;
+					string[] boneNames = GetRenderer()._animationTexture.GetAnimations()._bones;
 
 					for (int i = 0; i < boneNames.Length; i++)
 					{
@@ -54,6 +46,8 @@ namespace Framework
 
 				public bool GetBoneTransform(int boneIndex, float frame, GPUAnimatorBoneFollower.Flags flags, out Vector3 position, out Quaternion rotation, out Vector3 scale)
 				{
+					GetRenderer();
+
 					int trackedBoneIndex = GetTrackedBoneIndex(boneIndex);
 
 					if (trackedBoneIndex != -1)
@@ -116,6 +110,17 @@ namespace Framework
 				#endregion
 
 				#region Private Functions
+				private GPUAnimatorRenderer GetRenderer()
+				{
+					if (_renderer == null)
+					{
+						_renderer = GetComponent<GPUAnimatorRenderer>();
+						CacheBoneData();
+					}
+
+					return _renderer;
+				}
+
 				private void CacheBoneData()
 				{
 					GPUAnimations animations = _renderer._animationTexture.GetAnimations();

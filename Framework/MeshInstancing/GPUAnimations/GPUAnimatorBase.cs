@@ -98,9 +98,9 @@ namespace Framework
 				#endregion
 
 				#region Abstract Interface
-				public abstract float GetCurrentAnimationFrame();
-				public abstract float GetCurrentAnimationWeight();
-				public abstract float GetPreviousAnimationFrame();
+				public abstract float GetMainAnimationFrame();
+				public abstract float GetMainAnimationWeight();
+				public abstract float GetBackgroundAnimationFrame();
 				public abstract Bounds GetBounds();
 				#endregion
 

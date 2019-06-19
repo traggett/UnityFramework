@@ -100,12 +100,12 @@ namespace Framework
 						return;
 
 					//Work out local space bone transform
-					float curAnimWeight = _animator.GetCurrentAnimationWeight();
-					_boneTracking.GetBoneTransform(_boneIndex, _animator.GetCurrentAnimationFrame(), _flags, out Vector3 localPosition, out Quaternion localRotation, out Vector3 localScale);
+					float curAnimWeight = _animator.GetMainAnimationWeight();
+					_boneTracking.GetBoneTransform(_boneIndex, _animator.GetMainAnimationFrame(), _flags, out Vector3 localPosition, out Quaternion localRotation, out Vector3 localScale);
 
 					if (curAnimWeight < 1.0f)
 					{
-						_boneTracking.GetBoneTransform(_boneIndex, _animator.GetPreviousAnimationFrame(), _flags, out Vector3 prevLocalPosition, out Quaternion prevLocalRotation, out Vector3 prevLocalScale);
+						_boneTracking.GetBoneTransform(_boneIndex, _animator.GetBackgroundAnimationFrame(), _flags, out Vector3 prevLocalPosition, out Quaternion prevLocalRotation, out Vector3 prevLocalScale);
 
 						if ((_flags & Flags.Position) != 0)
 							localPosition = Vector3.Lerp(prevLocalPosition, localPosition, curAnimWeight);

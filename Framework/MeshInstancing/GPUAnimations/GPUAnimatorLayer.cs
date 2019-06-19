@@ -13,8 +13,8 @@ namespace Framework
 				private readonly int _layer;
 				private readonly GPUAnimationPlayer[] _clipPlayers;
 				private readonly int[] _clipPlayerStates;
-				private int _currentPlayerIndex;
-				private float _currentAnimationWeight;
+				private int _mainPlayerIndex;
+				private float _mainAnimationWeight;
 				#endregion
 
 				#region Public Interface
@@ -24,23 +24,23 @@ namespace Framework
 					_layer = layer;
 					_clipPlayers = new GPUAnimationPlayer[2];
 					_clipPlayerStates = new int[2];
-					_currentPlayerIndex = 0;
-					_currentAnimationWeight = 1.0f;
+					_mainPlayerIndex = 0;
+					_mainAnimationWeight = 1.0f;
 				}
 
-				public float GetCurrentAnimationFrame()
+				public float GetMainAnimationFrame()
 				{
-					return _clipPlayers[_currentPlayerIndex].GetCurrentTexureFrame();
+					return _clipPlayers[_mainPlayerIndex].GetCurrentTexureFrame();
 				}
 
-				public float GetCurrentAnimationWeight()
+				public float GetMainAnimationWeight()
 				{
-					return _currentAnimationWeight;
+					return _mainAnimationWeight;
 				}
 
-				public float GetPreviousAnimationFrame()
+				public float GetBackgroundAnimationFrame()
 				{
-					return _clipPlayers[1 - _currentPlayerIndex].GetCurrentTexureFrame();
+					return _clipPlayers[1 - _mainPlayerIndex].GetCurrentTexureFrame();
 				}
 				
 				public void Update()
@@ -53,61 +53,61 @@ namespace Framework
 						AnimatorTransitionInfo transitionInfo = _animator.GetAnimatorTransitionInfo(_layer);
 
 						//Check current player is playing the next state
-						if (_clipPlayerStates[_currentPlayerIndex] != nextState.shortNameHash)
+						if (_clipPlayerStates[_mainPlayerIndex] != nextState.shortNameHash)
 						{
 							//If not switch current player index and start animation on player
-							_currentPlayerIndex = 1 - _currentPlayerIndex;
-							_clipPlayerStates[_currentPlayerIndex] = nextState.shortNameHash;
+							_mainPlayerIndex = 1 - _mainPlayerIndex;
+							_clipPlayerStates[_mainPlayerIndex] = nextState.shortNameHash;
 
 							AnimatorClipInfo[] nextClips = _animator.GetNextAnimatorClipInfo(_layer);
-							PlayAnimation(nextState, nextClips, _currentPlayerIndex);
+							PlayAnimation(nextState, nextClips, _mainPlayerIndex);
 						}
 
 						//Then check previous player is playing the previous state
-						if (_clipPlayerStates[1 - _currentPlayerIndex] != previousState.shortNameHash)
+						if (_clipPlayerStates[1 - _mainPlayerIndex] != previousState.shortNameHash)
 						{
-							_clipPlayerStates[1 - _currentPlayerIndex] = previousState.shortNameHash;
+							_clipPlayerStates[1 - _mainPlayerIndex] = previousState.shortNameHash;
 
 							AnimatorClipInfo[] previousClips = _animator.GetCurrentAnimatorClipInfo(_layer);
-							PlayAnimation(previousState, previousClips, 1 - _currentPlayerIndex);
+							PlayAnimation(previousState, previousClips, 1 - _mainPlayerIndex);
 						}
 
 						//Update times
-						_clipPlayers[_currentPlayerIndex].SetNormalizedTime(nextState.normalizedTime, true);
-						_clipPlayers[1 - _currentPlayerIndex].SetNormalizedTime(previousState.normalizedTime, true);
-						_currentAnimationWeight = transitionInfo.normalizedTime;
+						_clipPlayers[_mainPlayerIndex].SetNormalizedTime(nextState.normalizedTime, true);
+						_clipPlayers[1 - _mainPlayerIndex].SetNormalizedTime(previousState.normalizedTime, true);
+						_mainAnimationWeight = transitionInfo.normalizedTime;
 					}
 					//Otherwise just update current animation
 					else
 					{
 						AnimatorStateInfo currentState = _animator.GetCurrentAnimatorStateInfo(_layer);
 
-						if (_clipPlayerStates[_currentPlayerIndex] != currentState.shortNameHash)
+						if (_clipPlayerStates[_mainPlayerIndex] != currentState.shortNameHash)
 						{
-							_clipPlayerStates[_currentPlayerIndex] = currentState.shortNameHash;
+							_clipPlayerStates[_mainPlayerIndex] = currentState.shortNameHash;
 							AnimatorClipInfo[] currentClips = _animator.GetCurrentAnimatorClipInfo(_layer);
-							PlayAnimation(currentState, currentClips, _currentPlayerIndex);
+							PlayAnimation(currentState, currentClips, _mainPlayerIndex);
 
 							//Stop other player
-							_clipPlayers[1 - _currentPlayerIndex] = new GPUAnimationPlayer();
+							_clipPlayers[1 - _mainPlayerIndex] = new GPUAnimationPlayer();
 						}
 
 						//Update time
-						_clipPlayers[_currentPlayerIndex].SetNormalizedTime(currentState.normalizedTime, true);
-						_currentAnimationWeight = 1.0f;
+						_clipPlayers[_mainPlayerIndex].SetNormalizedTime(currentState.normalizedTime, true);
+						_mainAnimationWeight = 1.0f;
 					}
 				}
 				
 				public void GetRootMotionVelocities(out Vector3 velocity, out Vector3 angularVelocity)
 				{
-					_clipPlayers[_currentPlayerIndex].GetRootMotionVelocities(out velocity, out angularVelocity);
+					_clipPlayers[_mainPlayerIndex].GetRootMotionVelocities(out velocity, out angularVelocity);
 
-					if (_currentAnimationWeight < 1.0f)
+					if (_mainAnimationWeight < 1.0f)
 					{
-						_clipPlayers[1 - _currentPlayerIndex].GetRootMotionVelocities(out Vector3 previousPlayerVelocity, out Vector3 previousPlayerAngularVelocity);
+						_clipPlayers[1 - _mainPlayerIndex].GetRootMotionVelocities(out Vector3 previousPlayerVelocity, out Vector3 previousPlayerAngularVelocity);
 
-						velocity = Vector3.Lerp(previousPlayerVelocity, velocity, _currentAnimationWeight);
-						angularVelocity = Vector3.Lerp(previousPlayerAngularVelocity, angularVelocity, _currentAnimationWeight);
+						velocity = Vector3.Lerp(previousPlayerVelocity, velocity, _mainAnimationWeight);
+						angularVelocity = Vector3.Lerp(previousPlayerAngularVelocity, angularVelocity, _mainAnimationWeight);
 					}
 				}
 				#endregion

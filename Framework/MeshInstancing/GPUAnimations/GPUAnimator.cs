@@ -14,6 +14,8 @@ namespace Framework
 				#region Public Data
 				[HideInInspector]
 				public float _animatedValue;
+				[Range(0,8)]
+				public int _numAdditionalLayers;
 				#endregion
 
 				#region Private Data
@@ -21,6 +23,7 @@ namespace Framework
 				private Animator _animator;
 				private SkinnedMeshRenderer _skinnedMeshRenderer;
 				private GPUAnimatorLayer _baseLayer;
+				private GPUAnimatorLayer[] _additionalLayers;
 				#endregion
 
 				#region MonoBehaviour
@@ -29,6 +32,11 @@ namespace Framework
 					_animator = GetComponent<Animator>();
 					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
 					_baseLayer = new GPUAnimatorLayer(_animator, 0);
+
+					_additionalLayers = new GPUAnimatorLayer[_numAdditionalLayers];
+					for (int i=0; i<_numAdditionalLayers; i++)
+						_additionalLayers[i] = new GPUAnimatorLayer(_animator, i + 1);
+
 					_onInitialise += Initialise;
 
 					CachedTransformData(this.transform);
@@ -45,19 +53,19 @@ namespace Framework
 				#endregion
 
 				#region GPUAnimatorBase
-				public override float GetCurrentAnimationFrame()
+				public override float GetMainAnimationFrame()
 				{
-					return _baseLayer.GetCurrentAnimationFrame();
+					return _baseLayer.GetMainAnimationFrame();
 				}
 
-				public override float GetCurrentAnimationWeight()
+				public override float GetMainAnimationWeight()
 				{
-					return _baseLayer.GetCurrentAnimationWeight();
+					return _baseLayer.GetMainAnimationWeight();
 				}
 
-				public override float GetPreviousAnimationFrame()
+				public override float GetBackgroundAnimationFrame()
 				{
-					return _baseLayer.GetPreviousAnimationFrame();
+					return _baseLayer.GetBackgroundAnimationFrame();
 				}
 
 				public override Bounds GetBounds()
@@ -66,6 +74,32 @@ namespace Framework
 						return _skinnedMeshRenderer.bounds;
 
 					return new Bounds();
+				}
+				#endregion
+
+				#region Public Interface
+				public float GetAnimationFrame(int layer)
+				{
+					if (layer == 0)
+						return _baseLayer.GetMainAnimationFrame();
+
+					return _additionalLayers[layer].GetMainAnimationFrame();
+				}
+
+				public float GetMainAnimationWeight(int layer)
+				{
+					if (layer == 0)
+						return _baseLayer.GetMainAnimationWeight();
+
+					return _additionalLayers[layer].GetMainAnimationWeight();
+				}
+
+				public float GetBackgroundAnimationFrame(int layer)
+				{
+					if (layer == 0)
+						return _baseLayer.GetBackgroundAnimationFrame();
+
+					return _additionalLayers[layer].GetBackgroundAnimationFrame();
 				}
 				#endregion
 

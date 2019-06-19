@@ -189,17 +189,17 @@ namespace Framework
 				#endregion
 
 				#region GPUAnimatorBase
-				public override float GetCurrentAnimationFrame()
+				public override float GetMainAnimationFrame()
 				{
 					return _primaryAnimationState != null ? _primaryAnimationState.GetCurrentTexureFrame() : 0.0f;
 				}
 
-				public override float GetCurrentAnimationWeight()
+				public override float GetMainAnimationWeight()
 				{
 					return _primaryAnimationState != null ? _primaryAnimationState.Weight : 1.0f;
 				}
 
-				public override float GetPreviousAnimationFrame()
+				public override float GetBackgroundAnimationFrame()
 				{
 					return _secondaryAnimationState != null ? _secondaryAnimationState.GetCurrentTexureFrame() : 0.0f;
 				}

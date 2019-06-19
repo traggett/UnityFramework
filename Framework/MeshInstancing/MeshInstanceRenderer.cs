@@ -42,19 +42,20 @@ namespace Framework
 
 			#region Protected Data
 			protected T[] _instanceData;
-			protected MaterialPropertyBlock _propertyBlock;
-			protected struct RenderData
-			{
-				public int _index;
-				public float _zDist;
-			}
-			protected List<RenderData> _renderedObjects;
-			protected Matrix4x4[] _renderedObjectTransforms;
+			protected MaterialPropertyBlock _propertyBlock;		
 			#endregion
 
 			#region Private Data
 			private static readonly int kDepthSortSearchNodes = 8;
-			private RenderData[] _renderData;
+			private int _numRenderedObjects;
+			private struct RenderData
+			{
+				public int _index;
+				public float _zDist;
+			}
+			private RenderData[] _renderedObjects;
+			private List<int> _renderedObjectIndexes;
+			private Matrix4x4[] _renderedObjectTransforms;
 			private Plane[] _frustumPlanes;
 			private Vector3[] _frustumPlaneNormals;
 			private float[] _frustumPlaneDistances;
@@ -88,11 +89,11 @@ namespace Framework
 			protected virtual void Initialise()
 			{
 				//Init data
-				_renderedObjects = new List<RenderData>(_maxMeshes);
 				_instanceData = new T[_maxMeshes];
-				_renderData = new RenderData[_maxMeshes];
-				for (int i = 0; i < _renderData.Length; i++)
-					_renderData[i] = new RenderData();
+				_renderedObjects = new RenderData[_maxMeshes];
+				for (int i = 0; i < _renderedObjects.Length; i++)
+					_renderedObjects[i] = new RenderData();
+				_renderedObjectIndexes = new List<int>(_maxMeshes);
 				_renderedObjectTransforms = new Matrix4x4[_maxMeshes];
 
 				_propertyBlock = new MaterialPropertyBlock();
@@ -108,7 +109,6 @@ namespace Framework
 					return;
 
 				//Find list of rendered objects
-				_renderedObjects.Clear();
 				Vector3 cameraPos = camera.transform.position;
 
 				if (_frustrumCulling != eFrustrumCulling.Off)
@@ -125,55 +125,43 @@ namespace Framework
 					}
 				}
 
+				_renderedObjectIndexes.Clear();
+
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
-					bool rendered = _instanceData[i].IsValid() && _instanceData[i].IsActive();
-
-					//If frustum culling is enabled, check should draw this game object
-					if (rendered && _frustrumCulling == eFrustrumCulling.Bounds)
+					if (ShouldInstanceBeRendered(ref _instanceData[i]))
 					{
-						rendered = GeometryUtility.TestPlanesAABB(_frustumPlanes, _instanceData[i].GetBounds());
-					}
-					else if (rendered && _frustrumCulling == eFrustrumCulling.Sphere)
-					{
-						Vector3 position = _instanceData[i].GetWorldBoundingSphereCentre();
-						float radius = _instanceData[i].GetWorldBoundingSphereRadius();
-						rendered = IsSphereInFrustrum(ref _frustumPlanes, ref _frustumPlaneNormals, ref _frustumPlaneDistances, position, radius);
-					}
-
-					if (rendered)
-					{
-						_renderData[i]._index = i;
+						_renderedObjects[i]._index = i;
 						
 						if (_sortByDepth)
 						{
 							Vector3 position = _instanceData[i].GetWorldPos();
-							_renderData[i]._zDist = (cameraPos - position).sqrMagnitude;
+							_renderedObjects[i]._zDist = (cameraPos - position).sqrMagnitude;
 						}
 
-						AddToRenderedList(_renderData[i]);
+						AddToRenderedList(i);
 					}
 				}
 
-				int numRenderedObjects = _renderedObjects.Count;
+				_numRenderedObjects = _renderedObjectIndexes.Count;
 
-				if (_renderedObjects.Count > 0)
+				if (_numRenderedObjects > 0)
 				{
-					FillTransformMatricies(numRenderedObjects);
-					UpdateProperties(numRenderedObjects);
-					RenderInstances(numRenderedObjects);
+					FillTransformMatricies();
+					UpdateProperties();
+					RenderInstances();
 				}
 			}
 			
-			protected virtual void RenderInstances(int numRenderedObjects)
+			protected virtual void RenderInstances()
 			{
 				for (int i = 0; i < _mesh.subMeshCount; i++)
 				{
-					Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, numRenderedObjects, _propertyBlock, _shadowCastingMode, _recieveShadows, _layer);
+					Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, _numRenderedObjects, _propertyBlock, _shadowCastingMode, _recieveShadows, _layer);
 				}
 			}
 
-			protected virtual void UpdateProperties(int numRenderedObjects)
+			protected virtual void UpdateProperties()
 			{
 			}
 
@@ -188,32 +176,61 @@ namespace Framework
 					}
 				}
 			}
+
+			protected int GetNumRenderedInstances()
+			{
+				return _numRenderedObjects;
+			}
+
+			protected int GetRenderedInstanceIndex(int renderedObjectIndex)
+			{
+				return _renderedObjects[_renderedObjectIndexes[renderedObjectIndex]]._index;
+			}
 			#endregion
 
 			#region Private Functions
+			private bool ShouldInstanceBeRendered(ref T instance)
+			{
+				bool rendered = instance.IsValid() && instance.IsActive();
+
+				//If frustum culling is enabled, check should draw this game object
+				if (rendered && _frustrumCulling == eFrustrumCulling.Bounds)
+				{
+					rendered = GeometryUtility.TestPlanesAABB(_frustumPlanes, instance.GetBounds());
+				}
+				else if (rendered && _frustrumCulling == eFrustrumCulling.Sphere)
+				{
+					Vector3 position = instance.GetWorldBoundingSphereCentre();
+					float radius = instance.GetWorldBoundingSphereRadius();
+					rendered = IsSphereInFrustrum(ref _frustumPlanes, ref _frustumPlaneNormals, ref _frustumPlaneDistances, position, radius);
+				}
+
+				return rendered;
+			}
+
 			private bool AreBoundsInFrustrum(Plane[] cameraFrustrumPlanes, ref Bounds bounds)
 			{
 				return GeometryUtility.TestPlanesAABB(cameraFrustrumPlanes, bounds);
 			}
 			
-			private void FillTransformMatricies(int numRenderedObjects)
+			private void FillTransformMatricies()
 			{
-				for (int i = 0; i < numRenderedObjects; i++)
+				for (int i = 0; i < _numRenderedObjects; i++)
 				{
-					_instanceData[_renderedObjects[i]._index].GetWorldMatrix(out _renderedObjectTransforms[i]);
+					_instanceData[_renderedObjects[_renderedObjectIndexes[i]]._index].GetWorldMatrix(out _renderedObjectTransforms[i]);
 				}
 			}
 
-			private void AddToRenderedList(RenderData renderData)
+			private void AddToRenderedList(int renderDataIndex)
 			{
 				if (_sortByDepth)
 				{
-					int index = FindDepthIndex(renderData._zDist, 0, _renderedObjects.Count);
-					_renderedObjects.Insert(index, renderData);
+					int index = FindDepthIndex(_renderedObjects[renderDataIndex]._zDist, 0, _renderedObjectIndexes.Count);
+					_renderedObjectIndexes.Insert(index, renderDataIndex);
 				}
 				else
 				{
-					_renderedObjects.Add(renderData);
+					_renderedObjectIndexes.Add(renderDataIndex);
 				}
 			}
 
@@ -229,7 +246,7 @@ namespace Framework
 				for (int i = 0; i < numSearches; i++)
 				{
 					//If this distance is greater than current node its between this and prev node
-					if (zDist > _renderedObjects[currIndex]._zDist)
+					if (zDist > _renderedObjects[_renderedObjectIndexes[currIndex]]._zDist)
 					{
 						//If first node or search one node at a time then found our index
 						if (i == 0 || nodesPerSearch == 1)

@@ -14,9 +14,9 @@ namespace Framework
 				#endregion
 
 				#region Private Data
-				private float[] _currentAnimationFrames;
-				private float[] _previousAnimationFrames;
-				private float[] _currentAnimationWeights;
+				private float[] _mainAnimationFrames;
+				private float[] _backgroundAnimationFrames;
+				private float[] _mainAnimationWeights;
 
 				private Dictionary<RuntimeAnimatorController, GPUAnimatorOverrideController> _animatorOverrideControllers = new Dictionary<RuntimeAnimatorController, GPUAnimatorOverrideController>();
 				#endregion
@@ -67,9 +67,9 @@ namespace Framework
 				{
 					base.Initialise();
 
-					_currentAnimationFrames = new float[_maxMeshes];
-					_previousAnimationFrames = new float[_maxMeshes];
-					_currentAnimationWeights = new float[_maxMeshes];
+					_mainAnimationFrames = new float[_maxMeshes];
+					_backgroundAnimationFrames = new float[_maxMeshes];
+					_mainAnimationWeights = new float[_maxMeshes];
 
 					for (int i = 0; i < _materials.Length; i++)
 					{
@@ -77,22 +77,25 @@ namespace Framework
 					}
 				}
 
-				protected override void UpdateProperties(int numRenderedObjects)
+				protected override void UpdateProperties()
 				{
+					int numRenderedInstances = GetNumRenderedInstances();
+
 					int index = 0;
-					foreach (RenderData renderData in _renderedObjects)
+					for (int i =0; i< numRenderedInstances; i++)
 					{
-						GPUAnimatorBase animator = _instanceData[renderData._index]._animator;
-						_currentAnimationFrames[index] = animator.GetCurrentAnimationFrame();
-						_currentAnimationWeights[index] = animator.GetCurrentAnimationWeight();
-						_previousAnimationFrames[index] = animator.GetPreviousAnimationFrame();
+						int instanceIndex = GetRenderedInstanceIndex(i);
+						GPUAnimatorBase animator = _instanceData[instanceIndex]._animator;
+						_mainAnimationFrames[index] = animator.GetMainAnimationFrame();
+						_mainAnimationWeights[index] = animator.GetMainAnimationWeight();
+						_backgroundAnimationFrames[index] = animator.GetBackgroundAnimationFrame();
 						
 						index++;
 					}
 
-					_propertyBlock.SetFloatArray("_currentAnimationFrame", _currentAnimationFrames);
-					_propertyBlock.SetFloatArray("_currentAnimationWeight", _currentAnimationWeights);
-					_propertyBlock.SetFloatArray("_previousAnimationFrame", _previousAnimationFrames);
+					_propertyBlock.SetFloatArray("_mainAnimationFrame", _mainAnimationFrames);
+					_propertyBlock.SetFloatArray("_mainAnimationWeight", _mainAnimationWeights);
+					_propertyBlock.SetFloatArray("_backgroundAnimationFrame", _backgroundAnimationFrames);
 				}
 				#endregion
 			}

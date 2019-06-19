@@ -19,17 +19,37 @@ uniform int _animationTextureWidth;
 uniform int _animationTextureHeight;
 
 #if (SHADER_TARGET < 30 || SHADER_API_GLES)
-uniform float _currentAnimationFrame;
-uniform float _currentAnimationWeight;
-uniform float _previousAnimationFrame;
+
+uniform float _mainAnimationFrame;
+uniform float _mainAnimationWeight;
+uniform float _backgroundAnimationFrame;
+
+uniform float _layerTwoWeight;
+uniform float _layerTwoMainAnimFrame;
+uniform float _layerTwoMainAnimWeight;
+uniform float _layerTwoBackgroundAnim;
+
 #else
+
 UNITY_INSTANCING_BUFFER_START(Props)
-	UNITY_DEFINE_INSTANCED_PROP(float, _currentAnimationFrame)
-#define _currentAnimationFrame_arr Props
-	UNITY_DEFINE_INSTANCED_PROP(float, _currentAnimationWeight)
-#define _currentAnimationWeight_arr Props
-	UNITY_DEFINE_INSTANCED_PROP(float, _previousAnimationFrame)
-#define _previousAnimationFrame_arr Props
+
+	UNITY_DEFINE_INSTANCED_PROP(float, _mainAnimationFrame)
+#define _mainAnimationFrame_arr Props
+	UNITY_DEFINE_INSTANCED_PROP(float, _mainAnimationWeight)
+#define _mainAnimationWeight_arr Props
+	UNITY_DEFINE_INSTANCED_PROP(float, _backgroundAnimationFrame)
+#define _backgroundAnimationFrame_arr Props
+
+	UNITY_DEFINE_INSTANCED_PROP(float, _layerTwoWeight)
+#define _layerTwoWeight_arr Props
+	UNITY_DEFINE_INSTANCED_PROP(float, _layerTwoMainAnimFrame)
+#define _layerTwoMainAnimFrame_arr Props
+	UNITY_DEFINE_INSTANCED_PROP(float, _layerTwoMainAnimWeight)
+#define _layerTwoMainAnimWeight_arr Props
+	UNITY_DEFINE_INSTANCED_PROP(float, _layerTwoBackgroundAnim)
+#define _layerTwoBackgroundAnim_arr Props
+
+
 UNITY_INSTANCING_BUFFER_END(Props)
 #endif
 
@@ -124,28 +144,28 @@ void calcVertexFromAnimation(float4 boneIDs, float4 boneWeights, float curFrame,
 }
 
 
-void calcBlendedAnimations(float4 boneIDs, float4 boneWeights, float curAnimFrame, float curAnimWeight, float preAnimFrame, inout half4 vertex, inout half3 normal, inout half4 tangent)
+void calcBlendedAnimations(float4 boneIDs, float4 boneWeights, float mainAnimFrame, float mainAnimWeight, float backgroundAnimFrame, inout half4 vertex, inout half3 normal, inout half4 tangent)
 {
 	//Find vertex position for currently playing animation
 	half4 curAnimVertex = vertex;
 	half3 curAnimNormal = normal;
 	half3 curAnimTangent = tangent.xyz;
 	
-	calcVertexFromAnimation(boneIDs, boneWeights, curAnimFrame, curAnimVertex, curAnimNormal, curAnimTangent);	
+	calcVertexFromAnimation(boneIDs, boneWeights, mainAnimFrame, curAnimVertex, curAnimNormal, curAnimTangent);	
 
 	//Find vertex position for previous animation if blending on top of it and lerp current one on top
-	if (curAnimWeight < 1.0)
+	if (mainAnimWeight < 1.0)
 	{
 		half4 prevAnimVertex = vertex;
 		half3 prevAnimNormal = normal;
 		half3 prevAnimTangent = tangent;
-		calcVertexFromAnimation(boneIDs, boneWeights, preAnimFrame, prevAnimVertex, prevAnimNormal, prevAnimTangent);
+		calcVertexFromAnimation(boneIDs, boneWeights, backgroundAnimFrame, prevAnimVertex, prevAnimNormal, prevAnimTangent);
 		
-		curAnimVertex = lerp(prevAnimVertex, curAnimVertex, curAnimWeight);
+		curAnimVertex = lerp(prevAnimVertex, curAnimVertex, mainAnimWeight);
 		
 #if !defined(_SKIN_POS_ONLY)	
-		curAnimNormal = lerp(prevAnimNormal, curAnimNormal, curAnimWeight);
-		curAnimTangent = lerp(prevAnimTangent, curAnimTangent, curAnimWeight);
+		curAnimNormal = lerp(prevAnimNormal, curAnimNormal, mainAnimWeight);
+		curAnimTangent = lerp(prevAnimTangent, curAnimTangent, mainAnimWeight);
 #endif
 	}
 	
@@ -160,19 +180,50 @@ void calcBlendedAnimations(float4 boneIDs, float4 boneWeights, float curAnimFram
 void applyGPUAnimations(float4 boneIDs, float4 boneWeights, inout half4 vertex, inout half3 normal, inout half4 tangent)
 {
 #if (SHADER_TARGET < 30 || SHADER_API_GLES)
-	float curAnimFrame = _currentAnimationFrame;
-	float curAnimWeight = _currentAnimationWeight;
-	float preAnimFrame = _previousAnimationFrame;
+	float mainAnimFrame = _mainAnimationFrame;
+	float mainAnimWeight = _mainAnimationWeight;
+	float backgroundAnimFrame = _backgroundAnimationFrame;
 #else
-	float curAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationFrame_arr, _currentAnimationFrame);
-	float curAnimWeight = UNITY_ACCESS_INSTANCED_PROP(_currentAnimationWeight_arr, _currentAnimationWeight);
-	float preAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_previousAnimationFrame_arr, _previousAnimationFrame);
+	float mainAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_mainAnimationFrame_arr, _mainAnimationFrame);
+	float mainAnimWeight = UNITY_ACCESS_INSTANCED_PROP(_mainAnimationWeight_arr, _mainAnimationWeight);
+	float backgroundAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_backgroundAnimationFrame_arr, _backgroundAnimationFrame);
+#endif
+	
+	calcBlendedAnimations(boneIDs, boneWeights, mainAnimFrame, mainAnimWeight, backgroundAnimFrame, vertex, normal, tangent);
+}
+
+void applyGPUAnimationsTwoLayers(float4 boneIDs, float4 boneWeights, inout half4 vertex, inout half3 normal, inout half4 tangent)
+{
+#if (SHADER_TARGET < 30 || SHADER_API_GLES)
+	float layerTwoWeight = _layerTwoWeight;
+	float layerTwoMainAnimFrame = _layerTwoMainAnimFrame;
+	float layerTwoMainAnimWeight = _layerTwoMainAnimWeight;
+	float layerTwoBackgroundAnim = _layerTwoBackgroundAnim;
+#else
+	float layerTwoWeight = UNITY_ACCESS_INSTANCED_PROP(_layerTwoWeight_arr, _layerTwoWeight);
+	float layerTwoMainAnimFrame = UNITY_ACCESS_INSTANCED_PROP(_layerTwoMainAnimFrame_arr, _layerTwoMainAnimFrame);
+	float layerTwoMainAnimWeight = UNITY_ACCESS_INSTANCED_PROP(_layerTwoMainAnimWeight_arr, _layerTwoMainAnimWeight);
+	float layerTwoBackgroundAnim = UNITY_ACCESS_INSTANCED_PROP(_layerTwoBackgroundAnim_arr, _layerTwoBackgroundAnim);
 #endif
 
 	//Base Layer
-	calcBlendedAnimations(boneIDs, boneWeights, curAnimFrame, curAnimWeight, preAnimFrame, vertex, normal, tangent);
+	if (layerTwoWeight < 1.0)
+	{
+		applyGPUAnimations(boneIDs, boneWeights, vertex, normal, tangent);
+	}
 	
-	//if multi layers are supported, get 2nd layer params, check its weight is less than 1, calc both layers
+	//2nd Layer
+	if (layerTwoWeight > 0.0)
+	{
+		half4 layerTwoVertex; 
+		half3 layerTwoNormal;
+		half4 layerTwoTangent;
+		calcBlendedAnimations(boneIDs, boneWeights, layerTwoMainAnimFrame, layerTwoMainAnimWeight, layerTwoBackgroundAnim, layerTwoVertex, layerTwoNormal, layerTwoTangent);
+		
+		vertex = lerp(vertex, layerTwoVertex, layerTwoWeight);
+		normal = lerp(normal, layerTwoNormal, layerTwoWeight);
+		tangent = lerp(tangent, layerTwoTangent, layerTwoWeight);
+	}
 }
 
 #define GPU_ANIMATION_DATA(boneIdsIdx, boneWeightsIdx) \
@@ -181,7 +232,7 @@ void applyGPUAnimations(float4 boneIDs, float4 boneWeights, inout half4 vertex, 
 	
 #define GPU_ANIMATE(input) \
 	applyGPUAnimations(input.boneIDs, input.boneWeights, input.vertex, input.normal, input.tangent);
-
+	
 #endif // _GPU_ANIMATION
 
 #endif // GPU_ANIMATION_INCLUDED
