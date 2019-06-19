@@ -12,11 +12,13 @@ namespace Framework
 			{
 				public readonly GameObject _gameObject;
 				public readonly GPUAnimatorBase _animator;
+				public object _extraData;
 
 				public GPUAnimatedMeshInstance(GameObject instance)
 				{
 					_gameObject = instance;
 					_animator = GameObjectUtils.GetComponent<GPUAnimatorBase>(instance, true);
+					_extraData = null;
 				}
 
 				#region IMeshInstance
