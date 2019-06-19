@@ -234,22 +234,33 @@ namespace Framework
 				
 				return FromCamelCase(name);
 			}
-
-			public static string RemoveRichText(string text)
+			
+			public static string RemoveRichText(string source)
 			{
-				if (text != null)
+				char[] array = new char[source.Length];
+				int arrayIndex = 0;
+				bool inside = false;
+
+				for (int i = 0; i < source.Length; i++)
 				{
-					text = text.Replace("<b>", "");
-					text = text.Replace("</b>", "");
-					text = text.Replace("<B>", "");
-					text = text.Replace("</B>", "");
-					text = text.Replace("<i>", "");
-					text = text.Replace("</i>", "");
-					text = text.Replace("<I>", "");
-					text = text.Replace("</I>", "");
+					char let = source[i];
+					if (let == '<')
+					{
+						inside = true;
+						continue;
+					}
+					if (let == '>')
+					{
+						inside = false;
+						continue;
+					}
+					if (!inside)
+					{
+						array[arrayIndex] = let;
+						arrayIndex++;
+					}
 				}
-				
-				return text;
+				return new string(array, 0, arrayIndex);
 			}
 		}
 	}

@@ -60,7 +60,7 @@ namespace Framework
 					};
 
 					overrideClip.SetCurve("", typeof(GPUAnimator), "_animatedValue", new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(origClip.length, 0f)));
-					overrideClip.legacy = false;
+					overrideClip.legacy = false; //Think this doesnt work in builds :(
 
 					return overrideClip;
 				}
