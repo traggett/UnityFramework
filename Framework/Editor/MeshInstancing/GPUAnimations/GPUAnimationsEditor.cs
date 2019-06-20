@@ -154,6 +154,7 @@ namespace Framework
 						AnimationClip[] animationClips = _animations;
 						Animator animator = null;
 						string[] animationStateNames = null;
+						int[] animationStateLayers = null;
 
 						//If using animator then get clips and state names from controller
 						if (_useAnimator)
@@ -168,7 +169,7 @@ namespace Framework
 							}
 								
 
-							GetAnimationClipsFromAnimator(animator, out animationClips, out animationStateNames);
+							GetAnimationClipsFromAnimator(animator, out animationClips, out animationStateNames, out animationStateLayers);
 
 							if (animationClips.Length == 0)
 							{
@@ -234,13 +235,18 @@ namespace Framework
 							//Needed to prevent first frame pop?
 							if (animator != null)
 							{
-								animator.Play(animationStateNames[animIndex]);
+								for (int layer=1; layer < animator.layerCount; layer++)
+								{
+									animator.SetLayerWeight(animIndex, layer == animationStateLayers[animIndex] ? 1.0f : 0.0f);
+								}
+
+								animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
 								animator.Update(0f);
 								yield return null;
-								animator.Play(animationStateNames[animIndex], 0, 0f);
+								animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
 								animator.Update(0f);
 								yield return null;
-								animator.Play(animationStateNames[animIndex], 0, 0f);
+								animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
 								animator.Update(0f);
 								yield return null;
 							}
@@ -260,8 +266,19 @@ namespace Framework
 								//Using animator, update animator to progress forward with animation
 								else
 								{
-									animator.Play(animationStateNames[animIndex], 0, normalisedTime);
+									for (int layer = 1; layer < animator.layerCount; layer++)
+									{
+										animator.SetLayerWeight(layer, 0.0f);
+									}
+
+									animator.SetLayerWeight(animationStateLayers[animIndex], 1.0f);
+									float layerWeight = animator.GetLayerWeight(animationStateLayers[animIndex]);
+
+									animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex], normalisedTime);
 									animator.Update(0f);
+
+									layerWeight = animator.GetLayerWeight(animationStateLayers[animIndex]);
+
 									yield return null;
 								}
 
@@ -466,27 +483,34 @@ namespace Framework
 						return colors;
 					}
 					
-					private static void GetAnimationClipsFromAnimator(Animator animator, out AnimationClip[] animationClips, out string[] animationStateNames)
+					private static void GetAnimationClipsFromAnimator(Animator animator, out AnimationClip[] animationClips, out string[] animationStateNames, out int[] animationStateLayers)
 					{
 						AnimatorController animatorController = (AnimatorController)animator.runtimeAnimatorController;
-						AnimatorControllerLayer controllerLayer = animatorController.layers[0];
 
 						List<AnimationClip> clips = new List<AnimationClip>();
 						List<string> stateNames = new List<string>();
+						List<int> stateLayers = new List<int>();
 
-						foreach (ChildAnimatorState state in controllerLayer.stateMachine.states)
+						for (int i=0; i< animatorController.layers.Length; i++)
 						{
-							AnimationClip clip = state.state.motion as AnimationClip;
+							AnimatorControllerLayer controllerLayer = animatorController.layers[i];
 
-							if (clip != null && !clips.Contains(clip))
+							foreach (ChildAnimatorState state in controllerLayer.stateMachine.states)
 							{
-								clips.Add(clip);
-								stateNames.Add(state.state.name);
+								AnimationClip clip = state.state.motion as AnimationClip;
+
+								if (clip != null && !clips.Contains(clip))
+								{
+									clips.Add(clip);
+									stateNames.Add(state.state.name);
+									stateLayers.Add(i);
+								}
 							}
 						}
 
 						animationClips = clips.ToArray();
 						animationStateNames = stateNames.ToArray();
+						animationStateLayers = stateLayers.ToArray();
 					}
 
 					private static void CreateMeshForAnimations(Mesh sourceMesh, TEXCOORD boneIdChannel, TEXCOORD boneWeightChannel, string path)

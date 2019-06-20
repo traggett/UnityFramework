@@ -15,8 +15,8 @@ namespace Framework
 
 				#region Private Data
 				private float[] _mainAnimationFrames;
-				private float[] _backgroundAnimationFrames;
 				private float[] _mainAnimationWeights;
+				private float[] _backgroundAnimationFrames;
 
 				private Dictionary<RuntimeAnimatorController, GPUAnimatorOverrideController> _animatorOverrideControllers = new Dictionary<RuntimeAnimatorController, GPUAnimatorOverrideController>();
 				#endregion

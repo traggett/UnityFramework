@@ -22,8 +22,7 @@ namespace Framework
 				private static Avatar _dummyAvatar;
 				private Animator _animator;
 				private SkinnedMeshRenderer _skinnedMeshRenderer;
-				private GPUAnimatorLayer _baseLayer;
-				private GPUAnimatorLayer[] _additionalLayers;
+				private GPUAnimatorLayer[] _layers;
 				#endregion
 
 				#region MonoBehaviour
@@ -31,11 +30,10 @@ namespace Framework
 				{
 					_animator = GetComponent<Animator>();
 					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
-					_baseLayer = new GPUAnimatorLayer(_animator, 0);
 
-					_additionalLayers = new GPUAnimatorLayer[_numAdditionalLayers];
-					for (int i=0; i<_numAdditionalLayers; i++)
-						_additionalLayers[i] = new GPUAnimatorLayer(_animator, i + 1);
+					_layers = new GPUAnimatorLayer[1 + _numAdditionalLayers];
+					for (int i=0; i< _layers.Length; i++)
+						_layers[i] = new GPUAnimatorLayer(_animator, i);
 
 					_onInitialise += Initialise;
 
@@ -55,17 +53,17 @@ namespace Framework
 				#region GPUAnimatorBase
 				public override float GetMainAnimationFrame()
 				{
-					return _baseLayer.GetMainAnimationFrame();
+					return _layers[0].GetMainAnimationFrame();
 				}
 
 				public override float GetMainAnimationWeight()
 				{
-					return _baseLayer.GetMainAnimationWeight();
+					return _layers[0].GetMainAnimationWeight();
 				}
 
 				public override float GetBackgroundAnimationFrame()
 				{
-					return _baseLayer.GetBackgroundAnimationFrame();
+					return _layers[0].GetBackgroundAnimationFrame();
 				}
 
 				public override Bounds GetBounds()
@@ -78,28 +76,24 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public float GetAnimationFrame(int layer)
+				public float GetLayerWeight(int layer)
 				{
-					if (layer == 0)
-						return _baseLayer.GetMainAnimationFrame();
+					return _layers[layer].GetWeight();
+				}
 
-					return _additionalLayers[layer].GetMainAnimationFrame();
+				public float GetMainAnimationFrame(int layer)
+				{
+					return _layers[layer].GetMainAnimationFrame();
 				}
 
 				public float GetMainAnimationWeight(int layer)
 				{
-					if (layer == 0)
-						return _baseLayer.GetMainAnimationWeight();
-
-					return _additionalLayers[layer].GetMainAnimationWeight();
+					return _layers[layer].GetMainAnimationWeight();
 				}
 
 				public float GetBackgroundAnimationFrame(int layer)
 				{
-					if (layer == 0)
-						return _baseLayer.GetBackgroundAnimationFrame();
-
-					return _additionalLayers[layer].GetBackgroundAnimationFrame();
+					return _layers[layer].GetBackgroundAnimationFrame();
 				}
 				#endregion
 
@@ -112,14 +106,15 @@ namespace Framework
 				
 				private void UpdateAnimator()
 				{
-					_baseLayer.Update();
+					for (int i=0; i<_layers.Length; i++)
+						_layers[i].Update();
 				}
 
 				private void UpdateRootMotion()
 				{
 					if (_animator.applyRootMotion)
 					{
-						_baseLayer.GetRootMotionVelocities(out Vector3 velocity, out Vector3 angularVelocity);
+						_layers[0].GetRootMotionVelocities(out Vector3 velocity, out Vector3 angularVelocity);
 
 						Quaternion rotation = this.transform.localRotation;
 						Quaternion delta = Quaternion.Euler(angularVelocity * Time.deltaTime);

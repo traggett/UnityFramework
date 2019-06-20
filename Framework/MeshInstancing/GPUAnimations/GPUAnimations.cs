@@ -56,13 +56,16 @@ namespace Framework
 
 				public static void CheckForEvents(GameObject gameObject, Animation animation, float prevFrame, float currFrame)
 				{
-					for (int i = 0; i < animation._events.Length; i++)
+					if (animation._events != null)
 					{
-						float animationEventFrame = animation._startFrameOffset + (animation._events[i].time * animation._fps);
-
-						if (prevFrame < animationEventFrame && currFrame >= animationEventFrame)
+						for (int i = 0; i < animation._events.Length; i++)
 						{
-							AnimationUtils.TriggerAnimationEvent(animation._events[i], gameObject);
+							float animationEventFrame = animation._startFrameOffset + (animation._events[i].time * animation._fps);
+
+							if (prevFrame < animationEventFrame && currFrame >= animationEventFrame)
+							{
+								AnimationUtils.TriggerAnimationEvent(animation._events[i], gameObject);
+							}
 						}
 					}
 				}

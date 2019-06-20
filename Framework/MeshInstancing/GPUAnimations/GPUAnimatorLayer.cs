@@ -13,6 +13,7 @@ namespace Framework
 				private readonly int _layer;
 				private readonly GPUAnimationPlayer[] _clipPlayers;
 				private readonly int[] _clipPlayerStates;
+				private float _weight;
 				private int _mainPlayerIndex;
 				private float _mainAnimationWeight;
 				#endregion
@@ -24,6 +25,7 @@ namespace Framework
 					_layer = layer;
 					_clipPlayers = new GPUAnimationPlayer[2];
 					_clipPlayerStates = new int[2];
+					_weight = 1.0f;
 					_mainPlayerIndex = 0;
 					_mainAnimationWeight = 1.0f;
 				}
@@ -42,9 +44,16 @@ namespace Framework
 				{
 					return _clipPlayers[1 - _mainPlayerIndex].GetCurrentTexureFrame();
 				}
+
+				public float GetWeight()
+				{
+					return _weight;
+				}
 				
 				public void Update()
 				{
+					_weight = _animator.GetLayerWeight(_layer);
+
 					//Check if we're transitioning - TO DO! transition from state to same state seem broken / cause pops
 					if (_animator.IsInTransition(_layer))
 					{
