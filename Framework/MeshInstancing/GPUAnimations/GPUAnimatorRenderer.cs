@@ -52,10 +52,17 @@ namespace Framework
 
 				public GPUAnimatorOverrideController GetOverrideControllerForAnimator(Animator animator)
 				{
-					if (!_animatorOverrideControllers.TryGetValue(animator.runtimeAnimatorController, out GPUAnimatorOverrideController overrideController))
+					RuntimeAnimatorController runtimeAnimatorController = animator.runtimeAnimatorController;
+
+					if (runtimeAnimatorController is AnimatorOverrideController)
 					{
-						overrideController = new GPUAnimatorOverrideController(animator.runtimeAnimatorController, _animationTexture.GetAnimations());
-						_animatorOverrideControllers[animator.runtimeAnimatorController] = overrideController;
+						runtimeAnimatorController = ((AnimatorOverrideController)runtimeAnimatorController).runtimeAnimatorController;
+					}
+
+					if (!_animatorOverrideControllers.TryGetValue(runtimeAnimatorController, out GPUAnimatorOverrideController overrideController))
+					{
+						overrideController = new GPUAnimatorOverrideController(runtimeAnimatorController, _animationTexture.GetAnimations());
+						_animatorOverrideControllers[runtimeAnimatorController] = overrideController;
 					}
 
 					return overrideController;
