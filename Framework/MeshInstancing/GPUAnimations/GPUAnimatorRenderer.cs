@@ -42,8 +42,8 @@ namespace Framework
 
 					if (instance._animator != null)
 					{
-						instance._animator.Initialise(this);
 						ActivateInstance(instance);
+						instance._animator.Initialise(this);
 						return true;
 					}
 
@@ -70,18 +70,23 @@ namespace Framework
 				#endregion
 
 				#region MeshInstanceRenderer
-				protected override void Initialise()
+				protected override bool Initialise()
 				{
-					base.Initialise();
-
-					_mainAnimationFrames = new float[_maxMeshes];
-					_backgroundAnimationFrames = new float[_maxMeshes];
-					_mainAnimationWeights = new float[_maxMeshes];
-
-					for (int i = 0; i < _materials.Length; i++)
+					if (base.Initialise())
 					{
-						_animationTexture.SetMaterialProperties(_materials[i]);
+						_mainAnimationFrames = new float[_maxMeshes];
+						_backgroundAnimationFrames = new float[_maxMeshes];
+						_mainAnimationWeights = new float[_maxMeshes];
+
+						for (int i = 0; i < _materials.Length; i++)
+						{
+							_animationTexture.SetMaterialProperties(_materials[i]);
+						}
+
+						return true;
 					}
+
+					return false;
 				}
 
 				protected override void UpdateProperties()

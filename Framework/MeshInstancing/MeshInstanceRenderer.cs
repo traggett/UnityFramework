@@ -86,21 +86,28 @@ namespace Framework
 			#endregion
 
 			#region Protected Functions
-			protected virtual void Initialise()
+			protected virtual bool Initialise()
 			{
-				//Init data
-				_instanceData = new T[_maxMeshes];
-				_renderedObjects = new RenderData[_maxMeshes];
-				for (int i = 0; i < _renderedObjects.Length; i++)
-					_renderedObjects[i] = new RenderData();
-				_renderedObjectIndexes = new List<int>(_maxMeshes);
-				_renderedObjectTransforms = new Matrix4x4[_maxMeshes];
+				//Init data if needed
+				if (_instanceData == null)
+				{
+					_instanceData = new T[_maxMeshes];
+					_renderedObjects = new RenderData[_maxMeshes];
+					for (int i = 0; i < _renderedObjects.Length; i++)
+						_renderedObjects[i] = new RenderData();
+					_renderedObjectIndexes = new List<int>(_maxMeshes);
+					_renderedObjectTransforms = new Matrix4x4[_maxMeshes];
 
-				_propertyBlock = new MaterialPropertyBlock();
+					_propertyBlock = new MaterialPropertyBlock();
 
-				_frustumPlanes = new Plane[6];
-				_frustumPlaneNormals = new Vector3[6];
-				_frustumPlaneDistances = new float[6];
+					_frustumPlanes = new Plane[6];
+					_frustumPlaneNormals = new Vector3[6];
+					_frustumPlaneDistances = new float[6];
+
+					return true;
+				}
+
+				return false;
 			}
 
 			protected void Render(Camera camera)
@@ -167,6 +174,8 @@ namespace Framework
 
 			protected void ActivateInstance(T instance)
 			{
+				Initialise();
+
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
 					if (!_instanceData[i].IsValid())
