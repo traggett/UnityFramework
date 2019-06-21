@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace Framework
 {
+	using System;
 	using Utils;
 
 	namespace MeshInstancing
@@ -31,7 +32,9 @@ namespace Framework
 					_animator = GetComponent<Animator>();
 					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
 
-					_layers = new GPUAnimatorLayer[1 + _numAdditionalLayers];
+					int numLayers = Math.Min(1 + _numAdditionalLayers, _animator.layerCount);
+
+					_layers = new GPUAnimatorLayer[numLayers];
 					for (int i=0; i< _layers.Length; i++)
 						_layers[i] = new GPUAnimatorLayer(_animator, i);
 
@@ -94,6 +97,11 @@ namespace Framework
 				public float GetBackgroundAnimationFrame(int layer)
 				{
 					return _layers[layer].GetBackgroundAnimationFrame();
+				}
+
+				public int GetNumLayers()
+				{
+					return _layers.Length;
 				}
 				#endregion
 
