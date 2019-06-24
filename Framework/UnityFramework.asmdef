@@ -1,6 +1,9 @@
 {
     "name": "UnityFramework",
-    "references": [],
+    "references": [
+        "Unity.Timeline",
+        "Unity.TextMeshPro"
+    ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -8,5 +11,6 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": []
 }

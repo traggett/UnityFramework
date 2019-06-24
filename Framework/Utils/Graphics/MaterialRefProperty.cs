@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace Framework
 {
@@ -57,6 +58,21 @@ namespace Framework
 								return _graphic.materialForRendering;
 							}
 #endif
+
+							//Text Mesh Pro Graphics need to use fontSharedMaterial grr
+							if (_graphic is TMP_Text textMeshPro)
+							{
+								//Make instance of this material
+								if (textMeshPro.fontSharedMaterial != null)
+								{
+									textMeshPro.fontSharedMaterial = new Material(textMeshPro.fontSharedMaterial);
+									textMeshPro.fontSharedMaterial.name = textMeshPro.fontSharedMaterial.name + " (Instance)";
+									_material = textMeshPro.fontSharedMaterial;
+								}
+
+								return null;
+							}
+
 							//Make instance of this material
 							if (_graphic.material != null)
 							{
