@@ -8,7 +8,7 @@ namespace Framework
 		{
 			namespace Editor
 			{
-				[CustomEditor(typeof(GPUAnimatorBoneFollower), true)]
+				[CustomEditor(typeof(GPUAnimatorBoneFollower))]
 				public class GPUAnimatorBoneFollowerEditor : UnityEditor.Editor
 				{
 					private SerializedProperty _animatorProperty;

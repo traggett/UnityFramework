@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,7 +8,7 @@ namespace Framework
 	{
 		namespace GPUAnimations
 		{
-			public class GPUAnimatorOverrideController : AnimatorOverrideController
+			public sealed class GPUAnimatorOverrideController : AnimatorOverrideController
 			{
 				#region Private Data
 				private readonly Dictionary<AnimationClip, int> _animationLookUp;
@@ -22,18 +23,33 @@ namespace Framework
 					_animations = animations;
 					_animationLookUp = new Dictionary<AnimationClip, int>();
 
-					List<KeyValuePair<AnimationClip, AnimationClip>> anims = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+					List<KeyValuePair<AnimationClip, AnimationClip>> overrideClips = new List<KeyValuePair<AnimationClip, AnimationClip>>();
 
 					foreach (AnimationClip origClip in controller.animationClips)
 					{
 						//Override original animation
 						AnimationClip overrideClip = CreateOverrideClip(origClip);
-						anims.Add(new KeyValuePair<AnimationClip, AnimationClip>(origClip, overrideClip));
+						overrideClips.Add(new KeyValuePair<AnimationClip, AnimationClip>(origClip, overrideClip));
 						//Cache what gpu animation it corresponds too
 						_animationLookUp[overrideClip] = GetAnimationIndex(origClip);
 					}
 
-					ApplyOverrides(anims);
+					ApplyOverrides(overrideClips);
+				}
+
+				public GPUAnimatorOverrideController(RuntimeAnimatorController controller, GPUAnimations animations, List<KeyValuePair<AnimationClip, AnimationClip>> overrideClips) : base(controller)
+				{
+					this.name = controller.name + " (GPU Animated)";
+
+					_animations = animations;
+					_animationLookUp = new Dictionary<AnimationClip, int>();
+					
+					foreach (KeyValuePair<AnimationClip, AnimationClip> clipPair in overrideClips)
+					{
+						_animationLookUp[clipPair.Value] = GetAnimationIndex(clipPair.Key);
+					}
+
+					ApplyOverrides(overrideClips);
 				}
 
 				public GPUAnimations.Animation GetAnimation(AnimationClip clip)
@@ -45,10 +61,8 @@ namespace Framework
 
 					return GPUAnimations.Animation.kInvalid;
 				}
-				#endregion
 
-				#region Private Functions
-				private static AnimationClip CreateOverrideClip(AnimationClip origClip)
+				public static AnimationClip CreateOverrideClip(AnimationClip origClip)
 				{
 					AnimationClip overrideClip = new AnimationClip
 					{
@@ -64,7 +78,9 @@ namespace Framework
 
 					return overrideClip;
 				}
+				#endregion
 
+				#region Private Functions
 				private int GetAnimationIndex(AnimationClip clip)
 				{
 					for (int i = 0; i < _animations._animations.Length; i++)
