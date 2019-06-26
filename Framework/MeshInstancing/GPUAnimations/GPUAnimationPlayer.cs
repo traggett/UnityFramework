@@ -26,7 +26,7 @@ namespace Framework
 					_loops = 0;
 				}
 				
-				public void Update(float deltaTime, bool checkForEvents = false, GameObject eventListener = null)
+				public bool Update(float deltaTime, bool checkForEvents = false, GameObject eventListener = null)
 				{
 					if (_animation._totalFrames > 0 && deltaTime > 0f && _speed > 0f)
 					{
@@ -41,12 +41,16 @@ namespace Framework
 						{
 							switch (_wrapMode)
 							{
-								case WrapMode.Clamp:
+								case WrapMode.Once:
+									{
+										_frame = _animation._totalFrames;
+										return true;
+									}
 								case WrapMode.ClampForever:
 									{
 										_frame = _animation._totalFrames;
+										return false;
 									}
-									break;
 								case WrapMode.PingPong:
 								case WrapMode.Loop:
 								case WrapMode.Default:
@@ -54,11 +58,15 @@ namespace Framework
 									{
 										_frame = _frame < 0 ? _frame + _animation._totalFrames : _frame - _animation._totalFrames;
 										_loops++;
+										return false;
 									}
-									break;
 							}
 						}
+
+						return false;
 					}
+
+					return true;
 				}
 
 				public GPUAnimations.Animation GetAnimation()

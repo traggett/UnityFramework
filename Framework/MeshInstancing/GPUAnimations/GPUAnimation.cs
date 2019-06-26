@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 namespace Framework
 {
@@ -21,9 +22,48 @@ namespace Framework
 						return GetAnimationState(name);
 					}
 				}
+				public bool isPlaying
+				{
+					get
+					{
+						for (int i = 0; i < _animationStates.Length; i++)
+						{
+							if (_animationStates[i].Enabled)
+								return true;
+						}
+
+						return false;
+					}
+				}
 				#endregion
 
 				#region Private Data
+				private sealed class Enumerator : IEnumerator
+				{
+					private GPUAnimation _outer;
+
+					private int _currentIndex = -1;
+
+					public object Current => _outer.GetStateAtIndex(_currentIndex);
+
+					internal Enumerator(GPUAnimation outer)
+					{
+						_outer = outer;
+					}
+
+					public bool MoveNext()
+					{
+						int stateCount = _outer.GetStateCount();
+						_currentIndex++;
+						return _currentIndex < stateCount;
+					}
+
+					public void Reset()
+					{
+						_currentIndex = -1;
+					}
+				}
+
 				private SkinnedMeshRenderer _skinnedMeshRenderer;
 				private GPUAnimationState _primaryAnimationState;
 				private GPUAnimationState _secondaryAnimationState;
@@ -66,9 +106,7 @@ namespace Framework
 
 				public bool Play(string animation, PlayMode mode = PlayMode.StopSameLayer)
 				{
-					CancelQueue();
-					CancelCrossFade();
-					StopAll();
+					Stop();
 
 					GPUAnimationState animState = GetAnimationState(animation);
 
@@ -89,6 +127,17 @@ namespace Framework
 					}
 				}
 				
+				public void Stop()
+				{
+					CancelCrossFade();
+					CancelQueue();
+
+					for (int i = 0; i < _animationStates.Length; i++)
+					{
+						_animationStates[i].Enabled = false;
+					}
+				}
+
 				public GPUAnimationState PlayQueued(string animation, QueueMode queue = QueueMode.CompleteOthers, PlayMode mode = PlayMode.StopSameLayer)
 				{
 					CancelCrossFade();
@@ -186,6 +235,16 @@ namespace Framework
 						_animationStates[i].Time = 0.0f;
 					}
 				}
+
+				public GPUAnimationState GetStateAtIndex(int index)
+				{
+					return _animationStates[index];
+				}
+
+				public int GetStateCount()
+				{
+					return _animationStates.Length;
+				}
 				#endregion
 
 				#region GPUAnimatorBase
@@ -210,6 +269,11 @@ namespace Framework
 						return _skinnedMeshRenderer.bounds;
 
 					return new Bounds();
+				}
+
+				public IEnumerator GetEnumerator()
+				{
+					return new Enumerator(this);
 				}
 				#endregion
 
@@ -280,14 +344,6 @@ namespace Framework
 					return null;
 				}
 				
-				private void StopAll()
-				{
-					for (int i = 0; i < _animationStates.Length; i++)
-					{
-						Stop(i);
-					}
-				}
-
 				private void Stop(int animIndex)
 				{
 					_animationStates[animIndex].Enabled = false;
