@@ -17,7 +17,7 @@ namespace Framework
 
 				#region Private Data
 				private GPUAnimatorRenderer _renderer;
-				private Dictionary<RuntimeAnimatorController, GPUAnimatorOverrideController> _overrideControllers;
+				private Dictionary<RuntimeAnimatorController, GPUAnimatorOverrideController> _overrideControllers = new Dictionary<RuntimeAnimatorController, GPUAnimatorOverrideController>();
 
 				[Serializable]
 				private struct AnimationClipData
@@ -28,13 +28,7 @@ namespace Framework
 				[SerializeField]
 				private AnimationClipData[] _overrideClips;
 				#endregion
-
-				private void Awake()
-				{
-					_renderer = GetComponent<GPUAnimatorRenderer>();
-					_overrideControllers = new Dictionary<RuntimeAnimatorController, GPUAnimatorOverrideController>();
-				}
-
+				
 				#region Public Functions
 				public static GPUAnimatorOverrideController GetOverrideController(GPUAnimatorRenderer renderer, Animator animator)
 				{
@@ -78,6 +72,9 @@ namespace Framework
 				private GPUAnimatorOverrideController GetOverrideController(Animator animator)
 				{
 					RuntimeAnimatorController runtimeAnimatorController = GetRuntimeAnimatorController(animator);
+
+					if (_renderer == null)
+						_renderer = GetComponent<GPUAnimatorRenderer>();
 
 					if (!_overrideControllers.TryGetValue(runtimeAnimatorController, out GPUAnimatorOverrideController overrideController))
 					{
