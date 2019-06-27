@@ -54,15 +54,15 @@ namespace Framework
 					_texture = texture;
 				}
 
-				public static void CheckForEvents(GameObject gameObject, Animation animation, float prevFrame, float currFrame)
+				public static void CheckForEvents(GameObject gameObject, Animation animation, float prevFrame, float nextFrame)
 				{
 					if (animation._events != null)
 					{
 						for (int i = 0; i < animation._events.Length; i++)
 						{
-							float animationEventFrame = animation._startFrameOffset + (animation._events[i].time * animation._fps);
+							float animationEventFrame = animation._events[i].time * animation._fps;
 
-							if (prevFrame < animationEventFrame && currFrame >= animationEventFrame)
+							if (prevFrame <= animationEventFrame && animationEventFrame < nextFrame)
 							{
 								AnimationUtils.TriggerAnimationEvent(animation._events[i], gameObject);
 							}

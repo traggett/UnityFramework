@@ -1,3 +1,4 @@
+using Framework.Maths;
 using System;
 using UnityEngine;
 
@@ -44,7 +45,7 @@ namespace Framework
 					return -1;
 				}
 
-				public bool GetBoneTransform(int boneIndex, float frame, GPUAnimatorBoneFollower.Flags flags, out Vector3 position, out Quaternion rotation, out Vector3 scale)
+				public bool GetBoneTransform(int boneIndex, float frame, bool usePosition, bool useRotation, bool useScale, out Vector3 position, out Quaternion rotation, out Vector3 scale)
 				{
 					GetRenderer();
 
@@ -56,7 +57,7 @@ namespace Framework
 						int nextFrame = Math.Min(prevFrame + 1, _totalSamples - 1);
 						float frameLerp = frame - prevFrame;
 						
-						if ((flags & GPUAnimatorBoneFollower.Flags.Position) != 0)
+						if (usePosition)
 						{
 							Vector3 prevFramePos = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].MultiplyPoint3x4(Vector3.zero);
 							Vector3 nextFramePos = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].MultiplyPoint3x4(Vector3.zero);
@@ -67,25 +68,18 @@ namespace Framework
 							position = Vector3.zero;
 						}
 
-						if ((flags & GPUAnimatorBoneFollower.Flags.Rotation) != 0)
+						if (useRotation)
 						{
-							Vector3 prevForward = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].MultiplyVector(Vector3.forward);
-							Vector3 prevUp = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].MultiplyVector(Vector3.up);
-
-							Vector3 nextForward = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].MultiplyVector(Vector3.forward);
-							Vector3 nextUp = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].MultiplyVector(Vector3.up);
-
-							Vector3 forward = Vector3.Lerp(prevForward, nextForward, frameLerp);
-							Vector3 up = Vector3.Lerp(prevUp, nextUp, frameLerp);
-
-							rotation = Quaternion.LookRotation(forward, up);
+							Quaternion prevRotation = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].rotation;
+							Quaternion nextRotation = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].rotation;
+							rotation = Quaternion.Slerp(prevRotation, nextRotation, frameLerp);
 						}				
 						else
 						{
 							rotation = Quaternion.identity;
 						}
 						
-						if ((flags & GPUAnimatorBoneFollower.Flags.Scale) != 0)
+						if (useScale)
 						{
 							Vector3 prevScale = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[prevFrame].lossyScale;
 							Vector3 nextScale = _trackedBones[trackedBoneIndex]._cachedBoneMatrices[nextFrame].lossyScale;

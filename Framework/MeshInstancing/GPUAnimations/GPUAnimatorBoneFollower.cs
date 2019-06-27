@@ -99,28 +99,32 @@ namespace Framework
 					if (_boneTracking == null)
 						return;
 
+					bool followPosition = (_flags & Flags.Position) != 0;
+					bool followRotation = (_flags & Flags.Rotation) != 0;
+					bool followScale = (_flags & Flags.Scale) != 0;
+
 					//Work out local space bone transform
 					float curAnimWeight = _animator.GetMainAnimationWeight();
-					_boneTracking.GetBoneTransform(_boneIndex, _animator.GetMainAnimationFrame(), _flags, out Vector3 localPosition, out Quaternion localRotation, out Vector3 localScale);
+					_boneTracking.GetBoneTransform(_boneIndex, _animator.GetMainAnimationFrame(), followPosition, followRotation, followScale, out Vector3 localPosition, out Quaternion localRotation, out Vector3 localScale);
 
 					if (curAnimWeight < 1.0f)
 					{
-						_boneTracking.GetBoneTransform(_boneIndex, _animator.GetBackgroundAnimationFrame(), _flags, out Vector3 prevLocalPosition, out Quaternion prevLocalRotation, out Vector3 prevLocalScale);
+						_boneTracking.GetBoneTransform(_boneIndex, _animator.GetBackgroundAnimationFrame(), followPosition, followRotation, followScale, out Vector3 backgroundLocalPosition, out Quaternion backgroundLocalRotation, out Vector3 backgroundLocalScale);
 
-						if ((_flags & Flags.Position) != 0)
-							localPosition = Vector3.Lerp(prevLocalPosition, localPosition, curAnimWeight);
-						if ((_flags & Flags.Rotation) != 0)
-							localRotation = Quaternion.Slerp(prevLocalRotation, localRotation, curAnimWeight);
-						if ((_flags & Flags.Scale) != 0)
-							localScale = Vector3.Lerp(prevLocalScale, localScale, curAnimWeight);
+						if (followPosition)
+							localPosition = Vector3.Lerp(backgroundLocalPosition, localPosition, curAnimWeight);
+						if (followRotation)
+							localRotation = Quaternion.Slerp(backgroundLocalRotation, localRotation, curAnimWeight);
+						if (followScale)
+							localScale = Vector3.Lerp(backgroundLocalScale, localScale, curAnimWeight);
 					}
 
 					//Convert to world space
-					if ((_flags & Flags.Position) != 0)
+					if (followPosition)
 						_worldBonePosition = _animator.transform.TransformPoint(localPosition);
-					if ((_flags & Flags.Rotation) != 0)
+					if (followRotation)
 						_worldBoneRotation = _animator.transform.rotation * localRotation;
-					if ((_flags & Flags.Scale) != 0)
+					if (followScale)
 						_worldBoneScale = Vector3.Scale(_animator.transform.lossyScale, localScale);
 
 					UpdateTargetTransform();

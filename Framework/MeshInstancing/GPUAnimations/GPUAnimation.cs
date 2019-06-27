@@ -301,6 +301,9 @@ namespace Framework
 					{
 						_primaryAnimationState.Enabled = true;
 						_primaryAnimationState.Weight = 1.0f;
+
+						if (_wrapMode != WrapMode.Default)
+							_primaryAnimationState.WrapMode = _wrapMode;
 					}
 				}
 

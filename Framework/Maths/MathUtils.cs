@@ -398,6 +398,16 @@ namespace Framework
 				matrix.m13 = position.y;
 				matrix.m23 = position.z;
 			}
+
+			public static Vector3 GetForward(ref Matrix4x4 matrix)
+			{
+				return matrix.GetColumn(2);
+			}
+
+			public static Vector3 GetUp(ref Matrix4x4 matrix)
+			{
+				return matrix.GetColumn(1);
+			}
 		}
 	}
 }
