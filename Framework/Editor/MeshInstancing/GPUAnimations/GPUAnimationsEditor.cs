@@ -167,7 +167,7 @@ namespace Framework
 								_working = false;
 								yield break;
 							}
-								
+
 
 							GetAnimationClipsFromAnimator(animator, out animationClips, out animationStateNames, out animationStateLayers);
 
@@ -182,9 +182,10 @@ namespace Framework
 							animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 						}
 
+						
+
 						Transform[] bones = skinnedMesh.bones;
 						Matrix4x4[] bindposes = skinnedMesh.sharedMesh.bindposes;
-
 						int numBones = bones.Length;
 
 						if (numBones == 0)
@@ -195,10 +196,16 @@ namespace Framework
 						}
 
 						string[] boneNames = new string[numBones];
+						Vector3[] origBonePositons = new Vector3[numBones];
+						Quaternion[] origBoneRotations = new Quaternion[numBones];
+						Vector3[] origBoneScales = new Vector3[numBones];
 
 						for (int i=0; i<numBones; i++)
 						{
 							boneNames[i] = bones[i].gameObject.name;
+							origBonePositons[i] = bones[i].localPosition;
+							origBoneRotations[i] = bones[i].localRotation;
+							origBoneScales[i] = bones[i].localScale;
 						}
 
 						GPUAnimations.Animation[] animations = new GPUAnimations.Animation[animationClips.Length];
@@ -249,6 +256,16 @@ namespace Framework
 								animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
 								animator.Update(0f);
 								yield return null;
+							}
+							//Reset all bone transforms
+							else
+							{
+								for (int i = 0; i < numBones; i++)
+								{
+									bones[i].localPosition = origBonePositons[i];
+									bones[i].localRotation = origBoneRotations[i];
+									bones[i].localScale = origBoneScales[i];
+								}
 							}
 							
 							for (int i = 0; i < totalSamples; i++)

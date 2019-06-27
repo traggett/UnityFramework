@@ -45,9 +45,10 @@ namespace Framework
 					}
 				}
 
-				public void CreateOverrideControllers()
+#if UNITY_EDITOR
+				public void CacheOverrideClips()
 				{
-					List<AnimationClipData> clips = new List<AnimationClipData>();
+					List<AnimationClip> clips = new List<AnimationClip>();
 
 					for (int i = 0; i < _controllers.Length; i++)
 					{
@@ -55,17 +56,26 @@ namespace Framework
 						{
 							foreach (AnimationClip clip in _controllers[i].animationClips)
 							{
-								clips.Add(new AnimationClipData()
+								if (clip != null && !clips.Contains(clip))
 								{
-									_originalClip = clip,
-									_overrideClip = GPUAnimatorOverrideController.CreateOverrideClip(clip)
-								});
+									clips.Add(clip);
+								}
 							}
 						}
 					}
 
-					_overrideClips = clips.ToArray();
+					_overrideClips = new AnimationClipData[clips.Count];
+
+					for (int i = 0; i < _overrideClips.Length; i++)
+					{
+						_overrideClips[i] = new AnimationClipData()
+						{
+							_originalClip = clips[i],
+							_overrideClip = GPUAnimatorOverrideController.CreateOverrideClip(clips[i])
+						};
+					}
 				}
+#endif
 				#endregion
 
 				#region Private Functions

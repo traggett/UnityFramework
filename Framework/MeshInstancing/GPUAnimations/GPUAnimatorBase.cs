@@ -37,17 +37,6 @@ namespace Framework
 					_initialised = false;
 				}
 
-				private void LateUpdate()
-				{
-					Transform transform = this.transform;
-
-					if (transform.hasChanged)
-					{
-						CachedTransformData(transform);
-						transform.hasChanged = false;
-					}
-				}
-
 #if UNITY_EDITOR
 				void OnDrawGizmosSelected()
 				{
@@ -73,11 +62,15 @@ namespace Framework
 
 				public Matrix4x4 GetWorldMatrix()
 				{
+					UpdateTransformIfNeeded();
+
 					return _worldMatrix;
 				}
 
 				public Vector3 GetWorldPos()
 				{
+					UpdateTransformIfNeeded();
+
 					return _worldPos;
 				}
 
@@ -112,6 +105,17 @@ namespace Framework
 					_worldScale = transform.lossyScale;
 					_worldBoundingSphereRadius = Mathf.Max(Mathf.Max(_worldScale.x, _worldScale.y), _worldScale.z) * _sphericalBoundsRadius;
 					_worldBoundingSphereCentre = _worldMatrix.MultiplyPoint3x4(_sphericalBoundsCentre);
+				}
+
+				protected void UpdateTransformIfNeeded()
+				{
+					Transform transform = this.transform;
+
+					if (transform.hasChanged)
+					{
+						CachedTransformData(transform);
+						transform.hasChanged = false;
+					}
 				}
 				#endregion
 			}

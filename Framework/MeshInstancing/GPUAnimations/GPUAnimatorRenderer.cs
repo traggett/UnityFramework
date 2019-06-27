@@ -53,6 +53,8 @@ namespace Framework
 				{
 					if (base.Initialise())
 					{
+						_mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 1000000f);
+
 						_mainAnimationFrames = new float[_maxMeshes];
 						_backgroundAnimationFrames = new float[_maxMeshes];
 						_mainAnimationWeights = new float[_maxMeshes];

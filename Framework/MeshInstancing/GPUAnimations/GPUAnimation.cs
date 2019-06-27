@@ -99,12 +99,12 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public bool Play(PlayMode mode = PlayMode.StopSameLayer)
+				public bool Play(PlayMode mode = PlayMode.StopSameLayer, WrapMode wrapMode = WrapMode.Default)
 				{
-					return Play(_defaultAnimation, mode);
+					return Play(_defaultAnimation, mode, wrapMode);
 				}
 
-				public bool Play(string animation, PlayMode mode = PlayMode.StopSameLayer)
+				public bool Play(string animation, PlayMode mode = PlayMode.StopSameLayer, WrapMode wrapMode = WrapMode.Default)
 				{
 					Stop();
 
@@ -116,8 +116,14 @@ namespace Framework
 						animState.Time = 0.0f;
 						animState.Weight = 1.0f;
 
-						if (_wrapMode != WrapMode.Default)
+						if (wrapMode != WrapMode.Default)
+						{
+							animState.WrapMode = wrapMode;
+						}
+						else if (_wrapMode != WrapMode.Default)
+						{
 							animState.WrapMode = _wrapMode;
+						}							
 
 						return true;
 					}

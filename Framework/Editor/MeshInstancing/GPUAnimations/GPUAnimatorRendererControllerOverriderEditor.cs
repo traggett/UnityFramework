@@ -26,14 +26,14 @@ namespace Framework
 						if (DrawDefaultInspector())
 						{
 							serializedObject.ApplyModifiedProperties();
-							controllerOverrider.CreateOverrideControllers();
+							controllerOverrider.CacheOverrideClips();
 						}
 
 						EditorGUILayout.Separator();
 						
 						if (GUILayout.Button("Update Animation Overides"))
 						{
-							controllerOverrider.CreateOverrideControllers();
+							controllerOverrider.CacheOverrideClips();
 						}
 					}
 
