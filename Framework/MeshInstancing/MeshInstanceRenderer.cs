@@ -173,7 +173,8 @@ namespace Framework
 			{
 				for (int i = 0; i < _mesh.subMeshCount; i++)
 				{
-					Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, _numRenderedObjects, _propertyBlock, _shadowCastingMode, _recieveShadows, _layer);
+					if (i < _materials.Length &&  _materials[i].GetMaterial() != null)
+						Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, _numRenderedObjects, _propertyBlock, _shadowCastingMode, _recieveShadows, _layer);
 				}
 			}
 
