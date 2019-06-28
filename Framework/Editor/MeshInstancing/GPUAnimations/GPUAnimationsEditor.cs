@@ -32,7 +32,8 @@ namespace Framework
 					private Mesh _mesh;
 					private TEXCOORD _boneIdChanel = TEXCOORD.TEXCOORD3;
 					private TEXCOORD _boneWeightChannel = TEXCOORD.TEXCOORD4;
-					
+					private int _numBonesPerVertex = 4;
+
 					private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
 					#endregion
 
@@ -59,7 +60,7 @@ namespace Framework
 
 						GUILayout.BeginVertical();
 						{
-							EditorGUILayout.LabelField("Generate Animation Texture", EditorStyles.largeLabel);
+							EditorGUILayout.LabelField("Generate GPU Animation Texture", EditorStyles.largeLabel);
 							EditorGUILayout.Separator();
 
 							GameObject prefab = EditorGUILayout.ObjectField("Asset to Evaluate", _evaluatedObject, typeof(GameObject), true) as GameObject;
@@ -82,7 +83,16 @@ namespace Framework
 								_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
 							}
 
-							_useAnimator = EditorGUILayout.Toggle("Sample Animator", _useAnimator);
+							Animator animator = GameObjectUtils.GetComponent<Animator>(_evaluatedObject, true);
+
+							if (animator != null)
+							{
+								_useAnimator = EditorGUILayout.Toggle("Use Animator", _useAnimator);
+							}
+							else
+							{
+								_useAnimator = false;
+							}
 
 							if (!_useAnimator)
 							{
@@ -117,13 +127,14 @@ namespace Framework
 
 						GUILayout.BeginVertical();
 						{
-							EditorGUILayout.LabelField("Generate Animation Texture Mesh", EditorStyles.largeLabel);
+							EditorGUILayout.LabelField("Generate GPU Animated Mesh", EditorStyles.largeLabel);
 							EditorGUILayout.Separator();
 
 							_mesh = EditorGUILayout.ObjectField("Mesh", _mesh, typeof(Mesh), true) as Mesh;
 
 							_boneIdChanel = (TEXCOORD)EditorGUILayout.EnumPopup("Bone IDs UV Channel", _boneIdChanel);
 							_boneWeightChannel = (TEXCOORD)EditorGUILayout.EnumPopup("Bone Weights UV Channel", _boneWeightChannel);
+							_numBonesPerVertex = EditorGUILayout.IntSlider(new GUIContent("Bones Per Vertex"), _numBonesPerVertex, 1, 4);
 
 							if (_mesh != null)
 							{
@@ -133,7 +144,7 @@ namespace Framework
 
 									if (!string.IsNullOrEmpty(path))
 									{
-										CreateMeshForAnimations(_mesh, _boneIdChanel, _boneWeightChannel, path);
+										CreateMeshForAnimations(_mesh, _boneIdChanel, _boneWeightChannel, _numBonesPerVertex, path);
 									}
 								}
 							}
@@ -538,9 +549,9 @@ namespace Framework
 						animationStateLayers = stateLayers.ToArray();
 					}
 
-					private static void CreateMeshForAnimations(Mesh sourceMesh, TEXCOORD boneIdChannel, TEXCOORD boneWeightChannel, string path)
+					private static void CreateMeshForAnimations(Mesh sourceMesh, TEXCOORD boneIdChannel, TEXCOORD boneWeightChannel, int bonesPerVertex, string path)
 					{
-						Mesh mesh = CreateMeshWithExtraData(sourceMesh, boneIdChannel, boneWeightChannel);
+						Mesh mesh = CreateMeshWithExtraData(sourceMesh, boneIdChannel, boneWeightChannel, bonesPerVertex);
 						mesh.UploadMeshData(true);
 
 						string assetPath = FileUtil.GetProjectRelativePath(path);
@@ -549,7 +560,7 @@ namespace Framework
 						AssetDatabase.SaveAssets();
 					}
 
-					private static Mesh CreateMeshWithExtraData(Mesh sourceMesh, TEXCOORD boneIdsUVChanel, TEXCOORD boneWeightsUVChanel, int bonesPerVertex = 4)
+					private static Mesh CreateMeshWithExtraData(Mesh sourceMesh, TEXCOORD boneIdsUVChanel, TEXCOORD boneWeightsUVChanel, int bonesPerVertex)
 					{
 						Mesh mesh = Instantiate(sourceMesh);
 
