@@ -95,14 +95,23 @@ namespace Framework
 				#region Public Interface
 				public GPUAnimationState(GPUAnimations.Animation animation)
 				{
-					_player = new GPUAnimationPlayer(animation, animation._wrapMode);
+					WrapMode wrapMode = animation._wrapMode;
+
+					if (wrapMode == WrapMode.Default)
+						wrapMode = WrapMode.Once;
+
+					_player = new GPUAnimationPlayer(animation, wrapMode);
 				}
 
 				public void Update(float deltaTime, bool checkForEvents = false, GameObject eventListener = null)
 				{
 					if (Enabled)
 					{
-						_player.Update(deltaTime, checkForEvents, eventListener);
+						//If animation is finished, disable this state
+						if (_player.Update(deltaTime, checkForEvents, eventListener))
+						{
+							Enabled = false;
+						}
 					}
 
 					if (_fading)

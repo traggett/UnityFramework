@@ -34,7 +34,7 @@ namespace Framework
 					LoadIfNeeded();
 
 					//Set material constants
-					if (_animationTexture != null)
+					if (_animationTexture != null && material != null)
 					{
 						material.SetFloat("_boneCount", _animationTexture._bones.Length);
 						material.SetTexture("_animationTexture", _animationTexture._texture);

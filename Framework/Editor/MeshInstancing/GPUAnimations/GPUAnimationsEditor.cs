@@ -35,7 +35,8 @@ namespace Framework
 					private Mesh _mesh;
 					private TEXCOORD _boneIdChanel = TEXCOORD.TEXCOORD3;
 					private TEXCOORD _boneWeightChannel = TEXCOORD.TEXCOORD4;
-					
+					private int _numBonesPerVertex = 4;
+
 					private static int[] kAllowedTextureSizes = { 64, 128, 256, 512, 1024, 2048, 4098 };
 					#endregion
 
@@ -62,7 +63,7 @@ namespace Framework
 
 						GUILayout.BeginVertical();
 						{
-							EditorGUILayout.LabelField("Generate Animation Texture", EditorStyles.largeLabel);
+							EditorGUILayout.LabelField("Generate GPU Animation Texture", EditorStyles.largeLabel);
 							EditorGUILayout.Separator();
 
 							GameObject prefab = EditorGUILayout.ObjectField("Asset to Evaluate", _evaluatedObject, typeof(GameObject), true) as GameObject;
@@ -85,7 +86,16 @@ namespace Framework
 								_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
 							}
 
-							_useAnimator = EditorGUILayout.Toggle("Sample Animator", _useAnimator);
+							Animator animator = GameObjectUtils.GetComponent<Animator>(_evaluatedObject, true);
+
+							if (animator != null)
+							{
+								_useAnimator = EditorGUILayout.Toggle("Use Animator", _useAnimator);
+							}
+							else
+							{
+								_useAnimator = false;
+							}
 
 							if (!_useAnimator)
 							{
@@ -120,13 +130,14 @@ namespace Framework
 
 						GUILayout.BeginVertical();
 						{
-							EditorGUILayout.LabelField("Generate Animation Texture Mesh", EditorStyles.largeLabel);
+							EditorGUILayout.LabelField("Generate GPU Animated Mesh", EditorStyles.largeLabel);
 							EditorGUILayout.Separator();
 
 							_mesh = EditorGUILayout.ObjectField("Mesh", _mesh, typeof(Mesh), true) as Mesh;
 
 							_boneIdChanel = (TEXCOORD)EditorGUILayout.EnumPopup("Bone IDs UV Channel", _boneIdChanel);
 							_boneWeightChannel = (TEXCOORD)EditorGUILayout.EnumPopup("Bone Weights UV Channel", _boneWeightChannel);
+							_numBonesPerVertex = EditorGUILayout.IntSlider(new GUIContent("Bones Per Vertex"), _numBonesPerVertex, 1, 4);
 
 							if (_mesh != null)
 							{
@@ -136,7 +147,7 @@ namespace Framework
 
 									if (!string.IsNullOrEmpty(path))
 									{
-										CreateMeshForAnimations(_mesh, _boneIdChanel, _boneWeightChannel, path);
+										CreateMeshForAnimations(_mesh, _boneIdChanel, _boneWeightChannel, _numBonesPerVertex, path);
 									}
 								}
 							}
@@ -151,9 +162,6 @@ namespace Framework
 						_working = true;
 
 						GameObject gameObject = Instantiate(_evaluatedObject);
-
-						SkinnedMeshRenderer[] skinnedMeshes = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
-						SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
 						AnimationClip[] animationClips = _animations;
 						Animator animator = null;
 						string[] animationStateNames = null;
@@ -170,7 +178,7 @@ namespace Framework
 								_working = false;
 								yield break;
 							}
-								
+
 
 							GetAnimationClipsFromAnimator(animator, out animationClips, out animationStateNames, out animationStateLayers);
 
@@ -185,9 +193,11 @@ namespace Framework
 							animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 						}
 
+						SkinnedMeshRenderer[] skinnedMeshes = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+						SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
+						Matrix4x4 rootMat = gameObject.transform.worldToLocalMatrix;
 						Transform[] bones = skinnedMesh.bones;
 						Matrix4x4[] bindposes = skinnedMesh.sharedMesh.bindposes;
-
 						int numBones = bones.Length;
 
 						if (numBones == 0)
@@ -198,24 +208,37 @@ namespace Framework
 						}
 
 						string[] boneNames = new string[numBones];
-
-						for (int i=0; i<numBones; i++)
-						{
-							boneNames[i] = bones[i].gameObject.name;
-						}
+						Vector3[] origBonePositons = new Vector3[numBones];
+						Quaternion[] origBoneRotations = new Quaternion[numBones];
+						Vector3[] origBoneScales = new Vector3[numBones];
 
 						GPUAnimations.Animation[] animations = new GPUAnimations.Animation[animationClips.Length];
 
 						//3d array - animation / frame / bones
-						Matrix4x4[][][] boneWorldMatrix = new Matrix4x4[animations.Length][][];
+						Matrix4x4[][][] boneMatricies = new Matrix4x4[animations.Length + 1][][];
 
-						Matrix4x4 rootMat = gameObject.transform.worldToLocalMatrix;
-						int startOffset = 0;
+						//Insert dummy one frame animation at start which is just the reference pose
+						boneMatricies[0] = new Matrix4x4[1][];
+						boneMatricies[0][0] = new Matrix4x4[numBones];
+
+						for (int i=0; i<numBones; i++)
+						{
+							boneNames[i] = bones[i].gameObject.name;
+							origBonePositons[i] = bones[i].localPosition;
+							origBoneRotations[i] = bones[i].localRotation;
+							origBoneScales[i] = bones[i].localScale;
+
+							//Save reference pose bone matrix
+							boneMatricies[0][0][i] = rootMat * bones[i].localToWorldMatrix * bindposes[i];
+						}
+						
+						//Start after first frame (as this frame is our reference pose)
+						int startOffset = 1;
 
 						for (int animIndex = 0; animIndex < animations.Length; animIndex++)
 						{
 							AnimationClip clip = animationClips[animIndex];
-							bool hasRootMotion = animator != null && clip.hasMotionCurves;
+							bool hasRootMotion = _useAnimator && clip.hasMotionCurves;
 
 							string name = clip.name;
 							int totalFrames = Mathf.Max(Mathf.FloorToInt(clip.length * clip.frameRate), 1);
@@ -224,7 +247,7 @@ namespace Framework
 							AnimationEvent[] events = clip.events;
 
 							//Sample animation
-							boneWorldMatrix[animIndex] = new Matrix4x4[totalSamples][];
+							boneMatricies[animIndex + 1] = new Matrix4x4[totalSamples][];
 
 							Vector3[] rootMotionVelocities = null;
 							Vector3[] rootMotionAngularVelocities = null;
@@ -235,39 +258,43 @@ namespace Framework
 								rootMotionAngularVelocities = new Vector3[totalSamples];
 							}
 
-							//Needed to prevent first frame pop?
-							if (animator != null)
+							//Reset all bone transforms before sampling animations
+							for (int i = 0; i < numBones; i++)
+							{
+								bones[i].localPosition = origBonePositons[i];
+								bones[i].localRotation = origBoneRotations[i];
+								bones[i].localScale = origBoneScales[i];
+							}
+
+							//If using an animator, start playing animation with correct layer weights set
+							if (_useAnimator)
 							{
 								for (int layer=1; layer < animator.layerCount; layer++)
 								{
 									animator.SetLayerWeight(animIndex, layer == animationStateLayers[animIndex] ? 1.0f : 0.0f);
 								}
+								
+								animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
 
-								animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
-								animator.Update(0f);
-								yield return null;
-								animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
-								animator.Update(0f);
-								yield return null;
-								animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
-								animator.Update(0f);
-								yield return null;
+								//Needed to prevent first frame pop?
+								{
+									animator.Update(0f);
+									yield return null;
+									animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
+									animator.Update(0f);
+									yield return null;
+									animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
+									animator.Update(0f);
+									yield return null;
+								}
 							}
 							
 							for (int i = 0; i < totalSamples; i++)
 							{
 								float normalisedTime = i / (float)totalFrames;
 								
-								//Sample animation using legacy system
-								if (animator == null)
-								{
-									bool wasLegacy = clip.legacy;
-									clip.legacy = true;
-									clip.SampleAnimation(gameObject, normalisedTime * clip.length);
-									clip.legacy = wasLegacy;
-								}
 								//Using animator, update animator to progress forward with animation
-								else
+								if (_useAnimator)
 								{
 									for (int layer = 1; layer < animator.layerCount; layer++)
 									{
@@ -282,15 +309,24 @@ namespace Framework
 
 									layerWeight = animator.GetLayerWeight(animationStateLayers[animIndex]);
 
+									//Wait for end of frame
 									yield return null;
+								}
+								//Sample animation using legacy system
+								else
+								{
+									bool wasLegacy = clip.legacy;
+									clip.legacy = true;
+									clip.SampleAnimation(gameObject, normalisedTime * clip.length);
+									clip.legacy = wasLegacy;
 								}
 
 								//Save bone matrices
-								boneWorldMatrix[animIndex][i] = new Matrix4x4[numBones];
+								boneMatricies[animIndex + 1][i] = new Matrix4x4[numBones];
 
 								for (int boneIndex = 0; boneIndex < numBones; boneIndex++)
 								{
-									boneWorldMatrix[animIndex][i][boneIndex] = rootMat * bones[boneIndex].localToWorldMatrix * bindposes[boneIndex];
+									boneMatricies[animIndex + 1][i][boneIndex] = rootMat * bones[boneIndex].localToWorldMatrix * bindposes[boneIndex];
 								}
 
 								//Save root motion velocities
@@ -307,7 +343,7 @@ namespace Framework
 						}
 
 						//Create and save texture
-						if (!CalculateTextureSize(boneWorldMatrix, out int textureSize))
+						if (!CalculateTextureSize(boneMatricies, out int textureSize))
 						{
 							DestroyImmediate(gameObject);
 							_working = false;
@@ -324,13 +360,13 @@ namespace Framework
 						int pixely = 0;
 
 						//Foreach animation
-						for (int animIndex = 0; animIndex < boneWorldMatrix.Length; animIndex++)
+						for (int animIndex = 0; animIndex < boneMatricies.Length; animIndex++)
 						{
 							//For each frame
-							for (int j = 0; j < boneWorldMatrix[animIndex].Length; j++)
+							for (int j = 0; j < boneMatricies[animIndex].Length; j++)
 							{
 								//Convert all frame bone matrices to colors
-								Color[] matrixPixels = ConvertMatricesToColor(boneWorldMatrix[animIndex][j]);
+								Color[] matrixPixels = ConvertMatricesToColor(boneMatricies[animIndex][j]);
 								texture.SetPixels(pixelx, pixely, 4, numBones, matrixPixels);
 
 								//Shift to next frame position
@@ -516,9 +552,9 @@ namespace Framework
 						animationStateLayers = stateLayers.ToArray();
 					}
 
-					private static void CreateMeshForAnimations(Mesh sourceMesh, TEXCOORD boneIdChannel, TEXCOORD boneWeightChannel, string path)
+					private static void CreateMeshForAnimations(Mesh sourceMesh, TEXCOORD boneIdChannel, TEXCOORD boneWeightChannel, int bonesPerVertex, string path)
 					{
-						Mesh mesh = CreateMeshWithExtraData(sourceMesh, boneIdChannel, boneWeightChannel);
+						Mesh mesh = CreateMeshWithExtraData(sourceMesh, boneIdChannel, boneWeightChannel, bonesPerVertex);
 						mesh.UploadMeshData(true);
 
 						string assetPath = FileUtil.GetProjectRelativePath(path);
@@ -527,7 +563,7 @@ namespace Framework
 						AssetDatabase.SaveAssets();
 					}
 
-					private static Mesh CreateMeshWithExtraData(Mesh sourceMesh, TEXCOORD boneIdsUVChanel, TEXCOORD boneWeightsUVChanel, int bonesPerVertex = 4)
+					private static Mesh CreateMeshWithExtraData(Mesh sourceMesh, TEXCOORD boneIdsUVChanel, TEXCOORD boneWeightsUVChanel, int bonesPerVertex)
 					{
 						Mesh mesh = Instantiate(sourceMesh);
 

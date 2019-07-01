@@ -108,7 +108,7 @@ namespace Framework
 				#region Private Functions
 				private void Initialise()
 				{
-					_animator.runtimeAnimatorController = _renderer.GetOverrideControllerForAnimator(_animator);
+					_animator.runtimeAnimatorController = GPUAnimatorRendererControllerOverrider.GetOverrideController(_renderer, _animator);
 					_animator.avatar = GetDummyAvatar();
 				}
 				

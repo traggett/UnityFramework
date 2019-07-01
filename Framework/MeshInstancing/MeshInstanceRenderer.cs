@@ -26,7 +26,7 @@ namespace Framework
 			[Range(1, 1023)]
 			public int _maxMeshes = 1023;
 			public Mesh _mesh;
-			public Material[] _materials;
+			public InstancedMaterial[] _materials;
 			public ShadowCastingMode _shadowCastingMode;
 			public bool _recieveShadows;
 			public bool _sortByDepth;
@@ -93,8 +93,12 @@ namespace Framework
 				{
 					_instanceData = new T[_maxMeshes];
 					_renderedObjects = new RenderData[_maxMeshes];
+
 					for (int i = 0; i < _renderedObjects.Length; i++)
+					{
 						_renderedObjects[i] = new RenderData();
+					}
+						
 					_renderedObjectIndexes = new List<int>(_maxMeshes);
 					_renderedObjectTransforms = new Matrix4x4[_maxMeshes];
 
@@ -103,6 +107,11 @@ namespace Framework
 					_frustumPlanes = new Plane[6];
 					_frustumPlaneNormals = new Vector3[6];
 					_frustumPlaneDistances = new float[6];
+
+					for (int i = 0; i < _materials.Length; i++)
+					{
+						_materials[i].GetMaterial();
+					}
 
 					return true;
 				}
@@ -164,7 +173,8 @@ namespace Framework
 			{
 				for (int i = 0; i < _mesh.subMeshCount; i++)
 				{
-					Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, _numRenderedObjects, _propertyBlock, _shadowCastingMode, _recieveShadows, _layer);
+					if (i < _materials.Length &&  _materials[i].GetMaterial() != null)
+						Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, _numRenderedObjects, _propertyBlock, _shadowCastingMode, _recieveShadows, _layer);
 				}
 			}
 

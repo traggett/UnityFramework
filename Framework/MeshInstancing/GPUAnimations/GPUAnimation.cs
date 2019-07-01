@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 namespace Framework
 {
@@ -21,9 +22,48 @@ namespace Framework
 						return GetAnimationState(name);
 					}
 				}
+				public bool isPlaying
+				{
+					get
+					{
+						for (int i = 0; i < _animationStates.Length; i++)
+						{
+							if (_animationStates[i].Enabled)
+								return true;
+						}
+
+						return false;
+					}
+				}
 				#endregion
 
 				#region Private Data
+				private sealed class Enumerator : IEnumerator
+				{
+					private GPUAnimation _outer;
+
+					private int _currentIndex = -1;
+
+					public object Current => _outer.GetStateAtIndex(_currentIndex);
+
+					internal Enumerator(GPUAnimation outer)
+					{
+						_outer = outer;
+					}
+
+					public bool MoveNext()
+					{
+						int stateCount = _outer.GetStateCount();
+						_currentIndex++;
+						return _currentIndex < stateCount;
+					}
+
+					public void Reset()
+					{
+						_currentIndex = -1;
+					}
+				}
+
 				private SkinnedMeshRenderer _skinnedMeshRenderer;
 				private GPUAnimationState _primaryAnimationState;
 				private GPUAnimationState _secondaryAnimationState;
@@ -59,16 +99,14 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public bool Play(PlayMode mode = PlayMode.StopSameLayer)
+				public bool Play(PlayMode mode = PlayMode.StopSameLayer, WrapMode wrapMode = WrapMode.Default)
 				{
-					return Play(_defaultAnimation, mode);
+					return Play(_defaultAnimation, mode, wrapMode);
 				}
 
-				public bool Play(string animation, PlayMode mode = PlayMode.StopSameLayer)
+				public bool Play(string animation, PlayMode mode = PlayMode.StopSameLayer, WrapMode wrapMode = WrapMode.Default)
 				{
-					CancelQueue();
-					CancelCrossFade();
-					StopAll();
+					Stop();
 
 					GPUAnimationState animState = GetAnimationState(animation);
 
@@ -78,8 +116,14 @@ namespace Framework
 						animState.Time = 0.0f;
 						animState.Weight = 1.0f;
 
-						if (_wrapMode != WrapMode.Default)
+						if (wrapMode != WrapMode.Default)
+						{
+							animState.WrapMode = wrapMode;
+						}
+						else if (_wrapMode != WrapMode.Default)
+						{
 							animState.WrapMode = _wrapMode;
+						}							
 
 						return true;
 					}
@@ -89,6 +133,17 @@ namespace Framework
 					}
 				}
 				
+				public void Stop()
+				{
+					CancelCrossFade();
+					CancelQueue();
+
+					for (int i = 0; i < _animationStates.Length; i++)
+					{
+						_animationStates[i].Enabled = false;
+					}
+				}
+
 				public GPUAnimationState PlayQueued(string animation, QueueMode queue = QueueMode.CompleteOthers, PlayMode mode = PlayMode.StopSameLayer)
 				{
 					CancelCrossFade();
@@ -102,13 +157,12 @@ namespace Framework
 				public GPUAnimationState CrossFade(string animation, float fadeLength = 0.3f, PlayMode mode = PlayMode.StopSameLayer)
 				{
 					CancelQueue();
+					CancelCrossFade();
 
 					GPUAnimationState animState = GetAnimationState(animation);
-					_crossFadedQueuedAnimation = string.Empty;
-
+					
 					if (animState != null)
 					{
-						GPUAnimations animations = _renderer._animationTexture.GetAnimations();
 						_crossFadedAnimation = new GPUAnimationState(animState.GetAnimation())
 						{
 							Enabled = true,
@@ -126,10 +180,6 @@ namespace Framework
 							_animationStates[i].BlendWeightTo(0.0f, fadeLength, true);
 						}
 					}
-					else
-					{
-						_crossFadedAnimation = null;
-					}
 
 					return _crossFadedAnimation;
 				}
@@ -137,10 +187,11 @@ namespace Framework
 				public GPUAnimationState CrossFadeQueued(string animation, float fadeLength = 0.3f, QueueMode queue = QueueMode.CompleteOthers, PlayMode mode = PlayMode.StopSameLayer)
 				{
 					CancelQueue();
+					CancelCrossFade();
 
 					_crossFadedQueuedAnimation = animation;
 					_crossFadedAnimationQueueMode = queue;
-					_crossFadedAnimation = null;
+					_crossFadeLength = fadeLength;
 
 					//TO DO! return valid state??
 					return _crossFadedAnimation;
@@ -186,6 +237,16 @@ namespace Framework
 						_animationStates[i].Time = 0.0f;
 					}
 				}
+
+				public GPUAnimationState GetStateAtIndex(int index)
+				{
+					return _animationStates[index];
+				}
+
+				public int GetStateCount()
+				{
+					return _animationStates.Length;
+				}
 				#endregion
 
 				#region GPUAnimatorBase
@@ -211,6 +272,11 @@ namespace Framework
 
 					return new Bounds();
 				}
+
+				public IEnumerator GetEnumerator()
+				{
+					return new Enumerator(this);
+				}
 				#endregion
 
 				#region Private Functions
@@ -231,6 +297,9 @@ namespace Framework
 					{
 						_primaryAnimationState.Enabled = true;
 						_primaryAnimationState.Weight = 1.0f;
+
+						if (_wrapMode != WrapMode.Default)
+							_primaryAnimationState.WrapMode = _wrapMode;
 					}
 				}
 
@@ -280,14 +349,6 @@ namespace Framework
 					return null;
 				}
 				
-				private void StopAll()
-				{
-					for (int i = 0; i < _animationStates.Length; i++)
-					{
-						Stop(i);
-					}
-				}
-
 				private void Stop(int animIndex)
 				{
 					_animationStates[animIndex].Enabled = false;
