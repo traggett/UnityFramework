@@ -157,13 +157,12 @@ namespace Framework
 				public GPUAnimationState CrossFade(string animation, float fadeLength = 0.3f, PlayMode mode = PlayMode.StopSameLayer)
 				{
 					CancelQueue();
+					CancelCrossFade();
 
 					GPUAnimationState animState = GetAnimationState(animation);
-					_crossFadedQueuedAnimation = string.Empty;
-
+					
 					if (animState != null)
 					{
-						GPUAnimations animations = _renderer._animationTexture.GetAnimations();
 						_crossFadedAnimation = new GPUAnimationState(animState.GetAnimation())
 						{
 							Enabled = true,
@@ -181,10 +180,6 @@ namespace Framework
 							_animationStates[i].BlendWeightTo(0.0f, fadeLength, true);
 						}
 					}
-					else
-					{
-						_crossFadedAnimation = null;
-					}
 
 					return _crossFadedAnimation;
 				}
@@ -192,10 +187,11 @@ namespace Framework
 				public GPUAnimationState CrossFadeQueued(string animation, float fadeLength = 0.3f, QueueMode queue = QueueMode.CompleteOthers, PlayMode mode = PlayMode.StopSameLayer)
 				{
 					CancelQueue();
+					CancelCrossFade();
 
 					_crossFadedQueuedAnimation = animation;
 					_crossFadedAnimationQueueMode = queue;
-					_crossFadedAnimation = null;
+					_crossFadeLength = fadeLength;
 
 					//TO DO! return valid state??
 					return _crossFadedAnimation;
