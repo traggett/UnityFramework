@@ -2,6 +2,9 @@ using System;
 using UnityEngine;
 using System.Collections;
 
+//Disable private SerializedField warnings
+#pragma warning disable 0649
+
 namespace Framework
 {
 	namespace Utils

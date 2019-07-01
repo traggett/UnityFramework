@@ -460,7 +460,7 @@ namespace Framework
 						_typeToTagMap = new Dictionary<Type, string>();
 						_converterMap = new Dictionary<Type, ObjectConverter>();
 
-						Assembly[] assemblies = SystemUtils.GetUnityAssemblies();
+						Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
 						foreach (Assembly assembly in assemblies)
 						{

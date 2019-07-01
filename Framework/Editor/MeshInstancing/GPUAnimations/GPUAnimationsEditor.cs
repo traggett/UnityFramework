@@ -5,6 +5,9 @@ using UnityEngine;
 using UnityEditor;
 using UnityEditor.Animations;
 
+//Disable private SerializedField warnings
+#pragma warning disable 0649
+
 namespace Framework
 {
 	using Editor;
@@ -40,7 +43,7 @@ namespace Framework
 					[MenuItem("GPU Skinning/Animation Texture Generator", false)]
 					private static void MakeWindow()
 					{
-						GPUAnimationsEditor window = GetWindow(typeof(GPUAnimationsEditor)) as GPUAnimationsEditor;
+						GetWindow(typeof(GPUAnimationsEditor));
 					}
 
 					private void OnGUI()
