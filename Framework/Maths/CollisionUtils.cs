@@ -6,25 +6,25 @@ namespace Framework
 	{
 		public static class CollisionUtils
 		{
-			public static bool IsPointInsideCollider(Collider c, Vector3 p)
+			public static bool IsPointInsideCollider(Collider collider, Vector3 point)
 			{
-				if (c is SphereCollider sphereCollider)
+				if (collider is SphereCollider sphereCollider)
 				{
-					return IsPointInsideSphereCollider(sphereCollider, p);
+					return IsPointInsideSphereCollider(sphereCollider, point);
 				}
-				else if (c is BoxCollider boxCollider)
+				else if (collider is BoxCollider boxCollider)
 				{
-					return IsPointInsideBoxCollider(boxCollider, p);
+					return IsPointInsideBoxCollider(boxCollider, point);
 				}
-				else if (c is CapsuleCollider capsuleCollider)
+				else if (collider is CapsuleCollider capsuleCollider)
 				{
-					return IsPointInsideCapsuleCollider(capsuleCollider, p);
+					return IsPointInsideCapsuleCollider(capsuleCollider, point);
 				}
 				else
 				{
-					Vector3 offset = c.bounds.center - p;
-					Ray inputRay = new Ray(p, offset.normalized);
-					if (!c.Raycast(inputRay, out _, offset.magnitude * 1.1f))
+					Vector3 offset = collider.bounds.center - point;
+					Ray inputRay = new Ray(point, offset.normalized);
+					if (!collider.Raycast(inputRay, out _, offset.magnitude * 1.1f))
 					{
 						return true;
 					}
@@ -33,38 +33,38 @@ namespace Framework
 				return false;
 			}
 
-			public static bool IsPointInsideSphereCollider(SphereCollider c, Vector3 p)
+			public static bool IsPointInsideSphereCollider(SphereCollider collider, Vector3 point)
 			{
-				Vector3 worldCentre = c.transform.TransformPoint(c.center);
-				return (worldCentre - p).sqrMagnitude < c.radius * c.radius;
+				Vector3 localspacePoint = collider.transform.InverseTransformPoint(point);
+				Vector3 worldCentre = collider.transform.TransformPoint(collider.center);
+				return (worldCentre - localspacePoint).sqrMagnitude < collider.radius * collider.radius;
 			}
 
-			public static bool IsPointInsideBoxCollider(BoxCollider c, Vector3 p)
+			public static bool IsPointInsideBoxCollider(BoxCollider collider, Vector3 point)
 			{
-				Vector3 localP = c.transform.InverseTransformPoint(p);
-				return Mathf.Abs(c.center.x - localP.x) < c.size.x * 0.5f && Mathf.Abs(c.center.y - localP.y) < c.size.y * 0.5f && Mathf.Abs(c.center.z - localP.z) < c.size.z * 0.5f;
+				Vector3 localspacePoint = collider.transform.InverseTransformPoint(point);
+				return Mathf.Abs(collider.center.x - localspacePoint.x) < collider.size.x * 0.5f && Mathf.Abs(collider.center.y - localspacePoint.y) < collider.size.y * 0.5f && Mathf.Abs(collider.center.z - localspacePoint.z) < collider.size.z * 0.5f;
 			}
 
-			public static bool IsPointInsideCapsuleCollider(CapsuleCollider c, Vector3 p)
+			public static bool IsPointInsideCapsuleCollider(CapsuleCollider collider, Vector3 point)
 			{
-				//Lossy scale should be used?!?
-				Vector3 localP = c.transform.InverseTransformPoint(p);
+				Vector3 localspacePoint = collider.transform.InverseTransformPoint(point);
 
-				float halfHeight = c.height * 0.5f;
-				float halfHeightWithoutRadius = halfHeight - c.radius;
-				float radiusSqrd = c.radius * c.radius;
+				float halfHeight = collider.height * 0.5f;
+				float halfHeightWithoutRadius = halfHeight - collider.radius;
+				float radiusSqrd = collider.radius * collider.radius;
 
-				switch (c.direction)
+				switch (collider.direction)
 				{
 					//X axis
 					case 0:
-						return Mathf.Abs(localP.x - c.center.x) < halfHeight && (localP - new Vector3(Mathf.Clamp(localP.x, c.center.x - halfHeightWithoutRadius, c.center.x + halfHeightWithoutRadius), c.center.y, c.center.z)).sqrMagnitude < radiusSqrd;
+						return Mathf.Abs(localspacePoint.x - collider.center.x) < halfHeight && (localspacePoint - new Vector3(Mathf.Clamp(localspacePoint.x, collider.center.x - halfHeightWithoutRadius, collider.center.x + halfHeightWithoutRadius), collider.center.y, collider.center.z)).sqrMagnitude < radiusSqrd;
 					//Y axis
 					case 1:
-						return Mathf.Abs(localP.y - c.center.y) < halfHeight && (localP - new Vector3(c.center.x, Mathf.Clamp(localP.y, c.center.y - halfHeightWithoutRadius, c.center.y + halfHeightWithoutRadius), c.center.z)).sqrMagnitude < radiusSqrd;
+						return Mathf.Abs(localspacePoint.y - collider.center.y) < halfHeight && (localspacePoint - new Vector3(collider.center.x, Mathf.Clamp(localspacePoint.y, collider.center.y - halfHeightWithoutRadius, collider.center.y + halfHeightWithoutRadius), collider.center.z)).sqrMagnitude < radiusSqrd;
 					//Z axis
 					case 2:
-						return Mathf.Abs(localP.z - c.center.z) < halfHeight && (localP - new Vector3(c.center.x, c.center.y, Mathf.Clamp(localP.z, c.center.z - halfHeightWithoutRadius, c.center.z + halfHeightWithoutRadius))).sqrMagnitude < radiusSqrd;
+						return Mathf.Abs(localspacePoint.z - collider.center.z) < halfHeight && (localspacePoint - new Vector3(collider.center.x, collider.center.y, Mathf.Clamp(localspacePoint.z, collider.center.z - halfHeightWithoutRadius, collider.center.z + halfHeightWithoutRadius))).sqrMagnitude < radiusSqrd;
 				}
 
 				return false;
