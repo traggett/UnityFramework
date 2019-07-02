@@ -1487,6 +1487,8 @@ namespace Framework
 
 				private static bool GetActiveScene(string scenePath, out Scene scene, bool loadScene = false)
 				{
+					scene = new Scene();
+
 					for (int i = 0; i < SceneManager.sceneCount; i++)
 					{
 						scene = SceneManager.GetSceneAt(i);
@@ -1502,11 +1504,18 @@ namespace Framework
 
 					if (loadScene)
 					{
-						scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+						try
+						{
+							scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+						}
+						catch
+						{
+							return false;
+						}
+						
 						return scene.IsValid();
 					}
 					
-					scene = new Scene();
 					return false;
 				}
 				
