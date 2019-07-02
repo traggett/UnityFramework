@@ -9,7 +9,7 @@ namespace Framework
 			public class GPUAnimatorRenderer : MeshInstanceRenderer<GPUAnimatedMeshInstance>
 			{
 				#region Public Data
-				public GPUAnimationsRef _animationTexture;
+				public GPUAnimationsRef _animations;
 				#endregion
 
 				#region Private Data
@@ -24,7 +24,7 @@ namespace Framework
 #if UNITY_EDITOR
 					for (int i = 0; i < _materials.Length; i++)
 					{
-						_animationTexture.SetMaterialProperties(_materials[i]);
+						_animations.SetMaterialProperties(_materials[i]);
 					}
 #endif
 					
@@ -59,7 +59,7 @@ namespace Framework
 
 						for (int i = 0; i < _materials.Length; i++)
 						{
-							_animationTexture.SetMaterialProperties(_materials[i]);
+							_animations.SetMaterialProperties(_materials[i]);
 						}
 
 						return true;

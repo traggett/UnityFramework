@@ -41,7 +41,7 @@ namespace Framework
 					else
 					{
 						RuntimeAnimatorController runtimeAnimatorController = GetRuntimeAnimatorController(animator);
-						return new GPUAnimatorOverrideController(runtimeAnimatorController, renderer._animationTexture.GetAnimations());
+						return new GPUAnimatorOverrideController(runtimeAnimatorController, renderer._animations.GetAnimations());
 					}
 				}
 
@@ -100,7 +100,7 @@ namespace Framework
 								}
 							}
 						}
-						overrideController = new GPUAnimatorOverrideController(runtimeAnimatorController, _renderer._animationTexture.GetAnimations(), overrides);
+						overrideController = new GPUAnimatorOverrideController(runtimeAnimatorController, _renderer._animations.GetAnimations(), overrides);
 						_overrideControllers[runtimeAnimatorController] = overrideController;
 					}
 
