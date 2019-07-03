@@ -19,6 +19,9 @@ namespace Framework
 				{
 					get
 					{
+						if (_crossFadedAnimation != null && _crossFadedAnimation.Name == name)
+							return _crossFadedAnimation;
+
 						return GetAnimationState(name);
 					}
 				}
@@ -224,7 +227,7 @@ namespace Framework
 
 				public bool IsPlaying(string animation)
 				{
-					GPUAnimationState state = GetAnimationState(animation);
+					GPUAnimationState state = this[animation];
 
 					if (state != null)
 					{
@@ -348,9 +351,6 @@ namespace Framework
 
 				private GPUAnimationState GetAnimationState(string animationName)
 				{
-					if (_crossFadedAnimation != null && _crossFadedAnimation.Name == animationName)
-						return _crossFadedAnimation;
-
 					for (int i = 0; i < _animationStates.Length; i++)
 					{
 						if (_animationStates[i].Name == animationName)
