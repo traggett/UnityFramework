@@ -242,20 +242,23 @@ namespace Framework
 
 			public static T GetComponentInChildren<T>(GameObject gameObject) where T : class
 			{
-				for (int i = 0; i < gameObject.transform.childCount; i++)
+				if (gameObject != null)
 				{
-					T typedComponent = GetComponentInGameObject<T>(gameObject.transform.GetChild(i).gameObject);
+					for (int i = 0; i < gameObject.transform.childCount; i++)
+					{
+						T typedComponent = GetComponentInGameObject<T>(gameObject.transform.GetChild(i).gameObject);
 
-					if (typedComponent != null)
-						return typedComponent;
-				}
-				
-				for (int i = 0; i < gameObject.transform.childCount; i++)
-				{
-					T typedComponent = GetComponentInChildren<T>(gameObject.transform.GetChild(i).gameObject);
+						if (typedComponent != null)
+							return typedComponent;
+					}
 
-					if (typedComponent != null)
-						return typedComponent;
+					for (int i = 0; i < gameObject.transform.childCount; i++)
+					{
+						T typedComponent = GetComponentInChildren<T>(gameObject.transform.GetChild(i).gameObject);
+
+						if (typedComponent != null)
+							return typedComponent;
+					}
 				}
 
 				return null;
@@ -295,14 +298,17 @@ namespace Framework
 
 			private static T GetComponentInGameObject<T>(GameObject gameObject) where T : class
 			{
-				Component[] components = gameObject.GetComponents(typeof(Component));
-
-				for (int i = 0; i < components.Length; i++)
+				if (gameObject != null)
 				{
-					T typedComponent = components[i] as T;
+					Component[] components = gameObject.GetComponents(typeof(Component));
 
-					if (typedComponent != null)
-						return typedComponent;
+					for (int i = 0; i < components.Length; i++)
+					{
+						T typedComponent = components[i] as T;
+
+						if (typedComponent != null)
+							return typedComponent;
+					}
 				}
 
 				return null;
