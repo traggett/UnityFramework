@@ -9,7 +9,20 @@ namespace Framework
 			public sealed class GPUAnimationState
 			{
 				#region Public Data
-				public bool Enabled { get; set; }
+				public bool Enabled
+				{
+					get
+					{
+						return _enabled;
+					}
+					set
+					{
+						_enabled = value;
+
+						if (!_enabled)
+							CancelFading();
+					}
+				}
 				public float Weight { get; set; }
 				public WrapMode WrapMode
 				{
@@ -84,6 +97,7 @@ namespace Framework
 
 				#region Private Data
 				private GPUAnimationPlayer _player;
+				private bool _enabled;
 				private bool _fading;
 				private float _targetWeight;
 				private float _fromWeight;
@@ -125,7 +139,7 @@ namespace Framework
 
 							if (_disableAfterFade)
 							{
-								Enabled = false;
+								_enabled = false;
 							}
 						}
 						else
@@ -140,7 +154,7 @@ namespace Framework
 					return _player.GetCurrentTexureFrame();
 				}
 
-				public void BlendWeightTo(float targetWeight = 1.0f, float fadeLength = 0.3f, bool disableOnFade = false)
+				public void FadeWeightTo(float targetWeight = 1.0f, float fadeLength = 0.3f, bool disableOnFade = false)
 				{
 					_fading = fadeLength > 0.0f;
 
@@ -158,7 +172,7 @@ namespace Framework
 					}
 				}
 
-				public void CancelBlend()
+				public void CancelFading()
 				{
 					_fading = false;
 				}
