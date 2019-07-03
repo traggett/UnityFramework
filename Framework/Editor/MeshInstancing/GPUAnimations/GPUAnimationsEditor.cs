@@ -71,50 +71,53 @@ namespace Framework
 								_skinnedMeshIndex = 0;
 							}
 
-							if (_evaluatedObject != null && _skinnedMeshes != null && _skinnedMeshes.Length > 0)
+							if (_evaluatedObject != null)
 							{
-								string[] skinnedMeshes = new string[_skinnedMeshes.Length];
-
-								for (int i = 0; i < skinnedMeshes.Length; i++)
+								if (_skinnedMeshes != null && _skinnedMeshes.Length > 0)
 								{
-									skinnedMeshes[i] = _skinnedMeshes[i].gameObject.name;
+									string[] skinnedMeshes = new string[_skinnedMeshes.Length];
+
+									for (int i = 0; i < skinnedMeshes.Length; i++)
+									{
+										skinnedMeshes[i] = _skinnedMeshes[i].gameObject.name;
+									}
+
+									_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
 								}
 
-								_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
-							}
+								Animator animator = GameObjectUtils.GetComponent<Animator>(_evaluatedObject, true);
 
-							Animator animator = GameObjectUtils.GetComponent<Animator>(_evaluatedObject, true);
-
-							if (animator != null)
-							{
-								_useAnimator = EditorGUILayout.Toggle("Use Animator", _useAnimator);
-							}
-							else
-							{
-								_useAnimator = false;
-							}
-
-							if (!_useAnimator)
-							{
-								//Draw list showing animation clip, 
-								SerializedProperty animationsProperty = so.FindProperty("_animations");
-								EditorGUILayout.PropertyField(animationsProperty, true);
-								so.ApplyModifiedProperties();
-							}
-
-							if (_working)
-							{
-								EditorGUILayout.LabelField("Generating Animation Texture", EditorStyles.helpBox);
-							}
-							else if (_skinnedMeshes != null && (_useAnimator || (_animations != null && _animations.Length > 0)))
-							{
-								if (GUILayout.Button("Generate"))
+								if (animator != null)
 								{
-									string path = EditorUtility.SaveFilePanelInProject("Save Animation Texture", Path.GetFileNameWithoutExtension(""), "bytes", "Please enter a file name to save the animation texture to");
+									_useAnimator = EditorGUILayout.Toggle("Use Animator", _useAnimator);
+								}
+								else
+								{
+									_useAnimator = false;
+								}
 
-									if (!string.IsNullOrEmpty(path))
+								if (!_useAnimator)
+								{
+									//Draw list showing animation clip, 
+									SerializedProperty animationsProperty = so.FindProperty("_animations");
+									EditorGUILayout.PropertyField(animationsProperty, true);
+									so.ApplyModifiedProperties();
+								}
+
+								if (_working)
+								{
+									EditorGUILayout.LabelField("Generating Animation Texture", EditorStyles.helpBox);
+								}
+								else if (_skinnedMeshes != null && (_useAnimator || (_animations != null && _animations.Length > 0)))
+								{
+									if (GUILayout.Button("Generate"))
 									{
-										Run(BakeAnimationTexture(path));
+										string path = EditorUtility.SaveFilePanelInProject("Save Animation Texture", Path.GetFileNameWithoutExtension(""), "bytes", "Please enter a file name to save the animation texture to");
+
+										if (!string.IsNullOrEmpty(path))
+										{
+											Run(BakeAnimationTexture(path));
+										}
 									}
 								}
 							}
