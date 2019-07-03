@@ -120,7 +120,7 @@ namespace Framework
 					GPUAnimations animations = _renderer._animationTexture.GetAnimations();
 					
 					int numBones = animations._bones.Length;
-					_totalSamples = 0;
+					_totalSamples = 1;
 
 					for (int i = 0; i < animations._animations.Length; i++)
 					{

@@ -529,24 +529,32 @@ namespace Framework
 
 						for (int i=0; i< animatorController.layers.Length; i++)
 						{
-							AnimatorControllerLayer controllerLayer = animatorController.layers[i];
-
-							foreach (ChildAnimatorState state in controllerLayer.stateMachine.states)
-							{
-								AnimationClip clip = state.state.motion as AnimationClip;
-
-								if (clip != null && !clips.Contains(clip))
-								{
-									clips.Add(clip);
-									stateNames.Add(state.state.name);
-									stateLayers.Add(i);
-								}
-							}
+							GetAnimationClipsFromStatemachine(i, animatorController.layers[i].stateMachine, ref clips, ref stateNames, ref stateLayers);
 						}
 
 						animationClips = clips.ToArray();
 						animationStateNames = stateNames.ToArray();
 						animationStateLayers = stateLayers.ToArray();
+					}
+
+					private static void GetAnimationClipsFromStatemachine(int layer, AnimatorStateMachine stateMachine, ref List<AnimationClip> clips, ref List<string> stateNames, ref List<int> stateLayers)
+					{
+						foreach (ChildAnimatorState state in stateMachine.states)
+						{
+							AnimationClip clip = state.state.motion as AnimationClip;
+
+							if (clip != null && !clips.Contains(clip))
+							{
+								clips.Add(clip);
+								stateNames.Add(state.state.name);
+								stateLayers.Add(layer);
+							}
+						}
+
+						foreach (ChildAnimatorStateMachine childStateMachine in stateMachine.stateMachines)
+						{
+							GetAnimationClipsFromStatemachine(layer, childStateMachine.stateMachine, ref clips, ref stateNames, ref stateLayers);
+						}
 					}
 
 					private static void CreateMeshForAnimations(Mesh sourceMesh, TEXCOORD boneIdChannel, TEXCOORD boneWeightChannel, int bonesPerVertex, string path)
