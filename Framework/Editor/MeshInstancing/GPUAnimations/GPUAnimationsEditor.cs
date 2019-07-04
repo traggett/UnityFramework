@@ -418,13 +418,13 @@ namespace Framework
 								{
 									//Convert all frame bone matrices to colors
 									Color[] matrixPixels = ConvertMatricesToColor(boneMatricies[animIndex][j]);
-									texture.SetPixels(pixelx, pixely, 4, numBones, matrixPixels);
+									texture.SetPixels(pixelx, pixely, GPUAnimations.kPixelsPerBoneMatrix, numBones, matrixPixels);
 
 									//Shift to next frame position
-									pixelx += 4;
+									pixelx += GPUAnimations.kPixelsPerBoneMatrix;
 
 									//If less than 4 pixels from edge, move to next row
-									if (textureSize - pixelx < 4)
+									if (textureSize - pixelx < GPUAnimations.kPixelsPerBoneMatrix)
 									{
 										pixelx = 0;
 										pixely += numBones;
@@ -525,7 +525,7 @@ namespace Framework
 					
 					private static Color[] ConvertMatricesToColor(Matrix4x4[] boneMatrices)
 					{
-						Color[] colors = new Color[4 * boneMatrices.Length];
+						Color[] colors = new Color[GPUAnimations.kPixelsPerBoneMatrix * boneMatrices.Length];
 
 						int index = 0;
 
