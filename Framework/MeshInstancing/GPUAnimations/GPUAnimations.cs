@@ -13,6 +13,8 @@ namespace Framework
 			{
 				public static int kPixelsPerBoneMatrix = 4;
 
+				public readonly Texture2D _texture;
+
 				public struct Animation
 				{
 					public readonly string _name;
@@ -45,13 +47,20 @@ namespace Framework
 
 				public readonly Animation[] _animations;
 				public readonly string[] _bones;
-				public readonly Texture2D _texture;
-
-				public GPUAnimations(Animation[] animations, string[] bones, Texture2D texture)
+				
+				public struct TrackedBone
 				{
+					public readonly int _boneIndex;
+					public readonly Matrix4x4[] _cachedBoneMatrices;
+				}
+				public readonly TrackedBone[] _trackedBones;
+
+				public GPUAnimations(Texture2D texture, Animation[] animations, string[] bones, TrackedBone[] trackedBones)
+				{
+					_texture = texture;
 					_animations = animations;
 					_bones = bones;
-					_texture = texture;
+					_trackedBones = trackedBones;
 				}
 
 				public static void CheckForEvents(GameObject gameObject, Animation animation, float prevFrame, float nextFrame)
@@ -141,7 +150,7 @@ namespace Framework
 					texture.LoadRawTextureData(bytes);
 					texture.Apply();
 
-					return new GPUAnimations(animations, bones, texture);
+					return new GPUAnimations(texture, animations, bones, null);
 				}
 			}
 		}

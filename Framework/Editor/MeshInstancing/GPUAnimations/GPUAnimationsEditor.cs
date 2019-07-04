@@ -383,7 +383,7 @@ namespace Framework
 
 						texture.Apply();
 
-						GPUAnimations animationTexture = new GPUAnimations(animations, boneNames, texture);
+						GPUAnimations animationTexture = new GPUAnimations(texture, animations, boneNames, null);
 
 						SaveAnimationTexture(animationTexture, path);
 
