@@ -117,12 +117,11 @@ namespace Framework
 					_player = new GPUAnimationPlayer(animation, wrapMode);
 				}
 
-				public void Update(float deltaTime, bool checkForEvents = false, GameObject eventListener = null)
+				public void Update(float deltaTime, GameObject eventListener = null)
 				{
 					if (Enabled)
 					{
-						//If animation is finished, disable this state
-						if (_player.Update(deltaTime, checkForEvents, eventListener))
+						if (_player.Update(deltaTime, eventListener))
 						{
 							Enabled = false;
 						}

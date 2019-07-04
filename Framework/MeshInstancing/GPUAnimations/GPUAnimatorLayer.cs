@@ -54,7 +54,7 @@ namespace Framework
 				{
 					_weight = _animator.GetLayerWeight(_layer);
 
-					GameObject gameObject = _animator.gameObject;
+					GameObject eventListener = _animator.gameObject;
 
 					//Check if we're transitioning - TO DO! transition from state to same state seem broken / cause pops
 					if (_animator.IsInTransition(_layer))
@@ -84,8 +84,8 @@ namespace Framework
 						}
 
 						//Update times
-						_clipPlayers[_mainPlayerIndex].SetNormalizedTime(nextState.normalizedTime, true, gameObject);
-						_clipPlayers[1 - _mainPlayerIndex].SetNormalizedTime(previousState.normalizedTime, true, gameObject);
+						_clipPlayers[_mainPlayerIndex].SetNormalizedTime(nextState.normalizedTime, eventListener);
+						_clipPlayers[1 - _mainPlayerIndex].SetNormalizedTime(previousState.normalizedTime, eventListener);
 						_mainAnimationWeight = transitionInfo.normalizedTime;
 					}
 					//Otherwise just update current animation
@@ -104,7 +104,7 @@ namespace Framework
 						}
 
 						//Update time
-						_clipPlayers[_mainPlayerIndex].SetNormalizedTime(currentState.normalizedTime, true, gameObject);
+						_clipPlayers[_mainPlayerIndex].SetNormalizedTime(currentState.normalizedTime, eventListener);
 						_mainAnimationWeight = 1.0f;
 					}
 				}

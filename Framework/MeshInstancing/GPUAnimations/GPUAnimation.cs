@@ -143,24 +143,39 @@ namespace Framework
 				
 				public void Stop()
 				{
-					CancelCrossFade();
-					CancelQueue();
+					ClearCrossFadedAnimation();
+					ClearQueuedAnimation();
 
 					for (int i = 0; i < _animationStates.Length; i++)
 					{
 						_animationStates[i].Enabled = false;
 					}
+
+					_primaryAnimationState = null;
+					_secondaryAnimationState = null;
+				}
+
+				public void Stop(string animation)
+				{
+					GPUAnimationState state = GetAnimationState(animation);
+
+					if (state != null)
+					{
+						state.Enabled = false;
+						UpdatePlayers();
+					}
 				}
 
 				public GPUAnimationState PlayQueued(string animation, QueueMode queue = QueueMode.CompleteOthers, PlayMode mode = PlayMode.StopSameLayer)
 				{
-					CancelCrossFade();
+					ClearCrossFadedAnimation();
 
 					_queuedAnimation = animation;
 					_queuedAnimationMode = queue;
 					_queuedAnimationPlayMode = mode;
 					_queuedAnimationCrossFadeLength = -1.0f;
 
+					//TO DO! return valid state??
 					return GetAnimationState(animation);
 				}
 
@@ -168,7 +183,7 @@ namespace Framework
 				{
 					if (fadeLength > 0.0f)
 					{
-						CancelQueue();
+						ClearQueuedAnimation();
 
 						GPUAnimationState animState = GetAnimationState(animation);
 
@@ -202,7 +217,7 @@ namespace Framework
 
 				public GPUAnimationState CrossFadeQueued(string animation, float fadeLength = 0.3f, QueueMode queue = QueueMode.CompleteOthers, PlayMode mode = PlayMode.StopSameLayer)
 				{
-					CancelQueue();
+					ClearQueuedAnimation();
 
 					_queuedAnimation = animation;
 					_queuedAnimationMode = queue;
@@ -314,12 +329,12 @@ namespace Framework
 				{
 					if (_crossFadedAnimation != null)
 					{
-						_crossFadedAnimation.Update(Time.deltaTime, true, this.gameObject);
+						_crossFadedAnimation.Update(Time.deltaTime, this.gameObject);
 					}
 
 					for (int i = 0; i < _animationStates.Length; i++)
 					{
-						_animationStates[i].Update(Time.deltaTime, true, this.gameObject);
+						_animationStates[i].Update(Time.deltaTime, this.gameObject);
 					}
 
 					UpdateQueuedAnimation();
@@ -360,53 +375,69 @@ namespace Framework
 					return null;
 				}
 				
-				private void Stop(int animIndex)
-				{
-					_animationStates[animIndex].Enabled = false;
-				}
-
-				private bool AreAnimationsFinished(QueueMode queueMode, float fadeLength)
-				{
-					if (queueMode == QueueMode.CompleteOthers)
-					{
-						for (int i = 0; i < _animationStates.Length; i++)
-						{
-							if (_animationStates[i].Enabled)
-							{
-								if (fadeLength > 0.0f)
-								{
-									if (_animationStates[i].Length - _animationStates[i].Time > fadeLength)
-										return false;
-								}
-								else if (_animationStates[i].NormalizedTime < 1.0f)
-								{
-									return false;
-								}
-							}
-						}
-					}
-
-					return true;
-				}
-
 				private void UpdateQueuedAnimation()
 				{
-					if (!string.IsNullOrEmpty(_queuedAnimation) && AreAnimationsFinished(_queuedAnimationMode, _queuedAnimationCrossFadeLength))
+					if (!string.IsNullOrEmpty(_queuedAnimation))
 					{
-						if (_queuedAnimationCrossFadeLength > 0.0f)
+						bool queuedAnimationReady;
+						bool queuedAnimationCrossFaded = _queuedAnimationCrossFadeLength > 0.0f;
+						float timeRemaining = 0.0f;
+
+						switch (_queuedAnimationMode)
 						{
-							CrossFade(_queuedAnimation, _queuedAnimationCrossFadeLength);
+							case QueueMode.CompleteOthers:
+								{
+									queuedAnimationReady = true;
+
+									for (int i = 0; i < _animationStates.Length; i++)
+									{
+										if (_animationStates[i].Enabled)
+										{
+											if (queuedAnimationCrossFaded)
+											{
+												timeRemaining = Mathf.Max(_animationStates[i].Length - _animationStates[i].Time, timeRemaining);
+
+												if (timeRemaining > _queuedAnimationCrossFadeLength)
+												{
+													queuedAnimationReady = false;
+													break;
+												}
+											}
+											else if (_animationStates[i].NormalizedTime < 1.0f)
+											{
+												queuedAnimationReady = false;
+												break;
+											}
+										}
+									}
+								}
+								break;
+							case QueueMode.PlayNow:
+							default:
+								{
+									queuedAnimationReady = true;
+								}
+								break;
 						}
-						else
+
+						if (queuedAnimationReady)
 						{
-							Play(_queuedAnimation, _queuedAnimationPlayMode);
+							//Note - _queuedAnimation will get cleared by the CrossFade or Play call
+							if (queuedAnimationCrossFaded)
+							{
+								CrossFade(_queuedAnimation, timeRemaining);
+							}
+							else
+							{
+								Play(_queuedAnimation, _queuedAnimationPlayMode);
+							}
 						}
 					}
 				}
 
 				private void UpdateCrossFadedAnimation()
 				{
-					if (_crossFadedAnimation != null && _crossFadedAnimation.Enabled && _crossFadedAnimation.Weight >= 1.0f)
+					if (_crossFadedAnimation != null && _crossFadedAnimation.Weight >= 1.0f)
 					{
 						for (int i=0; i<_animationStates.Length; i++)
 						{
@@ -415,8 +446,8 @@ namespace Framework
 								_animationStates[i].Time = _crossFadedAnimation.Time;
 								_animationStates[i].Speed = _crossFadedAnimation.Speed;
 								_animationStates[i].WrapMode = _crossFadedAnimation.WrapMode;
+								_animationStates[i].Enabled = _crossFadedAnimation.Enabled;
 								_animationStates[i].Weight = 1.0f;
-								_animationStates[i].Enabled = true;
 							}
 							else
 							{
@@ -428,12 +459,12 @@ namespace Framework
 					}
 				}
 
-				private void CancelQueue()
+				private void ClearQueuedAnimation()
 				{
 					_queuedAnimation = string.Empty;
 				}
 
-				private void CancelCrossFade()
+				private void ClearCrossFadedAnimation()
 				{
 					_crossFadedAnimation = null;
 				}
@@ -450,7 +481,7 @@ namespace Framework
 
 				private int GetStateCount()
 				{
-					return _crossFadedAnimation != null ? _animationStates.Length + 1 : _animationStates.Length;
+					return _crossFadedAnimation != null ? 1 + _animationStates.Length : _animationStates.Length;
 				}
 				#endregion
 			}

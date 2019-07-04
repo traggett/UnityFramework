@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Framework
 {
-	using Utils;
-
 	namespace MeshInstancing
 	{
 		namespace GPUAnimations
@@ -61,22 +59,6 @@ namespace Framework
 					_animations = animations;
 					_bones = bones;
 					_trackedBones = trackedBones;
-				}
-
-				public static void CheckForEvents(GameObject gameObject, Animation animation, float prevFrame, float nextFrame)
-				{
-					if (animation._events != null)
-					{
-						for (int i = 0; i < animation._events.Length; i++)
-						{
-							float animationEventFrame = animation._events[i].time * animation._fps;
-
-							if (prevFrame <= animationEventFrame && animationEventFrame < nextFrame)
-							{
-								AnimationUtils.TriggerAnimationEvent(animation._events[i], gameObject);
-							}
-						}
-					}
 				}
 
 				public static GPUAnimations LoadFromFile(TextAsset file)

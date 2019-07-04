@@ -1,7 +1,10 @@
+using Framework.Utils;
 using UnityEngine;
 
 namespace Framework
 {
+	using Utils;
+
 	namespace MeshInstancing
 	{
 		namespace GPUAnimations
@@ -26,7 +29,7 @@ namespace Framework
 					_loops = 0;
 				}
 				
-				public bool Update(float deltaTime, bool checkForEvents = false, GameObject eventListener = null)
+				public bool Update(float deltaTime, GameObject eventListener = null)
 				{
 					if (_animation._totalFrames > 0 && deltaTime > 0f && _speed > 0f)
 					{
@@ -34,8 +37,10 @@ namespace Framework
 						
 						_frame += deltaTime * _animation._fps * _speed * GetPlaybackDirection();
 
-						if (checkForEvents)
-							GPUAnimations.CheckForEvents(eventListener, _animation, prevFrame, _frame);
+						if (eventListener != null)
+						{
+							CheckForEvents(eventListener, prevFrame, _frame);
+						}
 						
 						if (_frame > _animation._totalFrames || _frame < 0)
 						{
@@ -120,10 +125,10 @@ namespace Framework
 					return GetNormalizedTime() * _animation._length;
 				}
 				
-				public void SetCurrentTime(float time, bool checkForEvents = false, GameObject eventListener = null)
+				public void SetCurrentTime(float time, GameObject eventListener = null)
 				{
 					float normalizedTime = time / _animation._length;
-					SetNormalizedTime(normalizedTime, checkForEvents, eventListener);
+					SetNormalizedTime(normalizedTime, eventListener);
 				}
 
 				public float GetNormalizedTime()
@@ -131,7 +136,7 @@ namespace Framework
 					return _loops + (_frame / _animation._totalFrames);
 				}
 				
-				public void SetNormalizedTime(float normalizedTime, bool checkForEvents = false, GameObject eventListener = null)
+				public void SetNormalizedTime(float normalizedTime, GameObject eventListener = null)
 				{
 					float prevFrame = _frame;
 
@@ -140,8 +145,10 @@ namespace Framework
 
 					_frame = fraction * _animation._totalFrames;
 					
-					if (checkForEvents)
-						GPUAnimations.CheckForEvents(eventListener, _animation, prevFrame, _frame);
+					if (eventListener != null && _frame > prevFrame)
+					{
+						CheckForEvents(eventListener, prevFrame, _frame);
+					}	
 				}
 
 				public float GetSpeed()
@@ -174,6 +181,22 @@ namespace Framework
 					}
 
 					return 1.0f;
+				}
+
+				private void CheckForEvents(GameObject gameObject, float prevFrame, float nextFrame)
+				{
+					if (_animation._events != null)
+					{
+						for (int i = 0; i < _animation._events.Length; i++)
+						{
+							float animationEventFrame = _animation._events[i].time * _animation._fps;
+
+							if (prevFrame <= animationEventFrame && animationEventFrame < nextFrame)
+							{
+								AnimationUtils.TriggerAnimationEvent(_animation._events[i], gameObject);
+							}
+						}
+					}
 				}
 				#endregion
 			}
