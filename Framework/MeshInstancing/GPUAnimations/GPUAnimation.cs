@@ -174,7 +174,7 @@ namespace Framework
 
 						if (animState != null)
 						{
-							GPUAnimations animations = _renderer._animationTexture.GetAnimations();
+							GPUAnimations animations = _renderer._animations.GetAnimations();
 
 							_crossFadedAnimation = new GPUAnimationState(animState.GetAnimation())
 							{
@@ -289,7 +289,7 @@ namespace Framework
 				#region Private Functions
 				private void Initialise()
 				{
-					GPUAnimations animations = _renderer._animationTexture.GetAnimations();
+					GPUAnimations animations = _renderer._animations.GetAnimations();
 					_animationStates = new GPUAnimationState[animations._animations.Length];
 					
 					for (int i=0; i< animations._animations.Length; i++)
