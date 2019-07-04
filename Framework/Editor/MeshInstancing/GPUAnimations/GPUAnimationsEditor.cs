@@ -31,7 +31,6 @@ namespace Framework
 					private bool _working;
 					private SkinnedMeshRenderer[] _skinnedMeshes;
 					private int _skinnedMeshIndex;
-					private Animator _animator;
 					private bool _useAnimator;
 					private string[] _boneNames;
 					private List<int> _exposedBones;
@@ -78,8 +77,7 @@ namespace Framework
 								_skinnedMeshIndex = 0;
 								_boneNames = _skinnedMeshIndex < _skinnedMeshes.Length ? GetBoneNames(_skinnedMeshes[_skinnedMeshIndex]) : null;
 								_exposedBones = new List<int>();
-								_animator = prefab != null ? GameObjectUtils.GetComponent<Animator>(_evaluatedObject, true) : null;
-								_useAnimator = _animator != null;
+								_useAnimator = prefab != null && GameObjectUtils.GetComponent<Animator>(_evaluatedObject, true) != null;
 							}
 
 							if (_evaluatedObject != null && _skinnedMeshes != null && _skinnedMeshes.Length > 0)
@@ -105,7 +103,9 @@ namespace Framework
 
 								//Draw option for sampling with animator if object has one
 								{
-									if (_animator != null)
+									Animator animator = GameObjectUtils.GetComponent<Animator>(_evaluatedObject, true);
+
+									if (animator != null)
 									{
 										_useAnimator = EditorGUILayout.Toggle("Use Animator", _useAnimator);
 									}
@@ -209,14 +209,22 @@ namespace Framework
 						_working = true;
 
 						GameObject gameObject = Instantiate(_evaluatedObject);
+						gameObject.SetActive(true);
+						gameObject.transform.parent = null;
+						gameObject.transform.localPosition = Vector3.zero;
+						gameObject.transform.localRotation = Quaternion.identity;
+						gameObject.transform.localScale = Vector3.one;
+
 						AnimationClip[] animationClips = _animations;
 						string[] animationStateNames = null;
 						int[] animationStateLayers = null;
+						Animator animator = null;
 
 						//If using animator then get clips and state names from controller
 						if (_useAnimator)
 						{
-							GetAnimationClipsFromAnimator(_animator, out animationClips, out animationStateNames, out animationStateLayers);
+							animator = GameObjectUtils.GetComponent<Animator>(gameObject, true);
+							GetAnimationClipsFromAnimator(animator, out animationClips, out animationStateNames, out animationStateLayers);
 
 							if (animationClips.Length == 0)
 							{
@@ -225,13 +233,14 @@ namespace Framework
 								yield break;
 							}
 
-							AnimatorUtility.DeoptimizeTransformHierarchy(_animator.gameObject);
-							_animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+							AnimatorUtility.DeoptimizeTransformHierarchy(animator.gameObject);
+							animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 						}
 
 						Matrix4x4 rootMat = gameObject.transform.worldToLocalMatrix;
-						Transform[] bones = _skinnedMeshes[_skinnedMeshIndex].bones;
-						Matrix4x4[] bindposes = _skinnedMeshes[_skinnedMeshIndex].sharedMesh.bindposes;
+						SkinnedMeshRenderer[] skinnedMeshes = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+						Transform[] bones = skinnedMeshes[_skinnedMeshIndex].bones;
+						Matrix4x4[] bindposes = skinnedMeshes[_skinnedMeshIndex].sharedMesh.bindposes;
 						int numBones = bones.Length;
 
 						if (numBones == 0)
@@ -304,22 +313,22 @@ namespace Framework
 							//If using an animator, start playing animation with correct layer weights set
 							if (_useAnimator)
 							{
-								for (int layer=1; layer < _animator.layerCount; layer++)
+								for (int layer=1; layer < animator.layerCount; layer++)
 								{
-									_animator.SetLayerWeight(animIndex, layer == animationStateLayers[animIndex] ? 1.0f : 0.0f);
+									animator.SetLayerWeight(animIndex, layer == animationStateLayers[animIndex] ? 1.0f : 0.0f);
 								}
 
-								_animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
+								animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
 
 								//Needed to prevent first frame pop?
 								{
-									_animator.Update(0f);
+									animator.Update(0f);
 									yield return null;
-									_animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
-									_animator.Update(0f);
+									animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
+									animator.Update(0f);
 									yield return null;
-									_animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
-									_animator.Update(0f);
+									animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
+									animator.Update(0f);
 									yield return null;
 								}
 							}
@@ -331,18 +340,18 @@ namespace Framework
 								//Using animator, update animator to progress forward with animation
 								if (_useAnimator)
 								{
-									for (int layer = 1; layer < _animator.layerCount; layer++)
+									for (int layer = 1; layer < animator.layerCount; layer++)
 									{
-										_animator.SetLayerWeight(layer, 0.0f);
+										animator.SetLayerWeight(layer, 0.0f);
 									}
 
-									_animator.SetLayerWeight(animationStateLayers[animIndex], 1.0f);
-									float layerWeight = _animator.GetLayerWeight(animationStateLayers[animIndex]);
+									animator.SetLayerWeight(animationStateLayers[animIndex], 1.0f);
+									float layerWeight = animator.GetLayerWeight(animationStateLayers[animIndex]);
 
-									_animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex], normalisedTime);
-									_animator.Update(0f);
+									animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex], normalisedTime);
+									animator.Update(0f);
 
-									layerWeight = _animator.GetLayerWeight(animationStateLayers[animIndex]);
+									layerWeight = animator.GetLayerWeight(animationStateLayers[animIndex]);
 
 									//Wait for end of frame
 									yield return null;
@@ -367,8 +376,8 @@ namespace Framework
 								//Save root motion velocities
 								if (hasRootMotion)
 								{
-									rootMotionVelocities[i] = _animator.velocity;
-									rootMotionAngularVelocities[i] = _animator.angularVelocity;
+									rootMotionVelocities[i] = animator.velocity;
+									rootMotionAngularVelocities[i] = animator.angularVelocity;
 								}
 							}
 

@@ -7,10 +7,9 @@ namespace Framework
 		[Flags]
 		public enum TransformFlags
 		{
-			None = 0x0,
-			Translate = 0x1,
-			Rotate = 0x2,
-			Scale = 0x3
+			Translate = (1 << 0),
+			Rotate = (1 << 1),
+			Scale = (1 << 2)
 		}
 
 		public enum InterpolationType

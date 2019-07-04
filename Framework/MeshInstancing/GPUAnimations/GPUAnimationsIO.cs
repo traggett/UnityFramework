@@ -102,92 +102,92 @@ namespace Framework
 					return new GPUAnimations(texture, animations, bones, exposedBones);
 				}
 
-				public static void Write(GPUAnimations animationTexture, BinaryWriter writer)
+				public static void Write(GPUAnimations animations, BinaryWriter writer)
 				{
-					writer.Write(animationTexture._bones.Length);
-					for (int i = 0; i < animationTexture._bones.Length; i++)
+					writer.Write(animations._bones.Length);
+					for (int i = 0; i < animations._bones.Length; i++)
 					{
-						writer.Write(animationTexture._bones[i]);
+						writer.Write(animations._bones[i]);
 					}
 
-					writer.Write(animationTexture._animations.Length);
+					writer.Write(animations._animations.Length);
 
-					for (int i = 0; i < animationTexture._animations.Length; i++)
+					for (int i = 0; i < animations._animations.Length; i++)
 					{
-						writer.Write(animationTexture._animations[i]._name);
-						writer.Write(animationTexture._animations[i]._startFrameOffset);
-						writer.Write(animationTexture._animations[i]._totalFrames);
-						writer.Write(animationTexture._animations[i]._fps);
-						writer.Write((int)animationTexture._animations[i]._wrapMode);
+						writer.Write(animations._animations[i]._name);
+						writer.Write(animations._animations[i]._startFrameOffset);
+						writer.Write(animations._animations[i]._totalFrames);
+						writer.Write(animations._animations[i]._fps);
+						writer.Write((int)animations._animations[i]._wrapMode);
 
-						writer.Write(animationTexture._animations[i]._events.Length);
+						writer.Write(animations._animations[i]._events.Length);
 
-						for (int j = 0; j < animationTexture._animations[i]._events.Length; j++)
+						for (int j = 0; j < animations._animations[i]._events.Length; j++)
 						{
-							writer.Write(animationTexture._animations[i]._events[j].time);
-							writer.Write(animationTexture._animations[i]._events[j].functionName);
-							writer.Write(animationTexture._animations[i]._events[j].stringParameter);
-							writer.Write(animationTexture._animations[i]._events[j].floatParameter);
-							writer.Write(animationTexture._animations[i]._events[j].intParameter);
+							writer.Write(animations._animations[i]._events[j].time);
+							writer.Write(animations._animations[i]._events[j].functionName);
+							writer.Write(animations._animations[i]._events[j].stringParameter);
+							writer.Write(animations._animations[i]._events[j].floatParameter);
+							writer.Write(animations._animations[i]._events[j].intParameter);
 							//TO DO?
 							//writer.Write(animationTexture._animations[i]._events[j].objectReferenceParameter);
 						}
 
-						writer.Write(animationTexture._animations[i]._hasRootMotion);
+						writer.Write(animations._animations[i]._hasRootMotion);
 
-						if (animationTexture._animations[i]._hasRootMotion)
+						if (animations._animations[i]._hasRootMotion)
 						{
-							for (int j = 0; j < animationTexture._animations[i]._totalFrames; j++)
+							for (int j = 0; j < animations._animations[i]._totalFrames; j++)
 							{
-								writer.Write(animationTexture._animations[i]._rootMotionVelocities[j].x);
-								writer.Write(animationTexture._animations[i]._rootMotionVelocities[j].y);
-								writer.Write(animationTexture._animations[i]._rootMotionVelocities[j].z);
+								writer.Write(animations._animations[i]._rootMotionVelocities[j].x);
+								writer.Write(animations._animations[i]._rootMotionVelocities[j].y);
+								writer.Write(animations._animations[i]._rootMotionVelocities[j].z);
 
-								writer.Write(animationTexture._animations[i]._rootMotionAngularVelocities[j].x);
-								writer.Write(animationTexture._animations[i]._rootMotionAngularVelocities[j].y);
-								writer.Write(animationTexture._animations[i]._rootMotionAngularVelocities[j].z);
+								writer.Write(animations._animations[i]._rootMotionAngularVelocities[j].x);
+								writer.Write(animations._animations[i]._rootMotionAngularVelocities[j].y);
+								writer.Write(animations._animations[i]._rootMotionAngularVelocities[j].z);
 							}
 						}
 					}
 
-					writer.Write(animationTexture._exposedBones.Length);
+					writer.Write(animations._exposedBones.Length);
 
-					for (int i = 0; i < animationTexture._exposedBones.Length; i++)
+					for (int i = 0; i < animations._exposedBones.Length; i++)
 					{
-						writer.Write(animationTexture._exposedBones[i]._boneIndex);
+						writer.Write(animations._exposedBones[i]._boneIndex);
 
-						writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices.Length);
+						writer.Write(animations._exposedBones[i]._cachedBoneMatrices.Length);
 
-						for (int j = 0; j < animationTexture._exposedBones[i]._cachedBoneMatrices.Length; j++)
+						for (int j = 0; j < animations._exposedBones[i]._cachedBoneMatrices.Length; j++)
 						{
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).x);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).y);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).z);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).w);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).x);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).y);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).z);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).w);
 
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).x);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).y);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).z);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).w);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).x);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).y);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).z);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).w);
 
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).x);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).y);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).z);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).w);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).x);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).y);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).z);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).w);
 
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).x);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).y);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).z);
-							writer.Write(animationTexture._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).w);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).x);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).y);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).z);
+							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).w);
 						}
 					}
 
 
-					byte[] bytes = animationTexture._texture.GetRawTextureData();
+					byte[] bytes = animations._texture.GetRawTextureData();
 
-					writer.Write((int)animationTexture._texture.format);
-					writer.Write(animationTexture._texture.width);
-					writer.Write(animationTexture._texture.height);
+					writer.Write((int)animations._texture.format);
+					writer.Write(animations._texture.width);
+					writer.Write(animations._texture.height);
 					writer.Write(bytes.Length);
 					writer.Write(bytes);
 				}

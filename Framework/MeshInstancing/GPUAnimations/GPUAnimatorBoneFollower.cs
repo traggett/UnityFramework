@@ -15,7 +15,6 @@ namespace Framework
 				#region Public Data
 				public GPUAnimatorBase _animator;
 				public string _boneName;
-				public Transform _targetTransform;
 				public TransformFlags _flags = TransformFlags.Translate & TransformFlags.Rotate;
 				#endregion
 
@@ -92,11 +91,11 @@ namespace Framework
 
 					//Work out local space bone transform
 					float curAnimWeight = _animator.GetMainAnimationWeight();
-					GetExposedBoneTransform(animations, _exposedBoneIndex, _animator.GetMainAnimationFrame(), _flags, out Vector3 localPosition, out Quaternion localRotation, out Vector3 localScale);
+					GetBoneTransform(animations, _exposedBoneIndex, _animator.GetMainAnimationFrame(), _flags, out Vector3 localPosition, out Quaternion localRotation, out Vector3 localScale);
 
 					if (curAnimWeight < 1.0f)
 					{
-						GetExposedBoneTransform(animations, _exposedBoneIndex, _animator.GetBackgroundAnimationFrame(), _flags, out Vector3 backgroundLocalPosition, out Quaternion backgroundLocalRotation, out Vector3 backgroundLocalScale);
+						GetBoneTransform(animations, _exposedBoneIndex, _animator.GetBackgroundAnimationFrame(), _flags, out Vector3 backgroundLocalPosition, out Quaternion backgroundLocalRotation, out Vector3 backgroundLocalScale);
 
 						if (followPosition)
 							localPosition = Vector3.Lerp(backgroundLocalPosition, localPosition, curAnimWeight);
@@ -119,17 +118,14 @@ namespace Framework
 				
 				private void UpdateTargetTransform()
 				{
-					if (_targetTransform != null)
-					{
-						if ((_flags & TransformFlags.Translate) != 0)
-							_targetTransform.position = _worldBonePosition;
+					if ((_flags & TransformFlags.Translate) != 0)
+						this.transform.position = _worldBonePosition;
 
-						if ((_flags & TransformFlags.Rotate) != 0)
-							_targetTransform.rotation = _worldBoneRotation;
+					if ((_flags & TransformFlags.Rotate) != 0)
+						this.transform.rotation = _worldBoneRotation;
 
-						if ((_flags & TransformFlags.Scale) != 0)
-							GameObjectUtils.SetTransformWorldScale(_targetTransform, _worldBoneScale);
-					}
+					if ((_flags & TransformFlags.Scale) != 0)
+						GameObjectUtils.SetTransformWorldScale(this.transform, _worldBoneScale);
 				}
 
 				private static int GetExposedBoneIndex(GPUAnimations animations, string boneName)
@@ -164,7 +160,7 @@ namespace Framework
 					return -1;
 				}
 
-				private static void GetExposedBoneTransform(GPUAnimations animations, int exposedBoneIndex, float frame, TransformFlags flags, out Vector3 position, out Quaternion rotation, out Vector3 scale)
+				private static void GetBoneTransform(GPUAnimations animations, int exposedBoneIndex, float frame, TransformFlags flags, out Vector3 position, out Quaternion rotation, out Vector3 scale)
 				{
 					int totalSamples = animations._exposedBones[exposedBoneIndex]._cachedBoneMatrices.Length;
 
