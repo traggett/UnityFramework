@@ -16,7 +16,7 @@ namespace Framework
 			public NodeInputField<float> _from = 0.0f;
 			public NodeInputField<float> _to = 1.0f;
 			public NodeInputField<float> _t = 0.0f;
-			public eInterpolation _interpolationtype = eInterpolation.Linear;
+			public InterpolationType _interpolationtype = InterpolationType.Linear;
 			#endregion
 
 			#region Private Data

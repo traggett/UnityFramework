@@ -20,7 +20,7 @@ namespace Framework
 			public ComponentRef<IAnimator> _animator;
 			public int _channel = 0;
 			public float _blendTime = 0.0f;
-			public eInterpolation _easeType = eInterpolation.InOutSine;
+			public InterpolationType _easeType = InterpolationType.InOutSine;
 			#endregion
 
 			#region Event

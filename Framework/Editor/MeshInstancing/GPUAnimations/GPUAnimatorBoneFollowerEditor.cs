@@ -2,6 +2,8 @@ using UnityEditor;
 
 namespace Framework
 {
+	using Maths;
+
 	namespace MeshInstancing
 	{
 		namespace GPUAnimations
@@ -39,7 +41,7 @@ namespace Framework
 						EditorGUILayout.PropertyField(_targetTransformProperty);
 						EditorGUILayout.Separator();
 
-						_flagsProperty.intValue = (int)(GPUAnimatorBoneFollower.Flags)EditorGUILayout.EnumFlagsField(_flagsProperty.displayName, (GPUAnimatorBoneFollower.Flags)_flagsProperty.intValue);
+						_flagsProperty.intValue = (int)(TransformFlags)EditorGUILayout.EnumFlagsField(_flagsProperty.displayName, (TransformFlags)_flagsProperty.intValue);
 
 						serializedObject.ApplyModifiedProperties();
 					}

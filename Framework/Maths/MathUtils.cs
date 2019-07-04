@@ -41,75 +41,75 @@ namespace Framework
 				return lerp;
 			}
 
-			public static float Interpolate(eInterpolation type, float start, float end, float t)
+			public static float Interpolate(InterpolationType type, float start, float end, float t)
 			{
 				return Interpolation.Interpolate(type, start, end, t);
 			}
 
-			public static double Interpolate(eInterpolation type, double start, double end, double t)
+			public static double Interpolate(InterpolationType type, double start, double end, double t)
 			{
 				return Interpolation.Interpolate(type, start, end, t);
 			}
 
-			public static Vector2 Interpolate(eInterpolation type, Vector2 from, Vector2 to, float t)
+			public static Vector2 Interpolate(InterpolationType type, Vector2 from, Vector2 to, float t)
 			{
 				float lerp = Interpolation.Interpolate(type, 0.0f, 1.0f, t);
 				return Vector2.Lerp(from, to, lerp);
 			}
 
-			public static Vector3 Interpolate(eInterpolation type, Vector3 from, Vector3 to, float t)
+			public static Vector3 Interpolate(InterpolationType type, Vector3 from, Vector3 to, float t)
 			{
 				float lerp = Interpolation.Interpolate(type, 0.0f, 1.0f, t);
 				return Vector3.Lerp(from, to, lerp);
 			}
 
-			public static Quaternion Interpolate(eInterpolation type, Quaternion from, Quaternion to, float t)
+			public static Quaternion Interpolate(InterpolationType type, Quaternion from, Quaternion to, float t)
 			{
 				float lerp = Interpolation.Interpolate(type, 0.0f, 1.0f, t);
 				return Quaternion.Slerp(from, to, lerp);
 			}
 
-			public static Color Interpolate(eInterpolation type, Color from, Color to, float t)
+			public static Color Interpolate(InterpolationType type, Color from, Color to, float t)
 			{
 				float lerp = Interpolation.Interpolate(type, 0.0f, 1.0f, t);
 				return Color.Lerp(from, to, lerp);
 			}
 
-			public static Rect Interpolate(eInterpolation type, Rect from, Rect to, float t)
+			public static Rect Interpolate(InterpolationType type, Rect from, Rect to, float t)
 			{
 				float lerp = Interpolation.Interpolate(type, 0.0f, 1.0f, t);
 				return Lerp(from, to, lerp);
 			}
 
-			public static FloatRange Interpolate(eInterpolation type, FloatRange from, FloatRange to, float t)
+			public static FloatRange Interpolate(InterpolationType type, FloatRange from, FloatRange to, float t)
 			{
 				float lerp = Interpolation.Interpolate(type, 0.0f, 1.0f, t);
 				return Lerp(from, to, lerp);
 			}
 
-			public static float Damp(float a, float b, float lambda, float deltaTime, eInterpolation type = eInterpolation.Linear)
+			public static float Damp(float a, float b, float lambda, float deltaTime, InterpolationType type = InterpolationType.Linear)
 			{
 				return Interpolation.Interpolate(type, a, b, 1.0f - Mathf.Exp(-lambda * deltaTime));
 			}
 
-			public static double Damp(double a, double b, double lambda, double deltaTime, eInterpolation type = eInterpolation.Linear)
+			public static double Damp(double a, double b, double lambda, double deltaTime, InterpolationType type = InterpolationType.Linear)
 			{
 				return Interpolation.Interpolate(type, a, b, 1.0d - Math.Exp(-lambda * deltaTime));
 			}
 
-			public static Vector2 Damp(Vector2 a, Vector2 b, float lambda, float deltaTime, eInterpolation type = eInterpolation.Linear)
+			public static Vector2 Damp(Vector2 a, Vector2 b, float lambda, float deltaTime, InterpolationType type = InterpolationType.Linear)
 			{
 				float lerp = Damp(0.0f, 1.0f, lambda, deltaTime, type);
 				return Vector2.Lerp(a, b, lerp);
 			}
 
-			public static Vector3 Damp(Vector3 a, Vector3 b, float lambda, float deltaTime, eInterpolation type = eInterpolation.Linear)
+			public static Vector3 Damp(Vector3 a, Vector3 b, float lambda, float deltaTime, InterpolationType type = InterpolationType.Linear)
 			{
 				float lerp = Damp(0.0f, 1.0f, lambda, deltaTime, type);
 				return Vector3.Lerp(a, b, lerp);
 			}
 
-			public static Quaternion Damp(Quaternion a, Quaternion b, float lambda, float deltaTime, eInterpolation type = eInterpolation.Linear)
+			public static Quaternion Damp(Quaternion a, Quaternion b, float lambda, float deltaTime, InterpolationType type = InterpolationType.Linear)
 			{
 				float lerp = Damp(0.0f, 1.0f, lambda, deltaTime, type);
 				return Quaternion.Slerp(a, b, lerp);

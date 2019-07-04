@@ -16,7 +16,7 @@ namespace Framework
 			public NodeInputField<Color> _from = Color.clear;
 			public NodeInputField<Color> _to = Color.white;
 			public NodeInputField<float> _t = 0.0f;
-			public eInterpolation _interpolationtype = eInterpolation.Linear;
+			public InterpolationType _interpolationtype = InterpolationType.Linear;
 			#endregion
 
 			#region Private Data

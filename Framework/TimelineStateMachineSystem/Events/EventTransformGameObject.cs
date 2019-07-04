@@ -44,7 +44,7 @@ namespace Framework
 			public eTransformFlag _transformFlags = eTransformFlag.Translate;
 			public eMoveType _moveType = eMoveType.To;
 			public eTargetType _targetType = eTargetType.LocalDelta;
-			public eInterpolation _easeType = eInterpolation.Linear;
+			public InterpolationType _easeType = InterpolationType.Linear;
 			public float _duration = 0.0f;
 			public GameObjectRef _targetTransform;
 			public Vector3 _targetPosition = Vector3.zero;

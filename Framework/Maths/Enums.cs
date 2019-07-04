@@ -1,29 +1,19 @@
+using System;
+
 namespace Framework
 {
 	namespace Maths
 	{
-		public enum eDirection
+		[Flags]
+		public enum TransformFlags
 		{
-			None,
-			Left,
-			Right,
-			Up,
-			Down
+			None = 0x0,
+			Translate = 0x1,
+			Rotate = 0x2,
+			Scale = 0x3
 		}
 
-		public enum eAlignment2D
-		{
-			Horiztonal,
-			Vertical
-		}
-
-		public enum eDirection2D
-		{
-			Forwards = 1,
-			Backwards = -1,
-		}
-
-		public enum eInterpolation
+		public enum InterpolationType
 		{
 			Linear,
 			InQuad,

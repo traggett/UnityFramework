@@ -9,91 +9,91 @@ namespace Framework
 		public static class Interpolation
 		{
 			#region Utility Functions
-			public static float Interpolate(eInterpolation type, float start, float end, float t)
+			public static float Interpolate(InterpolationType type, float start, float end, float t)
 			{
 				switch (type)
 				{
-					case eInterpolation.InQuad:
+					case InterpolationType.InQuad:
 						return InterpolateInQuad(start, end, t);
-					case eInterpolation.OutQuad:
+					case InterpolationType.OutQuad:
 						return InterpolateOutQuad(start, end, t);
-					case eInterpolation.InOutQuad:
+					case InterpolationType.InOutQuad:
 						return InterpolateInOutQuad(start, end, t);
-					case eInterpolation.InOutCubic:
+					case InterpolationType.InOutCubic:
 						return InterpolateInOutCubic(start, end, t);
-					case eInterpolation.InCubic:
+					case InterpolationType.InCubic:
 						return InterpolateInCubic(start, end, t);
-					case eInterpolation.OutCubic:
+					case InterpolationType.OutCubic:
 						return InterpolateOutCubic(start, end, t);
-					case eInterpolation.InSine:
+					case InterpolationType.InSine:
 						return InterpolateInSine(start, end, t);
-					case eInterpolation.OutSine:
+					case InterpolationType.OutSine:
 						return InterpolateOutSine(start, end, t);
-					case eInterpolation.InOutSine:
+					case InterpolationType.InOutSine:
 						return InterpolateInOutSine(start, end, t);
-					case eInterpolation.InOutSineInv:
+					case InterpolationType.InOutSineInv:
 						return InterpolateInOutSineInv(start, end, t);
-					case eInterpolation.InElastic:
+					case InterpolationType.InElastic:
 						return InterpolateInElastic(start, end, t);
-					case eInterpolation.OutElastic:
+					case InterpolationType.OutElastic:
 						return InterpolateOutElastic(start, end, t);
-					case eInterpolation.InOutElastic:
+					case InterpolationType.InOutElastic:
 						return InterpolateInOutElastic(start, end, t);
-					case eInterpolation.InBounce:
+					case InterpolationType.InBounce:
 						return InterpolateInBounce(start, end, t);
-					case eInterpolation.OutBounce:
+					case InterpolationType.OutBounce:
 						return InterpolateOutBounce(start, end, t);
-					case eInterpolation.InOutBounce:
+					case InterpolationType.InOutBounce:
 						return InterpolateInOutBounce(start, end, t);
 					default:
-					case eInterpolation.Linear:
+					case InterpolationType.Linear:
 						return InterpolateLinear(start, end, t);
 				}
 			}
 
-			public static double Interpolate(eInterpolation type, double start, double end, double t)
+			public static double Interpolate(InterpolationType type, double start, double end, double t)
 			{
 				switch (type)
 				{
-					case eInterpolation.InQuad:
+					case InterpolationType.InQuad:
 						return InterpolateInQuad(start, end, t);
-					case eInterpolation.OutQuad:
+					case InterpolationType.OutQuad:
 						return InterpolateOutQuad(start, end, t);
-					case eInterpolation.InOutQuad:
+					case InterpolationType.InOutQuad:
 						return InterpolateInOutQuad(start, end, t);
-					case eInterpolation.InOutCubic:
+					case InterpolationType.InOutCubic:
 						return InterpolateInOutCubic(start, end, t);
-					case eInterpolation.InCubic:
+					case InterpolationType.InCubic:
 						return InterpolateInCubic(start, end, t);
-					case eInterpolation.OutCubic:
+					case InterpolationType.OutCubic:
 						return InterpolateOutCubic(start, end, t);
-					case eInterpolation.InSine:
+					case InterpolationType.InSine:
 						return InterpolateInSine(start, end, t);
-					case eInterpolation.OutSine:
+					case InterpolationType.OutSine:
 						return InterpolateOutSine(start, end, t);
-					case eInterpolation.InOutSine:
+					case InterpolationType.InOutSine:
 						return InterpolateInOutSine(start, end, t);
-					case eInterpolation.InOutSineInv:
+					case InterpolationType.InOutSineInv:
 						return InterpolateInOutSineInv(start, end, t);
-					case eInterpolation.InElastic:
+					case InterpolationType.InElastic:
 						return InterpolateInElastic(start, end, t);
-					case eInterpolation.OutElastic:
+					case InterpolationType.OutElastic:
 						return InterpolateOutElastic(start, end, t);
-					case eInterpolation.InOutElastic:
+					case InterpolationType.InOutElastic:
 						return InterpolateInOutElastic(start, end, t);
-					case eInterpolation.InBounce:
+					case InterpolationType.InBounce:
 						return InterpolateInBounce(start, end, t);
-					case eInterpolation.OutBounce:
+					case InterpolationType.OutBounce:
 						return InterpolateOutBounce(start, end, t);
-					case eInterpolation.InOutBounce:
+					case InterpolationType.InOutBounce:
 						return InterpolateInOutBounce(start, end, t);
 					default:
-					case eInterpolation.Linear:
+					case InterpolationType.Linear:
 						return InterpolateLinear(start, end, t);
 				}
 			}
 			
-			public static IEnumerator Interpolate(float value, Action<float> valueSetter, eInterpolation type, float to, float time)
+			public static IEnumerator Interpolate(float value, Action<float> valueSetter, InterpolationType type, float to, float time)
 			{
 				if (time > 0.0f)
 				{
@@ -123,7 +123,7 @@ namespace Framework
 				yield break;
 			}
 
-			public static IEnumerator Interpolate(double value, Action<double> valueSetter, eInterpolation type, double to, float time)
+			public static IEnumerator Interpolate(double value, Action<double> valueSetter, InterpolationType type, double to, float time)
 			{
 				if (time > 0.0f)
 				{

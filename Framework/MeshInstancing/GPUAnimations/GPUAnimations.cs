@@ -1,5 +1,4 @@
-﻿using System.IO;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Framework
 {
@@ -9,9 +8,11 @@ namespace Framework
 		{
 			public class GPUAnimations
 			{
+				#region Public Data
 				public static int kPixelsPerBoneMatrix = 4;
 
 				public readonly Texture2D _texture;
+				public readonly string[] _bones;
 
 				public struct Animation
 				{
@@ -42,98 +43,31 @@ namespace Framework
 
 					public static readonly Animation kInvalid = new Animation(string.Empty, 0, 0, 0f, WrapMode.Default, new AnimationEvent[0], false, new Vector3[0], new Vector3[0]);
 				}
-
 				public readonly Animation[] _animations;
-				public readonly string[] _bones;
 				
-				public struct TrackedBone
+				public struct ExposedBone
 				{
 					public readonly int _boneIndex;
 					public readonly Matrix4x4[] _cachedBoneMatrices;
-				}
-				public readonly TrackedBone[] _trackedBones;
 
-				public GPUAnimations(Texture2D texture, Animation[] animations, string[] bones, TrackedBone[] trackedBones)
+					public ExposedBone(int boneIndex, Matrix4x4[] boneMatrices)
+					{
+						_boneIndex = boneIndex;
+						_cachedBoneMatrices = boneMatrices;
+					}
+				}
+				public readonly ExposedBone[] _exposedBones;
+				#endregion
+
+				#region Public Interface
+				public GPUAnimations(Texture2D texture, Animation[] animations, string[] bones, ExposedBone[] exposedBones)
 				{
 					_texture = texture;
 					_animations = animations;
 					_bones = bones;
-					_trackedBones = trackedBones;
+					_exposedBones = exposedBones;
 				}
-
-				public static GPUAnimations LoadFromFile(TextAsset file)
-				{
-					BinaryReader reader = new BinaryReader(new MemoryStream(file.bytes));
-
-					string[] bones = new string[reader.ReadInt32()];
-					for (int i = 0; i < bones.Length; i++)
-					{
-						bones[i] = reader.ReadString();
-					}
-
-					int animCount = reader.ReadInt32();
-
-					Animation[] animations = new Animation[animCount];
-					for (int i = 0; i < animCount; i++)
-					{
-						string name = reader.ReadString();
-						int startOffset = reader.ReadInt32();
-						int totalFrames = reader.ReadInt32();
-						float fps = reader.ReadSingle();
-						WrapMode wrapMode = (WrapMode)reader.ReadInt32();
-
-						int numEvents = reader.ReadInt32();
-						AnimationEvent[] events = new AnimationEvent[numEvents];
-
-						for (int j = 0; j < numEvents; j++)
-						{
-							events[j] = new AnimationEvent
-							{
-								time = reader.ReadSingle(),
-								functionName = reader.ReadString(),
-
-								stringParameter = reader.ReadString(),
-								floatParameter = reader.ReadSingle(),
-								intParameter = reader.ReadInt32()
-								//TO DO?
-								//evnt.objectReferenceParameter = reader.Rea();
-							};
-						}
-
-						bool hasRootMotion = reader.ReadBoolean();
-
-						Vector3[] rootMotionVelocities = null;
-						Vector3[] rootMotionAngularVelocities = null;
-
-						if (hasRootMotion)
-						{
-							rootMotionVelocities = new Vector3[totalFrames];
-							rootMotionAngularVelocities = new Vector3[totalFrames];
-
-							for (int j = 0; j < totalFrames; j++)
-							{
-								rootMotionVelocities[j] = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-								rootMotionAngularVelocities[j] = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
-							}
-						}
-
-						animations[i] = new Animation(name, startOffset, totalFrames, fps, wrapMode, events, hasRootMotion, rootMotionVelocities, rootMotionAngularVelocities);
-					}
-
-					//Read texture
-					TextureFormat format = (TextureFormat)reader.ReadInt32();
-					int textureWidth = reader.ReadInt32();
-					int textureHeight = reader.ReadInt32();
-					int byteLength = reader.ReadInt32();
-					byte[] bytes = new byte[byteLength];
-					bytes = reader.ReadBytes(byteLength);
-					Texture2D texture = new Texture2D(textureWidth, textureHeight, format, false);
-					texture.filterMode = FilterMode.Point;
-					texture.LoadRawTextureData(bytes);
-					texture.Apply();
-
-					return new GPUAnimations(texture, animations, bones, null);
-				}
+				#endregion
 			}
 		}
 	}

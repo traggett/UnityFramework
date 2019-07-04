@@ -20,7 +20,7 @@ namespace Framework
 			public AnimationRef _animation = new AnimationRef();
 			public eWrapMode _wrapMode = eWrapMode.Default;
 			public float _blendTime = 0.0f;
-			public eInterpolation _easeType = eInterpolation.InOutSine;
+			public InterpolationType _easeType = InterpolationType.InOutSine;
 			public float _weight = 1.0f;
 			public bool _queued = false;
 			#endregion

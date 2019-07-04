@@ -23,14 +23,18 @@ namespace Framework
 				public sealed class GPUAnimationsEditor : UpdatedEditorWindow
 				{
 					#region Private Data
-					private bool _working;
-
+					[SerializeField]
 					private GameObject _evaluatedObject;
-					private SkinnedMeshRenderer[] _skinnedMeshes;
-					private int _skinnedMeshIndex;
-					private bool _useAnimator;
 					[SerializeField]
 					private AnimationClip[] _animations;
+
+					private bool _working;
+					private SkinnedMeshRenderer[] _skinnedMeshes;
+					private int _skinnedMeshIndex;
+					private Animator _animator;
+					private bool _useAnimator;
+					private string[] _boneNames;
+					private List<int> _exposedBones;
 
 					private Mesh _mesh;
 					private TEXCOORD _boneIdChanel = TEXCOORD.TEXCOORD3;
@@ -72,11 +76,15 @@ namespace Framework
 								_evaluatedObject = prefab;
 								_skinnedMeshes = prefab != null ? prefab.GetComponentsInChildren<SkinnedMeshRenderer>() : new SkinnedMeshRenderer[0];
 								_skinnedMeshIndex = 0;
+								_boneNames = _skinnedMeshIndex < _skinnedMeshes.Length ? GetBoneNames(_skinnedMeshes[_skinnedMeshIndex]) : null;
+								_exposedBones = new List<int>();
+								_animator = prefab != null ? GameObjectUtils.GetComponent<Animator>(_evaluatedObject, true) : null;
+								_useAnimator = _animator != null;
 							}
 
-							if (_evaluatedObject != null)
+							if (_evaluatedObject != null && _skinnedMeshes != null && _skinnedMeshes.Length > 0)
 							{
-								if (_skinnedMeshes != null && _skinnedMeshes.Length > 0)
+								//Draw Skinned Mesh Popup
 								{
 									string[] skinnedMeshes = new string[_skinnedMeshes.Length];
 
@@ -85,20 +93,29 @@ namespace Framework
 										skinnedMeshes[i] = _skinnedMeshes[i].gameObject.name;
 									}
 
-									_skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
+									int skinnedMeshIndex = EditorGUILayout.Popup("Skinned Mesh", _skinnedMeshIndex, skinnedMeshes);
+
+									if (skinnedMeshIndex != _skinnedMeshIndex)
+									{
+										_skinnedMeshIndex = skinnedMeshIndex;
+										_boneNames = GetBoneNames(_skinnedMeshes[_skinnedMeshIndex]);
+										_exposedBones = new List<int>();
+									}
 								}
 
-								Animator animator = GameObjectUtils.GetComponent<Animator>(_evaluatedObject, true);
-
-								if (animator != null)
+								//Draw option for sampling with animator if object has one
 								{
-									_useAnimator = EditorGUILayout.Toggle("Use Animator", _useAnimator);
-								}
-								else
-								{
-									_useAnimator = false;
+									if (_animator != null)
+									{
+										_useAnimator = EditorGUILayout.Toggle("Use Animator", _useAnimator);
+									}
+									else
+									{
+										_useAnimator = false;
+									}
 								}
 
+								//If not usign animator, draw array for animations instead
 								if (!_useAnimator)
 								{
 									//Draw list showing animation clip, 
@@ -106,6 +123,32 @@ namespace Framework
 									EditorGUILayout.PropertyField(animationsProperty, true);
 									so.ApplyModifiedProperties();
 								}
+
+								//Draw options for Exposed bones
+								EditorGUILayout.BeginHorizontal();
+								{
+									EditorGUILayout.LabelField(new GUIContent("Exposed Bones"));
+
+									string exposedBones = _exposedBones.Count == 0 ? "None" : _boneNames[_exposedBones[0]];
+
+									for (int i = 1; i < _exposedBones.Count; i++)
+									{
+										exposedBones += ", " + _exposedBones[i];
+									}
+
+									if (EditorGUILayout.DropdownButton(new GUIContent(exposedBones), FocusType.Keyboard))
+									{
+										GenericMenu menu = new GenericMenu();
+										
+										for (int i = 0; i < _boneNames.Length; i++)
+										{
+											menu.AddItem(new GUIContent(_boneNames[i]), _exposedBones.Contains(i), OnClickExposedBone, i);
+										}
+
+										menu.ShowAsContext();
+									}
+								}
+								EditorGUILayout.EndHorizontal();
 
 								if (_working)
 								{
@@ -123,6 +166,7 @@ namespace Framework
 										}
 									}
 								}
+								
 							}
 						}
 						GUILayout.EndVertical();
@@ -166,24 +210,13 @@ namespace Framework
 
 						GameObject gameObject = Instantiate(_evaluatedObject);
 						AnimationClip[] animationClips = _animations;
-						Animator animator = null;
 						string[] animationStateNames = null;
 						int[] animationStateLayers = null;
 
 						//If using animator then get clips and state names from controller
 						if (_useAnimator)
 						{
-							animator = GameObjectUtils.GetComponent<Animator>(gameObject, true);
-
-							if (animator == null)
-							{
-								DestroyImmediate(gameObject);
-								_working = false;
-								yield break;
-							}
-
-
-							GetAnimationClipsFromAnimator(animator, out animationClips, out animationStateNames, out animationStateLayers);
+							GetAnimationClipsFromAnimator(_animator, out animationClips, out animationStateNames, out animationStateLayers);
 
 							if (animationClips.Length == 0)
 							{
@@ -192,15 +225,13 @@ namespace Framework
 								yield break;
 							}
 
-							AnimatorUtility.DeoptimizeTransformHierarchy(animator.gameObject);
-							animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+							AnimatorUtility.DeoptimizeTransformHierarchy(_animator.gameObject);
+							_animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 						}
 
-						SkinnedMeshRenderer[] skinnedMeshes = gameObject.GetComponentsInChildren<SkinnedMeshRenderer>();
-						SkinnedMeshRenderer skinnedMesh = skinnedMeshes[_skinnedMeshIndex];
 						Matrix4x4 rootMat = gameObject.transform.worldToLocalMatrix;
-						Transform[] bones = skinnedMesh.bones;
-						Matrix4x4[] bindposes = skinnedMesh.sharedMesh.bindposes;
+						Transform[] bones = _skinnedMeshes[_skinnedMeshIndex].bones;
+						Matrix4x4[] bindposes = _skinnedMeshes[_skinnedMeshIndex].sharedMesh.bindposes;
 						int numBones = bones.Length;
 
 						if (numBones == 0)
@@ -209,8 +240,7 @@ namespace Framework
 							_working = false;
 							yield break;
 						}
-
-						string[] boneNames = new string[numBones];
+						
 						Vector3[] origBonePositons = new Vector3[numBones];
 						Quaternion[] origBoneRotations = new Quaternion[numBones];
 						Vector3[] origBoneScales = new Vector3[numBones];
@@ -226,7 +256,6 @@ namespace Framework
 
 						for (int i=0; i<numBones; i++)
 						{
-							boneNames[i] = bones[i].gameObject.name;
 							origBonePositons[i] = bones[i].localPosition;
 							origBoneRotations[i] = bones[i].localRotation;
 							origBoneScales[i] = bones[i].localScale;
@@ -237,6 +266,7 @@ namespace Framework
 						
 						//Start after first frame (as this frame is our reference pose)
 						int startOffset = 1;
+						int totalNumberOfSamples = 1;
 
 						for (int animIndex = 0; animIndex < animations.Length; animIndex++)
 						{
@@ -246,6 +276,8 @@ namespace Framework
 							string name = clip.name;
 							int totalFrames = Mathf.Max(Mathf.FloorToInt(clip.length * clip.frameRate), 1);
 							int totalSamples = totalFrames + 1;
+							totalNumberOfSamples += totalSamples;
+
 							WrapMode wrapMode = clip.wrapMode;
 							AnimationEvent[] events = clip.events;
 
@@ -272,22 +304,22 @@ namespace Framework
 							//If using an animator, start playing animation with correct layer weights set
 							if (_useAnimator)
 							{
-								for (int layer=1; layer < animator.layerCount; layer++)
+								for (int layer=1; layer < _animator.layerCount; layer++)
 								{
-									animator.SetLayerWeight(animIndex, layer == animationStateLayers[animIndex] ? 1.0f : 0.0f);
+									_animator.SetLayerWeight(animIndex, layer == animationStateLayers[animIndex] ? 1.0f : 0.0f);
 								}
-								
-								animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
+
+								_animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
 
 								//Needed to prevent first frame pop?
 								{
-									animator.Update(0f);
+									_animator.Update(0f);
 									yield return null;
-									animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
-									animator.Update(0f);
+									_animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
+									_animator.Update(0f);
 									yield return null;
-									animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
-									animator.Update(0f);
+									_animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex]);
+									_animator.Update(0f);
 									yield return null;
 								}
 							}
@@ -299,18 +331,18 @@ namespace Framework
 								//Using animator, update animator to progress forward with animation
 								if (_useAnimator)
 								{
-									for (int layer = 1; layer < animator.layerCount; layer++)
+									for (int layer = 1; layer < _animator.layerCount; layer++)
 									{
-										animator.SetLayerWeight(layer, 0.0f);
+										_animator.SetLayerWeight(layer, 0.0f);
 									}
 
-									animator.SetLayerWeight(animationStateLayers[animIndex], 1.0f);
-									float layerWeight = animator.GetLayerWeight(animationStateLayers[animIndex]);
+									_animator.SetLayerWeight(animationStateLayers[animIndex], 1.0f);
+									float layerWeight = _animator.GetLayerWeight(animationStateLayers[animIndex]);
 
-									animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex], normalisedTime);
-									animator.Update(0f);
+									_animator.Play(animationStateNames[animIndex], animationStateLayers[animIndex], normalisedTime);
+									_animator.Update(0f);
 
-									layerWeight = animator.GetLayerWeight(animationStateLayers[animIndex]);
+									layerWeight = _animator.GetLayerWeight(animationStateLayers[animIndex]);
 
 									//Wait for end of frame
 									yield return null;
@@ -335,8 +367,8 @@ namespace Framework
 								//Save root motion velocities
 								if (hasRootMotion)
 								{
-									rootMotionVelocities[i] = animator.velocity;
-									rootMotionAngularVelocities[i] = animator.angularVelocity;
+									rootMotionVelocities[i] = _animator.velocity;
+									rootMotionAngularVelocities[i] = _animator.angularVelocity;
 								}
 							}
 
@@ -346,47 +378,77 @@ namespace Framework
 						}
 
 						//Create and save texture
-						if (!CalculateTextureSize(boneMatricies, out int textureSize))
+						Texture2D texture;
 						{
-							DestroyImmediate(gameObject);
-							_working = false;
-							yield break;
+							if (!CalculateTextureSize(totalNumberOfSamples, numBones, out int textureSize))
+							{
+								DestroyImmediate(gameObject);
+								_working = false;
+								yield break;
+							}
+
+							texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBAHalf, false)
+							{
+								filterMode = FilterMode.Point
+							};
+
+							//Loop through animations / frames / bones setting pixels for each bone matrix
+							int pixelx = 0;
+							int pixely = 0;
+
+							//Foreach animation
+							for (int animIndex = 0; animIndex < boneMatricies.Length; animIndex++)
+							{
+								//For each frame
+								for (int j = 0; j < boneMatricies[animIndex].Length; j++)
+								{
+									//Convert all frame bone matrices to colors
+									Color[] matrixPixels = ConvertMatricesToColor(boneMatricies[animIndex][j]);
+									texture.SetPixels(pixelx, pixely, 4, numBones, matrixPixels);
+
+									//Shift to next frame position
+									pixelx += 4;
+
+									//If less than 4 pixels from edge, move to next row
+									if (textureSize - pixelx < 4)
+									{
+										pixelx = 0;
+										pixely += numBones;
+									}
+								}
+							}
+
+							texture.Apply();
 						}
 
-						Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBAHalf, false)
+						//Save our exposed bones
+						GPUAnimations.ExposedBone[] exposedBones;
 						{
-							filterMode = FilterMode.Point
-						};
+							exposedBones = new GPUAnimations.ExposedBone[_exposedBones.Count];
 
-						//Loop through animations / frames / bones setting pixels for each bone matrix
-						int pixelx = 0;
-						int pixely = 0;
-
-						//Foreach animation
-						for (int animIndex = 0; animIndex < boneMatricies.Length; animIndex++)
-						{
-							//For each frame
-							for (int j = 0; j < boneMatricies[animIndex].Length; j++)
+							for (int i = 0; i < exposedBones.Length; i++)
 							{
-								//Convert all frame bone matrices to colors
-								Color[] matrixPixels = ConvertMatricesToColor(boneMatricies[animIndex][j]);
-								texture.SetPixels(pixelx, pixely, 4, numBones, matrixPixels);
+								//Work out bone index
+								int boneIndex = _exposedBones[i];
+								
+								Matrix4x4 inverseBindPose = bindposes[boneIndex].inverse;
 
-								//Shift to next frame position
-								pixelx += 4;
-
-								//If less than 4 pixels from edge, move to next row
-								if (textureSize - pixelx < 4)
+								//Work out bone matrixes
+								Matrix4x4[] exposedBoneMatricies = new Matrix4x4[totalNumberOfSamples];
+								int sampleIndex = 0;					
+								for (int anim=0; anim < boneMatricies.Length; anim++)
 								{
-									pixelx = 0;
-									pixely += numBones;
+									for (int frame = 0; frame < boneMatricies[anim].Length; frame++)
+									{
+										exposedBoneMatricies[sampleIndex++] = boneMatricies[anim][frame][boneIndex] * inverseBindPose;
+									}
 								}
+
+								exposedBones[i] = new GPUAnimations.ExposedBone(boneIndex, exposedBoneMatricies);
 							}
 						}
 
-						texture.Apply();
-
-						GPUAnimations animationTexture = new GPUAnimations(texture, animations, boneNames, null);
+						GPUAnimations animationTexture = new GPUAnimations(texture, animations, _boneNames, exposedBones);
 
 						SaveAnimationTexture(animationTexture, path);
 
@@ -406,60 +468,7 @@ namespace Framework
 						FileStream file = File.Open(fileName, FileMode.Create);
 						BinaryWriter writer = new BinaryWriter(file);
 
-						writer.Write(animationTexture._bones.Length);
-						for (int i = 0; i < animationTexture._bones.Length; i++)
-						{
-							writer.Write(animationTexture._bones[i]);
-						}
-
-						writer.Write(animationTexture._animations.Length);
-
-						for (int i = 0; i < animationTexture._animations.Length; i++)
-						{
-							writer.Write(animationTexture._animations[i]._name);
-							writer.Write(animationTexture._animations[i]._startFrameOffset);
-							writer.Write(animationTexture._animations[i]._totalFrames);
-							writer.Write(animationTexture._animations[i]._fps);
-							writer.Write((int)animationTexture._animations[i]._wrapMode);
-
-							writer.Write(animationTexture._animations[i]._events.Length);
-
-							for (int j = 0; j < animationTexture._animations[i]._events.Length; j++)
-							{
-								writer.Write(animationTexture._animations[i]._events[j].time);
-								writer.Write(animationTexture._animations[i]._events[j].functionName);
-								writer.Write(animationTexture._animations[i]._events[j].stringParameter);
-								writer.Write(animationTexture._animations[i]._events[j].floatParameter);
-								writer.Write(animationTexture._animations[i]._events[j].intParameter);
-								//TO DO?
-								//writer.Write(animationTexture._animations[i]._events[j].objectReferenceParameter);
-							}
-
-							writer.Write(animationTexture._animations[i]._hasRootMotion);
-
-							if (animationTexture._animations[i]._hasRootMotion)
-							{
-								for (int j = 0; j < animationTexture._animations[i]._totalFrames; j++)
-								{
-									writer.Write(animationTexture._animations[i]._rootMotionVelocities[j].x);
-									writer.Write(animationTexture._animations[i]._rootMotionVelocities[j].y);
-									writer.Write(animationTexture._animations[i]._rootMotionVelocities[j].z);
-
-									writer.Write(animationTexture._animations[i]._rootMotionAngularVelocities[j].x);
-									writer.Write(animationTexture._animations[i]._rootMotionAngularVelocities[j].y);
-									writer.Write(animationTexture._animations[i]._rootMotionAngularVelocities[j].z);
-								}
-							}
-						}
-
-						//Write texture!
-						byte[] bytes = animationTexture._texture.GetRawTextureData();
-
-						writer.Write((int)animationTexture._texture.format);
-						writer.Write(animationTexture._texture.width);
-						writer.Write(animationTexture._texture.height);
-						writer.Write(bytes.Length);
-						writer.Write(bytes);
+						GPUAnimationsIO.Write(animationTexture, writer);
 
 						file.Close();
 
@@ -469,25 +478,17 @@ namespace Framework
 #endif
 					}
 
-					private static bool CheckTextureSize(int textureSize, int numBones, int totalFrames)
+					private static bool CheckTextureSize(int textureSize, int totalSamples, int numBones)
 					{
 						int numBonesPerHeight = textureSize / numBones;
 						int numMatriciesPerWidth = textureSize / GPUAnimations.kPixelsPerBoneMatrix;
 
-						return numBonesPerHeight * numMatriciesPerWidth >= totalFrames;
+						return numBonesPerHeight * numMatriciesPerWidth >= totalSamples;
 					}
 
-					private static bool CalculateTextureSize(Matrix4x4[][][] boneWorldMatrix, out int textureSize)
+					private static bool CalculateTextureSize(int totalSamples, int numBones, out int textureSize)
 					{
-						int numBones = boneWorldMatrix[0][0].Length;
-						int numFrames = 0;
-
-						for (int i = 0; i < boneWorldMatrix.Length; i++)
-						{
-							numFrames += boneWorldMatrix[i].Length;
-						}
-
-						int totalPixels = numFrames * numBones * GPUAnimations.kPixelsPerBoneMatrix;
+						int totalPixels = totalSamples * numBones * GPUAnimations.kPixelsPerBoneMatrix;
 						
 						int textureSizeIndex = 0;
 						
@@ -495,7 +496,7 @@ namespace Framework
 						{
 							textureSize = kAllowedTextureSizes[textureSizeIndex];
 
-							if (CheckTextureSize(textureSize, numBones, numFrames))
+							if (CheckTextureSize(textureSize, totalSamples, numBones))
 							{
 								return true;
 							}
@@ -635,6 +636,28 @@ namespace Framework
 						}
 
 						return mesh;
+					}
+
+					private static string[] GetBoneNames(SkinnedMeshRenderer skinnedMesh)
+					{
+						string[] boneNames = new string[skinnedMesh.bones.Length];
+
+						for (int i = 0; i < skinnedMesh.bones.Length; i++)
+						{
+							boneNames[i] = skinnedMesh.bones[i].gameObject.name;
+						}
+
+						return boneNames;
+					}
+
+					private void OnClickExposedBone(object data)
+					{
+						int boneIndex = (int)data;
+
+						if (_exposedBones.Contains(boneIndex))
+							_exposedBones.Remove(boneIndex);
+						else
+							_exposedBones.Add(boneIndex);
 					}
 					#endregion
 				}

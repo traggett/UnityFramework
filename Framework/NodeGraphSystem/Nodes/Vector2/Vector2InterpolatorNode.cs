@@ -16,7 +16,7 @@ namespace Framework
 			public NodeInputField<Vector2> _from = Vector2.zero;
 			public NodeInputField<Vector2> _to = Vector2.one;
 			public NodeInputField<float> _t = 0.0f;
-			public eInterpolation _interpolationtype = eInterpolation.Linear;
+			public InterpolationType _interpolationtype = InterpolationType.Linear;
 			#endregion
 
 			#region IValueSource<Vector2>

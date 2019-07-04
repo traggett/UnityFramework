@@ -15,7 +15,7 @@ namespace Framework
 			#region Public Data
 			public NodeInputField<float> _input = 0.0f;
 			public NodeInputField<FloatRange> _range = new FloatRange();
-			public eInterpolation _easeType = eInterpolation.Linear;
+			public InterpolationType _easeType = InterpolationType.Linear;
 			#endregion
 
 			#region Private Data

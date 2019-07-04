@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using UnityEngine;
 
 //Disable private SerializedField warnings
@@ -61,7 +62,8 @@ namespace Framework
 				{
 					if (_animationTexture == null && _asset != null)
 					{
-						_animationTexture = GPUAnimations.LoadFromFile(_asset);
+						BinaryReader reader = new BinaryReader(new MemoryStream(_asset.bytes));
+						_animationTexture = GPUAnimationsIO.Read(reader);
 					}
 				}
 				#endregion

@@ -61,7 +61,7 @@ namespace Framework
 					if (_directionLerp < 1.0f)
 					{
 						_directionLerp += _axisDeltaSpeed * deltaTime;
-						_currentEulerDirection = MathUtils.Interpolate(eInterpolation.InOutSine, _prevTargetEulerDirection, _targetEulerDirection, Mathf.Clamp01(_directionLerp));
+						_currentEulerDirection = MathUtils.Interpolate(InterpolationType.InOutSine, _prevTargetEulerDirection, _targetEulerDirection, Mathf.Clamp01(_directionLerp));
 					}
 
 					target.localRotation = _origRotation * Quaternion.Euler(_currentEulerDirection * amplitude);
