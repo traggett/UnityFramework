@@ -209,11 +209,16 @@ namespace Framework
 						_working = true;
 
 						GameObject gameObject = Instantiate(_evaluatedObject);
-						gameObject.SetActive(true);
-						gameObject.transform.parent = null;
-						gameObject.transform.localPosition = Vector3.zero;
-						gameObject.transform.localRotation = Quaternion.identity;
-						gameObject.transform.localScale = Vector3.one;
+						{
+							if (PrefabUtility.IsAnyPrefabInstanceRoot(gameObject))
+								PrefabUtility.UnpackPrefabInstance(gameObject, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+
+							gameObject.SetActive(true);
+							gameObject.transform.parent = null;
+							gameObject.transform.localPosition = Vector3.zero;
+							gameObject.transform.localRotation = Quaternion.identity;
+							gameObject.transform.localScale = Vector3.one;
+						}
 
 						AnimationClip[] animationClips = _animations;
 						string[] animationStateNames = null;
