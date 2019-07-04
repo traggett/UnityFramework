@@ -132,27 +132,22 @@ namespace Framework
 				{
 					if (animations != null)
 					{
-						int boneIndex = -1;
-
 						string[] boneNames = animations._bones;
 
 						for (int i = 0; i < boneNames.Length; i++)
 						{
 							if (boneNames[i] == boneName)
 							{
-								boneIndex = i;
-								break;
-							}
-						}
-
-						if (boneIndex != -1)
-						{
-							for (int i = 0; i < animations._exposedBones.Length; i++)
-							{
-								if (animations._exposedBones[i]._boneIndex == boneIndex)
+								for (int j = 0; j < animations._exposedBones.Length; j++)
 								{
-									return i;
+									if (animations._exposedBones[j]._boneIndex == i)
+									{
+										return j;
+									}
 								}
+
+								Debug.LogError("Bone '" + boneName + "' isn't exposed in GPU Animations Asset");
+								return -1;
 							}
 						}
 					}
