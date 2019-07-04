@@ -32,7 +32,7 @@ namespace Framework
 				#region Public Interface
 				public int GetBoneIndex(string boneName)
 				{
-					string[] boneNames = GetRenderer()._animationTexture.GetAnimations()._bones;
+					string[] boneNames = GetRenderer()._animations.GetAnimations()._bones;
 
 					for (int i = 0; i < boneNames.Length; i++)
 					{
@@ -117,7 +117,7 @@ namespace Framework
 
 				private void CacheBoneData()
 				{
-					GPUAnimations animations = _renderer._animationTexture.GetAnimations();
+					GPUAnimations animations = _renderer._animations.GetAnimations();
 					
 					int numBones = animations._bones.Length;
 					_totalSamples = 1;

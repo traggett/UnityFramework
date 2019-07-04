@@ -65,7 +65,7 @@ namespace Framework
 					{
 						GPUAnimatorRendererBoneTracking.TrackedBone trackedBone = (GPUAnimatorRendererBoneTracking.TrackedBone)_trackedBonesList.list[index];
 
-						GPUAnimations animations = _renderer._animationTexture.GetAnimations();
+						GPUAnimations animations = _renderer._animations.GetAnimations();
 
 						if (animations != null)
 						{

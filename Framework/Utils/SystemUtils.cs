@@ -168,7 +168,7 @@ namespace Framework
 				}
 				catch
 				{
-					throw new Exception("XmlObjectConverter of type " + type + " should have a method named " + name + " and it should be a static function matching OnConvertNodeDelegate.");
+					throw new Exception(type + " doesn't not have a static method named " + name + ".");
 				}
 
 				return function;
@@ -194,27 +194,6 @@ namespace Framework
 				}
 
 				return type.Name;
-			}
-
-			public static Assembly[] GetUnityAssemblies()
-			{
-				List<Assembly> serializableAssemblies = new List<Assembly>();
-				Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-				foreach (Assembly assembly in assemblies)
-				{
-					if ((assembly.FullName == "Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
-						(assembly.FullName == "Assembly-CSharp-Editor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
-						(assembly.FullName == "Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
-						(assembly.FullName == "Assembly-CSharp-Editor-firstpass, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
-						(assembly.FullName == "UnityFramework, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null") ||
-						(assembly.FullName == "UnityFrameworkEditor, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null"))
-					{
-						serializableAssemblies.Add(assembly);
-					}
-				}
-
-				return serializableAssemblies.ToArray();
 			}
 		}
 	}
