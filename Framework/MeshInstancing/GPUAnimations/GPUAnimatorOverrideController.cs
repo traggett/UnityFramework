@@ -54,10 +54,10 @@ namespace Framework
 
 				public GPUAnimations.Animation GetAnimation(AnimationClip clip)
 				{
-					int animationIndex = _animationLookUp[clip];
-
-					if (0 <= animationIndex && animationIndex < _animations._animations.Length)
+					if (_animationLookUp.TryGetValue(clip, out int animationIndex) && 0 <= animationIndex && animationIndex < _animations._animations.Length)
+					{
 						return _animations._animations[animationIndex];
+					}
 
 					return GPUAnimations.Animation.kInvalid;
 				}
