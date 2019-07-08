@@ -189,8 +189,6 @@ namespace Framework
 
 						if (animState != null)
 						{
-							GPUAnimations animations = _renderer._animations.GetAnimations();
-
 							_crossFadedAnimation = new GPUAnimationState(animState.GetAnimation())
 							{
 								Enabled = true,
