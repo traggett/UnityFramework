@@ -172,16 +172,11 @@ namespace Framework
 			
 			protected virtual void RenderInstances()
 			{
-				Bounds origBounds = _mesh.bounds;
-				_mesh.bounds = kInfiniteBounds;
-
 				for (int i = 0; i < _mesh.subMeshCount; i++)
 				{
 					if (i < _materials.Length &&  _materials[i].GetMaterial() != null)
 						Graphics.DrawMeshInstanced(_mesh, i, _materials[i], _renderedObjectTransforms, _numRenderedObjects, _propertyBlock, _shadowCastingMode, _recieveShadows, _layer);
 				}
-
-				_mesh.bounds = origBounds;
 			}
 
 			protected virtual void UpdateProperties()
