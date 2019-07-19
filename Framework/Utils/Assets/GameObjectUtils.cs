@@ -117,6 +117,15 @@ namespace Framework
 				}
 			}
 
+			public static void DisableChildren(Transform transform)
+			{
+				for (int i = transform.childCount - 1; i >= 0; --i)
+				{
+					GameObject child = transform.GetChild(i).gameObject;
+					child.SetActive(false);
+				}
+			}
+
 			public static void ResetTransform(Transform transform)
 			{
 				transform.localPosition = Vector3.zero;
