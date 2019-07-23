@@ -54,7 +54,7 @@ namespace Framework
 								case WrapMode.ClampForever:
 									{
 										_frame = _animation._totalFrames;
-										return false;
+										break;
 									}
 								case WrapMode.PingPong:
 								case WrapMode.Loop:
@@ -63,15 +63,13 @@ namespace Framework
 									{
 										_frame = _frame < 0 ? _frame + _animation._totalFrames : _frame - _animation._totalFrames;
 										_loops++;
-										return false;
+										break;
 									}
 							}
 						}
-
-						return false;
 					}
 
-					return true;
+					return false;
 				}
 
 				public GPUAnimations.Animation GetAnimation()

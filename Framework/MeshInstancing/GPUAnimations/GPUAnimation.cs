@@ -95,7 +95,7 @@ namespace Framework
 
 				private void Update()
 				{
-					UpdateAnimations();
+					UpdateAnimations(Time.deltaTime);
 				}
 
 				private void LateUpdate()
@@ -325,16 +325,16 @@ namespace Framework
 					}
 				}
 
-				private void UpdateAnimations()
+				private void UpdateAnimations(float deltaTime)
 				{
 					if (_crossFadedAnimation != null)
 					{
-						_crossFadedAnimation.Update(Time.deltaTime, this.gameObject);
+						_crossFadedAnimation.Update(deltaTime, this.gameObject);
 					}
 
 					for (int i = 0; i < _animationStates.Length; i++)
 					{
-						_animationStates[i].Update(Time.deltaTime, this.gameObject);
+						_animationStates[i].Update(deltaTime, this.gameObject);
 					}
 
 					UpdateQueuedAnimation();
