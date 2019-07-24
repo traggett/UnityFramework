@@ -186,15 +186,17 @@ namespace Framework
 			protected void ActivateInstance(T instance)
 			{
 				Initialise();
-
+				
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
 					if (!_instanceData[i].IsValid())
 					{
 						_instanceData[i] = instance;
-						break;
+						return;
 					}
 				}
+
+				Debug.LogError("Not enough instances, increase _maxMeshes");
 			}
 
 			protected int GetNumRenderedInstances()
