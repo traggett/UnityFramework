@@ -189,16 +189,13 @@ namespace Framework
 
 						if (animState != null)
 						{
-							GPUAnimations animations = _renderer._animations.GetAnimations();
-
 							_crossFadedAnimation = new GPUAnimationState(animState.GetAnimation())
 							{
 								Enabled = true,
-								Weight = 0.0f
+								Weight = 0.0f,
+								Speed = animState.Speed,
+								WrapMode = animState.WrapMode
 							};
-
-							if (_wrapMode != WrapMode.Default)
-								_crossFadedAnimation.WrapMode = _wrapMode;
 							
 							_crossFadedAnimation.FadeWeightTo(1.0f, fadeLength);
 						}

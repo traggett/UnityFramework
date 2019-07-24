@@ -23,7 +23,9 @@ namespace Framework
 							CancelFading();
 					}
 				}
+
 				public float Weight { get; set; }
+
 				public WrapMode WrapMode
 				{
 					get
@@ -116,7 +118,7 @@ namespace Framework
 
 					_player = new GPUAnimationPlayer(animation, wrapMode);
 				}
-
+				
 				public void Update(float deltaTime, GameObject eventListener = null)
 				{
 					if (Enabled)
