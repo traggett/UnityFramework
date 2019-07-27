@@ -43,7 +43,7 @@ namespace Framework
 					return propertyType;
 				}
 
-				public static T GetSerializedPropertyValue<T>(SerializedProperty prop)
+				public static T GetSerializedPropertyValue<T>(SerializedProperty prop) where T : new ()
 				{
 					string path = prop.propertyPath.Replace(".Array.data[", "[");
 					object obj = prop.serializedObject.targetObject;
@@ -62,6 +62,10 @@ namespace Framework
 							obj = GetValue(obj, elements[i]);
 						}
 					}
+
+					if (obj == null)
+						obj = new T();
+
 					return (T)obj;
 				}
 				
