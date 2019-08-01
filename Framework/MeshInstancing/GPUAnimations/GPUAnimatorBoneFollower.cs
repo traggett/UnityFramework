@@ -30,7 +30,7 @@ namespace Framework
 				{
 					if (_animator != null)
 					{
-						if (_animator.GetRenderer() != null)
+						if (_animator.IsInitialised())
 						{
 							Initialise();
 						}

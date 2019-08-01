@@ -25,24 +25,8 @@ namespace Framework
 				private SkinnedMeshRenderer _skinnedMeshRenderer;
 				private GPUAnimatorLayer[] _layers;
 				#endregion
-
+				
 				#region MonoBehaviour
-				private void Awake()
-				{
-					_animator = GetComponent<Animator>();
-					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
-
-					int numLayers = Math.Min(1 + _numAdditionalLayers, _animator.layerCount);
-
-					_layers = new GPUAnimatorLayer[numLayers];
-					for (int i=0; i< _layers.Length; i++)
-						_layers[i] = new GPUAnimatorLayer(_animator, i);
-
-					_onInitialise += Initialise;
-
-					CachedTransformData(this.transform);
-				}
-
 				private void Update()
 				{
 					if (_initialised)
@@ -54,6 +38,23 @@ namespace Framework
 				#endregion
 
 				#region GPUAnimatorBase
+				public override void Initialise(GPUAnimatorRenderer renderer)
+				{
+					base.Initialise(renderer);
+
+					_animator = GetComponent<Animator>();
+					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
+
+					int numLayers = Math.Max(Math.Min(1 + _numAdditionalLayers, _animator.layerCount), 1);
+
+					_layers = new GPUAnimatorLayer[numLayers];
+					for (int i = 0; i < _layers.Length; i++)
+						_layers[i] = new GPUAnimatorLayer(_animator, i);
+					
+					_animator.runtimeAnimatorController = GPUAnimatorRendererControllerOverrider.GetOverrideController(_renderer, _animator);
+					_animator.avatar = GetDummyAvatar();
+				}
+
 				public override float GetMainAnimationFrame()
 				{
 					return _layers[0].GetMainAnimationFrame();
@@ -106,12 +107,6 @@ namespace Framework
 				#endregion
 
 				#region Private Functions
-				private void Initialise()
-				{
-					_animator.runtimeAnimatorController = GPUAnimatorRendererControllerOverrider.GetOverrideController(_renderer, _animator);
-					_animator.avatar = GetDummyAvatar();
-				}
-				
 				private void UpdateAnimator()
 				{
 					for (int i=0; i<_layers.Length; i++)

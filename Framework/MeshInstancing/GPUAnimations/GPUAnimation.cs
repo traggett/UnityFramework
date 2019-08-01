@@ -81,18 +81,6 @@ namespace Framework
 				#endregion
 
 				#region MonoBehaviour
-				private void Awake()
-				{
-					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
-					_animationStates = new GPUAnimationState[0];
-					_primaryAnimationState = null;
-					_secondaryAnimationState = null;
-					
-					_onInitialise += Initialise;
-
-					CachedTransformData(this.transform);
-				}
-
 				private void Update()
 				{
 					UpdateAnimations(Time.deltaTime);
@@ -269,6 +257,36 @@ namespace Framework
 				#endregion
 
 				#region GPUAnimatorBase
+				public override void Initialise(GPUAnimatorRenderer renderer)
+				{
+					base.Initialise(renderer);
+
+					_skinnedMeshRenderer = GameObjectUtils.GetComponent<SkinnedMeshRenderer>(this.gameObject, true);
+					_animationStates = new GPUAnimationState[0];
+					_primaryAnimationState = null;
+					_secondaryAnimationState = null;
+
+					GPUAnimations animations = _renderer._animations.GetAnimations();
+					_animationStates = new GPUAnimationState[animations._animations.Length];
+
+					for (int i = 0; i < animations._animations.Length; i++)
+					{
+						_animationStates[i] = new GPUAnimationState(animations._animations[i]);
+					}
+
+					_primaryAnimationState = GetAnimationState(_defaultAnimation);
+					_secondaryAnimationState = null;
+
+					if (_primaryAnimationState != null && _playAutomatically)
+					{
+						_primaryAnimationState.Enabled = true;
+						_primaryAnimationState.Weight = 1.0f;
+
+						if (_wrapMode != WrapMode.Default)
+							_primaryAnimationState.WrapMode = _wrapMode;
+					}
+				}
+
 				public override float GetMainAnimationFrame()
 				{
 					return _primaryAnimationState != null ? _primaryAnimationState.GetCurrentTexureFrame() : 0.0f;
@@ -299,29 +317,6 @@ namespace Framework
 				#endregion
 
 				#region Private Functions
-				private void Initialise()
-				{
-					GPUAnimations animations = _renderer._animations.GetAnimations();
-					_animationStates = new GPUAnimationState[animations._animations.Length];
-					
-					for (int i=0; i< animations._animations.Length; i++)
-					{
-						_animationStates[i] = new GPUAnimationState(animations._animations[i]);
-					}
-
-					_primaryAnimationState = GetAnimationState(_defaultAnimation);
-					_secondaryAnimationState = null;
-
-					if (_primaryAnimationState != null && _playAutomatically)
-					{
-						_primaryAnimationState.Enabled = true;
-						_primaryAnimationState.Weight = 1.0f;
-
-						if (_wrapMode != WrapMode.Default)
-							_primaryAnimationState.WrapMode = _wrapMode;
-					}
-				}
-
 				private void UpdateAnimations(float deltaTime)
 				{
 					if (_crossFadedAnimation != null)
