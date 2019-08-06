@@ -32,5 +32,19 @@ namespace Framework
 			OutBounce,
 			InOutBounce,
 		}
+
+		public enum Direction1D
+		{
+			Forwards,
+			Backwards,
+		}
+
+		public enum Direction2D
+		{
+			Up,
+			Down,
+			Left,
+			Right
+		}
 	}
 }
