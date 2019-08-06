@@ -93,22 +93,26 @@ namespace Framework
 
 				for (int i = 0; i < _scenePrefabInstances.Length; i++)
 				{
-					if (component != null)
+					//Check scene prefab still exists
+					if (_scenePrefabInstances[i]._gameObject != null)
 					{
-						if (CheckForComponent(_scenePrefabInstances[i]._gameObject, component))
+						if (component != null)
 						{
-							prefab = _scenePrefabInstances[i]._gameObject;
-							id = i;
-							return true;
+							if (CheckForComponent(_scenePrefabInstances[i]._gameObject, component))
+							{
+								prefab = _scenePrefabInstances[i]._gameObject;
+								id = i;
+								return true;
+							}
 						}
-					}
-					else if (gameObject != null)
-					{
-						if (CheckForGameObject(_scenePrefabInstances[i]._gameObject, gameObject))
+						else if (gameObject != null)
 						{
-							prefab = _scenePrefabInstances[i]._gameObject;
-							id = i;
-							return true;
+							if (CheckForGameObject(_scenePrefabInstances[i]._gameObject, gameObject))
+							{
+								prefab = _scenePrefabInstances[i]._gameObject;
+								id = i;
+								return true;
+							}
 						}
 					}
 				}
