@@ -136,15 +136,25 @@ namespace Framework
 				public void SetNormalizedTime(float normalizedTime, GameObject eventListener = null)
 				{
 					float prevFrame = _frame;
+					float prevLoops = _loops;
 
 					_loops = Mathf.FloorToInt(normalizedTime);
 					float fraction = normalizedTime - _loops;
 
 					_frame = fraction * _animation._totalFrames;
 					
-					if (eventListener != null && _frame > prevFrame)
+					if (eventListener != null && (_frame > prevFrame || _loops > prevLoops))
 					{
-						CheckForEvents(eventListener, prevFrame, _frame);
+						float frame = _frame;
+
+						//If wrapped round a loop, need to flip prev frame and current frame
+						if (prevFrame > _frame)
+						{
+							frame = prevFrame;
+							prevFrame = _frame;
+						}
+
+						CheckForEvents(eventListener, prevFrame, frame);
 					}	
 				}
 
@@ -184,6 +194,7 @@ namespace Framework
 				{
 					if (_animation._events != null)
 					{
+
 						for (int i = 0; i < _animation._events.Length; i++)
 						{
 							float animationEventFrame = _animation._events[i].time * _animation._fps;
