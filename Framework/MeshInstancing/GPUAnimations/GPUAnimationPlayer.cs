@@ -30,16 +30,14 @@ namespace Framework
 				
 				public bool Update(float deltaTime, GameObject eventListener = null)
 				{
+					bool animationFinished = false;
+
 					if (_animation._totalFrames > 0 && deltaTime > 0f && _speed > 0f)
 					{
 						float prevFrame = _frame;
+						int prevLoops = _loops;
 						
 						_frame += deltaTime * _animation._fps * _speed * GetPlaybackDirection();
-
-						if (eventListener != null)
-						{
-							CheckForEvents(eventListener, prevFrame, _frame);
-						}
 						
 						if (_frame > _animation._totalFrames || _frame < 0)
 						{
@@ -48,12 +46,13 @@ namespace Framework
 								case WrapMode.Once:
 									{
 										_frame = _animation._totalFrames;
-										return true;
+										animationFinished = true;
+										break;
 									}
 								case WrapMode.ClampForever:
 									{
 										_frame = _animation._totalFrames;
-										return false;
+										break;
 									}
 								case WrapMode.PingPong:
 								case WrapMode.Loop:
@@ -61,16 +60,19 @@ namespace Framework
 								default:
 									{
 										_frame = _frame < 0 ? _frame + _animation._totalFrames : _frame - _animation._totalFrames;
-										_loops++;
-										return false;
+										_loops += _speed > 0 ? 1 : -1;
+										break;
 									}
 							}
 						}
 
-						return false;
+						if (eventListener != null)
+						{
+							CheckForEvents(eventListener, prevFrame, _frame, prevLoops, _loops);
+						}
 					}
 
-					return true;
+					return animationFinished;
 				}
 
 				public GPUAnimations.Animation GetAnimation()
@@ -138,15 +140,16 @@ namespace Framework
 				public void SetNormalizedTime(float normalizedTime, GameObject eventListener = null)
 				{
 					float prevFrame = _frame;
+					int prevLoops = _loops;
 
 					_loops = Mathf.FloorToInt(normalizedTime);
 					float fraction = normalizedTime - _loops;
 
 					_frame = fraction * _animation._totalFrames;
 					
-					if (eventListener != null && _frame > prevFrame)
+					if (eventListener != null)
 					{
-						CheckForEvents(eventListener, prevFrame, _frame);
+						CheckForEvents(eventListener, prevFrame, _frame, prevLoops, _loops);
 					}	
 				}
 
@@ -176,21 +179,46 @@ namespace Framework
 				{
 					if (_wrapMode == WrapMode.PingPong)
 					{
-						return _loops % 2 == (_loops > 0 ? 1 : 0) ? -1.0f : 1.0f;
+						return _loops % 2 == (_loops > 0 ? 1 : 0) ? -1f : 1f;
 					}
 
-					return 1.0f;
+					return 1f;
 				}
 
-				private void CheckForEvents(GameObject gameObject, float prevFrame, float nextFrame)
+				private void CheckForEvents(GameObject gameObject, float prevFrame, float currFrame, int prevLoops, int currLoops)
 				{
-					if (_animation._events != null)
+					if (_animation._events != null && _animation._events.Length > 0)
 					{
+						bool differentLoops = prevLoops != currLoops;
+						float prevLoopframes = 0f;
+						float currLoopframes = 0f;
+
+						if (differentLoops)
+						{
+							prevLoopframes = prevLoops * _animation._totalFrames;
+							currLoopframes = currLoops * _animation._totalFrames;
+
+							prevFrame += prevLoopframes;
+							currFrame += currLoopframes;
+						}
+						
 						for (int i = 0; i < _animation._events.Length; i++)
 						{
 							float animationEventFrame = _animation._events[i].time * _animation._fps;
+							bool triggerEvent = false;
 
-							if (prevFrame <= animationEventFrame && animationEventFrame < nextFrame)
+							if (prevFrame < currFrame)
+							{
+								triggerEvent = ((prevFrame < prevLoopframes + animationEventFrame && prevLoopframes + animationEventFrame <= currFrame)
+											|| (differentLoops && (prevFrame < currLoopframes + animationEventFrame && currLoopframes + animationEventFrame <= currFrame)));
+							}
+							else if (prevFrame > currFrame)
+							{
+								triggerEvent = ((currFrame <= prevLoopframes + animationEventFrame && prevLoopframes + animationEventFrame < prevFrame)
+											|| (differentLoops && (currFrame <= currLoopframes + animationEventFrame && currLoopframes + animationEventFrame < prevFrame)));
+							}
+							
+							if (triggerEvent)
 							{
 								AnimationUtils.TriggerAnimationEvent(_animation._events[i], gameObject);
 							}

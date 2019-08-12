@@ -47,6 +47,7 @@ namespace Framework
 
 			#region Private Data
 			private static readonly int kDepthSortSearchNodes = 8;
+			private static Bounds kInfiniteBounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
 			private int _numRenderedObjects;
 			private struct RenderData
 			{
@@ -185,15 +186,17 @@ namespace Framework
 			protected void ActivateInstance(T instance)
 			{
 				Initialise();
-
+				
 				for (int i = 0; i < _instanceData.Length; i++)
 				{
 					if (!_instanceData[i].IsValid())
 					{
 						_instanceData[i] = instance;
-						break;
+						return;
 					}
 				}
+
+				Debug.LogError("Not enough instances, increase _maxMeshes");
 			}
 
 			protected int GetNumRenderedInstances()
