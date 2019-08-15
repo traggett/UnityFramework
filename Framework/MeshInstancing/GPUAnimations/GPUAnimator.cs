@@ -27,7 +27,7 @@ namespace Framework
 				#endregion
 				
 				#region MonoBehaviour
-				private void Update()
+				private void LateUpdate()
 				{
 					if (_initialised)
 					{

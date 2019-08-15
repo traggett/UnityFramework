@@ -45,13 +45,13 @@ namespace Framework
 							{
 								case WrapMode.Once:
 									{
-										_frame = _animation._totalFrames;
+										_frame = _speed > 0 ? _animation._totalFrames : 0;
 										animationFinished = true;
 										break;
 									}
 								case WrapMode.ClampForever:
 									{
-										_frame = _animation._totalFrames;
+										_frame = _speed > 0 ? _animation._totalFrames : 0;
 										break;
 									}
 								case WrapMode.PingPong:
@@ -144,9 +144,23 @@ namespace Framework
 
 					_loops = Mathf.FloorToInt(normalizedTime);
 					float fraction = normalizedTime - _loops;
-
 					_frame = fraction * _animation._totalFrames;
 					
+					//If wrap mode is set to ping pong then reverse frame every other loop
+					if (_wrapMode == WrapMode.PingPong)
+					{
+						if (_loops % 2 == (_loops > 0 ? 1 : 0))
+						{
+							_frame = _animation._totalFrames - _frame;
+						}
+					}
+					//Otherwise if not looping, clamp frame if looped
+					else if (_wrapMode != WrapMode.Loop && _loops != 0)
+					{
+						_frame = _loops > 0 ? _animation._totalFrames : 0;
+						prevLoops = _loops;
+					}
+
 					if (eventListener != null)
 					{
 						CheckForEvents(eventListener, prevFrame, _frame, prevLoops, _loops);
