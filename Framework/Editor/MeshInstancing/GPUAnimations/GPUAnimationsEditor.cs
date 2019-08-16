@@ -679,7 +679,8 @@ namespace Framework
 						if (clip.legacy)
 							return clip.wrapMode;
 
-						return clip.isLooping ? WrapMode.Loop : WrapMode.Default;
+						//For non legacy clips, either set to loop or clamp forever based on the loop time flag
+						return clip.isLooping ? WrapMode.Loop : WrapMode.ClampForever;
 					}
 					#endregion
 				}

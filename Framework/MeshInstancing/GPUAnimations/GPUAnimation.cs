@@ -77,6 +77,7 @@ namespace Framework
 				private string _queuedAnimation;
 				private QueueMode _queuedAnimationMode;
 				private PlayMode _queuedAnimationPlayMode;
+				private WrapMode _queuedAnimationWrapMode;
 				private float _queuedAnimationCrossFadeLength;
 				#endregion
 
@@ -154,20 +155,21 @@ namespace Framework
 					}
 				}
 
-				public GPUAnimationState PlayQueued(string animation, QueueMode queue = QueueMode.CompleteOthers, PlayMode mode = PlayMode.StopSameLayer)
+				public GPUAnimationState PlayQueued(string animation, QueueMode queue = QueueMode.CompleteOthers, PlayMode mode = PlayMode.StopSameLayer, WrapMode wrapMode = WrapMode.Default)
 				{
 					ClearCrossFadedAnimation();
 
 					_queuedAnimation = animation;
 					_queuedAnimationMode = queue;
 					_queuedAnimationPlayMode = mode;
+					_queuedAnimationWrapMode = wrapMode;
 					_queuedAnimationCrossFadeLength = -1.0f;
-
+					
 					//TO DO! return valid state??
 					return GetAnimationState(animation);
 				}
 
-				public GPUAnimationState CrossFade(string animation, float fadeLength = 0.3f, PlayMode mode = PlayMode.StopSameLayer)
+				public GPUAnimationState CrossFade(string animation, float fadeLength = 0.3f, PlayMode mode = PlayMode.StopSameLayer, WrapMode wrapMode = WrapMode.Default)
 				{
 					if (fadeLength > 0.0f)
 					{
@@ -182,7 +184,7 @@ namespace Framework
 								Enabled = true,
 								Weight = 0.0f,
 								Speed = animState.Speed,
-								WrapMode = animState.WrapMode
+								WrapMode = wrapMode == WrapMode.Default ? animState.WrapMode : wrapMode
 							};
 							
 							_crossFadedAnimation.FadeWeightTo(1.0f, fadeLength);
@@ -194,19 +196,20 @@ namespace Framework
 					}
 					else
 					{
-						Play(animation, mode);
+						Play(animation, mode, wrapMode);
 					}
 
 					return _crossFadedAnimation;
 				}
 
-				public GPUAnimationState CrossFadeQueued(string animation, float fadeLength = 0.3f, QueueMode queue = QueueMode.CompleteOthers, PlayMode mode = PlayMode.StopSameLayer)
+				public GPUAnimationState CrossFadeQueued(string animation, float fadeLength = 0.3f, QueueMode queue = QueueMode.CompleteOthers, PlayMode mode = PlayMode.StopSameLayer, WrapMode wrapMode = WrapMode.Default)
 				{
 					ClearQueuedAnimation();
 
 					_queuedAnimation = animation;
 					_queuedAnimationMode = queue;
 					_queuedAnimationPlayMode = mode;
+					_queuedAnimationWrapMode = wrapMode;
 					_queuedAnimationCrossFadeLength = fadeLength;
 
 					_crossFadedAnimation = null;
@@ -417,11 +420,11 @@ namespace Framework
 							//Note - _queuedAnimation will get cleared by the CrossFade or Play call
 							if (queuedAnimationCrossFaded)
 							{
-								CrossFade(_queuedAnimation, timeRemaining);
+								CrossFade(_queuedAnimation, timeRemaining, _queuedAnimationPlayMode, _queuedAnimationWrapMode);
 							}
 							else
 							{
-								Play(_queuedAnimation, _queuedAnimationPlayMode);
+								Play(_queuedAnimation, _queuedAnimationPlayMode, _queuedAnimationWrapMode);
 							}
 						}
 					}

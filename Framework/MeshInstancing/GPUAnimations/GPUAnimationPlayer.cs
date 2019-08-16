@@ -36,31 +36,38 @@ namespace Framework
 					{
 						float prevFrame = _frame;
 						int prevLoops = _loops;
-						
-						_frame += deltaTime * _animation._fps * _speed * GetPlaybackDirection();
+
+						float speed = _speed;
+
+						if (_wrapMode == WrapMode.PingPong)
+						{
+							speed *= _loops % 2 == (_loops > 0 ? 1 : 0) ? -1f : 1f;
+						}
+
+						_frame += deltaTime * _animation._fps * speed;
 						
 						if (_frame > _animation._totalFrames || _frame < 0)
 						{
 							switch (_wrapMode)
 							{
-								case WrapMode.Once:
+								case WrapMode.PingPong:
+								case WrapMode.Loop:
+
 									{
-										_frame = _speed > 0 ? _animation._totalFrames : 0;
-										animationFinished = true;
+										_frame %= _animation._totalFrames;
+										_loops += _speed > 0 ? 1 : -1;
 										break;
 									}
 								case WrapMode.ClampForever:
 									{
-										_frame = _speed > 0 ? _animation._totalFrames : 0;
+										_frame = _frame > _animation._totalFrames ? _animation._totalFrames : 0;
 										break;
 									}
-								case WrapMode.PingPong:
-								case WrapMode.Loop:
+								case WrapMode.Once:
 								case WrapMode.Default:
-								default:
 									{
-										_frame = _frame < 0 ? _frame + _animation._totalFrames : _frame - _animation._totalFrames;
-										_loops += _speed > 0 ? 1 : -1;
+										_frame = 0;
+										animationFinished = true;
 										break;
 									}
 							}
@@ -146,19 +153,39 @@ namespace Framework
 					float fraction = normalizedTime - _loops;
 					_frame = fraction * _animation._totalFrames;
 					
-					//If wrap mode is set to ping pong then reverse frame every other loop
-					if (_wrapMode == WrapMode.PingPong)
+					switch (_wrapMode)
 					{
-						if (_loops % 2 == (_loops > 0 ? 1 : 0))
-						{
-							_frame = _animation._totalFrames - _frame;
-						}
-					}
-					//Otherwise if not looping, clamp frame if looped
-					else if (_wrapMode != WrapMode.Loop && _loops != 0)
-					{
-						_frame = _loops > 0 ? _animation._totalFrames : 0;
-						prevLoops = _loops;
+						case WrapMode.PingPong:
+							{
+								if (_loops % 2 == (_loops > 0 ? 1 : 0))
+								{
+									_frame = _animation._totalFrames - _frame;
+								}
+							}
+							break;
+						case WrapMode.Loop:
+							{
+								break;
+							}
+						case WrapMode.ClampForever:
+							{
+								if (_loops != 0)
+								{
+									_frame = _loops > 0 ? _animation._totalFrames : 0;
+									prevLoops = _loops;
+								}
+								break;
+							}
+						case WrapMode.Once:
+						case WrapMode.Default:
+							{
+								if (_loops != 0)
+								{
+									_frame = 0;
+									prevLoops = _loops;
+								}
+								break;
+							}
 					}
 
 					if (eventListener != null)
@@ -189,16 +216,6 @@ namespace Framework
 				#endregion
 
 				#region Private Functions
-				private float GetPlaybackDirection()
-				{
-					if (_wrapMode == WrapMode.PingPong)
-					{
-						return _loops % 2 == (_loops > 0 ? 1 : 0) ? -1f : 1f;
-					}
-
-					return 1f;
-				}
-
 				private void CheckForEvents(GameObject gameObject, float prevFrame, float currFrame, int prevLoops, int currLoops)
 				{
 					if (_animation._events != null && _animation._events.Length > 0)
