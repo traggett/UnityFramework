@@ -133,7 +133,7 @@ namespace Framework
 
 									for (int i = 1; i < _exposedBones.Count; i++)
 									{
-										exposedBones += ", " + _exposedBones[i];
+										exposedBones += ", " + _boneNames[_exposedBones[i]];
 									}
 
 									if (EditorGUILayout.DropdownButton(new GUIContent(exposedBones), FocusType.Keyboard))
@@ -202,7 +202,7 @@ namespace Framework
 						GUILayout.EndVertical();
 					}
 					#endregion
-
+					
 					#region Private Functions
 					private IEnumerator BakeAnimationTexture(string path)
 					{
@@ -292,7 +292,7 @@ namespace Framework
 							int totalSamples = totalFrames + 1;
 							totalNumberOfSamples += totalSamples;
 
-							WrapMode wrapMode = clip.wrapMode;
+							WrapMode wrapMode = GetClipWrapMode(clip);
 							AnimationEvent[] events = clip.events;
 
 							//Sample animation
@@ -672,6 +672,15 @@ namespace Framework
 							_exposedBones.Remove(boneIndex);
 						else
 							_exposedBones.Add(boneIndex);
+					}
+
+					private WrapMode GetClipWrapMode(AnimationClip clip)
+					{
+						if (clip.legacy)
+							return clip.wrapMode;
+
+						//For non legacy clips, either set to loop or clamp forever based on the loop time flag
+						return clip.isLooping ? WrapMode.Loop : WrapMode.ClampForever;
 					}
 					#endregion
 				}
