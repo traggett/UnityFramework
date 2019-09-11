@@ -240,13 +240,13 @@ namespace Framework
 
 							if (prevFrame < currFrame)
 							{
-								triggerEvent = ((prevFrame < prevLoopframes + animationEventFrame && prevLoopframes + animationEventFrame <= currFrame)
-											|| (differentLoops && (prevFrame < currLoopframes + animationEventFrame && currLoopframes + animationEventFrame <= currFrame)));
+								triggerEvent = ((prevFrame <= prevLoopframes + animationEventFrame && prevLoopframes + animationEventFrame < currFrame)
+											|| (differentLoops && (prevFrame <= currLoopframes + animationEventFrame && currLoopframes + animationEventFrame < currFrame)));
 							}
 							else if (prevFrame > currFrame)
 							{
-								triggerEvent = ((currFrame <= prevLoopframes + animationEventFrame && prevLoopframes + animationEventFrame < prevFrame)
-											|| (differentLoops && (currFrame <= currLoopframes + animationEventFrame && currLoopframes + animationEventFrame < prevFrame)));
+								triggerEvent = ((currFrame < prevLoopframes + animationEventFrame && prevLoopframes + animationEventFrame <= prevFrame)
+											|| (differentLoops && (currFrame < currLoopframes + animationEventFrame && currLoopframes + animationEventFrame <= prevFrame)));
 							}
 							
 							if (triggerEvent)
