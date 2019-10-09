@@ -19,6 +19,7 @@ namespace Framework
 				#endregion
 
 				#region Private Data
+				private bool _initialised;
 				private int _exposedBoneIndex;
 				private Vector3 _worldBonePosition;
 				private Quaternion _worldBoneRotation;
@@ -39,15 +40,12 @@ namespace Framework
 							_animator._onInitialise += Initialise;
 						}
 					}
-					else
-					{
-						this.enabled = false;
-					}
 				}
 
 				private void LateUpdate()
 				{
-					UpdateBoneTransform();
+					if (_initialised)
+						UpdateBoneTransform();
 				}
 				#endregion
 
@@ -71,6 +69,8 @@ namespace Framework
 				#region Private Functions
 				private void Initialise()
 				{
+					_initialised = true;
+
 					_worldBonePosition = Vector3.zero;
 					_worldBoneRotation = Quaternion.identity;
 					_worldBonePosition = Vector3.one;
