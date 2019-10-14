@@ -475,6 +475,7 @@ namespace Framework
 							}
 							catch (Exception e)
 							{
+								Debug.Log(e.Message);
 								continue;
 							}
 
