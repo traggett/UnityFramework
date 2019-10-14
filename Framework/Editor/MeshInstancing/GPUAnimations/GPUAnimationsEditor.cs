@@ -448,17 +448,26 @@ namespace Framework
 								Matrix4x4 inverseBindPose = bindposes[boneIndex].inverse;
 
 								//Work out bone matrixes
-								Matrix4x4[] exposedBoneMatricies = new Matrix4x4[totalNumberOfSamples];
+								Vector3[] exposedBonePositions = new Vector3[totalNumberOfSamples];
+								Quaternion[] exposedBoneRotations = new Quaternion[totalNumberOfSamples];
+								Vector3[] exposedBoneScales = new Vector3[totalNumberOfSamples];
+
 								int sampleIndex = 0;					
 								for (int anim=0; anim < boneMatricies.Length; anim++)
 								{
 									for (int frame = 0; frame < boneMatricies[anim].Length; frame++)
 									{
-										exposedBoneMatricies[sampleIndex++] = boneMatricies[anim][frame][boneIndex] * inverseBindPose;
+										Matrix4x4 boneMatrix = boneMatricies[anim][frame][boneIndex] * inverseBindPose;
+
+										exposedBonePositions[sampleIndex] = boneMatrix.MultiplyPoint3x4(Vector3.zero);
+										exposedBoneRotations[sampleIndex] = boneMatrix.rotation;
+										exposedBoneScales[sampleIndex] = boneMatrix.lossyScale;
+
+										sampleIndex++;
 									}
 								}
 
-								exposedBones[i] = new GPUAnimations.ExposedBone(boneIndex, exposedBoneMatricies);
+								exposedBones[i] = new GPUAnimations.ExposedBone(boneIndex, exposedBonePositions, exposedBoneRotations, exposedBoneScales);
 							}
 						}
 

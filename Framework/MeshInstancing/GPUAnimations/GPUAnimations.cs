@@ -43,19 +43,43 @@ namespace Framework
 
 					public static readonly Animation kInvalid = new Animation(string.Empty, 0, 0, 0f, WrapMode.Default, new AnimationEvent[0], false, new Vector3[0], new Vector3[0]);
 				}
+
 				public readonly Animation[] _animations;
 				
 				public struct ExposedBone
 				{
 					public readonly int _boneIndex;
-					public readonly Matrix4x4[] _cachedBoneMatrices;
+					public readonly Vector3[] _cachedBonePositions;
+					public readonly Quaternion[] _cachedBoneRotations;
+					public readonly Vector3[] _cachedBoneScales;
 
-					public ExposedBone(int boneIndex, Matrix4x4[] boneMatrices)
+					public ExposedBone(int boneIndex, Vector3[] bonePositions, Quaternion[] boneRotations, Vector3[] boneScales)
 					{
 						_boneIndex = boneIndex;
-						_cachedBoneMatrices = boneMatrices;
+						_cachedBonePositions = bonePositions;
+						_cachedBoneRotations = boneRotations;
+						_cachedBoneScales = boneScales;
+					}
+
+					public void GetBoneTransform(int prevFrame, int nextFrame, float frameLerp, bool usePosition, bool useRotation, bool useScale, out Vector3 localPosition, out Quaternion localRotation, out Vector3 localScale)
+					{
+						if (usePosition)
+							localPosition = Vector3.Lerp(_cachedBonePositions[prevFrame], _cachedBonePositions[nextFrame], frameLerp);
+						else
+							localPosition = Vector3.zero;
+
+						if (useRotation)
+							localRotation = Quaternion.Slerp(_cachedBoneRotations[prevFrame], _cachedBoneRotations[nextFrame], frameLerp);
+						else
+							localRotation = Quaternion.identity;
+
+						if (useScale)
+							localScale = Vector3.Lerp(_cachedBoneScales[prevFrame], _cachedBoneScales[nextFrame], frameLerp);
+						else
+							localScale = Vector3.one;
 					}
 				}
+
 				public readonly ExposedBone[] _exposedBones;
 				#endregion
 

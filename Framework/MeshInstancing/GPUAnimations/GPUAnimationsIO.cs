@@ -73,18 +73,19 @@ namespace Framework
 					for (int i = 0; i < exposedBoneCount; i++)
 					{
 						int boneIndex = reader.ReadInt32();
-						int numMatricies = reader.ReadInt32();
-						Matrix4x4[] matrices = new Matrix4x4[numMatricies];
+						int numSamples = reader.ReadInt32();
+						Vector3[] bonePositions = new Vector3[numSamples];
+						Quaternion[] boneRotations = new Quaternion[numSamples];
+						Vector3[] boneScales = new Vector3[numSamples];
 
-						for (int j = 0; j < numMatricies; j++)
+						for (int j = 0; j < numSamples; j++)
 						{
-							matrices[j] = new Matrix4x4(new Vector4(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()),
-														new Vector4(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()),
-														new Vector4(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()),
-														new Vector4(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
+							bonePositions[j] = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+							boneRotations[j] = new Quaternion(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
+							boneScales[j] = new Vector3(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle());
 						}
 
-						exposedBones[i] = new GPUAnimations.ExposedBone(boneIndex, matrices);
+						exposedBones[i] = new GPUAnimations.ExposedBone(boneIndex, bonePositions, boneRotations, boneScales);
 					}
 
 
@@ -156,29 +157,22 @@ namespace Framework
 					{
 						writer.Write(animations._exposedBones[i]._boneIndex);
 
-						writer.Write(animations._exposedBones[i]._cachedBoneMatrices.Length);
+						writer.Write(animations._exposedBones[i]._cachedBonePositions.Length);
 
-						for (int j = 0; j < animations._exposedBones[i]._cachedBoneMatrices.Length; j++)
+						for (int j = 0; j < animations._exposedBones[i]._cachedBonePositions.Length; j++)
 						{
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).x);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).y);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).z);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(0).w);
+							writer.Write(animations._exposedBones[i]._cachedBonePositions[j].x);
+							writer.Write(animations._exposedBones[i]._cachedBonePositions[j].y);
+							writer.Write(animations._exposedBones[i]._cachedBonePositions[j].z);
 
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).x);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).y);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).z);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(1).w);
-
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).x);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).y);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).z);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(2).w);
-
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).x);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).y);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).z);
-							writer.Write(animations._exposedBones[i]._cachedBoneMatrices[j].GetColumn(3).w);
+							writer.Write(animations._exposedBones[i]._cachedBoneRotations[j].x);
+							writer.Write(animations._exposedBones[i]._cachedBoneRotations[j].y);
+							writer.Write(animations._exposedBones[i]._cachedBoneRotations[j].z);
+							writer.Write(animations._exposedBones[i]._cachedBoneRotations[j].w);
+							
+							writer.Write(animations._exposedBones[i]._cachedBoneScales[j].x);
+							writer.Write(animations._exposedBones[i]._cachedBoneScales[j].y);
+							writer.Write(animations._exposedBones[i]._cachedBoneScales[j].z);
 						}
 					}
 
