@@ -121,11 +121,11 @@ namespace Framework
 				
 				public void Update(float deltaTime, GameObject eventListener = null)
 				{
-					if (Enabled)
+					if (_enabled)
 					{
 						if (_player.Update(deltaTime, eventListener))
 						{
-							Enabled = false;
+							_enabled = false;
 						}
 					}
 
