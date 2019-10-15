@@ -17,10 +17,14 @@ namespace Framework
 					}
 					set
 					{
-						_enabled = value;
+						if (_enabled != value)
+						{
+							_enabled = value;
+							_owner.OnStateEnabledChanged(this, value);
 
-						if (!_enabled)
-							CancelFading();
+							if (!_enabled)
+								CancelFading();
+						}
 					}
 				}
 
@@ -98,6 +102,7 @@ namespace Framework
 				#endregion
 
 				#region Private Data
+				private GPUAnimation _owner;
 				private GPUAnimationPlayer _player;
 				private bool _enabled;
 				private bool _fading;
@@ -108,9 +113,11 @@ namespace Framework
 				private bool _disableAfterFade;
 				#endregion
 
-				#region Public Interface
-				public GPUAnimationState(GPUAnimations.Animation animation)
+				#region Internal Interface
+				internal GPUAnimationState(GPUAnimation owner, GPUAnimations.Animation animation)
 				{
+					_owner = owner;
+
 					WrapMode wrapMode = animation._wrapMode;
 
 					if (wrapMode == WrapMode.Default)
@@ -118,8 +125,8 @@ namespace Framework
 
 					_player = new GPUAnimationPlayer(animation, wrapMode);
 				}
-				
-				public void Update(float deltaTime, GameObject eventListener = null)
+
+				internal void Update(float deltaTime, GameObject eventListener = null)
 				{
 					if (_enabled)
 					{
@@ -150,12 +157,12 @@ namespace Framework
 					}
 				}
 
-				public float GetCurrentTexureFrame()
+				internal float GetCurrentTexureFrame()
 				{
 					return _player.GetCurrentTexureFrame();
 				}
 
-				public void FadeWeightTo(float targetWeight = 1.0f, float fadeLength = 0.3f, bool disableOnFade = false)
+				internal void FadeWeightTo(float targetWeight = 1.0f, float fadeLength = 0.3f, bool disableOnFade = false)
 				{
 					_fading = fadeLength > 0.0f;
 
@@ -173,12 +180,12 @@ namespace Framework
 					}
 				}
 
-				public void CancelFading()
+				internal void CancelFading()
 				{
 					_fading = false;
 				}
 
-				public GPUAnimations.Animation GetAnimation()
+				internal GPUAnimations.Animation GetAnimation()
 				{
 					return _player.GetAnimation();
 				}

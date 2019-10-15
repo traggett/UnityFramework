@@ -30,13 +30,7 @@ namespace Framework
 				{
 					get
 					{
-						for (int i = 0; i < _animationStates.Length; i++)
-						{
-							if (_animationStates[i].Enabled)
-								return true;
-						}
-
-						return false;
+						return _activeAnimationStates.Count > 0;
 					}
 				}
 				#endregion
@@ -71,10 +65,10 @@ namespace Framework
 				private SkinnedMeshRenderer _skinnedMeshRenderer;
 				private GPUAnimationState _primaryAnimationState;
 				private GPUAnimationState _secondaryAnimationState;
-
-				private List<GPUAnimationState> _activeStates;
+				
 				private GPUAnimationState[] _animationStates;
 				private GPUAnimationState _crossFadedAnimation;
+				private List<GPUAnimationState> _activeAnimationStates;
 
 				private string _queuedAnimation;
 				private QueueMode _queuedAnimationMode;
@@ -121,9 +115,7 @@ namespace Framework
 						{
 							animState.WrapMode = _wrapMode;
 						}
-
-						_activeStates.Add(animState);
-
+						
 						UpdatePlayers();
 
 						return true;
@@ -136,18 +128,17 @@ namespace Framework
 				
 				public void Stop()
 				{
-					ClearCrossFadedAnimation();
-					ClearQueuedAnimation();
-
 					for (int i = 0; i < _animationStates.Length; i++)
 					{
 						_animationStates[i].Enabled = false;
 					}
 
-					_activeStates.Clear();
+					_activeAnimationStates.Clear();
 
 					_primaryAnimationState = null;
 					_secondaryAnimationState = null;
+					_queuedAnimation = string.Empty;
+					_crossFadedAnimation = null;
 				}
 
 				public void Stop(string animation)
@@ -157,7 +148,6 @@ namespace Framework
 					if (state != null)
 					{
 						state.Enabled = false;
-						_activeStates.Remove(state);
 						UpdatePlayers();
 					}
 				}
@@ -186,7 +176,7 @@ namespace Framework
 
 						if (animState != null)
 						{
-							_crossFadedAnimation = new GPUAnimationState(animState.GetAnimation())
+							_crossFadedAnimation = new GPUAnimationState(this, animState.GetAnimation())
 							{
 								Enabled = true,
 								Weight = 0.0f,
@@ -195,8 +185,6 @@ namespace Framework
 							};
 							
 							_crossFadedAnimation.FadeWeightTo(1.0f, fadeLength);
-
-							_activeStates.Add(_crossFadedAnimation);
 						}
 						else
 						{
@@ -268,6 +256,16 @@ namespace Framework
 				}
 				#endregion
 
+				#region Internal Interface
+				internal void OnStateEnabledChanged(GPUAnimationState state, bool enabled)
+				{
+					if (enabled)
+						_activeAnimationStates.Add(state);
+					else
+						_activeAnimationStates.Remove(state);
+				}
+				#endregion
+
 				#region GPUAnimatorBase
 				public override void Initialise(GPUAnimatorRenderer renderer)
 				{
@@ -283,10 +281,10 @@ namespace Framework
 
 					for (int i = 0; i < animations._animations.Length; i++)
 					{
-						_animationStates[i] = new GPUAnimationState(animations._animations[i]);
+						_animationStates[i] = new GPUAnimationState(this, animations._animations[i]);
 					}
 
-					_activeStates = new List<GPUAnimationState>(animations._animations.Length + 1);
+					_activeAnimationStates = new List<GPUAnimationState>(animations._animations.Length + 1);
 
 					_primaryAnimationState = GetAnimationState(_defaultAnimation);
 					_secondaryAnimationState = null;
@@ -298,8 +296,6 @@ namespace Framework
 
 						if (_wrapMode != WrapMode.Default)
 							_primaryAnimationState.WrapMode = _wrapMode;
-
-						_activeStates.Add(_primaryAnimationState);
 					}
 				}
 
@@ -335,13 +331,15 @@ namespace Framework
 				#region Private Functions
 				private void UpdateAnimations(float deltaTime)
 				{
-					for (int i = _activeStates.Count - 1; i >= 0; i--)
+					for (int i = 0; i < _activeAnimationStates.Count;)
 					{
-						GPUAnimationState state = _activeStates[i];
+						GPUAnimationState state = _activeAnimationStates[i];
 						state.Update(deltaTime, this.gameObject);
 
-						if (!state.Enabled)
-							_activeStates.RemoveAt(i);
+						if (state.Enabled)
+							i++;
+						else
+							_activeAnimationStates.RemoveAt(i);
 					}
 
 					UpdateQueuedAnimation();
@@ -446,13 +444,10 @@ namespace Framework
 				{
 					if (_crossFadedAnimation != null && _crossFadedAnimation.Weight >= 1.0f)
 					{
-						GPUAnimationState crossFadedState = null;
-
 						for (int i=0; i<_animationStates.Length; i++)
 						{
 							if (_animationStates[i].Name == _crossFadedAnimation.Name)
 							{
-								crossFadedState = _animationStates[i];
 								_animationStates[i].Time = _crossFadedAnimation.Time;
 								_animationStates[i].Speed = _crossFadedAnimation.Speed;
 								_animationStates[i].WrapMode = _crossFadedAnimation.WrapMode;
@@ -465,11 +460,7 @@ namespace Framework
 							}
 						}
 
-						_activeStates.Clear();
-
-						if (crossFadedState != null)
-							_activeStates.Add(crossFadedState);
-
+						_activeAnimationStates.Remove(_crossFadedAnimation);
 						_crossFadedAnimation = null;
 					}
 				}
@@ -481,6 +472,9 @@ namespace Framework
 
 				private void ClearCrossFadedAnimation()
 				{
+					if (_crossFadedAnimation != null && _crossFadedAnimation.Enabled)
+						_activeAnimationStates.Remove(_crossFadedAnimation);
+
 					_crossFadedAnimation = null;
 				}
 
