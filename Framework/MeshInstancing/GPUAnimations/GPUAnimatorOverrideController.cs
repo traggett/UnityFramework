@@ -73,8 +73,8 @@ namespace Framework
 						localBounds = origClip.localBounds,
 					};
 
-					overrideClip.SetCurve("", typeof(GPUAnimator), "_animatedValue", new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(origClip.length, 0f)));
-					overrideClip.legacy = false; //Think this doesnt work in builds :(
+					overrideClip.SetCurve("", typeof(GPUAnimator), "_animatedValue", new AnimationCurve(new Keyframe(origClip.length, 0f)));
+					overrideClip.legacy = false;
 
 					return overrideClip;
 				}
