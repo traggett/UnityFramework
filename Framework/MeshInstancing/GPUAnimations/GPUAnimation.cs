@@ -1,9 +1,9 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 namespace Framework
 {
-	using System.Collections.Generic;
 	using Utils;
 
 	namespace MeshInstancing
@@ -85,7 +85,7 @@ namespace Framework
 
 				private void LateUpdate()
 				{
-					UpdatePlayers();
+					UpdatePrimaryAndSecondaryStates();
 				}
 				#endregion
 
@@ -116,7 +116,7 @@ namespace Framework
 							animState.WrapMode = _wrapMode;
 						}
 						
-						UpdatePlayers();
+						UpdatePrimaryAndSecondaryStates();
 
 						return true;
 					}
@@ -148,7 +148,7 @@ namespace Framework
 					if (state != null)
 					{
 						state.Enabled = false;
-						UpdatePlayers();
+						UpdatePrimaryAndSecondaryStates();
 					}
 				}
 
@@ -346,25 +346,21 @@ namespace Framework
 					UpdateCrossFadedAnimation();
 				}
 
-				private void UpdatePlayers()
+				private void UpdatePrimaryAndSecondaryStates()
 				{
-					//Work out what animation state has the highest and second highest weight
 					_primaryAnimationState = _crossFadedAnimation;
 					_secondaryAnimationState = null;
-
-					for (int i = 0; i < _animationStates.Length; i++)
+					
+					foreach (GPUAnimationState state in _activeAnimationStates)
 					{
-						if (_animationStates[i].Enabled)
+						if (_crossFadedAnimation == null && (_primaryAnimationState == null || state.Weight > _primaryAnimationState.Weight))
 						{
-							if (_crossFadedAnimation == null && (_primaryAnimationState == null || _animationStates[i].Weight > _primaryAnimationState.Weight))
-							{
-								_secondaryAnimationState = _primaryAnimationState;
-								_primaryAnimationState = _animationStates[i];
-							}
-							else if (_secondaryAnimationState == null || _animationStates[i].Weight > _secondaryAnimationState.Weight)
-							{
-								_secondaryAnimationState = _animationStates[i];
-							}
+							_secondaryAnimationState = _primaryAnimationState;
+							_primaryAnimationState = state;
+						}
+						else if (_secondaryAnimationState == null || state.Weight > _secondaryAnimationState.Weight)
+						{
+							_secondaryAnimationState = state;
 						}
 					}
 				}
