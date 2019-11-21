@@ -34,7 +34,6 @@ namespace Framework
 				private void Awake()
 				{
 					CachedTransformData(this.transform);
-					_initialised = false;
 				}
 
 #if UNITY_EDITOR
