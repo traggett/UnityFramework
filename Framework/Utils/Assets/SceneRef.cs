@@ -40,17 +40,19 @@ namespace Framework
 				return property.IsSceneRefValid() ? SceneUtils.GetSceneNameFromPath(property._scenePath) : "No Scene";
 			}
 
+			public bool IsSceneLoaded()
+			{
+				Scene scene = GetScene();
+				return scene.IsValid() && scene.isLoaded;
+			}
+
 			public Scene GetScene()
 			{
 				Scene scene = new Scene();
 
 				if (IsSceneRefValid())
 				{
-#if UNITY_EDITOR
-					scene = EditorSceneManager.GetSceneByPath(_scenePath);
-#else
 					scene = SceneManager.GetSceneByPath(_scenePath);
-#endif
 				}
 
 				return scene;

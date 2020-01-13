@@ -12,9 +12,7 @@ namespace Framework
 			#region Public Interface
 			public static IEnumerator LoadScene(SceneLoadingInfo sceneInfo)
 			{
-				Scene scene = sceneInfo._scene.GetScene();
-
-				if (!scene.IsValid() || !scene.isLoaded)
+				if (!sceneInfo._scene.IsSceneLoaded())
 				{
 					AsyncOperation asyncOp;
 
@@ -31,12 +29,9 @@ namespace Framework
 					{
 						yield return null;
 					}
-					
-					if (!scene.IsValid())
-						scene = sceneInfo._scene.GetScene();
 
 					//Still have to wait until scene is loaded grr..
-					while (!scene.isLoaded)
+					while (!sceneInfo._scene.IsSceneLoaded())
 					{
 						yield return null;
 					}
@@ -49,9 +44,7 @@ namespace Framework
 
 			public static IEnumerator LoadSceneNonAsync(SceneLoadingInfo sceneInfo)
 			{
-				Scene scene = sceneInfo._scene.GetScene();
-
-				if (!scene.IsValid() || !scene.isLoaded)
+				if (!sceneInfo._scene.IsSceneLoaded())
 				{
 					try
 					{
@@ -61,18 +54,15 @@ namespace Framework
 					{
 						yield break;
 					}
+
+					//Still have to wait until scene is loaded grr..
+					while (!sceneInfo._scene.IsSceneLoaded())
+					{
+						yield return null;
+					}
+
+					LoadAdditonalAssets(sceneInfo);
 				}
-
-				if (!scene.IsValid())
-					scene = sceneInfo._scene.GetScene();
-
-				//Still have to wait until scene is loaded grr..
-				while (!scene.isLoaded)
-				{
-					yield return null;
-				}
-
-				LoadAdditonalAssets(sceneInfo);
 
 				yield break;
 			}
