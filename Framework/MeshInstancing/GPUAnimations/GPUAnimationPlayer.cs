@@ -30,47 +30,56 @@ namespace Framework
 				
 				public bool Update(float deltaTime, GameObject eventListener = null)
 				{
+					bool animationFinished = false;
+
 					if (_animation._totalFrames > 0 && deltaTime > 0f && _speed > 0f)
 					{
 						float prevFrame = _frame;
-						
-						_frame += deltaTime * _animation._fps * _speed * GetPlaybackDirection();
+						int prevLoops = _loops;
 
-						if (eventListener != null)
+						float speed = _speed;
+
+						if (_wrapMode == WrapMode.PingPong)
 						{
-							CheckForEvents(eventListener, prevFrame, _frame);
+							speed *= _loops % 2 == (_loops > 0 ? 1 : 0) ? -1f : 1f;
 						}
+
+						_frame += deltaTime * _animation._fps * speed;
 						
 						if (_frame > _animation._totalFrames || _frame < 0)
 						{
 							switch (_wrapMode)
 							{
-								case WrapMode.Once:
+								case WrapMode.PingPong:
+								case WrapMode.Loop:
+
 									{
-										_frame = _animation._totalFrames;
-										return true;
+										_frame %= _animation._totalFrames;
+										_loops += _speed > 0 ? 1 : -1;
+										break;
 									}
 								case WrapMode.ClampForever:
 									{
-										_frame = _animation._totalFrames;
-										return false;
+										_frame = _frame > _animation._totalFrames ? _animation._totalFrames : 0;
+										break;
 									}
-								case WrapMode.PingPong:
-								case WrapMode.Loop:
+								case WrapMode.Once:
 								case WrapMode.Default:
-								default:
 									{
-										_frame = _frame < 0 ? _frame + _animation._totalFrames : _frame - _animation._totalFrames;
-										_loops++;
-										return false;
+										_frame = 0;
+										animationFinished = true;
+										break;
 									}
 							}
 						}
 
-						return false;
+						if (eventListener != null)
+						{
+							CheckForEvents(eventListener, prevFrame, _frame, prevLoops, _loops);
+						}
 					}
 
-					return true;
+					return animationFinished;
 				}
 
 				public GPUAnimations.Animation GetAnimation()
@@ -138,15 +147,50 @@ namespace Framework
 				public void SetNormalizedTime(float normalizedTime, GameObject eventListener = null)
 				{
 					float prevFrame = _frame;
+					int prevLoops = _loops;
 
 					_loops = Mathf.FloorToInt(normalizedTime);
 					float fraction = normalizedTime - _loops;
-
 					_frame = fraction * _animation._totalFrames;
 					
-					if (eventListener != null && _frame > prevFrame)
+					switch (_wrapMode)
 					{
-						CheckForEvents(eventListener, prevFrame, _frame);
+						case WrapMode.PingPong:
+							{
+								if (_loops % 2 == (_loops > 0 ? 1 : 0))
+								{
+									_frame = _animation._totalFrames - _frame;
+								}
+							}
+							break;
+						case WrapMode.Loop:
+							{
+								break;
+							}
+						case WrapMode.ClampForever:
+							{
+								if (_loops != 0)
+								{
+									_frame = _loops > 0 ? _animation._totalFrames : 0;
+									prevLoops = _loops;
+								}
+								break;
+							}
+						case WrapMode.Once:
+						case WrapMode.Default:
+							{
+								if (_loops != 0)
+								{
+									_frame = 0;
+									prevLoops = _loops;
+								}
+								break;
+							}
+					}
+
+					if (eventListener != null)
+					{
+						CheckForEvents(eventListener, prevFrame, _frame, prevLoops, _loops);
 					}	
 				}
 
@@ -172,25 +216,40 @@ namespace Framework
 				#endregion
 
 				#region Private Functions
-				private float GetPlaybackDirection()
+				private void CheckForEvents(GameObject gameObject, float prevFrame, float currFrame, int prevLoops, int currLoops)
 				{
-					if (_wrapMode == WrapMode.PingPong)
+					if (_animation._events != null && _animation._events.Length > 0)
 					{
-						return _loops % 2 == (_loops > 0 ? 1 : 0) ? -1.0f : 1.0f;
-					}
+						bool differentLoops = prevLoops != currLoops;
+						float prevLoopframes = 0f;
+						float currLoopframes = 0f;
 
-					return 1.0f;
-				}
+						if (differentLoops)
+						{
+							prevLoopframes = prevLoops * _animation._totalFrames;
+							currLoopframes = currLoops * _animation._totalFrames;
 
-				private void CheckForEvents(GameObject gameObject, float prevFrame, float nextFrame)
-				{
-					if (_animation._events != null)
-					{
+							prevFrame += prevLoopframes;
+							currFrame += currLoopframes;
+						}
+						
 						for (int i = 0; i < _animation._events.Length; i++)
 						{
 							float animationEventFrame = _animation._events[i].time * _animation._fps;
+							bool triggerEvent = false;
 
-							if (prevFrame <= animationEventFrame && animationEventFrame < nextFrame)
+							if (prevFrame < currFrame)
+							{
+								triggerEvent = ((prevFrame <= prevLoopframes + animationEventFrame && prevLoopframes + animationEventFrame < currFrame)
+											|| (differentLoops && (prevFrame <= currLoopframes + animationEventFrame && currLoopframes + animationEventFrame < currFrame)));
+							}
+							else if (prevFrame > currFrame)
+							{
+								triggerEvent = ((currFrame < prevLoopframes + animationEventFrame && prevLoopframes + animationEventFrame <= prevFrame)
+											|| (differentLoops && (currFrame < currLoopframes + animationEventFrame && currLoopframes + animationEventFrame <= prevFrame)));
+							}
+							
+							if (triggerEvent)
 							{
 								AnimationUtils.TriggerAnimationEvent(_animation._events[i], gameObject);
 							}

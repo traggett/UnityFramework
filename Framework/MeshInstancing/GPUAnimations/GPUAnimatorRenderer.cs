@@ -19,7 +19,7 @@ namespace Framework
 				#endregion
 
 				#region MonoBehaviour
-				private void Update()
+				private void LateUpdate()
 				{
 #if UNITY_EDITOR
 					for (int i = 0; i < _materials.Length; i++)

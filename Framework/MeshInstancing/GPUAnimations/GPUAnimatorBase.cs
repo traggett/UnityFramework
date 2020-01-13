@@ -34,7 +34,6 @@ namespace Framework
 				private void Awake()
 				{
 					CachedTransformData(this.transform);
-					_initialised = false;
 				}
 
 #if UNITY_EDITOR
@@ -48,11 +47,16 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public void Initialise(GPUAnimatorRenderer renderer)
+				public virtual void Initialise(GPUAnimatorRenderer renderer)
 				{
 					_initialised = true;
 					_renderer = renderer;
 					_onInitialise?.Invoke();
+				}
+
+				public bool IsInitialised()
+				{
+					return _initialised;
 				}
 
 				public GPUAnimatorRenderer GetRenderer()

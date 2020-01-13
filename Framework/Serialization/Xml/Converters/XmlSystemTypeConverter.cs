@@ -1,13 +1,9 @@
 using System;
 using System.Xml;
 
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 namespace Framework
 {
-	using Utils;
+    using System.Reflection;
 
 	namespace Serialization
 	{
@@ -31,7 +27,7 @@ namespace Framework
 
 					if (!string.IsNullOrEmpty(node.InnerText))
 					{
-						return SystemUtils.GetType(node.InnerText);
+						return Assembly.GetCallingAssembly().GetType(node.InnerText);
 					}
 
 					return null;

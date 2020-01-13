@@ -461,10 +461,23 @@ namespace Framework
 						_converterMap = new Dictionary<Type, ObjectConverter>();
 
 						Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-						foreach (Assembly assembly in assemblies)
+						
+						for (int i=0; i<assemblies.Length; i++)
 						{
-							Type[] types = assembly.GetTypes();
+							if (assemblies[i].ReflectionOnly)
+								continue;
+
+							Type[] types = null;
+
+							try
+							{
+								types = assemblies[i].GetTypes();
+							}
+							catch (Exception e)
+							{
+								Debug.Log(e.Message);
+								continue;
+							}
 
 							//First build dictionary of types marked with [Serializable] attribute
 							foreach (Type type in types)

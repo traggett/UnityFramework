@@ -11,11 +11,11 @@ namespace Framework
 			public static Type[] GetAllTypes()
 			{
 				List<Type> result = new List<Type>();
-				Assembly[] AS = AppDomain.CurrentDomain.GetAssemblies();
+				Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-				foreach (Assembly A in AS)
+				foreach (Assembly assembly in assemblies)
 				{
-					result.AddRange(A.GetTypes());
+					result.AddRange(assembly.GetTypes());
 				}
 
 				return result.ToArray();
@@ -24,11 +24,11 @@ namespace Framework
 			public static Type[] GetAllSubTypes(Type baseType, bool allowAbstract = false)
 			{
 				List<Type> result = new List<Type>();
-				Assembly[] AS = AppDomain.CurrentDomain.GetAssemblies();
+				Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-				foreach (Assembly A in AS)
+				foreach (Assembly assembly in assemblies)
 				{
-					Type[] types = A.GetTypes();
+					Type[] types = assembly.GetTypes();
 
 					foreach (Type type in types)
 					{
@@ -40,11 +40,6 @@ namespace Framework
 				}
 
 				return result.ToArray();
-			}
-
-			public static Type GetType(string typeName)
-			{
-				return Assembly.GetCallingAssembly().GetType(typeName);
 			}
 
 			public static bool IsTypeOf(Type baseType, Type type)
@@ -129,10 +124,17 @@ namespace Framework
 			{
 				T attribute = null;
 
-				object[] customAttributes = memberInfo.GetCustomAttributes(typeof(T), false);
-				if (customAttributes.Length == 1 && customAttributes[0] is T)
+				try
 				{
-					attribute = (T)customAttributes[0];
+					object[] customAttributes = memberInfo.GetCustomAttributes(typeof(T), false);
+					if (customAttributes.Length == 1 && customAttributes[0] is T)
+					{
+						attribute = (T)customAttributes[0];
+					}
+				}
+				catch
+				{
+					return null;
 				}
 
 				return attribute;
@@ -140,20 +142,27 @@ namespace Framework
 
 			public static T GetAttribute<T>(Type type) where T : Attribute
 			{
-				Attribute[] attributes = Attribute.GetCustomAttributes(type);
-
-				// Displaying output.  
-				foreach (Attribute attr in attributes)
+				try
 				{
-					T attribute = attr as T;
+					Attribute[] attributes = Attribute.GetCustomAttributes(type);
 
-					if (attribute != null)
+					// Displaying output.  
+					foreach (Attribute attr in attributes)
 					{
-						return attribute;
+						T attribute = attr as T;
+
+						if (attribute != null)
+						{
+							return attribute;
+						}
 					}
+
+					return null;
 				}
-				
-				return null;
+				catch
+				{
+					return null;
+				}
 			}
 
 			public static T GetStaticMethodAsDelegate<T>(Type type, string name) where T : class

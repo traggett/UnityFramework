@@ -133,7 +133,7 @@ namespace Framework
 
 									for (int i = 1; i < _exposedBones.Count; i++)
 									{
-										exposedBones += ", " + _exposedBones[i];
+										exposedBones += ", " + _boneNames[_exposedBones[i]];
 									}
 
 									if (EditorGUILayout.DropdownButton(new GUIContent(exposedBones), FocusType.Keyboard))
@@ -202,7 +202,7 @@ namespace Framework
 						GUILayout.EndVertical();
 					}
 					#endregion
-
+					
 					#region Private Functions
 					private IEnumerator BakeAnimationTexture(string path)
 					{
@@ -292,7 +292,7 @@ namespace Framework
 							int totalSamples = totalFrames + 1;
 							totalNumberOfSamples += totalSamples;
 
-							WrapMode wrapMode = clip.wrapMode;
+							WrapMode wrapMode = GetClipWrapMode(clip);
 							AnimationEvent[] events = clip.events;
 
 							//Sample animation
@@ -448,17 +448,26 @@ namespace Framework
 								Matrix4x4 inverseBindPose = bindposes[boneIndex].inverse;
 
 								//Work out bone matrixes
-								Matrix4x4[] exposedBoneMatricies = new Matrix4x4[totalNumberOfSamples];
+								Vector3[] exposedBonePositions = new Vector3[totalNumberOfSamples];
+								Quaternion[] exposedBoneRotations = new Quaternion[totalNumberOfSamples];
+								Vector3[] exposedBoneScales = new Vector3[totalNumberOfSamples];
+
 								int sampleIndex = 0;					
 								for (int anim=0; anim < boneMatricies.Length; anim++)
 								{
 									for (int frame = 0; frame < boneMatricies[anim].Length; frame++)
 									{
-										exposedBoneMatricies[sampleIndex++] = boneMatricies[anim][frame][boneIndex] * inverseBindPose;
+										Matrix4x4 boneMatrix = boneMatricies[anim][frame][boneIndex] * inverseBindPose;
+
+										exposedBonePositions[sampleIndex] = boneMatrix.MultiplyPoint3x4(Vector3.zero);
+										exposedBoneRotations[sampleIndex] = boneMatrix.rotation;
+										exposedBoneScales[sampleIndex] = boneMatrix.lossyScale;
+
+										sampleIndex++;
 									}
 								}
 
-								exposedBones[i] = new GPUAnimations.ExposedBone(boneIndex, exposedBoneMatricies);
+								exposedBones[i] = new GPUAnimations.ExposedBone(boneIndex, exposedBonePositions, exposedBoneRotations, exposedBoneScales);
 							}
 						}
 
@@ -672,6 +681,15 @@ namespace Framework
 							_exposedBones.Remove(boneIndex);
 						else
 							_exposedBones.Add(boneIndex);
+					}
+
+					private WrapMode GetClipWrapMode(AnimationClip clip)
+					{
+						if (clip.legacy)
+							return clip.wrapMode;
+
+						//For non legacy clips, either set to loop or clamp forever based on the loop time flag
+						return clip.isLooping ? WrapMode.Loop : WrapMode.ClampForever;
 					}
 					#endregion
 				}

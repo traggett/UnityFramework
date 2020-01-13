@@ -19,10 +19,9 @@ namespace Framework
 				#endregion
 
 				#region Private Data
+				private bool _initialised;
 				private int _exposedBoneIndex;
-				private Vector3 _worldBonePosition;
-				private Quaternion _worldBoneRotation;
-				private Vector3 _worldBoneScale;
+				private int _exposedBoneNumSamples;
 				#endregion
 
 				#region MonoBehaviour
@@ -30,7 +29,7 @@ namespace Framework
 				{
 					if (_animator != null)
 					{
-						if (_animator.GetRenderer() != null)
+						if (_animator.IsInitialised())
 						{
 							Initialise();
 						}
@@ -39,43 +38,24 @@ namespace Framework
 							_animator._onInitialise += Initialise;
 						}
 					}
-					else
-					{
-						this.enabled = false;
-					}
 				}
 
 				private void LateUpdate()
 				{
-					UpdateBoneTransform();
-				}
-				#endregion
-
-				#region Public Interface
-				public Vector3 GetBoneWorldPosition()
-				{
-					return _worldBonePosition;
-				}
-
-				public Quaternion GetBoneWorldRotation()
-				{
-					return _worldBoneRotation;
-				}
-
-				public Vector3 GetBoneLossyScale()
-				{
-					return _worldBoneScale;
+					if (_initialised)
+						UpdateBoneTransform();
 				}
 				#endregion
 
 				#region Private Functions
 				private void Initialise()
 				{
-					_worldBonePosition = Vector3.zero;
-					_worldBoneRotation = Quaternion.identity;
-					_worldBonePosition = Vector3.one;
+					_initialised = true;
+					
+					GPUAnimations animations = _animator.GetRenderer()._animations.GetAnimations();
 
-					_exposedBoneIndex = GetExposedBoneIndex(_animator.GetRenderer()._animations.GetAnimations(), _boneName);
+					_exposedBoneIndex = GetExposedBoneIndex(animations, _boneName);
+					_exposedBoneNumSamples = animations._exposedBones[_exposedBoneIndex]._cachedBonePositions.Length;
 
 					if (_exposedBoneIndex == -1)
 						this.enabled = false;
@@ -87,47 +67,54 @@ namespace Framework
 					bool followRotation = (_flags & TransformFlags.Rotate) != 0;
 					bool followScale = (_flags & TransformFlags.Scale) != 0;
 
-					GPUAnimations animations = _animator.GetRenderer()._animations.GetAnimations();
+					Vector3 localPosition;
+					Quaternion localRotation;
+					Vector3 localScale;
 
 					//Work out local space bone transform
-					float curAnimWeight = _animator.GetMainAnimationWeight();
-					GetBoneTransform(animations, _exposedBoneIndex, _animator.GetMainAnimationFrame(), _flags, out Vector3 localPosition, out Quaternion localRotation, out Vector3 localScale);
-
-					if (curAnimWeight < 1.0f)
 					{
-						GetBoneTransform(animations, _exposedBoneIndex, _animator.GetBackgroundAnimationFrame(), _flags, out Vector3 backgroundLocalPosition, out Quaternion backgroundLocalRotation, out Vector3 backgroundLocalScale);
+						GPUAnimations animations = _animator.GetRenderer()._animations.GetAnimations();
 
-						if (followPosition)
-							localPosition = Vector3.Lerp(backgroundLocalPosition, localPosition, curAnimWeight);
-						if (followRotation)
-							localRotation = Quaternion.Slerp(backgroundLocalRotation, localRotation, curAnimWeight);
-						if (followScale)
-							localScale = Vector3.Lerp(backgroundLocalScale, localScale, curAnimWeight);
+						float curAnimWeight = _animator.GetMainAnimationWeight();
+						GetFrameInfo(_animator.GetMainAnimationFrame(), out int prevFrame, out int nextFrame, out float frameLerp);
+						animations._exposedBones[_exposedBoneIndex].GetBoneTransform(prevFrame, nextFrame, frameLerp, followPosition, followRotation, followScale, out localPosition, out localRotation, out localScale);
+
+						if (curAnimWeight < 1.0f)
+						{
+							GetFrameInfo(_animator.GetBackgroundAnimationFrame(), out prevFrame, out nextFrame, out frameLerp);
+							animations._exposedBones[_exposedBoneIndex].GetBoneTransform(prevFrame, nextFrame, frameLerp, followPosition, followRotation, followScale, out Vector3 backgroundLocalPosition, out Quaternion backgroundLocalRotation, out Vector3 backgroundLocalScale);
+
+							if (followPosition)
+								localPosition = Vector3.Lerp(backgroundLocalPosition, localPosition, curAnimWeight);
+							if (followRotation)
+								localRotation = Quaternion.Slerp(backgroundLocalRotation, localRotation, curAnimWeight);
+							if (followScale)
+								localScale = Vector3.Lerp(backgroundLocalScale, localScale, curAnimWeight);
+						}
 					}
+					
+					//Set world transform from this
+					{
+						if (followPosition && followRotation)
+						{
+							this.transform.SetPositionAndRotation(_animator.transform.TransformPoint(localPosition), _animator.transform.rotation * localRotation);
+						}
+						else if (followPosition)
+						{
+							this.transform.position = _animator.transform.TransformPoint(localPosition);
+						}
+						else if (followRotation)
+						{
+							this.transform.rotation = _animator.transform.rotation * localRotation;
+						}
 
-					//Convert to world space
-					if (followPosition)
-						_worldBonePosition = _animator.transform.TransformPoint(localPosition);
-					if (followRotation)
-						_worldBoneRotation = _animator.transform.rotation * localRotation;
-					if (followScale)
-						_worldBoneScale = Vector3.Scale(_animator.transform.lossyScale, localScale);
-
-					UpdateTargetTransform();
+						if (followScale)
+						{
+							GameObjectUtils.SetTransformWorldScale(this.transform, Vector3.Scale(_animator.transform.lossyScale, localScale));
+						}
+					}
 				}
 				
-				private void UpdateTargetTransform()
-				{
-					if ((_flags & TransformFlags.Translate) != 0)
-						this.transform.position = _worldBonePosition;
-
-					if ((_flags & TransformFlags.Rotate) != 0)
-						this.transform.rotation = _worldBoneRotation;
-
-					if ((_flags & TransformFlags.Scale) != 0)
-						GameObjectUtils.SetTransformWorldScale(this.transform, _worldBoneScale);
-				}
-
 				private static int GetExposedBoneIndex(GPUAnimations animations, string boneName)
 				{
 					if (animations != null)
@@ -154,47 +141,12 @@ namespace Framework
 
 					return -1;
 				}
-
-				private static void GetBoneTransform(GPUAnimations animations, int exposedBoneIndex, float frame, TransformFlags flags, out Vector3 position, out Quaternion rotation, out Vector3 scale)
+				
+				private void GetFrameInfo(float frame, out int prevFrame, out int nextFrame, out float frameLerp)
 				{
-					int totalSamples = animations._exposedBones[exposedBoneIndex]._cachedBoneMatrices.Length;
-
-					int prevFrame = Mathf.FloorToInt(frame);
-					int nextFrame = Math.Min(prevFrame + 1, totalSamples - 1);
-					float frameLerp = frame - prevFrame;
-
-					if ((flags & TransformFlags.Translate) != 0)
-					{
-						Vector3 prevFramePos = animations._exposedBones[exposedBoneIndex]._cachedBoneMatrices[prevFrame].MultiplyPoint3x4(Vector3.zero);
-						Vector3 nextFramePos = animations._exposedBones[exposedBoneIndex]._cachedBoneMatrices[nextFrame].MultiplyPoint3x4(Vector3.zero);
-						position = Vector3.Lerp(prevFramePos, nextFramePos, frameLerp);
-					}
-					else
-					{
-						position = Vector3.zero;
-					}
-
-					if ((flags & TransformFlags.Rotate) != 0)
-					{
-						Quaternion prevRotation = animations._exposedBones[exposedBoneIndex]._cachedBoneMatrices[prevFrame].rotation;
-						Quaternion nextRotation = animations._exposedBones[exposedBoneIndex]._cachedBoneMatrices[nextFrame].rotation;
-						rotation = Quaternion.Slerp(prevRotation, nextRotation, frameLerp);
-					}
-					else
-					{
-						rotation = Quaternion.identity;
-					}
-
-					if ((flags & TransformFlags.Scale) != 0)
-					{
-						Vector3 prevScale = animations._exposedBones[exposedBoneIndex]._cachedBoneMatrices[prevFrame].lossyScale;
-						Vector3 nextScale = animations._exposedBones[exposedBoneIndex]._cachedBoneMatrices[nextFrame].lossyScale;
-						scale = Vector3.Lerp(prevScale, nextScale, frameLerp);
-					}
-					else
-					{
-						scale = Vector3.one;
-					}
+					prevFrame = Mathf.FloorToInt(frame);
+					nextFrame = Math.Min(prevFrame + 1, _exposedBoneNumSamples - 1);
+					frameLerp = frame - prevFrame;
 				}
 				#endregion
 			}

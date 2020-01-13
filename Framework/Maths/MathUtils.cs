@@ -126,6 +126,25 @@ namespace Framework
 				return Mathf.Approximately(vec.x, 0.0f) && Mathf.Approximately(vec.y, 0.0f) && Mathf.Approximately(vec.z, 0.0f);
 			}
 
+			public static float Sqrd(float num)
+			{
+				return num * num;
+			}
+
+			public static float Pow(float num, int exp)
+			{
+				float result = 1.0f;
+				while (exp > 0)
+				{
+					if (exp % 2 == 1)
+						result *= num;
+					exp >>= 1;
+					num *= num;
+				}
+
+				return result;
+			}
+
 			public static bool FloatRangeIntersects(float range1start, float range1end, float range2start, float range2end)
 			{
 				if (range1start <= range2end)
