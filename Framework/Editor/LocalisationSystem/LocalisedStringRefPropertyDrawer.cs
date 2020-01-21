@@ -82,12 +82,10 @@ namespace Framework
 						}
 
 						//Draw button for adding new key
-						if (currentKey == 0)
+						if (currentKey == 0 && !localisationkeyProperty.hasMultipleDifferentValues)
 						{
 							string[] folders = Localisation.GetStringFolders();
-							int currentFolderIndex = 0;
-							string keyWithoutFolder;
-							Localisation.GetFolderIndex(localisationkey, out currentFolderIndex, out keyWithoutFolder);
+							Localisation.GetFolderIndex(localisationkey, out int currentFolderIndex, out string keyWithoutFolder);
 
 							float keyTextWidth = position.width - EditorUtils.GetLabelWidth() - (folderNameWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth);
 							float buttonWidth = autoKeySlashFakeWidth + keyTextWidth + buttonSpace + autoKeybuttonWidth + buttonSpace + addButtonWidth;
@@ -172,7 +170,7 @@ namespace Framework
 						//Draw displayed text (can be edited to update localization file)
 						{
 							//Only display if have a valid key
-							if (!string.IsNullOrEmpty(localisationkey) && Localisation.Exists(localisationkey))
+							if (!string.IsNullOrEmpty(localisationkey) && Localisation.Exists(localisationkey) && !localisationkeyProperty.hasMultipleDifferentValues)
 							{
 								string text = StringUtils.GetFirstLine(Localisation.GetRawString(localisationkey, Localisation.GetCurrentLanguage()));
 								float height = EditorGUIUtility.singleLineHeight;
