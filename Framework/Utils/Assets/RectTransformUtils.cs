@@ -22,6 +22,10 @@ namespace Framework
 			{
 				rt.offsetMax = new Vector2(rt.offsetMax.x, -top);
 			}
+			public static float GetTop(RectTransform rt)
+			{
+				return -rt.offsetMax.y;
+			}
 
 			public static void SetBottom(RectTransform rt, float bottom)
 			{
