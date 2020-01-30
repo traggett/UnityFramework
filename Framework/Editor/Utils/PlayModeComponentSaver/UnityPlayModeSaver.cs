@@ -28,6 +28,7 @@ namespace Framework
 				private const string kRevertComponentMenuString = "CONTEXT/Component/" + kRevertMenuString;
 				private const string kSaveGameObjectMenuString = "GameObject/" + kSaveMenuString;
 				private const string kRevertGameObjectMenuString = "GameObject/" + kRevertMenuString;
+				private const string kClearCacheMenuString = "Tools/Clear PlayModeSaver Cache";
 
 				private const string kUndoText = "Play Mode Changes";
 				private const string kEditorPrefsKey = "UnityPlayModeSaver.";
@@ -76,6 +77,13 @@ namespace Framework
 					public string _propertyPath;
 					public Material _material;
 				}
+
+				private enum State
+				{ 
+					Idle,
+					Busy,
+				}
+				private static State _state;
 				#endregion
 				
 				#region Constructor
@@ -88,7 +96,7 @@ namespace Framework
 				
 				#region Menu Functions
 				[MenuItem(kSaveComponentMenuString, false, 12)]
-				private static void SaveComponent(MenuCommand command)
+				public static void SaveComponent(MenuCommand command)
 				{
 					Component component = command.context as Component;
 
@@ -97,7 +105,7 @@ namespace Framework
 				}
 
 				[MenuItem(kSaveComponentMenuString, true)]
-				private static bool ValidateSaveComponent(MenuCommand command)
+				public static bool ValidateSaveComponent(MenuCommand command)
 				{
 					Component component = command.context as Component;
 
@@ -108,7 +116,7 @@ namespace Framework
 				}
 
 				[MenuItem(kRevertComponentMenuString, false, 12)]
-				private static void RevertComponent(MenuCommand command)
+				public static void RevertComponent(MenuCommand command)
 				{
 					Component component = command.context as Component;
 
@@ -117,7 +125,7 @@ namespace Framework
 				}
 
 				[MenuItem(kRevertComponentMenuString, true)]
-				private static bool ValidateRevertComponent(MenuCommand command)
+				public static bool ValidateRevertComponent(MenuCommand command)
 				{
 					Component component = command.context as Component;
 
@@ -128,7 +136,7 @@ namespace Framework
 				}
 
 				[MenuItem(kSaveGameObjectMenuString, false, -100)]
-				private static void SaveGameObject(MenuCommand command)
+				public static void SaveGameObject(MenuCommand command)
 				{
 					GameObject gameObject = command.context as GameObject;
 
@@ -142,7 +150,7 @@ namespace Framework
 				}
 
 				[MenuItem(kSaveGameObjectMenuString, true)]
-				private static bool ValidateSaveGameObject(MenuCommand command)
+				public static bool ValidateSaveGameObject(MenuCommand command)
 				{
 					GameObject gameObject = command.context as GameObject;
 					
@@ -159,7 +167,7 @@ namespace Framework
 				}
 
 				[MenuItem(kRevertGameObjectMenuString, false, -100)]
-				private static void RevertGameObject(MenuCommand command)
+				public static void RevertGameObject(MenuCommand command)
 				{
 					GameObject gameObject = command.context as GameObject;
 
@@ -173,7 +181,7 @@ namespace Framework
 				}
 
 				[MenuItem(kRevertGameObjectMenuString, true)]
-				private static bool ValidateRevertGameObject(MenuCommand command)
+				public static bool ValidateRevertGameObject(MenuCommand command)
 				{
 					GameObject gameObject = command.context as GameObject;
 
@@ -188,8 +196,25 @@ namespace Framework
 
 					return false;
 				}
+
+
+				[MenuItem(kClearCacheMenuString)]
+				public static void ClearCache()
+				{
+					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
+
+					for (int i = 0; i < numSavedObjects; i++)
+					{
+						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
+						DeleteObjectEditorPrefs(editorPrefKey);
+					}
+
+					SafeDeleteEditorPref(kEditorPrefsObjectCountKey);
+
+					_state = State.Idle;
+				}
 				#endregion
-				
+
 				#region Editor Functions
 				private static void OnModeChanged(PlayModeStateChange state)
 				{
@@ -197,6 +222,12 @@ namespace Framework
 					{
 						case PlayModeStateChange.ExitingEditMode:
 							{
+								//If restore or save failed, delete the cache
+								if (_state != State.Idle)
+								{
+									ClearCache();
+								}
+
 								CacheScenePrefabs();
 							}
 							break;
@@ -207,7 +238,17 @@ namespace Framework
 							break;
 						case PlayModeStateChange.EnteredEditMode:
 							{
-								RestoreSavedObjects();
+								//If save completed ok, restore objects
+								if (_state == State.Idle)
+								{
+									RestoreSavedObjects();
+								}
+								//otherwise delete the cache
+								else
+								{
+									ClearCache();
+								}
+								
 								RepaintEditorWindows();
 							}
 							break;
@@ -341,7 +382,7 @@ namespace Framework
 					if (saveObjIndex != -1)
 					{
 						string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
-						DeleteEditorPrefs(editorPrefKey);
+						DeleteObjectEditorPrefs(editorPrefKey);
 					}
 				}
 
@@ -369,9 +410,7 @@ namespace Framework
 				#region Scene Prefab Objects
 				private static bool IsScenePrefab(Object obj, string scenePath, out GameObject prefab, out int prefabSceneId)
 				{
-					Scene scene;
-
-					if (GetActiveScene(scenePath, out scene))
+					if (GetActiveScene(scenePath, out Scene scene))
 					{
 						return UnityPlayModeSaverSceneUtils.IsScenePrefabInstance(obj, scene, out prefab, out prefabSceneId);
 					}
@@ -450,7 +489,7 @@ namespace Framework
 					if (saveObjIndex != -1)
 					{
 						string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
-						DeleteEditorPrefs(editorPrefKey);
+						DeleteObjectEditorPrefs(editorPrefKey);
 					}
 				}
 
@@ -480,6 +519,8 @@ namespace Framework
 				#region Object Saving
 				private static void SaveObjectValues()
 				{
+					_state = State.Busy;
+
 					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 
 					for (int i = 0; i < numSavedObjects; i++)
@@ -489,6 +530,8 @@ namespace Framework
 						//Saving object values can result in more objects being added to list so re-grab the count.
 						numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 					}
+
+					_state = State.Idle;
 				}
 
 				private static void SaveObjectValues(int saveObjIndex)
@@ -523,13 +566,11 @@ namespace Framework
 
 						if (obj != null)
 						{
-							GameObject sceneParent = null;
-							GameObject topOfHieracy = null;
+							GameObject sceneParent;
+							GameObject topOfHieracy;
 
-							if (obj is Component)
+							if (obj is Component component)
 							{
-								Component component = (Component)obj;
-
 								topOfHieracy = component.gameObject;
 								FindRuntimeObjectParent(component.gameObject, out sceneParent, ref topOfHieracy);
 
@@ -544,10 +585,8 @@ namespace Framework
 									SaveRuntimeGameObject(editorPrefKey, topOfHieracy, sceneParent, null);
 								}
 							}
-							else if (obj is GameObject)
+							else if (obj is GameObject gameObject)
 							{
-								GameObject gameObject = (GameObject)obj;
-
 								topOfHieracy = gameObject;
 								FindRuntimeObjectParent(gameObject, out sceneParent, ref topOfHieracy);
 
@@ -668,9 +707,7 @@ namespace Framework
 				{
 					if (localIdentifier != -1)
 					{
-						Scene scene;
-
-						if (GetActiveScene(scenePath, out scene, loadSceneIfNeeded))
+						if (GetActiveScene(scenePath, out Scene scene, loadSceneIfNeeded))
 						{
 							foreach (GameObject rootObject in scene.GetRootGameObjects())
 							{
@@ -689,7 +726,7 @@ namespace Framework
 
 				private static Object FindSceneObject(GameObject gameObject, int localIdentifier)
 				{
-					if (localIdentifier != -1)
+					if (gameObject != null && localIdentifier != -1)
 					{
 						//Check game object
 						if (GetSceneIdentifier(gameObject) == localIdentifier)
@@ -765,9 +802,7 @@ namespace Framework
 				#region Scene Prefab Objects
 				private static Object FindScenePrefabObject(string scenePath, int instanceId, string prefabObjPath, bool loadSceneIfNeeded = false)
 				{
-					Scene scene;
-
-					if (GetActiveScene(scenePath, out scene, loadSceneIfNeeded))
+					if (GetActiveScene(scenePath, out Scene scene, loadSceneIfNeeded))
 					{
 						GameObject prefabInstance = UnityPlayModeSaverSceneUtils.GetScenePrefabInstance(scene, instanceId);
 
@@ -784,9 +819,7 @@ namespace Framework
 				#region Runtime Objects
 				private static Object FindRuntimeObject(string scenePath, int instanceId)
 				{
-					Scene scene;
-
-					if (GetActiveScene(scenePath, out scene))
+					if (GetActiveScene(scenePath, out Scene scene))
 					{
 						foreach (GameObject rootObject in scene.GetRootGameObjects())
 						{
@@ -892,10 +925,7 @@ namespace Framework
 
 						if (identifier != -1)
 						{
-							GameObject prefabInstance;
-							int prefabSceneId;
-
-							if (UnityPlayModeSaverSceneUtils.IsScenePrefabInstance(parentSceneObject, parentSceneObject.scene, out prefabInstance, out prefabSceneId))
+							if (UnityPlayModeSaverSceneUtils.IsScenePrefabInstance(parentSceneObject, parentSceneObject.scene, out GameObject prefabInstance, out int prefabSceneId))
 							{
 								string prefabPath = GetScenePrefabChildObjectPath(prefabInstance, parentSceneObject);
 
@@ -921,6 +951,7 @@ namespace Framework
 					else if (gameObject.transform.parent == null)
 					{
 						sceneParent = null;
+						topOfHieracy = gameObject;
 					}
 					else
 					{
@@ -956,6 +987,7 @@ namespace Framework
 				#region Object Restoring
 				private static void RestoreSavedObjects()
 				{
+					_state = State.Busy;
 					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 
 					List<Object> restoredObjects = new List<Object>();
@@ -1102,7 +1134,7 @@ namespace Framework
 							}
 						}
 
-						DeleteEditorPrefs(editorPrefKey);
+						DeleteObjectEditorPrefs(editorPrefKey);
 					}
 
 					if (restoredObjectsData.Count > 0)
@@ -1116,6 +1148,7 @@ namespace Framework
 					}
 
 					SafeDeleteEditorPref(kEditorPrefsObjectCountKey);
+					_state = State.Idle;
 				}
 
 				private static void RestoreObjectFromData(RestoredObjectData data)
@@ -1302,7 +1335,7 @@ namespace Framework
 
 						RestoreObjectFromData(data);
 
-						DeleteEditorPrefs(childeditorPrefKey);
+						DeleteObjectEditorPrefs(childeditorPrefKey);
 
 						childIndex++;
 					}
@@ -1310,7 +1343,7 @@ namespace Framework
 					return gameObject;
 				}
 
-				private static void DeleteEditorPrefs(string editorPrefKey)
+				private static void DeleteObjectEditorPrefs(string editorPrefKey)
 				{
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectScene);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectSceneId);
@@ -1414,12 +1447,11 @@ namespace Framework
 						return prefabGameObject;
 					
 					GameObject gameObject = prefabGameObject;
-					int i = 0;
 					int j = 0;
 
-					while (true)
+					while (j < path.Length)
 					{
-						i = path.IndexOf('[', j);
+						int i = path.IndexOf('[', j);
 
 						if (i == -1)
 							break;
@@ -1430,26 +1462,34 @@ namespace Framework
 							break;
 
 						string childIndexStr = path.Substring(i + 1, j - i - 1);
-						int childIndex = Convert.ToInt32(childIndexStr);
+						int childIndex = SafeConvertToInt(childIndexStr);
 
 						if (childIndex >= 0 && childIndex < gameObject.transform.childCount)
+						{
 							gameObject = gameObject.transform.GetChild(childIndex).gameObject;
+						}
 						else
+						{
 							return null;
+						}
 					}
 
 					int dotIndex = path.LastIndexOf('.');
 
 					if (dotIndex != -1)
 					{
-						int componentIndex = Convert.ToInt32(path.Substring(dotIndex + 1));
+						int componentIndex = SafeConvertToInt(path.Substring(dotIndex + 1));
 
 						Component[] components = gameObject.GetComponents<Component>();
 
 						if (componentIndex >= 0 && componentIndex < components.Length)
+						{
 							return components[componentIndex];
+						}
 						else
+						{
 							return null;
+						}
 					}
 					else
 					{
