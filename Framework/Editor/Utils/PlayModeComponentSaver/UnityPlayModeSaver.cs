@@ -91,6 +91,7 @@ namespace Framework
 				{
 					EditorApplication.playModeStateChanged += OnModeChanged;
 					EditorSceneManager.sceneSaving += OnSceneSaved;
+					ClearCache();
 				}
 				#endregion
 				
@@ -551,10 +552,10 @@ namespace Framework
 							SaveObjectValues(editorPrefKey, obj);
 
 							//If its a GameObject then add its components and child GameObjects (some of which might be runtime)
-							GameObject gameObject = obj as GameObject;
-
-							if (gameObject != null)
+							if (obj is GameObject gameObject)
+							{
 								AddSceneGameObjectChildObjectValues(gameObject);
+							}
 						}
 					}
 					//Runtime object
@@ -758,6 +759,7 @@ namespace Framework
 				{
 					Component[] components = gameObject.GetComponents<Component>();
 
+					//Save each component
 					for (int i = 0; i < components.Length; i++)
 					{
 						int identifier = GetSceneIdentifier(components[i]);
@@ -777,6 +779,7 @@ namespace Framework
 						}
 					}
 
+					//Save each child object
 					foreach (Transform child in gameObject.transform)
 					{
 						int identifier = GetSceneIdentifier(child.gameObject);

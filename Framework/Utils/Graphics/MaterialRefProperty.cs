@@ -85,7 +85,7 @@ namespace Framework
 					//...get from renderer / index
 					else if (_materialIndex != -1)
 					{
-						int numMaterials = _renderer.sharedMaterials.Length;
+						int numMaterials = _renderer != null ? _renderer.sharedMaterials.Length : 0;
 
 						if (_renderer != null && 0 <= _materialIndex && _materialIndex < numMaterials)
 						{
