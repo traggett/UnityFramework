@@ -433,7 +433,9 @@ namespace Framework
 							EditorGUI.FocusTextInControl(string.Empty);
 						}
 
-						float itemHeight = _textStyle.CalcHeight(new GUIContent("W"), float.MaxValue);
+						float itemHeight = Mathf.Max(_textStyle.CalcHeight(new GUIContent("W"), float.MaxValue), EditorGUIUtility.singleLineHeight);
+						_tableStyle.fixedHeight = itemHeight;
+
 						float secondLangWidth = position.width - _editorPrefs._keyWidth - _editorPrefs._firstLanguageWidth;
 
 						//On layout, check what part of table is currently being viewed
