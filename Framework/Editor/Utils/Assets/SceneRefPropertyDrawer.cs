@@ -24,7 +24,7 @@ namespace Framework
 						sceneAsset = AssetDatabase.LoadAssetAtPath(fileProp.stringValue, typeof(SceneAsset)) as SceneAsset;
 
 					EditorGUI.BeginChangeCheck();
-					sceneAsset = EditorGUI.ObjectField(filePosition, "Scene", sceneAsset, typeof(SceneAsset), false) as SceneAsset;
+					sceneAsset = EditorGUI.ObjectField(filePosition, label, sceneAsset, typeof(SceneAsset), false) as SceneAsset;
 					if (EditorGUI.EndChangeCheck())
 					{
 						fileProp.stringValue = AssetDatabase.GetAssetPath(sceneAsset);
