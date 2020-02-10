@@ -22,10 +22,12 @@ namespace Framework
 				private GUIStyle _textStyle;
 				private string _key;
 				private SystemLanguage _language;
-				private bool _richText;
-				private string _text;
+				private bool _richText;	
 				private bool _hasChanges;
 				private Vector2 _scrollPosition;
+
+				[SerializeField]
+				private string _text;
 
 				public static void ShowEditKey(string key, SystemLanguage language, GUIStyle style, Rect position)
 				{
@@ -82,9 +84,11 @@ namespace Framework
 							float textHeight = _textStyle.CalcHeight(new GUIContent(_text), this.position.width);
 
 							EditorGUI.BeginChangeCheck();
-							_text = EditorGUILayout.TextArea(_text, _textStyle, GUILayout.Height(textHeight));
+							string text = EditorGUILayout.TextArea(_text, _textStyle, GUILayout.Height(textHeight));
 							if (EditorGUI.EndChangeCheck())
 							{
+								Undo.RecordObject(this, "Changed Text");
+								_text = text;
 								_hasChanges = true;
 							}
 						}

@@ -14,7 +14,7 @@ namespace Framework
 		{
 			public static class EditorUtils
 			{
-				public static double kDoubleClickTime = 0.3d;
+				public static double kDoubleClickTime = 0.5d;
 
 				private static GUIStyle _coloredRoundedBoxStyle = null;
 				public static GUIStyle ColoredRoundedBoxStyle
