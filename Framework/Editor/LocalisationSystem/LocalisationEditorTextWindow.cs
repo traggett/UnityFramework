@@ -99,7 +99,7 @@ namespace Framework
 						{
 							GUILayout.FlexibleSpace();
 
-							if (GUILayout.Button("Ok", EditorStyles.miniButton))
+							if (GUILayout.Button("Save", EditorStyles.miniButton))
 							{
 								Localisation.Set(_key, _language, _text);
 								_hasChanges = false;

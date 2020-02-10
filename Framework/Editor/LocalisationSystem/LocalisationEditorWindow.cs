@@ -182,14 +182,18 @@ namespace Framework
 							border = new RectOffset(0, 0, 0, 0),
 							padding = new RectOffset(4, 4, 4, 4),
 							margin = new RectOffset(0, 0, 0, 0),
+							fixedHeight = EditorStyles.label.lineHeight + 8,
 						};
 					}
 
 					//if (_keyEditStyle == null || string.IsNullOrEmpty(_keyEditStyle.name))
 					{
-						_keyEditStyle = new GUIStyle(EditorStyles.textField)
+						_keyEditStyle = new GUIStyle(EditorStyles.textArea)
 						{
-							//margin = new RectOffset(0, 0, 0, 0),
+							border = new RectOffset(0, 0, 0, 0),
+							padding = new RectOffset(4, 4, 4, 4),
+							margin = new RectOffset(0, 0, 0, 4),
+							fixedHeight = EditorStyles.label.lineHeight + 8,
 						};
 						//_keyEditStyle.padding.left = 8;
 						//_keyEditStyle.padding.top = 3;
@@ -446,6 +450,8 @@ namespace Framework
 								//Render item
 								EditorGUILayout.BeginHorizontal(_tableStyle, GUILayout.Height(itemHeight));
 								{
+									GUI.backgroundColor = origBackgroundColor;
+
 									//Render Key
 									EditorGUILayout.BeginVertical(GUILayout.Width(_editorPrefs._keyWidth));
 									{
@@ -471,19 +477,17 @@ namespace Framework
 
 											GUILayout.FlexibleSpace();
 
-											GUI.backgroundColor = origBackgroundColor;
-
 											EditorGUILayout.BeginHorizontal(_keyButtonsStyle);
 											{
-												if (GUILayout.Button("Edit Key", EditorStyles.miniButton))
-												{
-													_editingKeyName = true;
-												}
-
 												if (GUILayout.Button("Edit", EditorStyles.miniButton))
 												{
 													_editingKeyName = false;
 													OpenTextEditor(_keys[i], currentLanguage);
+												}
+
+												if (GUILayout.Button("Edit Key", EditorStyles.miniButton))
+												{
+													_editingKeyName = true;
 												}
 
 												if (GUILayout.Button("Delete", EditorStyles.miniButton))
