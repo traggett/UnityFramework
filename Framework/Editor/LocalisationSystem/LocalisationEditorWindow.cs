@@ -22,14 +22,15 @@ namespace Framework
 
 				private static readonly string kWindowWindowName = "Localisation";
 				private static readonly string kEditorPrefKey = "LocalisationEditor.Settings";
-				
+				private static readonly string kEditKeyControlID = "Localisation.EditKey.";
 				private static readonly float kMinKeysWidth = 240.0f;
 				private static readonly float kResizerWidth = 8.0f;
 
 				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
 				private static readonly Color kTextLineBackgroundColorA = new Color(0.7f, 0.7f, 0.7f, 1.0f);
 				private static readonly Color kTextLineBackgroundColorB = new Color(0.82f, 0.82f, 0.82f, 1.0f);
-				private static readonly Color kTextBackgroundColorA = new Color(0.9f, 0.9f, 0.9f, 1.0f);
+				private static readonly Color kSelectedTextBackgroundColor = new Color(1.0f, 0.84f, 0.12f, 1.0f);
+				private static readonly Color kTextBackgroundColorA = new Color(0.88f, 0.88f, 0.88f, 1.0f);
 				private static readonly Color kTextBackgroundColorB = new Color(0.98f, 0.98f, 0.98f, 1.0f);
 
 				private static LocalisationEditorWindow _instance = null;
@@ -56,8 +57,7 @@ namespace Framework
 
 				private GUIStyle _tableStyle;
 				private GUIStyle _keyStyle;
-				private GUIStyle _keyEditStyle;
-				private GUIStyle _keyButtonsStyle;
+				private GUIStyle _editKeyStyle;
 				private GUIStyle _textStyle;
 				private GUIStyle _editTextStyle;
 
@@ -188,33 +188,26 @@ namespace Framework
 						};
 					}
 
-					if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
+					//if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
 					{
 						_keyStyle = new GUIStyle(EditorStyles.label)
 						{
 							border = new RectOffset(0, 0, 0, 0),
 							padding = new RectOffset(4, 4, 4, 4),
 							margin = new RectOffset(0, 0, 0, 0),
-							fixedHeight = EditorStyles.label.lineHeight + 8,
+							alignment = TextAnchor.UpperLeft,
+							fixedHeight = 0,
 						};
 					}
 
-					if (_keyEditStyle == null || string.IsNullOrEmpty(_keyEditStyle.name))
+					//if (_editKeyStyle == null || string.IsNullOrEmpty(_editKeyStyle.name))
 					{
-						_keyEditStyle = new GUIStyle(EditorStyles.textArea)
+						_editKeyStyle = new GUIStyle(EditorStyles.textField)
 						{
 							border = new RectOffset(0, 0, 0, 0),
 							padding = new RectOffset(4, 4, 4, 4),
-							margin = new RectOffset(0, 0, 0, 4),
-							fixedHeight = EditorStyles.label.lineHeight + 8,
-						};
-					}
-
-					if (_keyButtonsStyle == null || string.IsNullOrEmpty(_keyButtonsStyle.name))
-					{
-						_keyButtonsStyle = new GUIStyle()
-						{
-							padding = new RectOffset(4, 4, 0, 4),
+							margin = new RectOffset(0, 0, 0, 0),
+							fixedHeight = 0,
 						};
 					}
 
@@ -245,7 +238,7 @@ namespace Framework
 						{
 							stretchHeight = false,
 							wordWrap = true,
-							fixedHeight = 0,
+	
 						};
 					}
 				}
@@ -463,22 +456,24 @@ namespace Framework
 									GUI.backgroundColor = origBackgroundColor;
 
 									//Render Key
-									EditorGUILayout.BeginVertical(GUILayout.Width(_editorPrefs._keyWidth));
+									EditorGUILayout.BeginVertical();
 									{
 										if (_editingKeyName == _keys[i])
 										{
 											EditorGUI.BeginChangeCheck();
-											string key = EditorGUILayout.DelayedTextField(_keys[i], _keyEditStyle, GUILayout.Width(_editorPrefs._keyWidth));
+											GUI.SetNextControlName(kEditKeyControlID);
+											string key = EditorGUILayout.DelayedTextField(_keys[i], _editKeyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight));
 											if (EditorGUI.EndChangeCheck())
 											{
 												_editingKeyName = null;
 												Localisation.ChangeKey(_keys[i], key);
 												UpdateKeys();
+												EditorGUI.FocusTextInControl("");
 											}
 										}
 										else
 										{
-											if (GUILayout.Button(_keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth)))
+											if (GUILayout.Button(_keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight)))
 											{
 												OnClickItem(i, SystemLanguage.Unknown);
 											}
@@ -488,26 +483,22 @@ namespace Framework
 
 									//Render Text
 									{
-										GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
+										GUI.backgroundColor = selected ? kSelectedTextBackgroundColor : i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 
 										//Render First Language
-										EditorGUILayout.BeginVertical(GUILayout.Width(_editorPrefs._firstLanguageWidth));
-										{
-											string text = Localisation.GetRawString(_keys[i], currentLanguage);
+										string text = Localisation.GetRawString(_keys[i], currentLanguage);
 
-											if (GUILayout.Button(selected ? text : StringUtils.GetFirstLine(text), selected ? _editTextStyle : _textStyle, GUILayout.Width(_editorPrefs._firstLanguageWidth)))
-											{
-												OnClickItem(i, currentLanguage);
-											}
+										if (GUILayout.Button(selected ? text : StringUtils.GetFirstLine(text), selected ? _editTextStyle : _textStyle, GUILayout.Width(_editorPrefs._firstLanguageWidth)))
+										{
+											OnClickItem(i, currentLanguage);
 										}
-										EditorGUILayout.EndVertical();
 
 										//Render Second Language
 										EditorGUILayout.BeginVertical(GUILayout.Width(secondLangWidth));
 										{
-											string text = Localisation.GetRawString(_keys[i], _editorPrefs._secondLanguage);
+											string stext = Localisation.GetRawString(_keys[i], _editorPrefs._secondLanguage);
 
-											if (GUILayout.Button(selected ? text : StringUtils.GetFirstLine(text), selected ? _editTextStyle : _textStyle, GUILayout.Width(secondLangWidth)))
+											if (GUILayout.Button(selected ? stext : StringUtils.GetFirstLine(stext), selected ? _editTextStyle : _textStyle, GUILayout.Width(secondLangWidth)))
 											{
 												OnClickItem(i, _editorPrefs._secondLanguage);
 											}
@@ -611,6 +602,7 @@ namespace Framework
 						else
 						{
 							_editingKeyName = _keys[index];
+							EditorGUI.FocusTextInControl(kEditKeyControlID);
 						}
 					}
 
