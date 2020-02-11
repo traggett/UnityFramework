@@ -473,6 +473,7 @@ namespace Framework
 											{
 												_editingKeyName = null;
 												Localisation.ChangeKey(_keys[i], key);
+												UpdateKeys();
 											}
 										}
 										else
@@ -785,6 +786,7 @@ namespace Framework
 						Localisation.Remove(_editorPrefs._selectedKeys[i]);
 					}
 
+					UpdateKeys();
 					_editorPrefs._selectedKeys = new string[0];
 					SaveEditorPrefs();
 					_needsRepaint = true;

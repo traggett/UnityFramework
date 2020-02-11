@@ -54,10 +54,7 @@ namespace Framework
 						//Tool bar
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Height(EditorGUIUtility.singleLineHeight));
 						{
-							if (GUILayout.Button(_key, EditorStyles.toolbarTextField))
-							{
-
-							}
+							GUILayout.Button(" " + _key + " ", EditorStyles.toolbarTextField);
 
 							EditorGUI.BeginChangeCheck();
 							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_language, EditorStyles.toolbarPopup);
