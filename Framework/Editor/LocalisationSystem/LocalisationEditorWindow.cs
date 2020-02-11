@@ -23,8 +23,9 @@ namespace Framework
 				private static readonly string kWindowWindowName = "Localisation";
 				private static readonly string kEditorPrefKey = "LocalisationEditor.Settings";
 				
-				private static readonly float kMinKeysWidth = 180.0f;
-				
+				private static readonly float kMinKeysWidth = 240.0f;
+				private static readonly float kResizerWidth = 8.0f;
+
 				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
 				private static readonly Color kTextLineBackgroundColorA = new Color(0.7f, 0.7f, 0.7f, 1.0f);
 				private static readonly Color kTextLineBackgroundColorB = new Color(0.82f, 0.82f, 0.82f, 1.0f);
@@ -50,7 +51,7 @@ namespace Framework
 				private Vector2 _scrollPosition;
 				private bool _needsRepaint;
 				private string _addNewKey = string.Empty;
-				private bool _editingKeyName;
+				private string _editingKeyName;
 				private string _filter;
 
 				private GUIStyle _tableStyle;
@@ -65,11 +66,16 @@ namespace Framework
 				private float _contentHeight;
 				private float _contentStart;
 
+				private bool _keysDirty;
+
+
+				private double lastClickTime = 0d;
+				private int _lastClickKeyIndex;
+
 				private string[] _keys;
 
 				private enum eKeySortOrder
 				{
-					None,
 					Asc,
 					Desc
 				}
@@ -92,7 +98,7 @@ namespace Framework
 					InitGUIStyles();
 
 					_needsRepaint = false;
-
+					_keysDirty = false;
 
 					EditorGUILayout.BeginVertical();
 					{
@@ -160,11 +166,18 @@ namespace Framework
 					}
 
 					_controlID = GUIUtility.GetControlID(FocusType.Passive);
+					UpdateKeys();
+				}
+
+				private void UpdateKeys()
+				{
+					_keys = GetKeys();
+					_keysDirty = true;
 				}
 
 				private void InitGUIStyles()
 				{
-					//if (_tableStyle == null || string.IsNullOrEmpty(_tableStyle.name))
+					if (_tableStyle == null || string.IsNullOrEmpty(_tableStyle.name))
 					{
 						_tableStyle = new GUIStyle(EditorStyles.toolbarTextField)
 						{
@@ -175,7 +188,7 @@ namespace Framework
 						};
 					}
 
-					//if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
+					if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
 					{
 						_keyStyle = new GUIStyle(EditorStyles.label)
 						{
@@ -186,7 +199,7 @@ namespace Framework
 						};
 					}
 
-					//if (_keyEditStyle == null || string.IsNullOrEmpty(_keyEditStyle.name))
+					if (_keyEditStyle == null || string.IsNullOrEmpty(_keyEditStyle.name))
 					{
 						_keyEditStyle = new GUIStyle(EditorStyles.textArea)
 						{
@@ -195,11 +208,9 @@ namespace Framework
 							margin = new RectOffset(0, 0, 0, 4),
 							fixedHeight = EditorStyles.label.lineHeight + 8,
 						};
-						//_keyEditStyle.padding.left = 8;
-						//_keyEditStyle.padding.top = 3;
 					}
 
-					//if (_keyButtonsStyle == null || string.IsNullOrEmpty(_keyButtonsStyle.name))
+					if (_keyButtonsStyle == null || string.IsNullOrEmpty(_keyButtonsStyle.name))
 					{
 						_keyButtonsStyle = new GUIStyle()
 						{
@@ -247,7 +258,7 @@ namespace Framework
 
 				private void RenderTitleBar()
 				{
-					EditorGUILayout.BeginVertical(GUILayout.Height(EditorGUIUtility.singleLineHeight * 2));
+					EditorGUILayout.BeginVertical();
 					{
 						//Load save
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
@@ -260,6 +271,7 @@ namespace Framework
 							if (GUILayout.Button("Reload", EditorStyles.toolbarButton))
 							{
 								Localisation.ReloadStrings();
+								UpdateKeys();
 							}
 
 							EditorGUILayout.Separator();
@@ -310,16 +322,18 @@ namespace Framework
 							GUILayout.Button("Filter", EditorStyles.toolbarButton);
 
 							EditorGUI.BeginChangeCheck();
-							_filter = EditorGUILayout.TextField(_filter);
+							_filter = EditorGUILayout.TextField(_filter, EditorStyles.toolbarSearchField);
 							if (EditorGUI.EndChangeCheck())
 							{
 								_needsRepaint = true;
+								UpdateKeys();
 							}
 
 							if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
 							{
 								_filter = "";
-								SelectKey(_editorPrefs._selectedKey);
+								UpdateKeys();
+								SelectKey(_editorPrefs._selectedKeys);
 							}
 
 							if (GUILayout.Button("Choose Localisation Folder", EditorStyles.toolbarButton))
@@ -337,48 +351,39 @@ namespace Framework
 						EditorGUILayout.EndHorizontal();
 
 						//Headers
-						EditorGUILayout.BeginHorizontal();
+						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
+							float keyWidth = _editorPrefs._keyWidth - (kResizerWidth * 0.5f);
+							float firstLanguageWidth = _editorPrefs._firstLanguageWidth - kResizerWidth;
+							float secondLangWidth = position.width - _editorPrefs._keyWidth - _editorPrefs._firstLanguageWidth;
+							
+							keyWidth -= _scrollPosition.x;
+
 							//Key
-							EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Width(_editorPrefs._keyWidth - 3));
+							if (GUILayout.Button("Key", EditorStyles.toolbarButton, GUILayout.Width(Mathf.Max(keyWidth, 0f))))
 							{
-								if (GUILayout.Button("Key", EditorStyles.toolbarButton, GUILayout.ExpandWidth(true)))
-								{
-									_sortOrder = _sortOrder == eKeySortOrder.Desc ? eKeySortOrder.Asc : eKeySortOrder.Desc;
-								}
+								_sortOrder = _sortOrder == eKeySortOrder.Desc ? eKeySortOrder.Asc : eKeySortOrder.Desc;
 							}
-							EditorGUILayout.EndHorizontal();
 
 							//Keys Resizer
 							RenderResizer(ref _keysResizerRect);
 
-							//Text
-							EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Width(_editorPrefs._firstLanguageWidth - 3));
-							{
-								//First Language
-								GUILayout.Button(Localisation.GetCurrentLanguage().ToString(), EditorStyles.toolbarButton, GUILayout.ExpandWidth(true));
-							}
-							EditorGUILayout.EndHorizontal();
+							//First Language
+							GUILayout.Button(Localisation.GetCurrentLanguage().ToString(), EditorStyles.toolbarButton, GUILayout.Width(firstLanguageWidth));
 
 							//Language Resizer
 							RenderResizer(ref _languageResizerRect);
 
 							//Second Language
-							float secondLangWidth = position.width - _editorPrefs._keyWidth - _editorPrefs._firstLanguageWidth;
-
-							EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Width(secondLangWidth));
+							EditorGUI.BeginChangeCheck();
+							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_editorPrefs._secondLanguage, EditorStyles.toolbarPopup, GUILayout.Width(secondLangWidth));
+							if (EditorGUI.EndChangeCheck())
 							{
-								EditorGUI.BeginChangeCheck();
-								SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_editorPrefs._secondLanguage, EditorStyles.toolbarButton);
-								if (EditorGUI.EndChangeCheck())
-								{
-									if (_editorPrefs._secondLanguage != Localisation.GetCurrentLanguage())
-										Localisation.UnloadStrings(_editorPrefs._secondLanguage);
+								if (_editorPrefs._secondLanguage != Localisation.GetCurrentLanguage())
+									Localisation.UnloadStrings(_editorPrefs._secondLanguage);
 
-									_editorPrefs._secondLanguage = language;
-								}
+								_editorPrefs._secondLanguage = language;
 							}
-							EditorGUILayout.EndHorizontal();
 						}
 						EditorGUILayout.EndHorizontal();
 					}
@@ -387,11 +392,20 @@ namespace Framework
 
 				private void RenderResizer(ref Rect rect)
 				{
-					GUILayout.Box(string.Empty, EditorStyles.toolbar, GUILayout.Width(4.0f), GUILayout.ExpandHeight(true));
+					GUILayout.Box(string.Empty, EditorStyles.toolbar, GUILayout.Width(kResizerWidth), GUILayout.ExpandHeight(true));
 					rect = GUILayoutUtility.GetLastRect();
-					rect.x -= 8;
-					rect.width += 16;
 					EditorGUIUtility.AddCursorRect(rect, MouseCursor.SplitResizeLeftRight);
+				}
+
+				private bool IsSelected(string key)
+				{
+					for (int i=0; i< _editorPrefs._selectedKeys.Length; i++)
+					{
+						if (_editorPrefs._selectedKeys[i] == key)
+							return true;
+					}
+
+					return false;
 				}
 
 				private void RenderTable()
@@ -399,13 +413,12 @@ namespace Framework
 					_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
 					{
 						float defaultItemHeight = Mathf.Max(_textStyle.CalcSize(new GUIContent("W")).y, _keyStyle.lineHeight);
-						float secondLangWidth = position.width - _editorPrefs._keyWidth - _editorPrefs._firstLanguageWidth;
 						SystemLanguage currentLanguage = Localisation.GetCurrentLanguage();
+						float secondLangWidth = position.width - _editorPrefs._keyWidth - _editorPrefs._firstLanguageWidth;
 
 						//On layout, check what part of table is currently being viewed
-						if (Event.current.type == EventType.Layout)
+						if (Event.current.type == EventType.Layout || _keysDirty)
 						{
-							_keys = GetKeys();
 							GetViewableRange(_scrollPosition.y, GetTableAreaHeight(), defaultItemHeight, out _viewStartIndex, out _viewEndIndex, out _contentStart, out _contentHeight);
 						}
 						
@@ -417,7 +430,7 @@ namespace Framework
 							//Then render viewable range
 							for (int i = _viewStartIndex; i < _viewEndIndex; i++)
 							{
-								bool selected = _keys[i] == _editorPrefs._selectedKey;
+								bool selected = IsSelected(_keys[i]);
 									
 								Color origBackgroundColor = GUI.backgroundColor;
 								GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
@@ -427,9 +440,6 @@ namespace Framework
 								{
 									if (selected)
 									{
-										//Work out height of key + buttons
-										float keyHeight = _keyStyle.lineHeight + EditorStyles.miniButton.lineHeight;
-										
 										//Work out highest text size
 										string textA = Localisation.GetRawString(_keys[i], Localisation.GetCurrentLanguage());
 										float textAHeight = _editTextStyle.CalcHeight(new GUIContent(textA), _editorPrefs._firstLanguageWidth);
@@ -439,7 +449,7 @@ namespace Framework
 
 										float textHeight = Mathf.Max(textAHeight, textBHeight);
 
-										itemHeight = Mathf.Max(keyHeight, textHeight);
+										itemHeight = Mathf.Max(defaultItemHeight, textHeight);
 									}
 									else
 									{
@@ -455,61 +465,21 @@ namespace Framework
 									//Render Key
 									EditorGUILayout.BeginVertical(GUILayout.Width(_editorPrefs._keyWidth));
 									{
-										if (selected)
+										if (_editingKeyName == _keys[i])
 										{
-											if (_editingKeyName)
+											EditorGUI.BeginChangeCheck();
+											string key = EditorGUILayout.DelayedTextField(_keys[i], _keyEditStyle, GUILayout.Width(_editorPrefs._keyWidth));
+											if (EditorGUI.EndChangeCheck())
 											{
-												EditorGUI.BeginChangeCheck();
-												string key = EditorGUILayout.DelayedTextField(_keys[i], _keyEditStyle, GUILayout.Width(_editorPrefs._keyWidth));
-												if (EditorGUI.EndChangeCheck())
-												{
-													_editingKeyName = false;
-													Localisation.ChangeKey(_keys[i], key);
-												}
+												_editingKeyName = null;
+												Localisation.ChangeKey(_keys[i], key);
 											}
-											else
-											{
-												if (GUILayout.Button(_keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth)))
-												{
-													OnClickItem(_keys[i], SystemLanguage.Unknown);
-												}
-											}
-
-											GUILayout.FlexibleSpace();
-
-											EditorGUILayout.BeginHorizontal(_keyButtonsStyle);
-											{
-												if (GUILayout.Button("Edit", EditorStyles.miniButton))
-												{
-													_editingKeyName = false;
-													OpenTextEditor(_keys[i], currentLanguage);
-												}
-
-												if (GUILayout.Button("Edit Key", EditorStyles.miniButton))
-												{
-													_editingKeyName = true;
-												}
-
-												if (GUILayout.Button("Delete", EditorStyles.miniButton))
-												{
-													DeleteSelected();
-												}
-
-												if (GUILayout.Button("Duplicate", EditorStyles.miniButton))
-												{
-													DuplicateSelected();
-												}
-
-												GUILayout.FlexibleSpace();
-											}
-											EditorGUILayout.EndHorizontal();
 										}
-										//Not Selected
 										else
 										{
 											if (GUILayout.Button(_keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth)))
 											{
-												OnClickItem(_keys[i], SystemLanguage.Unknown);
+												OnClickItem(i, SystemLanguage.Unknown);
 											}
 										}
 									}
@@ -526,7 +496,7 @@ namespace Framework
 
 											if (GUILayout.Button(selected ? text : StringUtils.GetFirstLine(text), selected ? _editTextStyle : _textStyle, GUILayout.Width(_editorPrefs._firstLanguageWidth)))
 											{
-												OnClickItem(_keys[i], currentLanguage);
+												OnClickItem(i, currentLanguage);
 											}
 										}
 										EditorGUILayout.EndVertical();
@@ -538,7 +508,7 @@ namespace Framework
 
 											if (GUILayout.Button(selected ? text : StringUtils.GetFirstLine(text), selected ? _editTextStyle : _textStyle, GUILayout.Width(secondLangWidth)))
 											{
-												OnClickItem(_keys[i], _editorPrefs._secondLanguage);
+												OnClickItem(i, _editorPrefs._secondLanguage);
 											}
 										}
 										EditorGUILayout.EndVertical();
@@ -554,62 +524,121 @@ namespace Framework
 					EditorGUILayout.EndScrollView();
 				}
 
-				private double lastClickTime = 0d;
-				private string lastClickKey;
-
-				private void OnClickItem(string key, SystemLanguage language)
+				private void OnClickItem(int index, SystemLanguage language)
 				{
-					//Select this key
-					_editorPrefs._selectedKey = key;
-					_editingKeyName = false;
+					//Add key to selection
+					if (Event.current.control)
+					{
+						ArrayUtility.Add(ref _editorPrefs._selectedKeys, _keys[index]);
+					}
+					//Add keys to selection
+					else if(Event.current.shift)
+					{
+						//Select from this key to next selected key _keys
+
+						int nearestSelectedKeyUp = -1;
+						for (int i = index; i<_keys.Length; i++)
+						{
+							if (IsSelected(_keys[i]))
+							{
+								nearestSelectedKeyUp = i;
+								break;
+							}
+						}
+
+						int nearestSelectedKeyDown = -1;
+						for (int i = index-1; i >= 0; i--)
+						{
+							if (IsSelected(_keys[i]))
+							{
+								nearestSelectedKeyDown = i;
+								break;
+							}
+						}
+
+						//No other keys selected
+						if (nearestSelectedKeyUp == -1 && nearestSelectedKeyDown == -1)
+						{
+							_editorPrefs._selectedKeys = new string[] { _keys[index] };
+						}
+						else
+						{
+							int toUp = nearestSelectedKeyUp != -1 ? nearestSelectedKeyUp - index : int.MaxValue;
+							int toDown = nearestSelectedKeyDown != -1 ? index - nearestSelectedKeyDown : int.MaxValue;
+
+							if (toUp <= toDown)
+							{
+								//Add index to up to selection
+								for (int i = index; i< nearestSelectedKeyUp; i++)
+								{
+									ArrayUtility.Add(ref _editorPrefs._selectedKeys, _keys[i]);
+								}
+							}
+							else
+							{
+								//Add index to down to selection
+								for (int i = index; i >= nearestSelectedKeyDown; i--)
+								{
+									ArrayUtility.Add(ref _editorPrefs._selectedKeys, _keys[i]);
+								}
+							}
+						}
+
+						//Search up from this key
+
+
+						ArrayUtility.Add(ref _editorPrefs._selectedKeys, _keys[index]);
+					}
+					//Select just this key
+					else
+					{
+						_editorPrefs._selectedKeys = new string[] { _keys[index] };
+					}
+					
+					_editingKeyName = null;
+					_needsRepaint = true;
 
 					//If double click open up edit text window
 					double time = EditorApplication.timeSinceStartup;
 
-					if (language != SystemLanguage.Unknown && time - lastClickTime < EditorUtils.kDoubleClickTime && key == lastClickKey)
+					if (time - lastClickTime < EditorUtils.kDoubleClickTime && index == _lastClickKeyIndex)
 					{
-						OpenTextEditor(key, language);
+						if (language != SystemLanguage.Unknown)
+						{
+							OpenTextEditor(_keys[index], language);
+						}
+						else
+						{
+							_editingKeyName = _keys[index];
+						}
 					}
 
 					lastClickTime = time;
-					lastClickKey = key;
+					_lastClickKeyIndex = index;
 				}
 
 				private void OpenTextEditor(string key, SystemLanguage language)
 				{
 					Rect position = new Rect();
 					position.width = this.position.width * 0.75f;
-					position.height = this.position.height * 0.5f;
+					position.height = this.position.height * 0.33f;
 					position.x = this.position.x + this.position.width * 0.125f;
-					position.y = this.position.y + this.position.height * 0.25f;
+					position.y = this.position.y + this.position.height * 0.33f;
 
 					LocalisationEditorTextWindow.ShowEditKey(key, language, _editTextStyle, position);
 				}
 
 				private void RenderBottomBar()
 				{
-					EditorGUILayout.Separator();
-
-					EditorGUILayout.BeginHorizontal(GUILayout.Height(EditorGUIUtility.singleLineHeight));
+					EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 					{
-						if (GUILayout.Button("Add New", EditorStyles.toolbarButton, GUILayout.Width(_editorPrefs._keyWidth)))
-						{
-							if (!Localisation.Exists(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
-							{
-								Localisation.Set(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
-								_keys = GetKeys();
-								SelectKey(_addNewKey);
-								_addNewKey = "";
-							}
-						}
+						GUILayout.Button("Add New Key:", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
 
 						string[] folders = Localisation.GetStringFolders();
-						int currentFolderIndex = 0;
-						string keyWithoutFolder;
-						Localisation.GetFolderIndex(_addNewKey, out currentFolderIndex, out keyWithoutFolder);
+						Localisation.GetFolderIndex(_addNewKey, out int currentFolderIndex, out string keyWithoutFolder);
 
 						EditorGUI.BeginChangeCheck();
-						int newFolderIndex = EditorGUILayout.Popup(currentFolderIndex, folders);
+						int newFolderIndex = EditorGUILayout.Popup(currentFolderIndex, folders, EditorStyles.toolbarDropDown);
 						string currentFolder = newFolderIndex == 0 ? "" : folders[newFolderIndex];
 						if (EditorGUI.EndChangeCheck())
 						{
@@ -621,19 +650,26 @@ namespace Framework
 
 						if (newFolderIndex != 0)
 						{
-							keyWithoutFolder = EditorGUILayout.TextField(keyWithoutFolder);
+							keyWithoutFolder = EditorGUILayout.TextField(keyWithoutFolder, GUILayout.ExpandWidth(true));
 							_addNewKey = currentFolder + "/" + keyWithoutFolder;
 						}
 						else
 						{
-							_addNewKey = EditorGUILayout.TextField(_addNewKey);
+							_addNewKey = EditorGUILayout.TextField(_addNewKey, GUILayout.ExpandWidth(true));
 						}
 
-						GUILayout.FlexibleSpace();
+						if (GUILayout.Button(" Ok ", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
+						{
+							if (!Localisation.Exists(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
+							{
+								Localisation.Set(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
+								UpdateKeys();
+								SelectKey(_addNewKey);
+								_addNewKey = "";
+							}
+						}
 					}
 					EditorGUILayout.EndHorizontal();
-
-					EditorGUILayout.Separator();
 				}
 
 				private void HandleInput()
@@ -713,6 +749,7 @@ namespace Framework
 							break;
 
 						case EventType.ValidateCommand:
+						case EventType.ExecuteCommand:
 							{
 								if (inputEvent.commandName == "SoftDelete")
 								{
@@ -726,35 +763,50 @@ namespace Framework
 								{
 									_needsRepaint = true;
 								}
+								else if (inputEvent.commandName == "SelectAll")
+								{
+									SelectAll();
+								}
 							}
 							break;
 					}
 				}
 
+				private void SelectAll()
+				{
+					_editorPrefs._selectedKeys = _keys;
+					_needsRepaint = true;
+				}
+
 				private void DeleteSelected()
 				{
-					if (!string.IsNullOrEmpty(_editorPrefs._selectedKey))
+					for (int i=0; i< _editorPrefs._selectedKeys.Length; i++)
 					{
-						Localisation.Remove(_editorPrefs._selectedKey);
-						_editorPrefs._selectedKey = null;
-						SaveEditorPrefs();
-						_needsRepaint = true;
+						Localisation.Remove(_editorPrefs._selectedKeys[i]);
 					}
+
+					_editorPrefs._selectedKeys = new string[0];
+					SaveEditorPrefs();
+					_needsRepaint = true;
 				}
 
 				private void DuplicateSelected()
 				{
-					if (!string.IsNullOrEmpty(_editorPrefs._selectedKey))
-					{ 
-						string newKey = _editorPrefs._selectedKey + " (Copy)";
+					List<string> newKeys = new List<string>();
+
+					for (int i = 0; i < _editorPrefs._selectedKeys.Length; i++)
+					{
+						string newKey = _editorPrefs._selectedKeys[i] + " (Copy)";
 
 						//To do! Set text for all loaded languages?
-						Localisation.Set(newKey, Localisation.GetCurrentLanguage(), Localisation.GetRawString(_editorPrefs._selectedKey, Localisation.GetCurrentLanguage()));
-						_keys = GetKeys();
-						SelectKey(newKey);
+						Localisation.Set(newKey, Localisation.GetCurrentLanguage(), Localisation.GetRawString(_editorPrefs._selectedKeys[i], Localisation.GetCurrentLanguage()));
 
-						_needsRepaint = true;
+						newKeys.Add(newKey);
 					}
+
+					UpdateKeys();
+					SelectKey(newKeys.ToArray());
+					_needsRepaint = true;
 				}
 				
 				private void GetViewableRange(float viewStart, float viewHeight, float itemHeight, out int startIndex, out int endIndex, out float contentStart, out float contentHeight)
@@ -781,15 +833,13 @@ namespace Framework
 					}
 				}
 
-				private void SelectKey(string key)
+				private void SelectKey(params string[] keys)
 				{
 					Focus();
 
 					InitGUIStyles();
 
-					_keys = GetKeys();
-
-					_editorPrefs._selectedKey = key;
+					_editorPrefs._selectedKeys = keys;
 					SaveEditorPrefs();
 
 					_needsRepaint = true;
@@ -797,16 +847,19 @@ namespace Framework
 					float toSelected = 0.0f;
 					bool foundKey = false;
 
-					for (int i = 0; i < _keys.Length; i++)
+					if (_editorPrefs._selectedKeys != null && _editorPrefs._selectedKeys.Length > 0)
 					{
-						foundKey = _keys[i] == _editorPrefs._selectedKey;
+						for (int i = 0; i < _keys.Length; i++)
+						{
+							foundKey = _keys[i] == _editorPrefs._selectedKeys[0];
 
-						if (foundKey)
-							break;
-						
-						toSelected += _textStyle.lineHeight;
+							if (foundKey)
+								break;
+
+							toSelected += _textStyle.lineHeight;
+						}
 					}
-
+					
 					if (foundKey)
 					{
 						float scrollAreaHeight = GetTableAreaHeight();
@@ -827,7 +880,7 @@ namespace Framework
 				{
 					string[] allKeys = Localisation.GetStringKeys();
 					List<string> keys = new List<string>();
-
+						
 					for (int i = 1; i < allKeys.Length; i++)
 					{
 						if (MatchsFilter(allKeys[i]) || MatchsFilter(Localisation.GetRawString(allKeys[i], Localisation.GetCurrentLanguage())))
@@ -838,12 +891,13 @@ namespace Framework
 
 					switch (_sortOrder)
 					{
-						case eKeySortOrder.Asc:
-							keys.Sort(StringComparer.InvariantCulture);
-							break;
 						case eKeySortOrder.Desc:
 							keys.Sort(StringComparer.InvariantCulture);
 							keys.Reverse();
+							break;
+						default:
+						case eKeySortOrder.Asc:
+							keys.Sort(StringComparer.InvariantCulture);
 							break;
 					}
 
@@ -854,6 +908,11 @@ namespace Framework
 				{
 					if (!string.IsNullOrEmpty(_filter))
 					{
+						//TO DO!
+						//match all inside quotes
+						//match all or things linked with +
+						//match either of things matched by spaces
+
 						string textLow = text.ToLower();
 						string[] words = _filter.Split(' ');
 

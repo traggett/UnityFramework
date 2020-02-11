@@ -17,7 +17,7 @@ namespace Framework
 				public SystemLanguage _secondLanguage = SystemLanguage.Russian;
 				public int _fontSize = LocalisationEditorWindow.kDefaultFontSize;
 				public EditorAssetRef<Font> _font;
-				public string _selectedKey;
+				public string[] _selectedKeys = new string[0];
 			}
 		}
 	}

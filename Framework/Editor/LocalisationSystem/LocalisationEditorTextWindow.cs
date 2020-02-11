@@ -1,15 +1,8 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
-using System;
-using System.Collections.Generic;
-
 namespace Framework
 {
-	using Serialization;
-	using Utils;
-	using Utils.Editor;
-
 	namespace LocalisationSystem
 	{
 		namespace Editor
@@ -61,18 +54,34 @@ namespace Framework
 						//Tool bar
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Height(EditorGUIUtility.singleLineHeight));
 						{
-							if (GUILayout.Button(_key, EditorStyles.objectField))
+							if (GUILayout.Button(_key, EditorStyles.toolbarTextField))
 							{
 
 							}
 
 							EditorGUI.BeginChangeCheck();
-							_richText = GUILayout.Toggle(_richText, "Rich Text", EditorStyles.toolbarButton);
+							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_language, EditorStyles.toolbarPopup);
+							if (EditorGUI.EndChangeCheck())
+							{
+								if (_hasChanges)
+								{
+									if (EditorUtility.DisplayDialog("Localisation String Has Been Modified", "Do you want to save the changes you made to the string?\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
+									{
+										Localisation.Set(_key, _language, _text);
+									}
+								}
+
+								_language = language;
+								_text = Localisation.GetRawString(_key, _language);
+								_hasChanges = false;
+							}
+
+							EditorGUI.BeginChangeCheck();
+							_richText = GUILayout.Toggle(_richText, "Show Rich Text", EditorStyles.toolbarButton);
 							if (EditorGUI.EndChangeCheck())
 							{
 								_textStyle.richText = _richText;
 							}
-
 
 							GUILayout.FlexibleSpace();
 						}
