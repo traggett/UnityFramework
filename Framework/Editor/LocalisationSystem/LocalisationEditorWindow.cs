@@ -17,6 +17,8 @@ namespace Framework
 			public sealed class LocalisationEditorWindow : EditorWindow
 			{
 				public static readonly int kDefaultFontSize = 12;
+				public static readonly int kMinFontSize = 8;
+				public static readonly int kMaxFontSize = 30;
 				public static readonly float kDefaultKeysWidth = 380.0f;
 				public static readonly float kDefaultFirstLangagueWidth = 580.0f;
 
@@ -139,6 +141,18 @@ namespace Framework
 					_instance.SelectKey(key);
 				}
 
+				public LocalisationEditorPrefs GetEditorPrefs()
+				{
+					return _editorPrefs;
+				}
+
+				public void SaveEditorPrefs()
+				{
+					string prefsXml = Serializer.ToString(_editorPrefs);
+					ProjectEditorPrefs.SetString(kEditorPrefKey, prefsXml);
+				}
+
+
 				private void CreateEditor()
 				{
 					if (_instance == null || _instance._editorPrefs == null)
@@ -188,7 +202,7 @@ namespace Framework
 						};
 					}
 
-					//if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
+					if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
 					{
 						_keyStyle = new GUIStyle(EditorStyles.label)
 						{
@@ -200,7 +214,7 @@ namespace Framework
 						};
 					}
 
-					//if (_editKeyStyle == null || string.IsNullOrEmpty(_editKeyStyle.name))
+					if (_editKeyStyle == null || string.IsNullOrEmpty(_editKeyStyle.name))
 					{
 						_editKeyStyle = new GUIStyle(EditorStyles.textField)
 						{
@@ -216,7 +230,7 @@ namespace Framework
 						_textStyle = new GUIStyle(EditorStyles.toolbarTextField)
 						{
 							font = _keyStyle.font,
-							fontSize = _editorPrefs._fontSize,
+							fontSize = _editorPrefs._tableFontSize,
 							richText = true,
 							margin = new RectOffset(0, 0, 0, 0),
 							border = new RectOffset(0, 0, 0, 0),
@@ -243,12 +257,6 @@ namespace Framework
 					}
 				}
 
-				private void SaveEditorPrefs()
-				{
-					string prefsXml = Serializer.ToString(_editorPrefs);
-					ProjectEditorPrefs.SetString(kEditorPrefKey, prefsXml);
-				}
-
 				private void RenderTitleBar()
 				{
 					EditorGUILayout.BeginVertical();
@@ -271,18 +279,18 @@ namespace Framework
 
 							GUILayout.Button("Scale", EditorStyles.toolbarButton);
 
-							int fontSize = EditorGUILayout.IntSlider(_editorPrefs._fontSize, 8, 16);
+							int fontSize = EditorGUILayout.IntSlider(_editorPrefs._tableFontSize, kMinFontSize, kMaxFontSize);
 
 							if (GUILayout.Button("Reset Scale", EditorStyles.toolbarButton))
 							{
 								fontSize = kDefaultFontSize;
 							}
 
-							if (_editorPrefs._fontSize != fontSize)
+							if (_editorPrefs._tableFontSize != fontSize)
 							{
-								_editorPrefs._fontSize = fontSize;
-								_textStyle.fontSize = _editorPrefs._fontSize;
-								_editTextStyle.fontSize = _editorPrefs._fontSize;
+								_editorPrefs._tableFontSize = fontSize;
+								_textStyle.fontSize = _editorPrefs._tableFontSize;
+								_editTextStyle.fontSize = _editorPrefs._tableFontSize;
 								SaveEditorPrefs();
 							}
 
@@ -623,7 +631,7 @@ namespace Framework
 					position.x = this.position.x + this.position.width * 0.125f;
 					position.y = this.position.y + this.position.height * 0.33f;
 
-					LocalisationEditorTextWindow.ShowEditKey(key, language, _editTextStyle, position);
+					LocalisationEditorTextWindow.ShowEditKey(this, key, language, position);
 				}
 
 				private void RenderBottomBar()

@@ -15,7 +15,8 @@ namespace Framework
 				public float _keyWidth = LocalisationEditorWindow.kDefaultKeysWidth;
 				public float _firstLanguageWidth = LocalisationEditorWindow.kDefaultFirstLangagueWidth;
 				public SystemLanguage _secondLanguage = SystemLanguage.Russian;
-				public int _fontSize = LocalisationEditorWindow.kDefaultFontSize;
+				public int _tableFontSize = LocalisationEditorWindow.kDefaultFontSize;
+				public int _editorFontSize = LocalisationEditorWindow.kDefaultFontSize;
 				public EditorAssetRef<Font> _font;
 				public string[] _selectedKeys = new string[0];
 			}

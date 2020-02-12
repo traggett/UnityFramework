@@ -10,8 +10,9 @@ namespace Framework
 			public sealed class LocalisationEditorTextWindow : EditorWindow
 			{
 				private static readonly string kWindowWindowName = "Edit Localisation String";
-				
-				private GUIStyle _localiserTextStyle;
+
+				private LocalisationEditorWindow _parent;
+				private GUIStyle _keyStyle;
 				private GUIStyle _textStyle;
 				private string _key;
 				private SystemLanguage _language;
@@ -22,25 +23,33 @@ namespace Framework
 				[SerializeField]
 				private string _text;
 
-				public static void ShowEditKey(string key, SystemLanguage language, GUIStyle style, Rect position)
+				public static void ShowEditKey(LocalisationEditorWindow parent, string key, SystemLanguage language, Rect position)
 				{
 					LocalisationEditorTextWindow textEditor = (LocalisationEditorTextWindow)GetWindow(typeof(LocalisationEditorTextWindow), false, kWindowWindowName);
-					textEditor.Show(key, language, style, position);
+					textEditor.Show(parent, key, language, position);
 				}
 
-				public void Show(string key, SystemLanguage language, GUIStyle style, Rect position)
+				private void Show(LocalisationEditorWindow parent, string key, SystemLanguage language, Rect position)
 				{
 					ShowPopup();
 
 					this.position = position;
+
+					_parent = parent;
 					_key = key;
 					_language = language;
-					_localiserTextStyle = style;
 
-					_textStyle = new GUIStyle(EditorStyles.textArea);
-					_textStyle.font = _localiserTextStyle.font;
-					_textStyle.fontSize = _localiserTextStyle.fontSize;
-					_textStyle.richText = _richText;
+					_keyStyle = new GUIStyle(EditorStyles.toolbarTextField)
+					{
+						fontStyle = FontStyle.Bold
+					};
+
+					_textStyle = new GUIStyle(EditorStyles.textArea)
+					{
+						font = _parent.GetEditorPrefs()._font,
+						fontSize = _parent.GetEditorPrefs()._editorFontSize,
+						richText = _richText
+					};
 
 					_text = Localisation.GetRawString(_key, _language);
 					_hasChanges = false;
@@ -52,9 +61,11 @@ namespace Framework
 					EditorGUILayout.BeginVertical();
 					{
 						//Tool bar
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							GUILayout.Button(" " + _key + " ", EditorStyles.toolbarTextField);
+							GUILayout.Button(" " + _key + " ", _keyStyle);
+
+							EditorGUILayout.Separator();
 
 							EditorGUI.BeginChangeCheck();
 							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_language, EditorStyles.toolbarPopup);
@@ -84,6 +95,29 @@ namespace Framework
 						}
 						EditorGUILayout.EndHorizontal();
 
+						//Text scaling
+						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+						{
+							GUILayout.Button("Scale", EditorStyles.toolbarButton);
+
+							int fontSize = EditorGUILayout.IntSlider(_parent.GetEditorPrefs()._editorFontSize, LocalisationEditorWindow.kMinFontSize, LocalisationEditorWindow.kMaxFontSize);
+
+							if (GUILayout.Button("Reset Scale", EditorStyles.toolbarButton))
+							{
+								fontSize = LocalisationEditorWindow.kDefaultFontSize;
+							}
+
+							if (_parent.GetEditorPrefs()._editorFontSize != fontSize)
+							{
+								_parent.GetEditorPrefs()._editorFontSize = fontSize;
+								_textStyle.fontSize = fontSize;
+								_parent.SaveEditorPrefs();
+							}
+
+							GUILayout.FlexibleSpace();
+						}
+						EditorGUILayout.EndHorizontal();
+
 						//Text
 						_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
 						{
@@ -101,7 +135,7 @@ namespace Framework
 						EditorGUILayout.EndScrollView();
 
 						//Bottom bar
-						EditorGUILayout.BeginHorizontal(GUILayout.Height(EditorGUIUtility.singleLineHeight * 1.5f));
+						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
 							GUILayout.FlexibleSpace();
 
