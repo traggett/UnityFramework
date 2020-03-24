@@ -81,7 +81,7 @@ namespace Framework
 			}
 
 
-			public static T[] FindAllComponentInferfacesInScene<T>(Scene scene) where T : class
+			public static T[] FindAllComponentInferfacesInScene<T>(Scene scene, bool includeInactive = false) where T : class
 			{
 				List<T> components = new List<T>();
 
@@ -89,27 +89,28 @@ namespace Framework
 				{
 					foreach (GameObject rootObject in scene.GetRootGameObjects())
 					{
-						AddChildren(rootObject, ref components);
+						if (includeInactive || rootObject.activeSelf)
+							AddComponentInferfacesInGameObject(rootObject, ref components, includeInactive);
 					}
 				}
 
 				return components.ToArray();			
 			}
 
-			private static void AddChildren<T>(GameObject gameObject, ref List<T> components) where T : class
+			private static void AddComponentInferfacesInGameObject<T>(GameObject gameObject, ref List<T> components, bool includeInactive = true) where T : class
 			{
 				Component[] cmponents = gameObject.GetComponents<Component>();
 
 				for (int i = 0; i < cmponents.Length; i++)
 				{
-					T typedComp = cmponents[i] as T;
-					if (typedComp != null)
+					if (cmponents[i] is T typedComp)
 						components.Add(typedComp);
 				}
 
 				foreach (Transform child in gameObject.transform)
 				{
-					AddChildren(child.gameObject, ref components);
+					if (includeInactive || child.gameObject.activeSelf)
+						AddComponentInferfacesInGameObject(child.gameObject, ref components);
 				}
 			}
 
