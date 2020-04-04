@@ -30,6 +30,11 @@ namespace Framework
 				if (_initialState.IsValid())
 					GoToState(StateMachine.Run(this, _initialState));
 			}
+
+			private void OnDisable()
+			{
+				_state = eState.NotRunning;
+			}
 			#endregion
 
 			#region Public Interface
