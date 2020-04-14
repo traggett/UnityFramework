@@ -1,5 +1,3 @@
-using Framework.Maths;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Framework
@@ -8,28 +6,39 @@ namespace Framework
 	{
 		public static class RectTransformUtils
 		{
-			public static void SetLeft(RectTransform rt, float left)
+			public static void SetLeft(RectTransform transform, float left)
 			{
-				rt.offsetMin = new Vector2(left, rt.offsetMin.y);
+				transform.offsetMin = new Vector2(left, transform.offsetMin.y);
 			}
 
-			public static void SetRight(RectTransform rt, float right)
+			public static void SetRight(RectTransform transform, float right)
 			{
-				rt.offsetMax = new Vector2(-right, rt.offsetMax.y);
+				transform.offsetMax = new Vector2(-right, transform.offsetMax.y);
 			}
 
-			public static void SetTop(RectTransform rt, float top)
+			public static void SetTop(RectTransform transform, float top)
 			{
-				rt.offsetMax = new Vector2(rt.offsetMax.x, -top);
-			}
-			public static float GetTop(RectTransform rt)
-			{
-				return -rt.offsetMax.y;
+				transform.offsetMax = new Vector2(transform.offsetMax.x, -top);
 			}
 
-			public static void SetBottom(RectTransform rt, float bottom)
+			public static float GetTop(RectTransform transform)
 			{
-				rt.offsetMin = new Vector2(rt.offsetMin.x, bottom);
+				return -transform.offsetMax.y;
+			}
+
+			public static void SetBottom(RectTransform transform, float bottom)
+			{
+				transform.offsetMin = new Vector2(transform.offsetMin.x, bottom);
+			}
+
+			public static void SetWidth(RectTransform transform, float width)
+			{
+				transform.sizeDelta = new Vector2(width, transform.sizeDelta.y);
+			}
+
+			public static void SetHeight(RectTransform transform, float height)
+			{
+				transform.sizeDelta = new Vector2(transform.sizeDelta.x, height);
 			}
 		}
 	}
