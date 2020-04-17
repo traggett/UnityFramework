@@ -40,6 +40,16 @@ namespace Framework
 			#region Public Interface
 			public void GoToState(IEnumerator state)
 			{
+				_current = state;
+
+				if (_state == eState.NotRunning)
+				{
+					StartCoroutine(Run());
+				}
+			}
+
+			public void SetNextState(IEnumerator state)
+			{
 				if (_state == eState.NotRunning)
 				{
 					_current = state;
