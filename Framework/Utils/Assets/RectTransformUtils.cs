@@ -51,9 +51,19 @@ namespace Framework
 				transform.sizeDelta = new Vector2(width, transform.sizeDelta.y);
 			}
 
+			public static float GetWidth(RectTransform transform)
+			{
+				return transform.sizeDelta.x;
+			}
+
 			public static void SetHeight(RectTransform transform, float height)
 			{
 				transform.sizeDelta = new Vector2(transform.sizeDelta.x, height);
+			}
+
+			public static float GetHeight(RectTransform transform)
+			{
+				return transform.sizeDelta.y;
 			}
 
 			public static void SetX(RectTransform transform, float x)
