@@ -41,6 +41,7 @@ namespace Framework
 			public void GoToState(IEnumerator state)
 			{
 				_current = state;
+				_next = null;
 
 				if (_state == eState.NotRunning)
 				{
