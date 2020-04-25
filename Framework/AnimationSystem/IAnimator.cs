@@ -1,13 +1,14 @@
 namespace Framework
 {
 	using Maths;
+	using UnityEngine;
 
 	namespace AnimationSystem
 	{
 		public interface IAnimator
 		{
 			#region Public Interface
-			void Play(int channel, string animName, eWrapMode wrapMode = eWrapMode.Default, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, float weight = 1.0f, bool queued = false);
+			void Play(int channel, string animName, WrapMode wrapMode = WrapMode.Default, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, float weight = 1.0f, bool queued = false);
 
 			void Stop(int channel, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine);
 

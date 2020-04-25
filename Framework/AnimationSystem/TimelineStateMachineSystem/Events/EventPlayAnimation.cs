@@ -18,7 +18,7 @@ namespace Framework
 			#region Public Data
 			public int _channel = 0;
 			public AnimationRef _animation = new AnimationRef();
-			public eWrapMode _wrapMode = eWrapMode.Default;
+			public WrapMode _wrapMode = WrapMode.Default;
 			public float _blendTime = 0.0f;
 			public InterpolationType _easeType = InterpolationType.InOutSine;
 			public float _weight = 1.0f;
