@@ -75,7 +75,12 @@ namespace Framework
 				public ChannelGroup(int channel)
 				{
 					_channel = channel;
+					_primaryLayer = new ChannelLayer((channel * (kNumberOfBackgroundLayers + 1)) + kNumberOfBackgroundLayers);
 					_backgroundLayers = new ChannelLayer[kNumberOfBackgroundLayers];
+					for (int i = 0; i<kNumberOfBackgroundLayers; i++)
+					{
+						_backgroundLayers[i] = new ChannelLayer(_primaryLayer._layer - i - 1);
+					}
 				}
 			}
 			private readonly List<ChannelGroup> _channels = new List<ChannelGroup>();
@@ -119,7 +124,7 @@ namespace Framework
 				//If no group exists, add new one and return first track index
 				if (channelGroup == null)
 				{
-					channelGroup = AddNewChannelGroup(channel);
+					channelGroup = new ChannelGroup(channel);
 					_channels.Add(channelGroup);
 				}
 				//Otherwise check an animation is currently playing on this group
@@ -311,7 +316,6 @@ namespace Framework
 
 
 			#region Private functions
-
 			private void UpdateChannelBlends(ChannelGroup channelGroup)
 			{
 				//Check primary animation is still valid, if not set channel to stopped
@@ -425,19 +429,6 @@ namespace Framework
 				}
 			}
 
-			private ChannelGroup AddNewChannelGroup(int channel)
-			{
-				ChannelGroup channelGroup = new ChannelGroup(channel);
-				channelGroup._primaryLayer = new ChannelLayer((channel * (kNumberOfBackgroundLayers + 1)) + kNumberOfBackgroundLayers);
-
-				for (int i = 0; i < kNumberOfBackgroundLayers; i++)
-				{
-					channelGroup._backgroundLayers[i] = new ChannelLayer(channelGroup._primaryLayer._layer - i - 1);
-				}
-
-				return channelGroup;
-			}
-
 			private AnimationState StartAnimationInLayer(int layer, string animName, WrapMode wrapMode)
 			{
 				AnimationState animation = AnimationComponent[animName];
@@ -481,27 +472,21 @@ namespace Framework
 
 				for (int i=0; i < kNumberOfBackgroundLayers ; i++)
 				{
-					AnimationState animation;
-					float origWeight;
+					AnimationState animation = null;
+					float origWeight = 0f;
 
 					if (IsChannelLayerPlaying(channelGroup._backgroundLayers[i]))
 					{
 						if (i < kNumberOfBackgroundLayers - 1)
 						{
 							channelGroup._backgroundLayers[i]._animation.layer -= 1;
+							animation = channelGroup._backgroundLayers[i]._animation;
+							origWeight = channelGroup._backgroundLayers[i]._origWeight;
 						}
 						else
 						{
 							StopChannelLayer(channelGroup._backgroundLayers[i]);
 						}
-
-						animation = channelGroup._backgroundLayers[i]._animation;
-						origWeight = channelGroup._backgroundLayers[i]._origWeight;
-					}
-					else
-					{
-						animation = null;
-						origWeight = 0f;
 					}
 
 					//Set new animation
