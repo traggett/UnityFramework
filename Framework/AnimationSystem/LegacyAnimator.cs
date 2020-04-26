@@ -15,7 +15,7 @@ namespace Framework
 			private static readonly int kNumberOfBackgroundLayers = 2;
 
 			private Animation _animation;
-			public Animation AnimationComponent
+			private Animation AnimationComponent
 			{
 				get
 				{
@@ -30,11 +30,18 @@ namespace Framework
 			private struct ChannelLayer
 			{
 				//Layer in animation component
-				public int _layer;
+				public readonly int _layer;
 				//The current animation
 				public AnimationState _animation;
 				//Used for blending when stopping
-				public float _origWeight;			
+				public float _origWeight;		
+				
+				public ChannelLayer(int layer)
+				{
+					_layer = layer;
+					_animation = null;
+					_origWeight = 1f;
+				}
 			}
 
 			private class ChannelGroup
@@ -48,9 +55,9 @@ namespace Framework
 				}
 				public State _state = State.Stopped;
 
-				public int _channel;
+				public readonly int _channel;
 				public ChannelLayer _primaryLayer;
-				public ChannelLayer[] _backgroundLayers = new ChannelLayer[kNumberOfBackgroundLayers];
+				public ChannelLayer[] _backgroundLayers;
 
 				//Primary track blending data
 				public float _lerpT;
@@ -64,8 +71,14 @@ namespace Framework
 				public float _queuedAnimationBlendTime;
 				public WrapMode _queuedAnimationWrapMode;
 				public InterpolationType _queuedAnimationEase;
+
+				public ChannelGroup(int channel)
+				{
+					_channel = channel;
+					_backgroundLayers = new ChannelLayer[kNumberOfBackgroundLayers];
+				}
 			}
-			private List<ChannelGroup> _channels = new List<ChannelGroup>();
+			private readonly List<ChannelGroup> _channels = new List<ChannelGroup>();
 			#endregion
 
 			#region MonoBehaviour Calls
@@ -123,16 +136,18 @@ namespace Framework
 				if (blendTime > 0.0f)
 				{
 					channelGroup._state = ChannelGroup.State.BlendingIn;
-					channelGroup._primaryLayer._animation.weight = 0.0f;
 					channelGroup._lerpT = 0.0f;
 					channelGroup._targetWeight = weight;
 					channelGroup._lerpSpeed = 1.0f / blendTime;
 					channelGroup._lerpEase = easeType;
+					if (channelGroup._primaryLayer._animation != null)
+						channelGroup._primaryLayer._animation.weight = 0.0f;
 				}
 				else
 				{
 					channelGroup._state = ChannelGroup.State.Playing;
-					channelGroup._primaryLayer._animation.weight = weight;
+					if (channelGroup._primaryLayer._animation != null)
+						channelGroup._primaryLayer._animation.weight = weight;
 				}
 			}
 
@@ -179,7 +194,7 @@ namespace Framework
 
 				if (channelGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer))
+					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
 					{
 						channelGroup._primaryLayer._animation.time = time;
 					}
@@ -192,7 +207,7 @@ namespace Framework
 
 				if (channelGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer))
+					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
 					{
 						channelGroup._primaryLayer._animation.speed = speed;
 					}
@@ -205,7 +220,7 @@ namespace Framework
 
 				if (channelGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer))
+					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
 					{
 						channelGroup._primaryLayer._animation.weight = weight;
 					}
@@ -218,7 +233,7 @@ namespace Framework
 
 				if (channelGroup != null)
 				{
-					return IsChannelLayerPlaying(channelGroup._primaryLayer);
+					return IsChannelLayerPlaying(channelGroup._primaryLayer, animName);
 				}
 
 				return false;
@@ -226,15 +241,12 @@ namespace Framework
 
 			public bool DoesAnimationExist(string animName)
 			{
-				
-				return false;
+				return AnimationComponent[animName] != null;
 			}
 
 			public float GetAnimationLength(string animName)
 			{
-				
-
-				return 0.0f;
+				return AnimationComponent[animName].length;
 			}
 
 			public float GetAnimationTime(int channel, string animName)
@@ -243,7 +255,7 @@ namespace Framework
 
 				if (channelGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer))
+					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
 					{
 						return channelGroup._primaryLayer._animation.time;
 					}
@@ -258,7 +270,7 @@ namespace Framework
 
 				if (channelGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer))
+					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
 					{
 						return channelGroup._primaryLayer._animation.speed;
 					}
@@ -273,7 +285,7 @@ namespace Framework
 
 				if (channelGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer))
+					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
 					{
 						return channelGroup._primaryLayer._animation.weight;
 					}
@@ -285,7 +297,14 @@ namespace Framework
 #if UNITY_EDITOR
 			public string[] GetAnimationNames()
 			{
-				return null;
+				string[] animationNames = new string[AnimationComponent.GetClipCount()];
+				int index = 0;
+				foreach (AnimationState animationState in AnimationComponent)
+				{
+					animationNames[index++] = animationState.clip.name;
+				}
+
+				return animationNames;
 			}
 #endif
 			#endregion
@@ -408,20 +427,12 @@ namespace Framework
 
 			private ChannelGroup AddNewChannelGroup(int channel)
 			{
-				ChannelGroup channelGroup = new ChannelGroup();
-				channelGroup._channel = channel;
-
-				channelGroup._primaryLayer = new ChannelLayer
-				{
-					_layer = (channel * (kNumberOfBackgroundLayers + 1)) + kNumberOfBackgroundLayers
-				};
+				ChannelGroup channelGroup = new ChannelGroup(channel);
+				channelGroup._primaryLayer = new ChannelLayer((channel * (kNumberOfBackgroundLayers + 1)) + kNumberOfBackgroundLayers);
 
 				for (int i = 0; i < kNumberOfBackgroundLayers; i++)
 				{
-					channelGroup._backgroundLayers[i] = new ChannelLayer
-					{
-						_layer = channelGroup._primaryLayer._layer - i - 1
-					};
+					channelGroup._backgroundLayers[i] = new ChannelLayer(channelGroup._primaryLayer._layer - i - 1);
 				}
 
 				return channelGroup;
@@ -430,18 +441,23 @@ namespace Framework
 			private AnimationState StartAnimationInLayer(int layer, string animName, WrapMode wrapMode)
 			{
 				AnimationState animation = AnimationComponent[animName];
-				animation.layer = layer;
 
-				if (wrapMode == WrapMode.Default)
+				if (animation != null)
 				{
-					if (AnimationComponent.wrapMode == WrapMode.Default)
-						wrapMode = animation.clip.wrapMode;
-					else
-						wrapMode = AnimationComponent.wrapMode;
-				}
+					animation.layer = layer;
 
-				animation.wrapMode = wrapMode;
-				animation.enabled = true;
+					if (wrapMode == WrapMode.Default)
+					{
+						if (AnimationComponent.wrapMode == WrapMode.Default)
+							wrapMode = animation.clip.wrapMode;
+						else
+							wrapMode = AnimationComponent.wrapMode;
+					}
+
+					animation.wrapMode = wrapMode;
+					animation.enabled = true;
+				}
+				
 				return animation;
 			}
 
@@ -502,6 +518,11 @@ namespace Framework
 			private bool IsChannelLayerPlaying(ChannelLayer channelLayer)
 			{
 				return channelLayer._animation != null && channelLayer._animation.enabled && channelLayer._animation.layer == channelLayer._layer;
+			}
+
+			private bool IsChannelLayerPlaying(ChannelLayer channelLayer, string animName)
+			{
+				return IsChannelLayerPlaying(channelLayer) && channelLayer._animation.name == animName;
 			}
 			#endregion
 		}
