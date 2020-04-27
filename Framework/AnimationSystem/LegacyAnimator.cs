@@ -214,7 +214,7 @@ namespace Framework
 				{
 					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
 					{
-						channelGroup._primaryLayer._animation.normalizedSpeed = time;
+						channelGroup._primaryLayer._animation.normalizedTime = time;
 					}
 				}
 			}
@@ -228,6 +228,19 @@ namespace Framework
 					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
 					{
 						channelGroup._primaryLayer._animation.speed = speed;
+					}
+				}
+			}
+
+			public void SetAnimationNormalizedSpeed(int channel, string animName, float speed)
+			{
+				ChannelGroup channelGroup = GetChannelGroup(channel);
+
+				if (channelGroup != null)
+				{
+					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					{
+						channelGroup._primaryLayer._animation.normalizedSpeed = speed;
 					}
 				}
 			}
@@ -290,7 +303,7 @@ namespace Framework
 				{
 					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
 					{
-						return channelGroup._primaryLayer._animation.normalizedSpeed;
+						return channelGroup._primaryLayer._animation.normalizedTime;
 					}
 				}
 
@@ -310,6 +323,21 @@ namespace Framework
 				}
 
 				return 1f;
+			}
+
+			public float GetAnimationNormalizedSpeed(int channel, string animName)
+			{
+				ChannelGroup channelGroup = GetChannelGroup(channel);
+
+				if (channelGroup != null)
+				{
+					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					{
+						return channelGroup._primaryLayer._animation.normalizedSpeed;
+					}
+				}
+
+				return 0f;
 			}
 
 			public float GetAnimationWeight(int channel, string animName)

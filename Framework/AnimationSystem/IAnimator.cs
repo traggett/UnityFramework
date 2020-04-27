@@ -20,6 +20,8 @@ namespace Framework
 
 			void SetAnimationSpeed(int channel, string animName, float speed);
 
+			void SetAnimationNormalizedSpeed(int channel, string animName, float speed);
+
 			void SetAnimationWeight(int channel, string animName, float weight);
 
 			bool IsPlaying(int channel, string animName);
@@ -31,6 +33,8 @@ namespace Framework
 			float GetAnimationNormalizedTime(int channel, string animName);
 
 			float GetAnimationSpeed(int channel, string animName);
+
+			float GetAnimationNormalizedSpeed(int channel, string animName);
 
 			float GetAnimationWeight(int channel, string animName);
 
