@@ -16,6 +16,8 @@ namespace Framework
 
 			void SetAnimationTime(int channel, string animName, float time);
 
+			void SetAnimationNormalizedTime(int channel, string animName, float time);
+
 			void SetAnimationSpeed(int channel, string animName, float speed);
 
 			void SetAnimationWeight(int channel, string animName, float weight);
@@ -25,6 +27,8 @@ namespace Framework
 			float GetAnimationLength(string animName);
 
 			float GetAnimationTime(int channel, string animName);
+
+			float GetAnimationNormalizedTime(int channel, string animName);
 
 			float GetAnimationSpeed(int channel, string animName);
 
