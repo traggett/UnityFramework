@@ -124,7 +124,7 @@ namespace Framework
 
 			public void SetTop(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				SetOffsetMax(new Vector2(GetRectTransform().offsetMax.x, target), time, interpolationType);
+				SetOffsetMax(new Vector2(GetRectTransform().offsetMax.x, -target), time, interpolationType);
 			}
 
 			public void SetLeft(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
@@ -134,7 +134,7 @@ namespace Framework
 
 			public void SetRight(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				SetOffsetMax(new Vector2(target, GetRectTransform().offsetMax.y), time, interpolationType);
+				SetOffsetMax(new Vector2(-target, GetRectTransform().offsetMax.y), time, interpolationType);
 			}
 			#endregion
 
