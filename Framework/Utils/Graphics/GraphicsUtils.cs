@@ -29,12 +29,6 @@ namespace Framework
 		{
 			private static Material _basicBlitMaterial;
 
-			public static Color SetAlpha(Color color, float alpha)
-			{
-				return new Color(color.r, color.g, color.b, alpha);
-			}
-
-
 			public static void CameraBlit(Camera camera, Texture source, RenderTexture dest)
 			{
 				CameraBlit(camera, source, dest, GetBlitMaterial(), 0);
