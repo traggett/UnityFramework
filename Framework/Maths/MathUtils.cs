@@ -167,7 +167,7 @@ namespace Framework
 				if (cross.z > 0)
 					ang = 360 - ang;
 
-				return DegreesTo180Range(ang);
+				return -DegreesTo180Range(ang);
 			}
 
 			public static Vector2 Cross(Vector2 dir)
@@ -187,17 +187,17 @@ namespace Framework
 				return new Vector2(cos * tx - sin * ty, sin * tx + cos * ty);
 			}
 
-			public static Vector2 RotateTowards(Vector2 current, Vector2 target, float maxRadiansDelta)
+			public static Vector2 RotateTowards(Vector2 current, Vector2 target, float maxDegreesDelta)
 			{
-				float angle = AngleBetween(current, target) ;
+				float angle = AngleBetween(current, target);
 
-				if (Mathf.Abs(angle) < maxRadiansDelta * Mathf.Rad2Deg)
+				if (Mathf.Abs(angle) < maxDegreesDelta)
 				{
 					return target;
 				}
 				else
 				{
-					return Rotate(current, -angle);
+					return Rotate(current, angle > 0 ? maxDegreesDelta : -maxDegreesDelta);
 				}
 			}
 
