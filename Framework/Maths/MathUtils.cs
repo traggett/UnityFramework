@@ -187,6 +187,20 @@ namespace Framework
 				return new Vector2(cos * tx - sin * ty, sin * tx + cos * ty);
 			}
 
+			public static Vector2 RotateTowards(Vector2 current, Vector2 target, float maxRadiansDelta)
+			{
+				float angle = AngleBetween(current, target) ;
+
+				if (Mathf.Abs(angle) < maxRadiansDelta * Mathf.Rad2Deg)
+				{
+					return target;
+				}
+				else
+				{
+					return Rotate(current, -angle);
+				}
+			}
+
 			public static float DegreesTo180Range(float angle)
 			{
 				angle %= 360.0f;
