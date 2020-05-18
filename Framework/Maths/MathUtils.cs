@@ -162,12 +162,12 @@ namespace Framework
 			public static float AngleBetween(Vector2 a, Vector2 b)
 			{
 				float ang = Vector2.Angle(a, b);
-				Vector3 cross = Vector3.Cross(a, b);
+				Vector3 cross = Vector3.Cross(b, a);
 
 				if (cross.z > 0)
 					ang = 360 - ang;
 
-				return -DegreesTo180Range(ang);
+				return DegreesTo180Range(ang);
 			}
 
 			public static Vector2 Cross(Vector2 dir)
@@ -441,6 +441,7 @@ namespace Framework
 			{
 				return matrix.GetColumn(1);
 			}
+
 		}
 	}
 }

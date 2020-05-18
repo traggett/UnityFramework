@@ -69,6 +69,49 @@ namespace Framework
 
 				return false;
 			}
+
+
+			// Find the points of intersection.
+			public static int Get2dLineCircleIntersection(Vector2 circleCentre, float circleRadius, Vector2 lineStart, Vector2 lineDir, out Vector2 S1, out Vector2 S2)
+			{
+				Vector2 h = circleCentre - lineStart;
+
+				float lf = Vector2.Dot(lineDir, h);
+
+				float s = (circleRadius * circleRadius) - Vector2.Dot(h, h) + (lf * lf);   // s=r^2-h^2+lf^2
+
+				// no intersection points ?
+				if (s < 0.0)
+				{
+					S1 = Vector2.zero;
+					S2 = Vector2.zero;
+					return 0;
+				}
+
+				s = Mathf.Sqrt(s);    // s=sqrt(r^2-h^2+lf^2)
+
+				int result = 0;
+
+				if (lf < s)                               // S1 behind A ?
+				{
+					if (lf + s >= 0)                          // S2 before A ?}
+					{
+						s = -s;                               // swap S1 <-> S2}
+						result = 1;                           // one intersection point
+					}
+				}
+				else
+				{
+					result = 2;                          // 2 intersection points
+				}
+
+
+				S1 = lineStart + lineDir * (lf - s);
+				S2 = lineStart + lineDir * (lf + s);
+
+				return result;
+			}
+
 		}
 	}
 }
