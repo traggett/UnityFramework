@@ -162,7 +162,7 @@ namespace Framework
 			public static float AngleBetween(Vector2 a, Vector2 b)
 			{
 				float ang = Vector2.Angle(a, b);
-				Vector3 cross = Vector3.Cross(b, a);
+				Vector3 cross = Vector3.Cross(a, b);
 
 				if (cross.z > 0)
 					ang = 360 - ang;
