@@ -96,7 +96,7 @@ namespace Framework
                 return _localisationKey;
             }
 
-			public string SetVariables(LocalisationLocalVariable[] variables)
+			public string SetVariables(params LocalisationLocalVariable[] variables)
 			{
 				_localVariables = variables;
 				//Update cached string
