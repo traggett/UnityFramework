@@ -17,6 +17,7 @@ namespace Framework
 			private string _cachedText;
 			private SystemLanguage _cachedLanguage;
 			private LocalisationGlobalVariable[] _cachedVariables;
+			private LocalisationLocalVariable[] _localVariables;
 			#endregion
 
 			#region Editor Data
@@ -33,6 +34,8 @@ namespace Framework
 				_cachedText = string.Empty;
 				_cachedLanguage = SystemLanguage.Unknown;
 				_cachedVariables = null;
+				_localVariables = new LocalisationLocalVariable[0];
+
 #if UNITY_EDITOR
 				_editorCollapsed = false;
 				_editorAutoNameParentName = null;
@@ -48,19 +51,32 @@ namespace Framework
 			{
 				return new LocalisedStringRef(key);
 			}
-			
-			public string GetLocalisedString(params LocalisationLocalVariable[] variables)
+
+			public string GetLocalisedString()
 			{
-				if (variables.Length > 0 || _cachedLanguage != Localisation.GetCurrentLanguage() || Localisation.AreGlobalVariablesOutOfDate(_cachedVariables)
+				if (_cachedLanguage != Localisation.GetCurrentLanguage() || Localisation.AreGlobalVariablesOutOfDate(_cachedVariables)
 #if UNITY_EDITOR
 					|| !Application.isPlaying
 #endif
 					)
 				{
+					if (_localVariables != null && _localVariables.Length > 0)
+						_cachedText = Localisation.Get(_localisationKey, _localVariables);
+					else
+						_cachedText = Localisation.Get(_localisationKey);
+
 					_cachedLanguage = Localisation.GetCurrentLanguage();
-					_cachedText = Localisation.Get(_localisationKey, variables);
 					_cachedVariables = Localisation.GetGlobalVariables(_cachedText);
 				}
+
+				return _cachedText;
+			}
+
+			public string GetLocalisedString(params LocalisationLocalVariable[] variables)
+			{
+				_cachedLanguage = Localisation.GetCurrentLanguage();
+				_cachedText = Localisation.Get(_localisationKey, variables);
+				_cachedVariables = Localisation.GetGlobalVariables(_cachedText);
 
 				return _cachedText;
 			}
@@ -79,6 +95,13 @@ namespace Framework
             {
                 return _localisationKey;
             }
+
+			public string SetVariables(LocalisationLocalVariable[] variables)
+			{
+				_localVariables = variables;
+				//Update cached string
+				return GetLocalisedString(_localVariables);
+			}
 
 #if UNITY_EDITOR
             public SystemLanguage GetDebugLanguage()
