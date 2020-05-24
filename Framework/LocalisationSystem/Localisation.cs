@@ -373,6 +373,7 @@ namespace Framework
 				MakeSureStringsAreLoaded(language);
 
 				string text = _localisationMaps[LanguageCodes.GetLanguageCode(language)].Get(key);
+
 				text = ReplaceVariables(text, localVariables);
 
 				return text;
@@ -419,29 +420,36 @@ namespace Framework
 
 						bool foundKey = false;
 
-						//First check provided local variables
-						for (int i=0; i<localVariables.Length; i++)
+						if (Application.isPlaying)
 						{
-							if (localVariables[i]._key == variableKey)
+							//First check provided local variables
+							for (int i = 0; i < localVariables.Length; i++)
 							{
-								fullText += localVariables[i]._value;
-								foundKey = true;
-								break;
+								if (localVariables[i]._key == variableKey)
+								{
+									fullText += localVariables[i]._value;
+									foundKey = true;
+									break;
+								}
+							}
+
+							//If not found in there check global variables
+							if (!foundKey)
+							{
+								VariableInfo info;
+								if (_globalVariables.TryGetValue(variableKey, out info))
+								{
+									fullText += info._value;
+								}
+								else if (Application.isPlaying)
+								{
+									Debug.LogError("Can't find variable to replace key '" + variableKey + "'");
+								}
 							}
 						}
-
-						//If not found in there check global variables
-						if (!foundKey)
+						else
 						{
-							VariableInfo info;
-							if (_globalVariables.TryGetValue(variableKey, out info))
-							{
-								fullText += info._value;
-							}
-							else if (Application.isPlaying)
-							{
-								Debug.LogError("Can't find variable to replace key '" + variableKey + "'");
-							}
+							fullText += "<" + variableKey + ">";
 						}
 
 						index = variableEndIndex + kVariableEndChars.Length;
