@@ -6,6 +6,8 @@ namespace Framework
 	{
 		public static class RectTransformUtils
 		{
+			private static readonly Vector3[] _worldCornersCache = new Vector3[4];
+
 			public static void SetLeft(RectTransform transform, float left)
 			{
 				transform.offsetMin = new Vector2(left, transform.offsetMin.y);
@@ -84,6 +86,12 @@ namespace Framework
 			public static float GetY(RectTransform transform)
 			{
 				return transform.anchoredPosition.y;
+			}
+
+			public static Vector3 GetWorldPos(RectTransform rectTransform)
+			{
+				rectTransform.GetWorldCorners(_worldCornersCache);
+				return _worldCornersCache[0] + ((_worldCornersCache[2] - _worldCornersCache[0]) * 0.5f);
 			}
 		}
 	}
