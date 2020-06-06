@@ -24,7 +24,6 @@ namespace Framework
 
 				private static readonly string kWindowWindowName = "Localisation";
 				private static readonly string kEditorPrefKey = "LocalisationEditor.Settings";
-				private static readonly string kEditKeyControlID = "Localisation.EditKey.";
 				private static readonly float kMinKeysWidth = 240.0f;
 				private static readonly float kResizerWidth = 8.0f;
 
@@ -474,14 +473,12 @@ namespace Framework
 										if (_editingKeyName == _keys[i])
 										{
 											EditorGUI.BeginChangeCheck();
-											GUI.SetNextControlName(kEditKeyControlID);
 											string key = EditorGUILayout.DelayedTextField(_keys[i], _editKeyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight));
 											if (EditorGUI.EndChangeCheck())
 											{
 												_editingKeyName = null;
 												Localisation.ChangeKey(_keys[i], key);
 												UpdateKeys();
-												EditorGUI.FocusTextInControl("");
 											}
 										}
 										else
@@ -615,7 +612,6 @@ namespace Framework
 						else
 						{
 							_editingKeyName = _keys[index];
-							EditorGUI.FocusTextInControl(kEditKeyControlID);
 						}
 					}
 
@@ -842,8 +838,6 @@ namespace Framework
 
 				private void SelectKey(params string[] keys)
 				{
-					Focus();
-
 					InitGUIStyles();
 
 					_editorPrefs._selectedKeys = keys;

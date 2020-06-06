@@ -69,9 +69,7 @@ namespace Framework
 						if (currentKeyIndex == 0)
 						{
 							string[] folders = Localisation.GetStringFolders();
-							int currentFolderIndex = 0;
-							string keyWithoutFolder;
-							Localisation.GetFolderIndex(localisedString.GetLocalisationKey(), out currentFolderIndex, out keyWithoutFolder);
+							Localisation.GetFolderIndex(localisedString.GetLocalisationKey(), out int currentFolderIndex, out string keyWithoutFolder);
 
 							EditorGUILayout.BeginHorizontal();
 							{
