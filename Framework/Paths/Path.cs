@@ -259,7 +259,7 @@ namespace Framework
 				return _nodes[index]._node.transform.position;
 			}
 
-			protected Vector3 GetNodeUp(int node, Vector3 forward)
+			public Vector3 GetNodeUp(int node, Vector3 forward)
 			{
 				//LHR (up X forward == right)
 				Vector3 right = Vector3.Cross(_nodes[node]._up, forward);

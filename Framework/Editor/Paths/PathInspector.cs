@@ -101,6 +101,8 @@ namespace Framework
 					Path path = (Path)target;
 					ContextMenuData data = (ContextMenuData)value;
 
+					Undo.RecordObject(this, "Changed Path Node Up");
+
 					switch (data._menuCommand)
 					{
 						case 0:
