@@ -15,6 +15,17 @@ namespace Framework
             {
                 return new Color(Mathf.Lerp(from.r, to.r, t), Mathf.Lerp(from.g, to.g, t), Mathf.Lerp(from.b, to.b, t), from.a);
             }
+
+            public static Color Invert(Color color)
+            {
+                Color.RGBToHSV(color, out float h, out float s, out float v);
+                
+                float hue = h + 0.5f;
+                if (hue > 1f)
+                    hue -= 1f;
+
+                return Color.HSVToRGB(hue, s, v);
+            }
         }
     }
 }
