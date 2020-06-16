@@ -9,8 +9,7 @@ namespace Framework
 		public abstract class AnimatorParamTrackMixer<T> : PlayableBehaviour, ITrackMixer, IParentBindableTrackMixer 
 		{
 			private TrackAsset _trackAsset;
-			private PlayableDirector _director;
-
+			
 			protected Animator _trackBinding;
 			protected int _parameterHash;
 
@@ -79,7 +78,6 @@ namespace Framework
 			public void SetTrackAsset(TrackAsset trackAsset, PlayableDirector playableDirector)
 			{
 				_trackAsset = trackAsset;
-				_director = playableDirector;
 			}
 
 			public TrackAsset GetTrackAsset()

@@ -258,17 +258,14 @@ namespace Framework
 					//Get closest point on line
 					int toNode = (i < _nodes.Length - 1) ? i + 1 : 0;
 					float lineLerp = 0.0f;
-					float dist = 0.0f;
-					float closestPointLineT, closestPointPathLineT;
+					float dist;
 
 					Vector3 fromNodePos = GetNodePosition(i);
 					Vector3 toNodePos = GetNodePosition(toNode);
 
 					Vector3 closestPoint;
 					Vector3 pathLineDir = (toNodePos - fromNodePos).normalized;
-					float pathLineT = 0.0f;
-
-					if (MathUtils.ClosestPointsOnTwoLines(ray.origin, ray.direction, fromNodePos, pathLineDir, out closestPointLineT, out closestPointPathLineT))
+					if (MathUtils.ClosestPointsOnTwoLines(ray.origin, ray.direction, fromNodePos, pathLineDir, out _, out float closestPointPathLineT))
 					{
 						closestPoint = fromNodePos + pathLineDir * closestPointPathLineT;
 						Vector3 closestPointOnRay = ray.origin + ray.direction * closestPointPathLineT;

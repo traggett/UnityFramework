@@ -37,19 +37,7 @@ namespace Framework
 
 			private PlayableDirector _playableDirector;
 
-			public void Play(PlayableAsset asset, DirectorWrapMode mode)
-			{
-				SetupBindingsForAsset(asset);
-				_playableDirector.Play(asset, mode);
-			}
-			
-			public void Play(PlayableAsset asset)
-			{
-				SetupBindingsForAsset(asset);
-				_playableDirector.Play(asset);
-			}
-
-			public void SetupBindingsForAsset(PlayableAsset asset)
+			public void PrepareBindings(PlayableAsset asset)
 			{
 				if (_playableDirector == null)
 					_playableDirector = GetComponent<PlayableDirector>();
@@ -69,13 +57,6 @@ namespace Framework
 					}
 				}
 			}
-
-#if UNITY_EDITOR
-			public void SyncCurrentBindings(PlayableDirector playableDirector)
-			{
-
-			}
-#endif
 
 			private PlayableAssetData GetAssetData(PlayableAsset asset)
 			{

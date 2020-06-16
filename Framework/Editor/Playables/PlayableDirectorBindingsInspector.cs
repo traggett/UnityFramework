@@ -1,13 +1,14 @@
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Playables;
-using System.Collections.Generic;
-using Framework.Utils;
 using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 namespace Framework
 {
+	using Utils;
+
 	namespace Playables
 	{
 		namespace Editor
@@ -40,20 +41,19 @@ namespace Framework
 
 					SerializedProperty assetProp = playableDirectorSO.FindProperty("m_PlayableAsset");
 					SerializedProperty sceneBindingsProp = playableDirectorSO.FindProperty("m_SceneBindings");
-					SerializedProperty exposedReferencesProp = playableDirectorSO.FindProperty("m_ExposedReferences");
-					exposedReferencesProp = exposedReferencesProp.FindPropertyRelative("m_References");
-
+					SerializedProperty exposedReferencesProp = playableDirectorSO.FindProperty("m_ExposedReferences.m_References");
+					
 					if (_cachedAsset != playableDirector.playableAsset)
 					{
 						_cachedAsset = playableDirector.playableAsset;
 
 						//Clear bindings
-						sceneBindingsProp.arraySize = 0;
-						exposedReferencesProp.arraySize = 0;
-						playableDirectorSO.ApplyModifiedProperties();
+						sceneBindingsProp.ClearArray();
+						exposedReferencesProp.ClearArray();
+						playableDirectorSO.ApplyModifiedPropertiesWithoutUndo();
 
 						//Load bindings from component
-						assetSwitcher.SetupBindingsForAsset(playableDirector.playableAsset);
+						assetSwitcher.PrepareBindings(playableDirector.playableAsset);
 						EditorSceneManager.MarkSceneDirty(playableDirector.gameObject.scene);
 					}
 
@@ -84,16 +84,16 @@ namespace Framework
 								_cachedAsset = assetDataProp.objectReferenceValue as PlayableAsset;
 
 								//Clear bindings
-								sceneBindingsProp.arraySize = 0;
-								exposedReferencesProp.arraySize = 0;
+								sceneBindingsProp.ClearArray();
+								exposedReferencesProp.ClearArray();
 
 								//Set playable assets
 								assetProp.objectReferenceValue = _cachedAsset;
 
-								playableDirectorSO.ApplyModifiedProperties();
+								playableDirectorSO.ApplyModifiedPropertiesWithoutUndo();
 
 								//Load bindings from component
-								assetSwitcher.SetupBindingsForAsset(_cachedAsset);
+								assetSwitcher.PrepareBindings(_cachedAsset);
 							}
 
 							if (GUILayout.Button("Clear"))
