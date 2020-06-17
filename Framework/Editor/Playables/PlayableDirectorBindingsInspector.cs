@@ -7,6 +7,7 @@ using System.Collections.Generic;
 
 namespace Framework
 {
+	using UnityEditor.Timeline;
 	using Utils;
 
 	namespace Playables
@@ -94,6 +95,9 @@ namespace Framework
 
 								//Load bindings from component
 								assetSwitcher.PrepareBindings(_cachedAsset);
+
+								if (TimelineEditor.inspectedDirector == playableDirector)
+									TimelineEditor.Refresh(RefreshReason.ContentsModified);
 							}
 
 							if (GUILayout.Button("Clear"))
@@ -105,6 +109,9 @@ namespace Framework
 								{
 									assetProp.objectReferenceValue = null;
 									playableDirectorSO.ApplyModifiedProperties();
+
+									if (TimelineEditor.inspectedDirector == playableDirector)
+										TimelineEditor.Refresh(RefreshReason.ContentsModified);
 								}
 
 								//Remove from array
