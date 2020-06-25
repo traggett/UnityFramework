@@ -370,7 +370,6 @@ namespace Framework
 #endif
 			#endregion
 
-
 			#region Private functions
 			private void UpdateChannelBlends(ChannelGroup channelGroup)
 			{
