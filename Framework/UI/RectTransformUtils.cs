@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Framework
 {
-	namespace Utils
+	namespace UI
 	{
 		public static class RectTransformUtils
 		{

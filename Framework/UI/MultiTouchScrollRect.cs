@@ -1,0 +1,69 @@
+﻿using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
+
+namespace Framework
+{
+	namespace UI
+	{
+		public class MultiTouchScrollRect : ScrollRect
+		{
+			private DragInputHandler _dragInput = new DragInputHandler();
+
+			protected override void LateUpdate()
+			{
+				base.LateUpdate();
+
+				_dragInput.ValidateInput();
+			}
+
+			public override void OnBeginDrag(PointerEventData eventData)
+			{
+				_dragInput.OnBeginDrag((ExtendedPointerEventData)eventData);
+
+				//If this is the only touch, start dragging now
+				if (_dragInput.GetCurrentInputCount() == 1)
+				{
+					base.OnBeginDrag(eventData);
+				}
+				//If now have multiple touches, stop dragging
+				else if (_dragInput.GetCurrentInputCount() > 1)
+				{
+					base.OnEndDrag(eventData);
+					StopMovement();
+				}
+			}
+
+			public override void OnDrag(PointerEventData eventData)
+			{
+				_dragInput.OnDrag((ExtendedPointerEventData)eventData);
+
+				//Only drag when one touch is active
+				if (_dragInput.GetCurrentInputCount() == 1)
+				{
+					base.OnDrag(eventData);
+				}
+			}
+
+			public override void OnEndDrag(PointerEventData eventData)
+			{
+				_dragInput.OnEndDrag((ExtendedPointerEventData)eventData);
+
+				//If no more touches, stop dragging
+				if (_dragInput.GetCurrentInputCount() == 0)
+				{
+					base.OnEndDrag(eventData);
+				}
+				//If now have just one touch, start dragging with it
+				else if (_dragInput.GetCurrentInputCount() == 1)
+				{
+					//Hacky, but override position of touch
+					eventData.position = _dragInput.GetPrimaryDragPosition();
+					base.OnBeginDrag(eventData);
+				}
+			}
+
+
+		}
+	}
+}

@@ -4,7 +4,7 @@ namespace Framework
 {
 	using Maths;
 
-	namespace Utils
+	namespace UI
 	{
 		public class RectTransformMover : MonoBehaviour
 		{
