@@ -442,6 +442,12 @@ namespace Framework
 				return matrix.GetColumn(1);
 			}
 
+			public static Vector2 ClampToRect(Vector2 value, Rect rect)
+			{
+				value.x = Mathf.Clamp(value.x, rect.xMin, rect.xMax);
+				value.y = Mathf.Clamp(value.y, rect.yMin, rect.yMax);
+				return value;
+			}
 		}
 	}
 }
