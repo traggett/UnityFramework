@@ -187,7 +187,7 @@ namespace Framework
 
 					if (_itemsBeingRemoved[i]._lerp > 1.0f)
 					{
-						_itemPool.Destroy(_itemsBeingRemoved[i]._item.GetTransform().gameObject, false);
+						_itemPool.Destroy(_itemsBeingRemoved[i]._item.GetTransform().gameObject);
 						_itemsBeingRemoved.RemoveAt(i);
 					}
 					else

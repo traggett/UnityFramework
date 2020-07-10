@@ -96,9 +96,12 @@ namespace Framework
 			{
 				_instances[index]._isFree = true;
 
-				if (_instances[index].gameObject.transform.parent != this.transform)
+				GameObject gameObject = _instances[index].gameObject;
+				gameObject.SetActive(false);
+
+				if (gameObject.transform.parent != this.transform)
 				{
-					_instances[index].gameObject.transform.SetParent(this.transform, false);
+					gameObject.transform.SetParent(this.transform, false);
 				}
 			}
 
