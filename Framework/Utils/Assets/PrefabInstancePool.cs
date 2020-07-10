@@ -13,25 +13,15 @@ namespace Framework
 			public int _growAmount;
 
 			private PooledPrefab[] _instances;
-			private List<GameObject> _toDestroy = new List<GameObject>();
+			private List<int> _toDestroy = new List<int>();
 
 			private void Update()
 			{
 				if (_instances != null)
 				{
-					foreach (GameObject gameObject in _toDestroy)
+					foreach (int index in _toDestroy)
 					{
-						int index = GetPrefabIndex(gameObject);
-
-						if (index != -1)
-						{
-							_instances[index]._isFree = true;
-
-							if (gameObject.transform.parent != this.transform)
-							{
-								gameObject.transform.SetParent(this.transform, false);
-							}
-						}
+						Destroy(index);
 					}
 
 					_toDestroy.Clear();
@@ -81,16 +71,35 @@ namespace Framework
 				return newInstance;
 			}
 
-			public bool Destroy(GameObject gameObject)
+			public bool Destroy(GameObject gameObject, bool instant = true)
 			{
-				if (GetPrefabIndex(gameObject) != -1)
+				int index = GetPrefabIndex(gameObject);
+				if (index != -1)
 				{
-					_toDestroy.Add(gameObject);
-					gameObject.SetActive(false);
+					if (instant)
+					{
+						Destroy(index);
+					}
+					else
+					{
+						_toDestroy.Add(index);
+						gameObject.SetActive(false);
+					}
+					
 					return true;
 				}
 
 				return false;
+			}
+
+			private void Destroy(int index)
+			{
+				_instances[index]._isFree = true;
+
+				if (_instances[index].gameObject.transform.parent != this.transform)
+				{
+					_instances[index].gameObject.transform.SetParent(this.transform, false);
+				}
 			}
 
 			public static void InitAllPrefabInstancePools()
