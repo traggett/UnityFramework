@@ -42,6 +42,7 @@ namespace Framework
 				public float _linePadding;
 				public float _lineShift;
 				public float _lineHeight;
+				public Color _lineColor;
 				public float _speed;
 				public float _acceleration;
 				public float _endOfLinePause;
@@ -191,6 +192,7 @@ namespace Framework
 					{
 						_lines[i].rectTransform.anchoredPosition = GetLinePosition(textInfo.lineInfo[i], out float lineWidth);
 						_lines[i].rectTransform.sizeDelta = new Vector2(lineWidth, lineHeight);
+						_lines[i].color = _lineColor;
 					}
 				}
 
