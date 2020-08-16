@@ -23,7 +23,7 @@ namespace Framework
 
 				public void SetTarget(Vector2 target, float moveTime, Vector2 current, float tolerance, InterpolationType interpolationType)
 				{
-					if (!IsLerping() || _interpolationType != interpolationType || Mathf.Abs(target.x - _target.x) > tolerance || Mathf.Abs(target.y - _target.y) > tolerance)
+					if (!IsLerping() || _interpolationType != interpolationType || !MathUtils.Approximately(target, _target, tolerance))
 					{
 						_lerp = 1f;
 						_from = current;

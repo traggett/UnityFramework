@@ -358,9 +358,10 @@ namespace Framework
 				float absA = Mathf.Abs(a);
 				float absB = Mathf.Abs(b);
 				float diff = Mathf.Abs(a - b);
-				
+
 				if (a == b)
-				{ // shortcut, handles infinities
+				{
+					// shortcut, handles infinities
 					return true;
 				}
 				else if (a == 0 || b == 0 || diff < float.Epsilon)
@@ -370,7 +371,8 @@ namespace Framework
 					return diff < (epsilon * float.Epsilon);
 				}
 				else
-				{ // use relative error
+				{ 
+					// use relative error
 					return diff / Mathf.Min((absA + absB), float.Epsilon) < epsilon;
 				}
 			}
