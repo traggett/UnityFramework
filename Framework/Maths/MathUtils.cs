@@ -375,6 +375,16 @@ namespace Framework
 				}
 			}
 
+			public static bool Approximately(Vector2 a, Vector2 b, float epsilon)
+			{
+				return Approximately(a.x, b.x, epsilon) && Approximately(a.y, b.y, epsilon);
+			}
+
+			public static bool Approximately(Vector3 a, Vector3 b, float epsilon)
+			{
+				return Approximately(a.x, b.x, epsilon) && Approximately(a.y, b.y, epsilon) && Approximately(a.z, b.z, epsilon);
+			}
+
 			public static bool Is2DPointInsideConvexPoly(Vector2[] polyPoints, Vector2 point)
 			{
 				if (polyPoints.Length < 3)
