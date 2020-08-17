@@ -82,7 +82,7 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private bool _shouldBeShowing;
+			private bool _shouldBeShowing = true;
 			private float _showLerp;
 			private float _showLerpSpeed;
 			private float _resizeLerp;
@@ -91,6 +91,11 @@ namespace Framework
 			#endregion
 
 			#region MonoBehaviour
+			private void Awake()
+			{
+				ShowInstant();
+			}
+
 			private void OnDisable()
 			{
 				HideInstant();

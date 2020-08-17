@@ -136,6 +136,14 @@ namespace Framework
 			{
 				SetOffsetMax(new Vector2(-target, GetRectTransform().offsetMax.y), time, interpolationType);
 			}
+
+			public RectTransform GetRectTransform()
+			{
+				if (_rectTransform == null)
+					_rectTransform = (RectTransform)this.transform;
+
+				return _rectTransform;
+			}
 			#endregion
 
 			#region MonoBehaviour
@@ -159,16 +167,6 @@ namespace Framework
 				{
 					rectTransform.offsetMax = _offsetMaxTarget.Update(deltaTime);
 				}
-			}
-			#endregion
-
-			#region Private Functions
-			private RectTransform GetRectTransform()
-			{
-				if (_rectTransform == null)
-					_rectTransform = (RectTransform)this.transform;
-
-				return _rectTransform;
 			}
 			#endregion
 		}

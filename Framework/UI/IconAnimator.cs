@@ -74,6 +74,11 @@ namespace Framework
 			#endregion
 
 			#region MonoBehaviour
+			private void Awake()
+			{
+				ShowInstant();
+			}
+
 			private void OnDisable()
 			{
 				HideInstant();
