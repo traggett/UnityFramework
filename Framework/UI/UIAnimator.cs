@@ -75,7 +75,7 @@ namespace Framework
 			#endregion
 
 			#region MonoBehaviour
-			private void Awake()
+			protected virtual void Awake()
 			{
 				_initialised = true;
 				OnShown();

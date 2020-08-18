@@ -38,13 +38,13 @@ namespace Framework
 
 			private static readonly float kDefaultLerpTime = 0.25f;
 
-			private PrefabInstancePool _itemPool;
-			private ScrollRect _scrollArea;
+			private readonly PrefabInstancePool _itemPool;
+			private readonly ScrollRect _scrollArea;
 			private float _lerpSpeed;
 
 			private class ScrollListItem
 			{
-				public enum eState
+				public enum State
 				{
 					Normal,
 					FadingIn,
@@ -56,7 +56,7 @@ namespace Framework
 				public Vector2 _fromPosition;
 				public Vector2 _targetPosition;
 				public float _lerp;
-				public eState _state;
+				public State _state;
 
 				public ScrollListItem(IScrollListItem<T> item)
 				{
@@ -149,7 +149,7 @@ namespace Framework
 				foreach (ScrollListItem item in toRemove)
 				{
 					item._lerp = 1.0f;
-					item._state = ScrollListItem.eState.FadingOut;
+					item._state = ScrollListItem.State.FadingOut;
 					_itemsBeingRemoved.Add(item);
 				}
 
@@ -163,19 +163,19 @@ namespace Framework
 					{
 						item._lerp = Mathf.Clamp01(item._lerp + _lerpSpeed * Time.deltaTime);
 
-						if (item._state == ScrollListItem.eState.Moving)
+						if (item._state == ScrollListItem.State.Moving)
 						{
 							float curvedLerp = MovementCurve.Evaluate(item._lerp);
 							item._item.GetTransform().anchoredPosition = Vector2.Lerp(item._fromPosition, item._targetPosition, curvedLerp);
 						}
-						else if (item._state == ScrollListItem.eState.FadingIn)
+						else if (item._state == ScrollListItem.State.FadingIn)
 						{
 							item._item.SetFade(item._lerp);
 						}
 
 						if (item._lerp >= 1.0f)
 						{
-							item._state = ScrollListItem.eState.Normal;
+							item._state = ScrollListItem.State.Normal;
 						}
 					}
 				}
@@ -221,7 +221,7 @@ namespace Framework
 				{
 					RectTransform transform = item._item.GetTransform();
 					item._lerp = 1.0f;
-					item._state = ScrollListItem.eState.Normal;
+					item._state = ScrollListItem.State.Normal;
 					item._item.SetFade(1.0f);
 					item._fromPosition = item._targetPosition;
 					transform.anchoredPosition = item._targetPosition;
@@ -273,7 +273,7 @@ namespace Framework
 						{
 							item = CreatItemType(items[i]);
 							item._lerp = 0.0f;
-							item._state = ScrollListItem.eState.FadingIn;
+							item._state = ScrollListItem.State.FadingIn;
 							item._targetPosition = pos;
 							item._fromPosition = pos;
 							transform = item._item.GetTransform();
@@ -292,7 +292,7 @@ namespace Framework
 							{
 								item._targetPosition = pos;
 								item._fromPosition = transform.anchoredPosition;
-								item._state = ScrollListItem.eState.Moving;
+								item._state = ScrollListItem.State.Moving;
 								item._lerp = 0.0f;
 								item._item.SetFade(1.0f);
 							}
