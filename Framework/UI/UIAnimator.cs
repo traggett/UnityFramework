@@ -23,8 +23,6 @@ namespace Framework
 				}
 				set
 				{
-					Debug.Log("Setting show " + this.transform.parent.name);
-
 					if (value != _shouldBeShowing || !_initialised)
 					{
 						_shouldBeShowing = value;
