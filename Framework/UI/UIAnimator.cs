@@ -19,10 +19,12 @@ namespace Framework
 			{
 				get
 				{
-					return _showLerp > 0f;
+					return _shouldBeShowing || _showLerp > 0f;
 				}
 				set
 				{
+					Debug.Log("Setting show " + this.transform.parent.name);
+
 					if (value != _shouldBeShowing || !_initialised)
 					{
 						_shouldBeShowing = value;

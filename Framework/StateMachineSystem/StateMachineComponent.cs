@@ -22,6 +22,7 @@ namespace Framework
 			private State _state = State.NotRunning;
 			private IEnumerator _current;
 			private IEnumerator _next;
+			private Coroutine _process;
 			#endregion
 
 			#region MonoBehaviour
@@ -33,7 +34,7 @@ namespace Framework
 
 			private void OnDisable()
 			{
-				_state = State.NotRunning;
+				Stop();
 			}
 			#endregion
 
@@ -45,7 +46,7 @@ namespace Framework
 
 				if (_state == State.NotRunning)
 				{
-					StartCoroutine(Run());
+					_process = StartCoroutine(Run());
 				}
 			}
 
@@ -64,7 +65,12 @@ namespace Framework
 
 			public void Stop()
 			{
-				StopAllCoroutines();
+				if (_process != null)
+				{
+					StopCoroutine(_process);
+					_process = null;
+				}
+				
 				_state = State.NotRunning;
 			}
 
@@ -105,18 +111,21 @@ namespace Framework
 				while (_current != null)
 				{
 					_state = State.Running;
-					while (_current.MoveNext())
+
+					while (_state == State.Running)
 					{
-						yield return _current.Current;
-
-						while (_state == State.Paused)
+						if (_current.MoveNext())
 						{
-							yield return null;
-						}
+							yield return _current.Current;
 
-						if (_state == State.NotRunning)
+							while (_state == State.Paused)
+							{
+								yield return null;
+							}
+						}	
+						else
 						{
-							yield break;
+							break;
 						}
 					}
 
