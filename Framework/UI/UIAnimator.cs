@@ -8,11 +8,13 @@ namespace Framework
 		public abstract class UIAnimator : MonoBehaviour
 		{
 			#region Public Data
-			//Animation stuff
+			public bool _showOnAwake;
+			public bool _disableOnHidden;
+
 			public float _showTime;
 			public float _hideTime;
 
-			public bool _disableOnHidden;
+			public Action _onShown;
 			public Action _onHidden;
 
 			public bool Showing
@@ -68,7 +70,7 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private bool _shouldBeShowing = true;
+			private bool _shouldBeShowing;
 			private float _showLerp;
 			private float _showLerpSpeed;
 			private bool _initialised;
@@ -77,8 +79,12 @@ namespace Framework
 			#region MonoBehaviour
 			protected virtual void Awake()
 			{
+				if (_showOnAwake)
+					OnShown();
+				else
+					OnHidden();
+
 				_initialised = true;
-				OnShown();
 			}
 
 			private void OnDisable()
@@ -92,6 +98,7 @@ namespace Framework
 			}
 			#endregion
 
+			#region Virtual Interface
 			protected virtual void OnStartShowAnimation()
 			{
 				UpdateAnimations(0f);
@@ -108,6 +115,7 @@ namespace Framework
 			{
 
 			}
+			#endregion
 
 			#region Private Functions
 			private void UpdateAnimations(float deltaTime)
@@ -157,6 +165,8 @@ namespace Framework
 				_shouldBeShowing = true;
 				_showLerp = 1f;
 				OnUpdateAnimations(1f, true);
+
+				_onShown?.Invoke();
 			}
 
 			private void OnHidden()

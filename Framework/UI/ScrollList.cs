@@ -33,10 +33,12 @@ namespace Framework
 				}
 			}
 
-			public float StartPadding { get; set; }
+			public float StartPadding 
+			{ 
+				get; set; }
 			public float EndPadding { get; set; }
 
-			private static readonly float kDefaultLerpTime = 0.25f;
+			private const float kDefaultLerpTime = 0.25f;
 
 			private readonly PrefabInstancePool _itemPool;
 			private readonly ScrollRect _scrollArea;
@@ -119,19 +121,26 @@ namespace Framework
 
 			private ScrollList(ScrollRect scrollArea, PrefabInstancePool itemPool)
 			{
-				MovementTime = kDefaultLerpTime;
-				MovementCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
 				_itemPool = itemPool;
 				_scrollArea = scrollArea;
 				Initialise();
 			}
 
-			public static void Create(ref ScrollList<T> scrollList, ScrollRect scrollArea, PrefabInstancePool itemPool, IList<T> items = null)
+			public static void Create(ref ScrollList<T> scrollList, ScrollRect scrollArea, PrefabInstancePool itemPool, IList<T> items = null,
+									float startPadding = 0f, float endPadding = 0f, float movementTime = kDefaultLerpTime, AnimationCurve movementCurve = null)
 			{
+				if (movementCurve == null)
+					movementCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
+
 				if (scrollList == null)
 				{
 					scrollList = new ScrollList<T>(scrollArea, itemPool);
 				}
+
+				scrollList.MovementCurve = movementCurve;
+				scrollList.MovementTime = movementTime;
+				scrollList.StartPadding = startPadding;
+				scrollList.EndPadding = endPadding;
 
 				scrollList.Initialise(items);
 			}
@@ -141,7 +150,7 @@ namespace Framework
 				Initialise(null);
 			}
 
-			public void Update(IList<T> items)
+			public void Update(IList<T> items, float deltaTime)
 			{
 				FindChanges(items, out _, out List<ScrollListItem> toRemove);
 
@@ -161,7 +170,7 @@ namespace Framework
 				{
 					if (item._lerp < 1.0f)
 					{
-						item._lerp = Mathf.Clamp01(item._lerp + _lerpSpeed * Time.deltaTime);
+						item._lerp = Mathf.Clamp01(item._lerp + _lerpSpeed * deltaTime);
 
 						if (item._state == ScrollListItem.State.Moving)
 						{
@@ -183,7 +192,7 @@ namespace Framework
 				//Lerp fade out for items being removed, destroy any that are no zero
 				for (int i = 0; i < _itemsBeingRemoved.Count;)
 				{
-					_itemsBeingRemoved[i]._lerp += _lerpSpeed * Time.deltaTime;
+					_itemsBeingRemoved[i]._lerp += _lerpSpeed * deltaTime;
 
 					if (_itemsBeingRemoved[i]._lerp > 1.0f)
 					{
