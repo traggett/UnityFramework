@@ -108,31 +108,31 @@ namespace Framework
 					throw new System.InvalidOperationException("Unable to start coroutine in state: " + _state);
 				}
 
-				while (_current != null)
+				_state = State.Running;
+
+				while (true)
 				{
-					_state = State.Running;
-
-					while (_state == State.Running)
+					while (_current != null && _current.MoveNext())
 					{
-						if (_current.MoveNext())
-						{
-							yield return _current.Current;
+						yield return _current.Current;
 
-							while (_state == State.Paused)
-							{
-								yield return null;
-							}
-						}	
-						else
+						while (_state == State.Paused)
 						{
-							break;
+							yield return null;
 						}
 					}
 
-					_current = _next;
-					_next = null;
+					if (_next != null)
+					{
+						_current = _next;
+						_next = null;
+					}
+					else
+					{
+						break;
+					}
 				}
-
+				
 				_state = State.NotRunning;
 			}
 			#endregion
