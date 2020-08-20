@@ -31,17 +31,13 @@ namespace Framework
 
 						if (value)
 						{
-							bool wasInitialised = _initialised;
+							if (!_initialised)
+							{
+								_showOnAwake = true;
+							}
+
 							this.gameObject.SetActive(true);
 
-							//If setting active caused the object to wake up, hide and animate it showing
-							if (!wasInitialised && _initialised)
-							{
-								OnHidden();
-								this.gameObject.SetActive(true);
-								_shouldBeShowing = true;
-							}
-							
 							if (_showTime > 0f)
 							{
 								_showLerpSpeed = 1f / _showTime;
@@ -54,6 +50,11 @@ namespace Framework
 						}
 						else
 						{
+							if (!_initialised)
+							{
+								_showOnAwake = false;
+							}
+
 							if (_hideTime > 0f && _showLerp > 0f)
 							{
 								_showLerpSpeed = 1f / _hideTime;
@@ -79,12 +80,12 @@ namespace Framework
 			#region MonoBehaviour
 			protected virtual void Awake()
 			{
+				_initialised = true;
+
 				if (_showOnAwake)
-					OnShown();
+					Showing = true;
 				else
 					OnHidden();
-
-				_initialised = true;
 			}
 
 			private void OnDisable()

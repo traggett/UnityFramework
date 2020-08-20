@@ -120,6 +120,18 @@ namespace Framework
 				}
 			}
 
+			public static void DestroyChildPrefabs(Transform parent, bool instant = true)
+			{
+				for (int i = 0; i < parent.childCount;)
+				{
+					PooledPrefab prefab = parent.GetChild(i).GetComponent<PooledPrefab>();
+					if (prefab == null || !prefab._parentPool.Destroy(prefab.gameObject, instant))
+					{
+						i++;
+					}
+				}
+			}
+
 			private void Init()
 			{
 				if (_instances == null)
@@ -129,7 +141,6 @@ namespace Framework
 					for (int i = 0; i < _instances.Length; i++)
 					{
 						_instances[i] = CreatePrefab();
-						_instances[i]._isFree = true;
 					}
 				}
 			}
@@ -138,7 +149,8 @@ namespace Framework
 			{
 				GameObject gameObject = Instantiate(_prefab, this.transform);
 				PooledPrefab prefab = gameObject.AddComponent<PooledPrefab>();
-				prefab.SetParentPool(this);
+				prefab._parentPool = this;
+				prefab._isFree = true;
 				gameObject.SetActive(false);
 				return prefab;
 			}
