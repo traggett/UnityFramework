@@ -27,12 +27,13 @@ namespace Framework
 				private static readonly float kMinKeysWidth = 240.0f;
 				private static readonly float kResizerWidth = 8.0f;
 
-				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1.0f, 0.8f, 0.1f, 1.0f);
+				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1f, 1f, 1f, 1f);
 				private static readonly Color kTextLineBackgroundColorA = new Color(0.7f, 0.7f, 0.7f, 1.0f);
 				private static readonly Color kTextLineBackgroundColorB = new Color(0.82f, 0.82f, 0.82f, 1.0f);
-				private static readonly Color kSelectedTextBackgroundColor = new Color(0.941f, 0.853f, 0.548f, 1.0f);
+				private static readonly Color kSelectedTextBackgroundColor = new Color(1f, 1f, 1f, 1f);
 				private static readonly Color kTextBackgroundColorA = new Color(0.88f, 0.88f, 0.88f, 1.0f);
 				private static readonly Color kTextBackgroundColorB = new Color(0.98f, 0.98f, 0.98f, 1.0f);
+				private static readonly Color kSelectedTextColor = new Color(130f / 255f, 180f / 255f, 255f / 255f, 1.0f);
 
 				private static LocalisationEditorWindow _instance = null;
 
@@ -58,9 +59,9 @@ namespace Framework
 
 				private GUIStyle _tableStyle;
 				private GUIStyle _keyStyle;
-				private GUIStyle _editKeyStyle;
+				private GUIStyle _selectedKeyStyle;
 				private GUIStyle _textStyle;
-				private GUIStyle _editTextStyle;
+				private GUIStyle _selectedTextStyle;
 
 				private int _viewStartIndex;
 				private int _viewEndIndex;
@@ -213,9 +214,9 @@ namespace Framework
 						};
 					}
 
-					if (_editKeyStyle == null || string.IsNullOrEmpty(_editKeyStyle.name))
+					if (_selectedKeyStyle == null || string.IsNullOrEmpty(_selectedKeyStyle.name))
 					{
-						_editKeyStyle = new GUIStyle(EditorStyles.textField)
+						_selectedKeyStyle = new GUIStyle(EditorStyles.textField)
 						{
 							border = new RectOffset(0, 0, 0, 0),
 							padding = new RectOffset(4, 4, 4, 4),
@@ -245,13 +246,12 @@ namespace Framework
 							_textStyle.font = font;
 					}
 
-					if (_editTextStyle == null || string.IsNullOrEmpty(_editTextStyle.name))
+					if (_selectedTextStyle == null || string.IsNullOrEmpty(_selectedTextStyle.name))
 					{
-						_editTextStyle = new GUIStyle(_textStyle)
+						_selectedTextStyle = new GUIStyle(_textStyle)
 						{
 							stretchHeight = false,
 							wordWrap = true,
-
 						};
 					}
 				}
@@ -289,7 +289,7 @@ namespace Framework
 							{
 								_editorPrefs._tableFontSize = fontSize;
 								_textStyle.fontSize = _editorPrefs._tableFontSize;
-								_editTextStyle.fontSize = _editorPrefs._tableFontSize;
+								_selectedTextStyle.fontSize = _editorPrefs._tableFontSize;
 								SaveEditorPrefs();
 							}
 
@@ -438,6 +438,7 @@ namespace Framework
 								bool selected = IsSelected(_keys[i]);
 
 								Color origBackgroundColor = GUI.backgroundColor;
+								Color origContentColor = GUI.contentColor;
 								GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
 
 								//Work out item height
@@ -447,10 +448,10 @@ namespace Framework
 									{
 										//Work out highest text size
 										string textA = Localisation.GetRawString(_keys[i], Localisation.GetCurrentLanguage());
-										float textAHeight = _editTextStyle.CalcHeight(new GUIContent(textA), _editorPrefs._firstLanguageWidth);
+										float textAHeight = _selectedTextStyle.CalcHeight(new GUIContent(textA), _editorPrefs._firstLanguageWidth);
 
 										string textB = Localisation.GetRawString(_keys[i], _editorPrefs._secondLanguage);
-										float textBHeight = _editTextStyle.CalcHeight(new GUIContent(textB), secondLangWidth);
+										float textBHeight = _selectedTextStyle.CalcHeight(new GUIContent(textB), secondLangWidth);
 
 										float textHeight = Mathf.Max(textAHeight, textBHeight);
 
@@ -466,6 +467,7 @@ namespace Framework
 								EditorGUILayout.BeginHorizontal(_tableStyle, GUILayout.Height(itemHeight));
 								{
 									GUI.backgroundColor = origBackgroundColor;
+									GUI.contentColor = selected ? kSelectedTextColor : Color.white;
 
 									//Render Key
 									EditorGUILayout.BeginVertical();
@@ -473,7 +475,7 @@ namespace Framework
 										if (_editingKeyName == _keys[i])
 										{
 											EditorGUI.BeginChangeCheck();
-											string key = EditorGUILayout.DelayedTextField(_keys[i], _editKeyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight));
+											string key = EditorGUILayout.DelayedTextField(_keys[i], _selectedKeyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight));
 											if (EditorGUI.EndChangeCheck())
 											{
 												_editingKeyName = null;
@@ -498,7 +500,7 @@ namespace Framework
 										//Render First Language
 										string text = Localisation.GetRawString(_keys[i], currentLanguage);
 
-										if (GUILayout.Button(selected ? text : StringUtils.GetFirstLine(text), selected ? _editTextStyle : _textStyle, GUILayout.Width(_editorPrefs._firstLanguageWidth), GUILayout.Height(itemHeight)))
+										if (GUILayout.Button(selected ? text : StringUtils.GetFirstLine(text), selected ? _selectedTextStyle : _textStyle, GUILayout.Width(_editorPrefs._firstLanguageWidth), GUILayout.Height(itemHeight)))
 										{
 											OnClickItem(i, currentLanguage);
 										}
@@ -508,7 +510,7 @@ namespace Framework
 										{
 											string stext = Localisation.GetRawString(_keys[i], _editorPrefs._secondLanguage);
 
-											if (GUILayout.Button(selected ? stext : StringUtils.GetFirstLine(stext), selected ? _editTextStyle : _textStyle, GUILayout.Width(secondLangWidth), GUILayout.Height(itemHeight)))
+											if (GUILayout.Button(selected ? stext : StringUtils.GetFirstLine(stext), selected ? _selectedTextStyle : _textStyle, GUILayout.Width(secondLangWidth), GUILayout.Height(itemHeight)))
 											{
 												OnClickItem(i, _editorPrefs._secondLanguage);
 											}
@@ -519,6 +521,7 @@ namespace Framework
 								EditorGUILayout.EndHorizontal();
 
 								GUI.backgroundColor = origBackgroundColor;
+								GUI.contentColor = origContentColor;
 							}
 						}
 						EditorGUILayout.EndVertical();
