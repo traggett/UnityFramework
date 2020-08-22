@@ -27,13 +27,12 @@ namespace Framework
 				private static readonly float kMinKeysWidth = 240.0f;
 				private static readonly float kResizerWidth = 8.0f;
 
-				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1f, 1f, 1f, 1f);
 				private static readonly Color kTextLineBackgroundColorA = new Color(0.7f, 0.7f, 0.7f, 1.0f);
 				private static readonly Color kTextLineBackgroundColorB = new Color(0.82f, 0.82f, 0.82f, 1.0f);
-				private static readonly Color kSelectedTextBackgroundColor = new Color(1f, 1f, 1f, 1f);
+				private static readonly Color kSelectedTextLineBackgroundColor = new Color(1f, 1f, 1f, 1f);
 				private static readonly Color kTextBackgroundColorA = new Color(0.88f, 0.88f, 0.88f, 1.0f);
 				private static readonly Color kTextBackgroundColorB = new Color(0.98f, 0.98f, 0.98f, 1.0f);
-				private static readonly Color kSelectedTextColor = new Color(130f / 255f, 180f / 255f, 255f / 255f, 1.0f);
+				private static readonly Color kSelectedTextColor = new Color(129f / 255f, 180f / 255f, 255f / 255f, 1.0f);
 
 				private static LocalisationEditorWindow _instance = null;
 
@@ -60,6 +59,7 @@ namespace Framework
 				private GUIStyle _tableStyle;
 				private GUIStyle _keyStyle;
 				private GUIStyle _selectedKeyStyle;
+				private GUIStyle _editKeyStyle;
 				private GUIStyle _textStyle;
 				private GUIStyle _selectedTextStyle;
 
@@ -202,7 +202,7 @@ namespace Framework
 						};
 					}
 
-					if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
+					//if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
 					{
 						_keyStyle = new GUIStyle(EditorStyles.label)
 						{
@@ -214,9 +214,9 @@ namespace Framework
 						};
 					}
 
-					if (_selectedKeyStyle == null || string.IsNullOrEmpty(_selectedKeyStyle.name))
+					//if (_selectedKeyStyle == null || string.IsNullOrEmpty(_selectedKeyStyle.name))
 					{
-						_selectedKeyStyle = new GUIStyle(EditorStyles.textField)
+						_selectedKeyStyle = new GUIStyle(EditorStyles.whiteLabel)
 						{
 							border = new RectOffset(0, 0, 0, 0),
 							padding = new RectOffset(4, 4, 4, 4),
@@ -225,9 +225,20 @@ namespace Framework
 						};
 					}
 
-					if (_textStyle == null || string.IsNullOrEmpty(_textStyle.name))
+					//if (_editKeyStyle == null || string.IsNullOrEmpty(_editKeyStyle.name))
 					{
-						_textStyle = new GUIStyle(EditorStyles.toolbarTextField)
+						_editKeyStyle = new GUIStyle(EditorStyles.textField)
+						{
+							border = new RectOffset(0, 0, 0, 0),
+							padding = new RectOffset(4, 4, 4, 4),
+							margin = new RectOffset(0, 0, 0, 0),
+							fixedHeight = 0,
+						};
+					}
+
+					//if (_textStyle == null || string.IsNullOrEmpty(_textStyle.name))
+					{
+						_textStyle = new GUIStyle(EditorStyles.textArea)
 						{
 							font = _keyStyle.font,
 							fontSize = _editorPrefs._tableFontSize,
@@ -246,7 +257,7 @@ namespace Framework
 							_textStyle.font = font;
 					}
 
-					if (_selectedTextStyle == null || string.IsNullOrEmpty(_selectedTextStyle.name))
+					//if (_selectedTextStyle == null || string.IsNullOrEmpty(_selectedTextStyle.name))
 					{
 						_selectedTextStyle = new GUIStyle(_textStyle)
 						{
@@ -439,8 +450,7 @@ namespace Framework
 
 								Color origBackgroundColor = GUI.backgroundColor;
 								Color origContentColor = GUI.contentColor;
-								GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
-
+								
 								//Work out item height
 								float itemHeight;
 								{
@@ -464,6 +474,7 @@ namespace Framework
 								}
 
 								//Render item
+								GUI.backgroundColor = selected ? kSelectedTextLineBackgroundColor : i % 2 == 0 ? kTextLineBackgroundColorA : kTextLineBackgroundColorB;
 								EditorGUILayout.BeginHorizontal(_tableStyle, GUILayout.Height(itemHeight));
 								{
 									GUI.backgroundColor = origBackgroundColor;
@@ -475,7 +486,7 @@ namespace Framework
 										if (_editingKeyName == _keys[i])
 										{
 											EditorGUI.BeginChangeCheck();
-											string key = EditorGUILayout.DelayedTextField(_keys[i], _selectedKeyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight));
+											string key = EditorGUILayout.DelayedTextField(_keys[i], _editKeyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight));
 											if (EditorGUI.EndChangeCheck())
 											{
 												_editingKeyName = null;
@@ -485,7 +496,7 @@ namespace Framework
 										}
 										else
 										{
-											if (GUILayout.Button(_keys[i], _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight)))
+											if (GUILayout.Button(_keys[i], selected ? _selectedKeyStyle : _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight)))
 											{
 												OnClickItem(i, SystemLanguage.Unknown);
 											}
@@ -495,7 +506,7 @@ namespace Framework
 
 									//Render Text
 									{
-										GUI.backgroundColor = selected ? kSelectedTextBackgroundColor : i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
+										GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 
 										//Render First Language
 										string text = Localisation.GetRawString(_keys[i], currentLanguage);
