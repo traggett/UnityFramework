@@ -202,7 +202,7 @@ namespace Framework
 						};
 					}
 
-					//if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
+					if (_keyStyle == null || string.IsNullOrEmpty(_keyStyle.name))
 					{
 						_keyStyle = new GUIStyle(EditorStyles.label)
 						{
@@ -214,7 +214,7 @@ namespace Framework
 						};
 					}
 
-					//if (_selectedKeyStyle == null || string.IsNullOrEmpty(_selectedKeyStyle.name))
+					if (_selectedKeyStyle == null || string.IsNullOrEmpty(_selectedKeyStyle.name))
 					{
 						_selectedKeyStyle = new GUIStyle(EditorStyles.whiteLabel)
 						{
@@ -225,7 +225,7 @@ namespace Framework
 						};
 					}
 
-					//if (_editKeyStyle == null || string.IsNullOrEmpty(_editKeyStyle.name))
+					if (_editKeyStyle == null || string.IsNullOrEmpty(_editKeyStyle.name))
 					{
 						_editKeyStyle = new GUIStyle(EditorStyles.textField)
 						{
@@ -236,9 +236,9 @@ namespace Framework
 						};
 					}
 
-					//if (_textStyle == null || string.IsNullOrEmpty(_textStyle.name))
+					if (_textStyle == null || string.IsNullOrEmpty(_textStyle.name))
 					{
-						_textStyle = new GUIStyle(EditorStyles.textArea)
+						_textStyle = new GUIStyle(EditorStyles.textField)
 						{
 							font = _keyStyle.font,
 							fontSize = _editorPrefs._tableFontSize,
@@ -257,7 +257,7 @@ namespace Framework
 							_textStyle.font = font;
 					}
 
-					//if (_selectedTextStyle == null || string.IsNullOrEmpty(_selectedTextStyle.name))
+					if (_selectedTextStyle == null || string.IsNullOrEmpty(_selectedTextStyle.name))
 					{
 						_selectedTextStyle = new GUIStyle(_textStyle)
 						{
