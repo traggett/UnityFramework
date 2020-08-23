@@ -12,7 +12,7 @@ namespace Framework
 		{
 			#region Public Data
 			public RectTransform _rectTransform;
-			public Image _backer;
+			public Image _icon;
 			public float _size = 128f;
 			public InterpolationType _showInterpolation;
 			public InterpolationType _hideInterpolation;
@@ -22,7 +22,7 @@ namespace Framework
 			#region UIAnimator
 			protected override void OnUpdateAnimations(float showLerp, bool showing)
 			{
-				_backer.color = ColorUtils.SetAlpha(_backer.color, _alphaCurve.Evaluate(showLerp));
+				_icon.color = ColorUtils.SetAlpha(_icon.color, _alphaCurve.Evaluate(showLerp));
 
 				float size = Interpolation.Interpolate(showing ? _showInterpolation : _hideInterpolation, 0f, _size, showLerp);
 				_rectTransform.sizeDelta = new Vector2(size, size);
