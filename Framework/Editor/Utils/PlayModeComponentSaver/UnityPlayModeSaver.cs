@@ -137,11 +137,9 @@ namespace Framework
 				}
 
 				[MenuItem(kSaveGameObjectMenuString, false, -100)]
-				public static void SaveGameObject(MenuCommand command)
+				public static void SaveGameObject()
 				{
-					GameObject gameObject = command.context as GameObject;
-
-					if (Application.isPlaying && gameObject != null)
+					if (Application.isPlaying && Selection.gameObjects != null)
 					{
 						foreach (GameObject go in Selection.gameObjects)
 						{
@@ -151,11 +149,9 @@ namespace Framework
 				}
 
 				[MenuItem(kSaveGameObjectMenuString, true)]
-				public static bool ValidateSaveGameObject(MenuCommand command)
+				public static bool ValidateSaveGameObject()
 				{
-					GameObject gameObject = command.context as GameObject;
-					
-					if (Application.isPlaying && gameObject != null)
+					if (Application.isPlaying && Selection.gameObjects != null)
 					{
 						foreach (GameObject go in Selection.gameObjects)
 						{
@@ -168,11 +164,9 @@ namespace Framework
 				}
 
 				[MenuItem(kRevertGameObjectMenuString, false, -100)]
-				public static void RevertGameObject(MenuCommand command)
+				public static void RevertGameObject()
 				{
-					GameObject gameObject = command.context as GameObject;
-
-					if (Application.isPlaying && gameObject != null)
+					if (Application.isPlaying && Selection.gameObjects != null)
 					{
 						foreach (GameObject go in Selection.gameObjects)
 						{
@@ -182,11 +176,9 @@ namespace Framework
 				}
 
 				[MenuItem(kRevertGameObjectMenuString, true)]
-				public static bool ValidateRevertGameObject(MenuCommand command)
+				public static bool ValidateRevertGameObject()
 				{
-					GameObject gameObject = command.context as GameObject;
-
-					if (Application.isPlaying && gameObject != null)
+					if (Application.isPlaying && Selection.gameObjects != null)
 					{
 						foreach (GameObject go in Selection.gameObjects)
 						{
