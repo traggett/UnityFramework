@@ -111,7 +111,7 @@ namespace Framework
 				}
 			}
 
-			private float GetContentWidth()
+			public float GetContentWidth()
 			{
 				float width = 0f;
 
