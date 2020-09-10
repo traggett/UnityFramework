@@ -10,7 +10,7 @@ namespace Framework
 			#region Public Data
 			public bool _showOnAwake;
 			public bool _disableOnHidden;
-
+			
 			public float _showTime;
 			public float _hideTime;
 
@@ -86,11 +86,6 @@ namespace Framework
 					Showing = true;
 				else
 					OnHidden();
-			}
-
-			private void OnDisable()
-			{
-				OnHidden();
 			}
 
 			private void Update()
