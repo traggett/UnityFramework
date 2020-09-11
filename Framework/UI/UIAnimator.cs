@@ -94,6 +94,13 @@ namespace Framework
 			}
 			#endregion
 
+			#region Public Interface
+			public bool IsHiding()
+			{
+				return !_shouldBeShowing && _showLerp > 0f;
+			}
+			#endregion
+
 			#region Virtual Interface
 			protected virtual void OnStartShowAnimation()
 			{

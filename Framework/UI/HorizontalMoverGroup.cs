@@ -115,15 +115,22 @@ namespace Framework
 			{
 				float width = 0f;
 
+				bool first = true;
+
 				foreach (RectTransform child in this.transform)
 				{
 					if (child != null && child.gameObject.activeSelf)
 					{
-						width += RectTransformUtils.GetWidth(child) + _spacing;
+						if (first)
+							first = false;
+						else
+							width += _spacing;
+
+						width += RectTransformUtils.GetWidth(child);
 					}
 				}
 
-				return width - _spacing;
+				return width;
 			}
 		}
 	}
