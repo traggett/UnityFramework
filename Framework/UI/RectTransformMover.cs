@@ -58,6 +58,7 @@ namespace Framework
 			private Target _anchorTarget;
 			private Target _offsetMinTarget;
 			private Target _offsetMaxTarget;
+			private Target _sizeDeltaTarget;
 			private RectTransform _rectTransform;
 			#endregion
 
@@ -107,6 +108,21 @@ namespace Framework
 				}
 			}
 
+			public void SetSizeDelta(Vector2 sizeDelta, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
+			{
+				Vector2 currentSizeDelta = GetRectTransform().sizeDelta;
+
+				if (time > 0f)
+				{
+					_sizeDeltaTarget.SetTarget(sizeDelta, time, currentSizeDelta, _targetTolerance, interpolationType);
+				}
+				else
+				{
+					_sizeDeltaTarget.Clear();
+					GetRectTransform().sizeDelta = sizeDelta;
+				}
+			}
+
 			public void SetX(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
 				SetAnchoredPosition(new Vector2(target, GetRectTransform().anchoredPosition.y), time, interpolationType);
@@ -135,6 +151,16 @@ namespace Framework
 			public void SetRight(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
 				SetOffsetMax(new Vector2(-target, GetRectTransform().offsetMax.y), time, interpolationType);
+			}
+
+			public void SetWidth(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
+			{
+				SetSizeDelta(new Vector2(target, GetRectTransform().sizeDelta.y), time, interpolationType);
+			}
+
+			public void SetHeight(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
+			{
+				SetSizeDelta(new Vector2(GetRectTransform().sizeDelta.x, target), time, interpolationType);
 			}
 
 			public RectTransform GetRectTransform()
@@ -166,6 +192,11 @@ namespace Framework
 				if (_offsetMaxTarget.IsLerping())
 				{
 					rectTransform.offsetMax = _offsetMaxTarget.Update(deltaTime);
+				}
+
+				if (_sizeDeltaTarget.IsLerping())
+				{
+					rectTransform.sizeDelta = _sizeDeltaTarget.Update(deltaTime);
 				}
 			}
 			#endregion
