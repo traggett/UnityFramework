@@ -27,6 +27,7 @@ namespace Framework
 					return _animation;
 				}
 			}
+
 			private struct ChannelLayer
 			{
 				//Layer in animation component
@@ -115,12 +116,6 @@ namespace Framework
 					}
 				}
 
-				//If not blending stop relevant animations
-				if (blendTime <= 0.0f)
-				{
-					StopChannel(channelGroup);
-				}
-
 				//If no group exists, add new one and return first track index
 				if (channelGroup == null)
 				{
@@ -128,9 +123,22 @@ namespace Framework
 					_channels.Add(channelGroup);
 				}
 				//Otherwise check an animation is currently playing on this group
-				else if (channelGroup._state != ChannelGroup.State.Stopped)
+				else
 				{
-					MovePrimaryAnimationToBackgroundTrack(channelGroup);
+					//If not blending stop all animation in this channel
+					if (blendTime <= 0.0f)
+					{
+						StopChannel(channelGroup);
+					}
+
+					//Clear queue
+					channelGroup._queuedAnimation = null;
+
+					//If this group is playing an animation, move it to a background track
+					if (channelGroup._state != ChannelGroup.State.Stopped)
+					{
+						MovePrimaryAnimationToBackgroundTrack(channelGroup);
+					}
 				}
 
 				//Start animation on primary track
@@ -145,12 +153,14 @@ namespace Framework
 					channelGroup._targetWeight = weight;
 					channelGroup._lerpSpeed = 1.0f / blendTime;
 					channelGroup._lerpEase = easeType;
+
 					if (channelGroup._primaryLayer._animation != null)
 						channelGroup._primaryLayer._animation.weight = 0.0f;
 				}
 				else
 				{
 					channelGroup._state = ChannelGroup.State.Playing;
+
 					if (channelGroup._primaryLayer._animation != null)
 						channelGroup._primaryLayer._animation.weight = weight;
 				}
@@ -436,7 +446,7 @@ namespace Framework
 
 					if (IsChannelLayerPlaying(channelGroup._primaryLayer))
 					{
-						timeRemaining = channelGroup._primaryLayer._animation.layer - channelGroup._primaryLayer._animation.time;
+						timeRemaining = channelGroup._primaryLayer._animation.length - channelGroup._primaryLayer._animation.time;
 						queuedReady = timeRemaining <= channelGroup._queuedAnimationBlendTime;
 					}
 					else
@@ -501,6 +511,7 @@ namespace Framework
 					}
 
 					animation.wrapMode = wrapMode;
+					animation.time = 0f;
 					animation.enabled = true;
 				}
 				
