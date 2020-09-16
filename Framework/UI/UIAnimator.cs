@@ -8,9 +8,9 @@ namespace Framework
 		public abstract class UIAnimator : MonoBehaviour
 		{
 			#region Public Data
-			public bool _showOnAwake;
+			public bool _showOnEnable;
 			public bool _disableOnHidden;
-			
+
 			public float _showTime;
 			public float _hideTime;
 
@@ -33,7 +33,7 @@ namespace Framework
 						{
 							if (!_initialised)
 							{
-								_showOnAwake = true;
+								_showOnEnable = true;
 							}
 
 							this.gameObject.SetActive(true);
@@ -52,7 +52,7 @@ namespace Framework
 						{
 							if (!_initialised)
 							{
-								_showOnAwake = false;
+								_showOnEnable = false;
 							}
 
 							if (_hideTime > 0f && _showLerp > 0f)
@@ -81,11 +81,18 @@ namespace Framework
 			protected virtual void Awake()
 			{
 				_initialised = true;
+				OnHidden();
+			}
 
-				if (_showOnAwake)
+			private void OnEnable()
+			{
+				if (_showOnEnable)
 					Showing = true;
-				else
-					OnHidden();
+			}
+
+			private void OnDisable()
+			{
+				OnHidden();
 			}
 
 			private void Update()
