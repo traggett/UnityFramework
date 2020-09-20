@@ -81,7 +81,9 @@ namespace Framework
 			protected virtual void Awake()
 			{
 				_initialised = true;
-				OnHidden();
+				_shouldBeShowing = false;
+				_showLerp = 0f;
+				OnUpdateAnimations(0f, false);
 			}
 
 			private void OnEnable()
