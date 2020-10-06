@@ -61,11 +61,11 @@ namespace Framework
 				if (parent != null && parent != newInstance.transform.parent)
 				{
 					newInstance.transform.SetParent(parent, false);
+					newInstance.transform.localPosition = _prefab.transform.localPosition;
+					newInstance.transform.localRotation = _prefab.transform.localRotation;
+					newInstance.transform.localScale = _prefab.transform.localScale;
 				}
 
-				newInstance.transform.localPosition = _prefab.transform.localPosition;
-				newInstance.transform.localRotation = _prefab.transform.localRotation;
-				newInstance.transform.localScale = _prefab.transform.localScale;
 				newInstance.SetActive(true);
 
 				return newInstance;

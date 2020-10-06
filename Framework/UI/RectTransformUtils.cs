@@ -93,6 +93,17 @@ namespace Framework
 				rectTransform.GetWorldCorners(_worldCornersCache);
 				return _worldCornersCache[0] + ((_worldCornersCache[2] - _worldCornersCache[0]) * 0.5f);
 			}
+
+			public static void SetPivotKeepPosition(RectTransform rectTransform, Vector2 pivot)
+			{
+				Vector3 deltaPosition = rectTransform.pivot - pivot;
+				deltaPosition.Scale(rectTransform.rect.size);
+				deltaPosition.Scale(rectTransform.localScale);
+				deltaPosition = rectTransform.rotation * deltaPosition;
+
+				rectTransform.pivot = pivot;
+				rectTransform.localPosition -= deltaPosition; 
+			}
 		}
 	}
 }

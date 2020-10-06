@@ -100,6 +100,11 @@ namespace Framework
 			}
 			#endregion
 
+			protected IEnumerator GetNext()
+			{
+				return _next;
+			}
+
 			#region Private Functions
 			private IEnumerator Run()
 			{
