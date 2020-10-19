@@ -237,30 +237,37 @@ namespace Framework
 			
 			public static string RemoveRichText(string source)
 			{
-				char[] array = new char[source.Length];
-				int arrayIndex = 0;
-				bool inside = false;
-
-				for (int i = 0; i < source.Length; i++)
+				if (!string.IsNullOrEmpty(source))
 				{
-					char let = source[i];
-					if (let == '<')
+					char[] array = new char[source.Length];
+					int arrayIndex = 0;
+					bool inside = false;
+
+					for (int i = 0; i < source.Length; i++)
 					{
-						inside = true;
-						continue;
+						char let = source[i];
+						if (let == '<')
+						{
+							inside = true;
+							continue;
+						}
+						if (let == '>')
+						{
+							inside = false;
+							continue;
+						}
+						if (!inside)
+						{
+							array[arrayIndex] = let;
+							arrayIndex++;
+						}
 					}
-					if (let == '>')
-					{
-						inside = false;
-						continue;
-					}
-					if (!inside)
-					{
-						array[arrayIndex] = let;
-						arrayIndex++;
-					}
+
+					return new string(array, 0, arrayIndex);
 				}
-				return new string(array, 0, arrayIndex);
+
+
+				return source;
 			}
 		}
 	}

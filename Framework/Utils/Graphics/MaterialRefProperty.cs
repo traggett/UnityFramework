@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -97,19 +96,8 @@ namespace Framework
 								return _renderer.sharedMaterials[_materialIndex];
 							}
 #endif
-							
-							//Check if list is already instantiated
-							List<Material> materials = new List<Material>(numMaterials);
-							_renderer.GetMaterials(materials);
-
-							if (materials.Count < numMaterials)
-							{
-								_material = _renderer.materials[_materialIndex];
-							}
-							else
-							{
-								_material = materials[_materialIndex];
-							}
+						
+							_material = _renderer.materials[_materialIndex];
 						}
 					}
 				}
