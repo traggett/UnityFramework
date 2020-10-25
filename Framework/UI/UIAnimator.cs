@@ -108,6 +108,16 @@ namespace Framework
 			{
 				return !_shouldBeShowing && _showLerp > 0f;
 			}
+
+			public void ShowInstant()
+			{
+				OnShown();
+			}
+
+			public void HideInstant()
+			{
+				OnHidden();
+			}
 			#endregion
 
 			#region Virtual Interface
