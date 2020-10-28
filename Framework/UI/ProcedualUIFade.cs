@@ -9,8 +9,22 @@ namespace Framework
         {
             public Color _bottomColor;
             public Color _topColor;
+			public Sprite _sprite;
 
-            protected override void OnRectTransformDimensionsChange()
+			public override Texture mainTexture
+			{
+				get
+				{
+					if (_sprite == null)
+					{
+						return null;
+					}
+
+					return _sprite.texture;
+				}
+			}
+
+			protected override void OnRectTransformDimensionsChange()
             {
                 base.OnRectTransformDimensionsChange();
                 SetVerticesDirty();
@@ -37,18 +51,22 @@ namespace Framework
 
 				vert.position = bottomLeftCorner;
 				vert.color = _bottomColor;
+				vert.uv0 = new Vector2(0f, 0f);
 				vertexHelper.AddVert(vert);
 
 				vert.position = new Vector2(topRightCorner.x, bottomLeftCorner.y);
 				vert.color = _bottomColor;
+				vert.uv0 = new Vector2(1f, 0f);
 				vertexHelper.AddVert(vert);
 
 				vert.position = topRightCorner;
 				vert.color = _topColor;
+				vert.uv0 = new Vector2(1f, 1f);
 				vertexHelper.AddVert(vert);
 
 				vert.position = new Vector2(bottomLeftCorner.x, topRightCorner.y);
 				vert.color = _topColor;
+				vert.uv0 = new Vector2(0f, 1f);
 				vertexHelper.AddVert(vert);
 
 				vertexHelper.AddTriangle(i + 0, i + 2, i + 1);
