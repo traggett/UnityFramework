@@ -7,8 +7,8 @@ namespace Framework
     {
         public class ProcedualUIFade : MaskableGraphic
         {
-            public Color _bottomColor;
-            public Color _topColor;
+			public Color _topColor;
+			public Color _bottomColor;
 			public Sprite _sprite;
 
 			public override Texture mainTexture
