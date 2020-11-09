@@ -7,8 +7,16 @@ namespace Framework
     {
         public class ProcedualUIFade : MaskableGraphic
         {
-			public Color _topColor;
-			public Color _bottomColor;
+			public enum Direction
+			{ 
+				Vertical,
+				Horizontal
+			}
+
+			public Direction _direction;
+			public Color _fromColor;
+			public Color _toColor;
+
 			public Sprite _sprite;
 
 			public override Texture mainTexture
@@ -50,22 +58,22 @@ namespace Framework
 				UIVertex vert = new UIVertex();
 
 				vert.position = bottomLeftCorner;
-				vert.color = _bottomColor;
+				vert.color = _fromColor;
 				vert.uv0 = new Vector2(0f, 0f);
 				vertexHelper.AddVert(vert);
 
 				vert.position = new Vector2(topRightCorner.x, bottomLeftCorner.y);
-				vert.color = _bottomColor;
+				vert.color = _direction == Direction.Vertical ? _fromColor : _toColor;
 				vert.uv0 = new Vector2(1f, 0f);
 				vertexHelper.AddVert(vert);
 
 				vert.position = topRightCorner;
-				vert.color = _topColor;
+				vert.color = _toColor;
 				vert.uv0 = new Vector2(1f, 1f);
 				vertexHelper.AddVert(vert);
 
 				vert.position = new Vector2(bottomLeftCorner.x, topRightCorner.y);
-				vert.color = _topColor;
+				vert.color = _direction == Direction.Vertical ? _toColor : _fromColor;
 				vert.uv0 = new Vector2(0f, 1f);
 				vertexHelper.AddVert(vert);
 
