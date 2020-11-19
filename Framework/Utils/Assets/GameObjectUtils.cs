@@ -10,6 +10,18 @@ namespace Framework
 		{
 			public static bool _isShuttingDown = false;
 
+			public static string GetGameObjectPath(GameObject gameObject)
+			{
+				string path = "/" + gameObject.name;
+
+				while (gameObject.transform.parent != null)
+				{
+					gameObject = gameObject.transform.parent.gameObject;
+					path = "/" + gameObject.name + path;
+				}
+				return path;
+			}
+
 			public static GameObject Create(string name, Transform parent = null)
 			{
 				if (_isShuttingDown)

@@ -148,6 +148,13 @@ namespace Framework
 
 			private PooledPrefab CreatePrefab()
 			{
+#if DEBUG
+				if (_prefab == null)
+				{
+					Debug.LogError("PrefabInstancePool " + GameObjectUtils.GetGameObjectPath(this.gameObject) + " is missing it's prefab!");
+					return null;
+				}					
+#endif
 				GameObject gameObject = Instantiate(_prefab, this.transform);
 				PooledPrefab prefab = gameObject.AddComponent<PooledPrefab>();
 				prefab._parentPool = this;
