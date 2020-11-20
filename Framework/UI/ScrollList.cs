@@ -207,6 +207,11 @@ namespace Framework
 				}
 			}
 
+			public float GetContentHeight()
+			{
+				return _scrollArea.content.sizeDelta.y;
+			}
+
 			#region Private Functions
 			private void Initialise(IList<T> items = null)
 			{
