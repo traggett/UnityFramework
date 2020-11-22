@@ -111,6 +111,7 @@ namespace Framework
 
 			public void ShowInstant()
 			{
+				Showing = true;
 				OnShown();
 			}
 
