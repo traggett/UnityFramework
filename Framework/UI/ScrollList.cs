@@ -332,9 +332,7 @@ namespace Framework
 
 					size += EndPadding;
 
-					Vector2 scrollAreaSize = _scrollArea.content.sizeDelta;
-					scrollAreaSize.y = size;
-					_scrollArea.content.sizeDelta = scrollAreaSize;
+					RectTransformUtils.SetHeight(_scrollArea.content, size);
 				}
 			}
 
