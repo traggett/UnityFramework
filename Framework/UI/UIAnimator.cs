@@ -17,11 +17,11 @@ namespace Framework
 			public Action _onShown;
 			public Action _onHidden;
 
-			public bool Showing
+			public bool Active
 			{
 				get
 				{
-					return _shouldBeShowing || _showLerp > 0f;
+					return _shouldBeShowing;
 				}
 				set
 				{
@@ -89,7 +89,7 @@ namespace Framework
 			private void OnEnable()
 			{
 				if (_showOnEnable)
-					Showing = true;
+					Active = true;
 			}
 
 			private void OnDisable()
@@ -104,20 +104,24 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			public bool IsHiding()
-			{
-				return !_shouldBeShowing && _showLerp > 0f;
-			}
-
 			public void ShowInstant()
 			{
-				Showing = true;
 				OnShown();
 			}
 
 			public void HideInstant()
 			{
 				OnHidden();
+			}
+
+			public bool IsFullyShowing()
+			{
+				return _shouldBeShowing && _showLerp >= 1f;
+			}
+
+			public bool IsVisible()
+			{
+				return _showLerp > 0f;
 			}
 			#endregion
 
