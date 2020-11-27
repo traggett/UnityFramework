@@ -42,38 +42,43 @@ namespace Framework
             {
                 vh.Clear();
 
-                var bottomLeftCorner = new Vector2(0, 0) - rectTransform.pivot;
+				Vector2 bottomLeftCorner = new Vector2(0, 0) - rectTransform.pivot;
                 bottomLeftCorner.x *= rectTransform.rect.width;
                 bottomLeftCorner.y *= rectTransform.rect.height;
 
-                CreateQuad(vh,
-                           bottomLeftCorner,
-                           bottomLeftCorner + (rectTransform.rect.width * Vector2.right) + (rectTransform.rect.height * Vector2.up));
+				Vector2 topRightCorner = bottomLeftCorner + (rectTransform.rect.width * Vector2.right) + (rectTransform.rect.height * Vector2.up);
+
+				Color fromColor = _fromColor * this.color;
+				Color toColor = _toColor * this.color;
+
+				CreateQuad(vh,
+                           bottomLeftCorner, topRightCorner,
+						   fromColor, toColor, _direction);
             }
 
-			private void CreateQuad(VertexHelper vertexHelper, Vector2 bottomLeftCorner, Vector2 topRightCorner)
+			private static void CreateQuad(VertexHelper vertexHelper, Vector2 bottomLeftCorner, Vector2 topRightCorner, Color from, Color to, Direction direction)
 			{
 				var i = vertexHelper.currentVertCount;
 
 				UIVertex vert = new UIVertex();
 
 				vert.position = bottomLeftCorner;
-				vert.color = _fromColor;
+				vert.color = from;
 				vert.uv0 = new Vector2(0f, 0f);
 				vertexHelper.AddVert(vert);
 
 				vert.position = new Vector2(topRightCorner.x, bottomLeftCorner.y);
-				vert.color = _direction == Direction.Vertical ? _fromColor : _toColor;
+				vert.color = direction == Direction.Vertical ? from : to;
 				vert.uv0 = new Vector2(1f, 0f);
 				vertexHelper.AddVert(vert);
 
 				vert.position = topRightCorner;
-				vert.color = _toColor;
+				vert.color = to;
 				vert.uv0 = new Vector2(1f, 1f);
 				vertexHelper.AddVert(vert);
 
 				vert.position = new Vector2(bottomLeftCorner.x, topRightCorner.y);
-				vert.color = _direction == Direction.Vertical ? _toColor : _fromColor;
+				vert.color = direction == Direction.Vertical ? to : from;
 				vert.uv0 = new Vector2(0f, 1f);
 				vertexHelper.AddVert(vert);
 
