@@ -25,7 +25,7 @@ namespace Framework
 				{
 					if (_sprite == null)
 					{
-						return null;
+						return s_WhiteTexture;
 					}
 
 					return _sprite.texture;
