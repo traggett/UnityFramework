@@ -475,7 +475,7 @@ namespace Framework
 							}
 							catch (Exception e)
 							{
-								Debug.Log(e.Message);
+								UnityEngine.Debug.Log(e.Message);
 								continue;
 							}
 
@@ -540,7 +540,7 @@ namespace Framework
 
 						if (!_tagToTypeMap.TryGetValue(xmlTag, out type))
 						{
-							Debug.LogError("XML Node tag '" + xmlTag + "' is not mapped to a type, check a class has a XmlTagAttribute with the same tag");
+							UnityEngine.Debug.LogError("XML Node tag '" + xmlTag + "' is not mapped to a type, check a class has a XmlTagAttribute with the same tag");
 						}
 					}
 

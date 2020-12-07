@@ -196,7 +196,7 @@ namespace Framework
 					}
 				}
 
-				Debug.LogError("Not enough instances, increase _maxMeshes");
+				UnityEngine.Debug.LogError("Not enough instances, increase _maxMeshes");
 			}
 
 			protected int GetNumRenderedInstances()

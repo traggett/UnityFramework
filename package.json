@@ -1,0 +1,10 @@
+{
+	"author": "Tom Raggett (https://github.com/traggett)",
+	"description": Framework and Utilities classes for Unity.",
+	"displayName": "Unity Framework",
+	"license": "MIT",
+	"name": "com.traggett.unityframework",
+	"version": "1.0.0",
+	"dependencies": {
+	}
+}

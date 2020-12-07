@@ -409,7 +409,7 @@ namespace Framework
 						int variableEndIndex = text.IndexOf(kVariableEndChars, variableStartIndex);
 						if (variableEndIndex == -1)
 						{
-							Debug.LogError("Can't find matching end bracket for variable in localised string");
+							UnityEngine.Debug.LogError("Can't find matching end bracket for variable in localised string");
 							return null;
 						}
 
@@ -443,7 +443,7 @@ namespace Framework
 								}
 								else if (Application.isPlaying)
 								{
-									Debug.LogError("Can't find variable to replace key '" + variableKey + "'");
+									UnityEngine.Debug.LogError("Can't find variable to replace key '" + variableKey + "'");
 								}
 							}
 						}

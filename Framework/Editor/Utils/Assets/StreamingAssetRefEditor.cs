@@ -67,7 +67,7 @@ namespace Framework
 							if (asset != null && !AssetUtils.IsStreamingAsset(asset))
 							{
 								asset = null;
-								Debug.LogError("Asset needs to be in Streaming Assets folder.");
+								UnityEngine.Debug.LogError("Asset needs to be in Streaming Assets folder.");
 							}
 
 							assetRef = new StreamingAssetRef<T>(asset);

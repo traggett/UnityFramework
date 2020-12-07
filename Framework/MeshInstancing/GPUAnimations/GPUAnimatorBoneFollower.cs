@@ -133,7 +133,7 @@ namespace Framework
 									}
 								}
 
-								Debug.LogError("Bone '" + boneName + "' isn't exposed in GPU Animations Asset");
+								UnityEngine.Debug.LogError("Bone '" + boneName + "' isn't exposed in GPU Animations Asset");
 								return -1;
 							}
 						}

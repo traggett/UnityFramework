@@ -67,7 +67,7 @@ namespace Framework
 							if (asset != null && !AssetUtils.IsAssetInResources(asset))
 							{
 								asset = null;
-								Debug.LogError("Asset needs to be in Resources folder.");
+								UnityEngine.Debug.LogError("Asset needs to be in Resources folder.");
 							}
 
 							assetRef = new AssetRef<T>(asset);

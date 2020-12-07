@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Framework
 {
-	namespace Utils
+	namespace Debug
 	{
 		public static class DebugDrawing
 		{
