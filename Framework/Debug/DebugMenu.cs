@@ -48,7 +48,7 @@ namespace Framework
 
 				public override string GetDisplayedText()
 				{
-					return _name + "  >>>";
+					return "[" + _name + "]";
 				}
 			}
 
@@ -281,7 +281,7 @@ namespace Framework
 
 				for (int i = _currentMenu._items.Count - 1; i >= 0; i--)
 				{
-					_visuals._items[itemIndex].text = _currentMenu._items[i].GetDisplayedText();
+					_visuals._items[itemIndex].text = i == _currentItemIndex ? "> " + _currentMenu._items[i].GetDisplayedText() : _currentMenu._items[i].GetDisplayedText();
 					_visuals._items[itemIndex].color = i == _currentItemIndex ? _visuals._highlightedColor : _visuals._title.color;
 					_visuals._items[itemIndex].gameObject.SetActive(true);
 					itemIndex++;
@@ -367,20 +367,20 @@ namespace Framework
 
 			private static void OnInputUpPressed(InputAction.CallbackContext context)
 			{
-				_currentItemIndex--;
+				_currentItemIndex++;
 
-				if (_currentItemIndex < 0)
-					_currentItemIndex = _currentMenu._items.Count - 1;
+				if (_currentItemIndex >= _currentMenu._items.Count)
+					_currentItemIndex = 0;
 
 				RefreshMenu();
 			}
 
 			private static void OnInputDownPressed(InputAction.CallbackContext context)
 			{
-				_currentItemIndex++;
+				_currentItemIndex--;
 
-				if (_currentItemIndex >= _currentMenu._items.Count)
-					_currentItemIndex = 0;
+				if (_currentItemIndex < 0)
+					_currentItemIndex = _currentMenu._items.Count - 1;
 
 				RefreshMenu();
 			}
