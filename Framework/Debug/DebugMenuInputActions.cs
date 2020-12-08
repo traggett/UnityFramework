@@ -73,7 +73,7 @@ namespace Framework.Debug
                 {
                     ""name"": """",
                     ""id"": ""ebb494a6-ddaf-44f8-907b-bb71d45d5ae4"",
-                    ""path"": ""<Keyboard>/f3"",
+                    ""path"": ""<Keyboard>/tab"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",

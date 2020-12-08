@@ -13,21 +13,20 @@ namespace Framework
 {
 	namespace Debug
 	{
-		public static class DebugMenu
+		public static class DebugMenuManager
 		{
-
-			private static DebugItemMenu _rootMenu;
+			private static Menu _rootMenu;
 			private static DebugMenuInputActions _inputActions;
 			private static DebugMenuVisuals _visuals;
-			private static DebugItemMenu _currentMenu;
+			private static Menu _currentMenu;
 			private static int _currentItemIndex;
 
 			#region Menu Items
-			private abstract class DebugItem
+			private abstract class MenuItem
 			{
 				public readonly string _name;
 
-				public DebugItem(string name)
+				public MenuItem(string name)
 				{
 					_name = name;
 				}
@@ -35,15 +34,15 @@ namespace Framework
 				public abstract string GetDisplayedText();
 			}
 
-			private class DebugItemMenu : DebugItem
+			private class Menu : MenuItem
 			{
-				public DebugItemMenu _parent;
-				public List<DebugItem> _items;
+				public Menu _parent;
+				public List<MenuItem> _items;
 
-				public DebugItemMenu(string name, DebugItemMenu parent = null) : base(name)
+				public Menu(string name, Menu parent = null) : base(name)
 				{
 					_parent = parent;
-					_items = new List<DebugItem>();
+					_items = new List<MenuItem>();
 				}
 
 				public override string GetDisplayedText()
@@ -52,11 +51,11 @@ namespace Framework
 				}
 			}
 
-			private class DebugItemFunction : DebugItem
+			private class MenuItemFunction : MenuItem
 			{
 				public readonly MethodInfo _function;
 
-				public DebugItemFunction(string name, MethodInfo function) : base(name)
+				public MenuItemFunction(string name, MethodInfo function) : base(name)
 				{
 					_function = function;
 				}
@@ -67,11 +66,11 @@ namespace Framework
 				}
 			}
 
-			private class DebugItemProperty : DebugItem
+			private class MenuItemProperty : MenuItem
 			{
 				public readonly PropertyInfo _property;
 
-				public DebugItemProperty(string name, PropertyInfo property) : base(name)
+				public MenuItemProperty(string name, PropertyInfo property) : base(name)
 				{
 					_property = property;
 				}
@@ -82,11 +81,11 @@ namespace Framework
 				}
 			}
 
-			private class DebugItemField : DebugItem
+			private class MenuItemField : MenuItem
 			{
 				public readonly FieldInfo _field;
 
-				public DebugItemField(string name, FieldInfo field) : base(name)
+				public MenuItemField(string name, FieldInfo field) : base(name)
 				{
 					_field = field;
 				}
@@ -97,9 +96,9 @@ namespace Framework
 				}
 			}
 
-			private class DebugItemBack : DebugItem
+			private class MenuItemBack : MenuItem
 			{
-				public DebugItemBack() : base(null)
+				public MenuItemBack() : base(null)
 				{
 					
 				}
@@ -110,9 +109,9 @@ namespace Framework
 				}
 			}
 
-			private class DebugItemExit : DebugItem
+			private class MenuItemExit : MenuItem
 			{
-				public DebugItemExit() : base(null)
+				public MenuItemExit() : base(null)
 				{
 
 				}
@@ -129,7 +128,6 @@ namespace Framework
 			{
 				BuildMenus();
 
-
 				_inputActions = new DebugMenuInputActions();
 				_inputActions.Menu.ToggleMenu.performed += OnInputToggleMenu;
 				_inputActions.Menu.Enter.performed += OnInputEnterPressed;
@@ -142,8 +140,8 @@ namespace Framework
 
 			private static void BuildMenus()
 			{
-				_rootMenu = new DebugItemMenu("Debug Menu");
-				_rootMenu._items.Add(new DebugItemExit());
+				_rootMenu = new Menu("Debug Menu");
+				_rootMenu._items.Add(new MenuItemExit());
 
 				Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
@@ -172,7 +170,7 @@ namespace Framework
 						{
 							if (method.GetParameters().Length == 0)
 							{
-								DebugMenuItemAttribute item = SystemUtils.GetAttribute<DebugMenuItemAttribute>(method);
+								DebugMenuAttribute item = SystemUtils.GetAttribute<DebugMenuAttribute>(method);
 
 								if (item != null)
 								{
@@ -185,7 +183,7 @@ namespace Framework
 
 						foreach (PropertyInfo property in properties)
 						{
-							DebugMenuItemAttribute item = SystemUtils.GetAttribute<DebugMenuItemAttribute>(property);
+							DebugMenuAttribute item = SystemUtils.GetAttribute<DebugMenuAttribute>(property);
 
 							if (item != null)
 							{
@@ -197,7 +195,7 @@ namespace Framework
 
 						foreach (FieldInfo field in fields)
 						{
-							DebugMenuItemAttribute item = SystemUtils.GetAttribute<DebugMenuItemAttribute>(field);
+							DebugMenuAttribute item = SystemUtils.GetAttribute<DebugMenuAttribute>(field);
 
 							if (item != null)
 							{
@@ -208,11 +206,11 @@ namespace Framework
 				}
 			}
 
-			private static DebugItemMenu FindOrAddMenu(DebugItemMenu parent, string name)
+			private static Menu FindOrAddMenu(Menu parent, string name)
 			{
-				foreach (DebugItem item in parent._items)
+				foreach (MenuItem item in parent._items)
 				{
-					if (item._name == name && item is DebugItemMenu menu)
+					if (item._name == name && item is Menu menu)
 					{
 						return menu;
 					}
@@ -220,10 +218,10 @@ namespace Framework
 
 				//Add menu
 				{
-					DebugItemMenu menu = new DebugItemMenu(name, parent);
+					Menu menu = new Menu(name, parent);
 
 					//Add item to go back to parent
-					menu._items.Add(new DebugItemBack());
+					menu._items.Add(new MenuItemBack());
 
 					//Add item in parent to open menu
 					parent._items.Add(menu);
@@ -232,7 +230,7 @@ namespace Framework
 				}
 			}
 
-			private static DebugItemMenu GetMenu(DebugMenuItemAttribute item, out string name)
+			private static Menu GetMenu(DebugMenuAttribute item, out string name)
 			{
 				if (string.IsNullOrEmpty(item.Path))
 				{
@@ -242,7 +240,7 @@ namespace Framework
 				else
 				{
 					string[] menus = item.Path.Split('/');
-					DebugItemMenu menu = _rootMenu;
+					Menu menu = _rootMenu;
 
 					for (int i=0; i<menus.Length-1; i++)
 					{
@@ -255,22 +253,22 @@ namespace Framework
 				}
 			}
 
-			private static void AddFunction(DebugMenuItemAttribute item, MethodInfo method)
+			private static void AddFunction(DebugMenuAttribute item, MethodInfo method)
 			{
-				DebugItemMenu menu = GetMenu(item, out string name);
-				menu._items.Add(new DebugItemFunction(string.IsNullOrEmpty(name) ? method.Name : name, method));
+				Menu menu = GetMenu(item, out string name);
+				menu._items.Add(new MenuItemFunction(string.IsNullOrEmpty(name) ? method.Name : name, method));
 			}
 
-			private static void AddProperty(DebugMenuItemAttribute item, PropertyInfo property)
+			private static void AddProperty(DebugMenuAttribute item, PropertyInfo property)
 			{
-				DebugItemMenu menu = GetMenu(item, out string name);
-				menu._items.Add(new DebugItemProperty(string.IsNullOrEmpty(name) ? property.Name : name, property));
+				Menu menu = GetMenu(item, out string name);
+				menu._items.Add(new MenuItemProperty(string.IsNullOrEmpty(name) ? property.Name : name, property));
 			}
 
-			private static void AddField(DebugMenuItemAttribute item, FieldInfo field)
+			private static void AddField(DebugMenuAttribute item, FieldInfo field)
 			{
-				DebugItemMenu menu = GetMenu(item, out string name);
-				menu._items.Add(new DebugItemField(string.IsNullOrEmpty(name) ? field.Name : name, field));
+				Menu menu = GetMenu(item, out string name);
+				menu._items.Add(new MenuItemField(string.IsNullOrEmpty(name) ? field.Name : name, field));
 			}
 
 			private static void RefreshMenu()
@@ -340,23 +338,23 @@ namespace Framework
 			{
 				if (_visuals != null && _visuals.gameObject.activeSelf)
 				{
-					DebugItem item = _currentMenu._items[_currentItemIndex];
+					MenuItem item = _currentMenu._items[_currentItemIndex];
 
-					if (item is DebugItemFunction function)
+					if (item is MenuItemFunction function)
 					{
 						function._function.Invoke(null, new object[0]);
 					}
-					else if (item is DebugItemMenu menu)
+					else if (item is Menu menu)
 					{
 						_currentMenu = menu;
 						_currentItemIndex = _currentMenu._items.Count - 1;
 					}
-					else if (item is DebugItemBack)
+					else if (item is MenuItemBack)
 					{
 						_currentMenu = _currentMenu._parent;
 						_currentItemIndex = _currentMenu._items.Count - 1;
 					}
-					else if (item is DebugItemExit)
+					else if (item is MenuItemExit)
 					{
 						_visuals.gameObject.SetActive(false);
 					}
@@ -389,9 +387,9 @@ namespace Framework
 			{
 				if (_visuals != null && _visuals.gameObject.activeSelf)
 				{
-					DebugItem item = _currentMenu._items[_currentItemIndex];
+					MenuItem item = _currentMenu._items[_currentItemIndex];
 
-					if (item is DebugItemField field)
+					if (item is MenuItemField field)
 					{
 						if (field._field.FieldType == typeof(bool))
 						{
@@ -413,7 +411,7 @@ namespace Framework
 							field._field.SetValue(null, value - 1d);
 						}
 					}
-					else if (item is DebugItemProperty property)
+					else if (item is MenuItemProperty property)
 					{
 						if (property._property.PropertyType == typeof(bool))
 						{
@@ -444,9 +442,9 @@ namespace Framework
 			{
 				if (_visuals != null && _visuals.gameObject.activeSelf)
 				{
-					DebugItem item = _currentMenu._items[_currentItemIndex];
+					MenuItem item = _currentMenu._items[_currentItemIndex];
 
-					if (item is DebugItemField field)
+					if (item is MenuItemField field)
 					{
 						if (field._field.FieldType == typeof(bool))
 						{
@@ -468,7 +466,7 @@ namespace Framework
 							field._field.SetValue(null, value + 1d);
 						}
 					}
-					else if (item is DebugItemProperty property)
+					else if (item is MenuItemProperty property)
 					{
 						if (property._property.PropertyType == typeof(bool))
 						{

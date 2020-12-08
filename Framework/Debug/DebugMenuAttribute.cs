@@ -6,11 +6,11 @@ namespace Framework
 	{
 		// Can be added to static parameterless functions, values and properties
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = false)]
-		public sealed class DebugMenuItemAttribute : Attribute
+		public sealed class DebugMenuAttribute : Attribute
 		{
 			public readonly string Path;
 
-			public DebugMenuItemAttribute(string path = null)
+			public DebugMenuAttribute(string path = null)
 			{
 				Path = path;
 			}
