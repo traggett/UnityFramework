@@ -365,22 +365,28 @@ namespace Framework
 
 			private static void OnInputUpPressed(InputAction.CallbackContext context)
 			{
-				_currentItemIndex++;
+				if (_visuals != null && _visuals.gameObject.activeSelf)
+				{
+					_currentItemIndex++;
 
-				if (_currentItemIndex >= _currentMenu._items.Count)
-					_currentItemIndex = 0;
+					if (_currentItemIndex >= _currentMenu._items.Count)
+						_currentItemIndex = 0;
 
-				RefreshMenu();
+					RefreshMenu();
+				}
 			}
 
 			private static void OnInputDownPressed(InputAction.CallbackContext context)
 			{
-				_currentItemIndex--;
+				if (_visuals != null && _visuals.gameObject.activeSelf)
+				{
+					_currentItemIndex--;
 
-				if (_currentItemIndex < 0)
-					_currentItemIndex = _currentMenu._items.Count - 1;
+					if (_currentItemIndex < 0)
+						_currentItemIndex = _currentMenu._items.Count - 1;
 
-				RefreshMenu();
+					RefreshMenu();
+				}
 			}
 
 			private static void OnInputLeftPressed(InputAction.CallbackContext context)

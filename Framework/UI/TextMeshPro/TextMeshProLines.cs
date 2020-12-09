@@ -119,6 +119,7 @@ namespace Framework
 								lines[i].rectTransform.anchorMin = new Vector2(0f, 0f);
 								lines[i].rectTransform.anchorMax = new Vector2(0f, 0f);
 								lines[i].rectTransform.sizeDelta = new Vector2(0f, lineHeight);
+								lines[i].color = _lineColor;
 							}
 						}
 
