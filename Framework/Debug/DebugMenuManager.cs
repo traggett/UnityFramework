@@ -358,9 +358,9 @@ namespace Framework
 					{
 						_visuals.gameObject.SetActive(false);
 					}
-				}
 
-				RefreshMenu();
+					RefreshMenu();
+				}
 			}
 
 			private static void OnInputUpPressed(InputAction.CallbackContext context)
@@ -439,9 +439,9 @@ namespace Framework
 							property._property.SetValue(null, value - 1d);
 						}
 					}
-				}
 
-				RefreshMenu();
+					RefreshMenu();
+				}
 			}
 
 			private static void OnInputRightPressed(InputAction.CallbackContext context)
@@ -494,13 +494,12 @@ namespace Framework
 							property._property.SetValue(null, value + 1d);
 						}
 					}
-				}
 
-				RefreshMenu();
+					RefreshMenu();
+				}
 			}
 			#endregion
 		}
 	}
 }
-
 #endif
