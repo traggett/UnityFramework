@@ -156,7 +156,7 @@ namespace Framework
 					{
 						types = assemblies[i].GetTypes();
 					}
-					catch (Exception e)
+					catch
 					{
 						continue;
 					}
