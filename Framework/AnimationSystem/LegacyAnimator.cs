@@ -476,8 +476,11 @@ namespace Framework
 			private void StopChannelLayer(ChannelLayer layer)
 			{
 				if (layer._animation != null && layer._animation.layer == layer._layer)
+				{
 					layer._animation.enabled = false;
-
+					layer._animation.weight = 0f;
+				}
+					
 				layer._animation = null;
 			}
 
