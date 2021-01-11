@@ -44,7 +44,7 @@ namespace Framework
 
 					foreach (AnimationState state in animation)
 					{
-						info += "clip:<b>" + state.name + "</b>    enabled:<b>" + state.enabled + "</b>    weight:<b>" + state.weight + "</b>    time:<b>" + state.time + "</b>";
+						info += "clip:<b>" + state.name + "</b>    enabled:<b>" + state.enabled + "</b>    weight:<b>" + state.weight + "</b>    time:<b>" + state.time + "</b>    layer:<b>" + state.layer + "</b>";
 						info += "\n";
 					}
 
