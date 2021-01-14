@@ -111,7 +111,7 @@ namespace Framework
 				{
 					Scene scene = SceneManager.GetSceneAt(i);
 
-					PrefabInstancePool[] prefabPools = SceneUtils.FindAllComponentInferfacesInScene<PrefabInstancePool>(scene);
+					PrefabInstancePool[] prefabPools = SceneUtils.FindAllComponentInferfacesInScene<PrefabInstancePool>(scene, true);
 
 					for (int j = 0; j < prefabPools.Length; j++)
 					{
