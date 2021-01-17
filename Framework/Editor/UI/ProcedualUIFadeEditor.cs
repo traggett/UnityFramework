@@ -15,9 +15,7 @@ namespace Framework
             private SerializedProperty _fromColor;
             private SerializedProperty _sprite;
             private SerializedProperty _material;
-
             private static readonly GUIContent _fromColorLable = new GUIContent("From Color"); 
-
 
             protected override void OnEnable()
             {
