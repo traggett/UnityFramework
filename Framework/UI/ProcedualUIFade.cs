@@ -5,32 +5,57 @@ namespace Framework
 {
     namespace UI
     {
-        public class ProcedualUIFade : MaskableGraphic
+        public class ProcedualUIFade : Image
         {
-			public enum Direction
+			public enum FadeDirection
 			{ 
 				Vertical,
 				Horizontal
 			}
-
-			public Direction _direction;
-			public Color _fromColor;
-			public Color _toColor;
-
-			public Sprite _sprite;
-
-			public override Texture mainTexture
-			{
-				get
-				{
-					if (_sprite == null)
-					{
-						return s_WhiteTexture;
-					}
-
-					return _sprite.texture;
-				}
+			
+			public FadeDirection Direction 
+			{ 
+				get 
+				{ 
+					return _direction; 
+				} 
+				set 
+				{ 
+					_direction = value; 
+					SetVerticesDirty();
+				} 
 			}
+
+			public virtual Color FromColor 
+			{ 
+				get 
+				{ 
+					return color; 
+				} 
+				set 
+				{ 
+					color = value; 
+				} 
+			}
+
+			public virtual Color ToColor 
+			{ 
+				get 
+				{ 
+					return _toColor; 
+				} 
+				set 
+				{ 
+					_toColor = value; 
+					SetVerticesDirty();
+				} 
+			}
+
+			[SerializeField]
+			private Color _toColor;
+
+			[SerializeField]
+			private FadeDirection _direction;
 
 			protected override void OnRectTransformDimensionsChange()
             {
@@ -47,45 +72,31 @@ namespace Framework
                 bottomLeftCorner.y *= rectTransform.rect.height;
 
 				Vector2 topRightCorner = bottomLeftCorner + (rectTransform.rect.width * Vector2.right) + (rectTransform.rect.height * Vector2.up);
+				Vector2[] uvs;
 
-				Color fromColor = _fromColor * this.color;
-				Color toColor = _toColor * this.color;
+				if (sprite != null && sprite.uv.Length == 4)
+				{
+					uvs = sprite.uv;
+				}
+				else
+				{
+					uvs = new Vector2[]
+					{
+						new Vector2(0f, 0f),
+						new Vector2(1f, 0f),
+						new Vector2(1f, 1f),
+						new Vector2(0f, 1f),
+					};
+				}
 
-				CreateQuad(vh,
-                           bottomLeftCorner, topRightCorner,
-						   fromColor, toColor, _direction);
+				vh.AddVert(bottomLeftCorner, FromColor, uvs[0]);
+				vh.AddVert(new Vector2(topRightCorner.x, bottomLeftCorner.y), _direction == FadeDirection.Vertical ? FromColor : ToColor, uvs[1]);
+				vh.AddVert(topRightCorner, ToColor, uvs[2]);
+				vh.AddVert(new Vector2(bottomLeftCorner.x, topRightCorner.y), _direction == FadeDirection.Vertical ? ToColor : FromColor, uvs[3]);
+
+				vh.AddTriangle(0, 2, 1);
+				vh.AddTriangle(3, 2, 0);
             }
-
-			private static void CreateQuad(VertexHelper vertexHelper, Vector2 bottomLeftCorner, Vector2 topRightCorner, Color from, Color to, Direction direction)
-			{
-				var i = vertexHelper.currentVertCount;
-
-				UIVertex vert = new UIVertex();
-
-				vert.position = bottomLeftCorner;
-				vert.color = from;
-				vert.uv0 = new Vector2(0f, 0f);
-				vertexHelper.AddVert(vert);
-
-				vert.position = new Vector2(topRightCorner.x, bottomLeftCorner.y);
-				vert.color = direction == Direction.Vertical ? from : to;
-				vert.uv0 = new Vector2(1f, 0f);
-				vertexHelper.AddVert(vert);
-
-				vert.position = topRightCorner;
-				vert.color = to;
-				vert.uv0 = new Vector2(1f, 1f);
-				vertexHelper.AddVert(vert);
-
-				vert.position = new Vector2(bottomLeftCorner.x, topRightCorner.y);
-				vert.color = direction == Direction.Vertical ? to : from;
-				vert.uv0 = new Vector2(0f, 1f);
-				vertexHelper.AddVert(vert);
-
-				vertexHelper.AddTriangle(i + 0, i + 2, i + 1);
-				vertexHelper.AddTriangle(i + 3, i + 2, i + 0);
-			}
-
 		}
 	}
 }
