@@ -65,117 +65,23 @@ namespace Framework
 				return playable;
 			}
 
-			//Finds the track mixer for a track given a playable graph instance
-			public static T GetTrackMixer<T>(PlayableGraph graph, TrackAsset track) where T : class, IPlayableBehaviour, ITrackMixer, new()
+			public static bool IsPlayableOfType(Playable playable, Type type)
 			{
-				int rootCount = graph.GetRootPlayableCount();
-
-				for (int i = 0; i < rootCount; i++)
-				{
-					Playable root = graph.GetRootPlayable(i);
-
-					T trackMixer = GetTrackMixer<T>(root, track);
-
-					if (trackMixer != null)
-					{
-						return trackMixer;
-					}
-				}
-
-				return null;
+				Type playableType = playable.GetPlayableType();
+				return SystemUtils.IsTypeOf(type, playableType);
 			}
 
-			public static PlayableBehaviour GetTrackMixer(PlayableGraph graph, TrackAsset track, Type type)
+			public static bool IsScriptPlayable<T>(Playable playable, out T playableBehaviour) where T : class, IPlayableBehaviour, new()
 			{
-				int rootCount = graph.GetRootPlayableCount();
-
-				for (int i = 0; i < rootCount; i++)
+				if (IsPlayableOfType(playable, typeof(T)))
 				{
-					Playable root = graph.GetRootPlayable(i);
-
-					PlayableBehaviour trackMixer = GetTrackMixer(root, track, type);
-
-					if (trackMixer != null)
-					{
-						return trackMixer;
-					}
+					ScriptPlayable<T> scriptPlayable = (ScriptPlayable<T>)playable;
+					playableBehaviour = scriptPlayable.GetBehaviour();
+					return true;
 				}
 
-				return null;
-			}
-
-			private static T GetTrackMixer<T>(Playable root, TrackAsset track) where T : class, IPlayableBehaviour, ITrackMixer, new()
-			{
-				int inputCount = root.GetOutputCount();
-
-				for (int i = 0; i < inputCount; i++)
-				{
-					Playable rootInput = root.GetOutput(i);
-
-					if (rootInput.IsValid())
-					{
-						//If this input is a T, check it matches our track
-						if (rootInput.GetPlayableType() == typeof(T))
-						{
-							ScriptPlayable<T> scriptPlayable = (ScriptPlayable<T>)rootInput;
-							T trackMixer = scriptPlayable.GetBehaviour();
-
-							if (trackMixer.GetTrackAsset() == track)
-							{
-								return trackMixer;
-							}
-						}
-
-						//Otherwise search this playable's inputs
-						{
-							T trackMixer = GetTrackMixer<T>(rootInput, track);
-
-							if (trackMixer != null)
-							{
-								return trackMixer;
-							}
-						}
-					}
-				}
-
-				return null;
-			}
-
-			private static PlayableBehaviour GetTrackMixer(Playable root, TrackAsset track, Type type)
-			{
-				int inputCount = root.GetOutputCount();
-
-				for (int i = 0; i < inputCount; i++)
-				{
-					Playable rootInput = root.GetOutput(i);
-
-					if (rootInput.IsValid())
-					{
-						//If this input is a T, check it matches our track
-						if (rootInput.GetPlayableType() is ITrackMixer)
-						{
-							PlayableBehaviour playableBehaviour = GetPlayableBehaviour(rootInput, type);
-							ITrackMixer trackMixer = playableBehaviour as ITrackMixer;
-
-							if (trackMixer != null && trackMixer.GetTrackAsset() == track)
-							{
-								return playableBehaviour;
-							}
-						}
-
-						//Otherwise search this playable's inputs
-						{
-							PlayableBehaviour trackMixer = GetTrackMixer(rootInput, track, type);
-
-							if (trackMixer != null)
-							{
-								return trackMixer;
-							}
-						}
-					}
-				}
-
-				return null;
+				playableBehaviour = null;
+				return false;
 			}
 
 			//Get all playable behaviours in a playable graph of type T, or implementing interface of type T
@@ -205,7 +111,7 @@ namespace Framework
 			public static void CreateAnimationCurves(TimelineClip clip)
 			{
 				FieldInfo field = clip.GetType().GetField("m_AnimationCurves", BindingFlags.NonPublic | BindingFlags.Instance);
-				AnimationClip animation = CreateAnimationClipForTrack("Clip Parameters", clip.parentTrack, true);
+				AnimationClip animation = CreateAnimationClipForTrack("Clip Parameters", clip.GetParentTrack(), true);
 				field.SetValue(clip, animation);
 			}
 
@@ -302,11 +208,9 @@ namespace Framework
 
 					if (node.IsValid())
 					{
-						Type playableType = node.GetPlayableType();
-
-						if (SystemUtils.IsTypeOf(typeof(T), playableType))
+						if (IsPlayableOfType(node, typeof(T)))
 						{
-							T playable = GetPlayableBehaviour(node, playableType) as T;
+							T playable = GetPlayableBehaviour(node, typeof(T)) as T;
 
 							if (playable != null)
 							{

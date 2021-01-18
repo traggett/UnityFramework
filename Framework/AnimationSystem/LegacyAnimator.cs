@@ -10,6 +10,16 @@ namespace Framework
 		[RequireComponent(typeof(Animation))]
 		public class LegacyAnimator : MonoBehaviour, IAnimator
 		{
+			#region Public Data
+			public struct AnimationParams
+			{
+				public string _animName;
+				public float _time;
+				public float _speed;
+				public float _weight;
+			}
+			#endregion
+
 			#region Private Data
 			//The number of animation that can be blending at any one time per each channel
 			private static readonly int kNumberOfBackgroundLayers = 2;
@@ -27,7 +37,6 @@ namespace Framework
 					return _animation;
 				}
 			}
-
 			private struct ChannelLayer
 			{
 				//Layer in animation component
@@ -378,6 +387,63 @@ namespace Framework
 				return animationNames;
 			}
 #endif
+			#endregion
+
+			#region Public Interface
+			public void SetChannelData(int channel, AnimationParams primaryAnim, params AnimationParams[] backgroundAnims)
+			{
+				ChannelGroup channelGroup = GetChannelGroup(channel);
+
+				//If no group exists, add new one and return first track index
+				if (channelGroup == null)
+				{
+					channelGroup = new ChannelGroup(channel);
+					_channels.Add(channelGroup);
+				}
+				
+				if (!IsChannelLayerPlaying(channelGroup._primaryLayer, primaryAnim._animName))
+				{
+					StopChannelLayer(channelGroup._primaryLayer);
+					channelGroup._primaryLayer._animation = StartAnimationInLayer(channelGroup._primaryLayer._layer, primaryAnim._animName, WrapMode.Default);
+				}
+
+				if (channelGroup._primaryLayer._animation != null)
+				{
+					channelGroup._state = ChannelGroup.State.Playing;
+					channelGroup._primaryLayer._animation.time = primaryAnim._time;
+					channelGroup._primaryLayer._animation.speed = primaryAnim._speed;
+					channelGroup._primaryLayer._animation.weight = primaryAnim._weight;
+
+					for (int i=0; i<kNumberOfBackgroundLayers; i++)
+					{
+						if (i < backgroundAnims.Length)
+						{
+							if (!IsChannelLayerPlaying(channelGroup._backgroundLayers[i], backgroundAnims[i]._animName))
+							{
+								StopChannelLayer(channelGroup._backgroundLayers[i]);
+								channelGroup._backgroundLayers[i]._animation = StartAnimationInLayer(channelGroup._backgroundLayers[i]._layer, backgroundAnims[i]._animName, WrapMode.Default);
+							}
+
+							channelGroup._backgroundLayers[i]._animation.time = backgroundAnims[i]._time;
+							channelGroup._backgroundLayers[i]._animation.speed = backgroundAnims[i]._speed;
+							channelGroup._backgroundLayers[i]._animation.weight = backgroundAnims[i]._weight;
+						}
+						else
+						{
+							StopChannelLayer(channelGroup._backgroundLayers[i]);	
+						}
+					}
+				}
+				else
+				{
+					StopChannel(channelGroup);
+				}
+			}
+			
+			public AnimationClip GetClip(string animName)
+			{
+				return AnimationComponent.GetClip(animName);
+			}
 			#endregion
 
 			#region Private functions

@@ -24,17 +24,9 @@ namespace Framework
 				{
 					TrackAsset newTrack = null;
 
-					//Add new track via reflection (puke)
-					Assembly assembly = Assembly.GetAssembly(typeof(TimelineEditor));
-					Type timelineWindowType = assembly.GetType("UnityEditor.Timeline.TimelineWindow");
-					//UnityEditor.Timeline.TimelineWindow
-					EditorWindow timelineWindow = EditorWindow.GetWindow(timelineWindowType);
-					//AddTrack(Type type, TrackAsset parent = null, string name = null);
-					MethodInfo methodInfo = timelineWindowType.GetMethod("AddTrack", new Type[] { typeof(Type), typeof(TrackAsset), typeof(string) });
-
-					if (methodInfo != null)
+					if (parent != null && parent.timelineAsset != null)
 					{
-						newTrack = (TrackAsset)methodInfo.Invoke(timelineWindow, new object[] { type, null, name });
+						newTrack = parent.timelineAsset.CreateTrack(type, null, name);
 
 						if (newTrack != null)
 						{
@@ -88,24 +80,35 @@ namespace Framework
 							}
 
 							//Refresh the window to show new track as child
-							{
-								GameObject previousTimelineObject = null;
-								if (TimelineEditor.inspectedDirector != null)
-									previousTimelineObject = TimelineEditor.inspectedDirector.gameObject;
-
-								//Have to set timeline to null and then back to this timeline to show changes grr...
-								methodInfo = timelineWindowType.GetMethod("SetCurrentTimeline", new Type[] { typeof(TimelineAsset) });
-
-								methodInfo.Invoke(timelineWindow, new object[] { null });
-								methodInfo.Invoke(timelineWindow, new object[] { parent.timelineAsset });
-
-								//Also need to reselect whatever timeline object was previously selected as above clears it
-								Selection.activeGameObject = previousTimelineObject;
-							}
+							ShowTimelineInEditorWindow(parent.timelineAsset);
 						}
 					}
 
 					return newTrack;
+				}
+				
+				public static void ShowTimelineInEditorWindow(TimelineAsset timelineAsset)
+				{
+					//Add new track via reflection (puke)
+					Assembly assembly = Assembly.GetAssembly(typeof(TimelineEditor));
+					Type timelineWindowType = assembly.GetType("UnityEditor.Timeline.TimelineWindow");
+					//UnityEditor.Timeline.TimelineWindow
+					EditorWindow timelineWindow = EditorWindow.GetWindow(timelineWindowType);
+					//AddTrack(Type type, TrackAsset parent = null, string name = null);
+					MethodInfo methodInfo = timelineWindowType.GetMethod("AddTrack", new Type[] { typeof(Type), typeof(TrackAsset), typeof(string) });
+
+					MethodInfo[] methj = timelineWindowType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic);
+
+					UnityEngine.Object previousSelectionObject = Selection.activeObject;
+
+					//Have to set timeline to null and then back to this timeline to show changes grr...
+					methodInfo = timelineWindowType.GetMethod("SetTimeline", new Type[] { typeof(TimelineAsset) });
+
+					methodInfo.Invoke(timelineWindow, new object[] { null });
+					methodInfo.Invoke(timelineWindow, new object[] { timelineAsset });
+
+					//Also need to reselect whatever timeline object was previously selected as above clears it
+					Selection.activeObject = previousSelectionObject;
 				}
 			}
 		}
