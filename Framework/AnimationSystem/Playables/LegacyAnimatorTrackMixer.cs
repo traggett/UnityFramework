@@ -110,6 +110,9 @@ namespace Framework
 
 			public override void ProcessFrame(Playable playable, FrameData info, object playerData)
 			{
+				if (_trackBinding == null)
+					return;
+
 				for (int i=0; i<_channelData.Length; i++)
 				{
 					ApplyAnimations(ref _channelData[i]);
