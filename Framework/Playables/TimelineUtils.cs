@@ -71,6 +71,7 @@ namespace Framework
 				return SystemUtils.IsTypeOf(type, playableType);
 			}
 
+
 			public static bool IsScriptPlayable<T>(Playable playable, out T playableBehaviour) where T : class, IPlayableBehaviour, new()
 			{
 				if (IsPlayableOfType(playable, typeof(T)))
@@ -106,6 +107,91 @@ namespace Framework
 				return playables;
 			}
 
+			public static bool IsOutputtingToPlayableType(Playable playable, Type type)
+			{
+				int numOutputs = playable.GetOutputCount();
+
+				for (int i=0; i<numOutputs; i++)
+				{
+					if (IsPlayableOfType(playable.GetOutput(i), type))
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			public static bool IsPrimaryClip(TimelineClip clip, PlayableDirector director)
+			{
+				//If doing pre extrapolation then is primary
+				if (clip.hasPreExtrapolation && clip.extrapolatedStart <= director.time && director.time <= clip.start)
+					return true;
+
+				//If doing post extrapolation then is primary
+				if (clip.hasPostExtrapolation && clip.start <= director.time && director.time <= clip.start + clip.extrapolatedDuration)
+					return true;
+
+				//if this clip is blending in, this is primary
+				if (clip.hasBlendIn && clip.start <= director.time && director.time <= clip.start + clip.blendInDuration)
+					return true;
+
+				//if this clip is blending out, is not primary
+				if (clip.hasBlendOut && clip.end - clip.blendOutDuration <= director.time && director.time <= clip.end)
+					return false;
+
+				//if during clip main then is primary
+				if (clip.start <= director.time && director.time <= clip.end)
+					return true;
+
+				return false;
+			}
+
+			public static float GetExtrapolatedTrackTime(TimelineClip clip, double directorTime, float animationLength)
+			{
+				TimelineClip.ClipExtrapolation extrapolation = directorTime < clip.start ? clip.preExtrapolationMode : clip.postExtrapolationMode;
+				float time = (float)(directorTime - clip.start);
+
+				if (clip.start <= directorTime && directorTime < clip.end)
+					return time;
+
+				if (animationLength <= 0.0f)
+					return 0.0f;
+
+				switch (extrapolation)
+				{
+					case TimelineClip.ClipExtrapolation.Continue:
+					case TimelineClip.ClipExtrapolation.Hold:
+						return time < 0.0f ? 0.0f : (float)clip.end;
+					case TimelineClip.ClipExtrapolation.Loop:
+						{
+							if (time < 0.0f)
+							{
+								float t = -time / animationLength;
+								int n = Mathf.FloorToInt(t);
+								float fraction = animationLength - (t - n);
+
+								time = (animationLength * n) + fraction;
+							}
+
+							return time;
+						}
+					case TimelineClip.ClipExtrapolation.PingPong:
+						{
+							float t = Mathf.Abs(time) / animationLength;
+							int n = Mathf.FloorToInt(t);
+							float fraction = t - n;
+
+							if (n % 2 == 1)
+								fraction = animationLength - fraction;
+
+							return (animationLength * n) + fraction;
+						}
+					case TimelineClip.ClipExtrapolation.None:
+					default:
+						return 0.0f;
+				}
+			}
 
 #if UNITY_EDITOR
 			public static void CreateAnimationCurves(TimelineClip clip)

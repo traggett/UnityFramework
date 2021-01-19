@@ -5,8 +5,6 @@ using UnityEngine.Timeline;
 
 namespace Framework
 {
-	using Playables;
-
 	namespace AnimationSystem
 	{
 		[Serializable]
@@ -17,7 +15,7 @@ namespace Framework
 			public double _animationDuration = PlayableBinding.DefaultDuration;
 			public float _animationSpeed = 1.0f;
 
-			protected LegacyAnimatorTrack _parentAnimatorTrack;
+			private TimelineClip _clip;
 
 			public ClipCaps clipCaps
 			{
@@ -35,6 +33,21 @@ namespace Framework
 				}
 			}
 
+			public void SetClip(TimelineClip clip)
+			{
+				_clip = clip;
+			}
+
+			public TimelineClip GetTimelineClip()
+			{
+				return _clip;
+			}		
+
+			public int GetChannel()
+			{
+				return ((LegacyAnimatorTrack)_clip.GetParentTrack())._animationChannel;
+			}
+
 			public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
 			{
 				ScriptPlayable<LegacyAnimatorPlayableBehaviour> playable = ScriptPlayable<LegacyAnimatorPlayableBehaviour>.Create(graph, new LegacyAnimatorPlayableBehaviour());
@@ -47,15 +60,6 @@ namespace Framework
 				return playable;
 			}
 
-			public void SetParentTrack(LegacyAnimatorTrack track)
-			{
-				_parentAnimatorTrack = track;
-			}
-
-			public LegacyAnimatorTrack GetParentTrack()
-			{
-				return _parentAnimatorTrack;
-			}
 		}
 	}
 }

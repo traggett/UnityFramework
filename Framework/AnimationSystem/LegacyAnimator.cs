@@ -392,51 +392,50 @@ namespace Framework
 			#region Public Interface
 			public void SetChannelData(int channel, AnimationParams primaryAnim, params AnimationParams[] backgroundAnims)
 			{
+				UnityEngine.Debug.Log(" a:" + primaryAnim._animName + " w:" + primaryAnim._weight + " t:" + primaryAnim._time);
+
 				ChannelGroup channelGroup = GetChannelGroup(channel);
 
-				//If no group exists, add new one and return first track index
 				if (channelGroup == null)
 				{
 					channelGroup = new ChannelGroup(channel);
 					_channels.Add(channelGroup);
 				}
-				
-				if (!IsChannelLayerPlaying(channelGroup._primaryLayer, primaryAnim._animName))
+
+				if (string.IsNullOrEmpty(primaryAnim._animName))
+				{
+					StopChannel(channelGroup);
+					return;
+				}				
+				else if (!IsChannelLayerPlaying(channelGroup._primaryLayer, primaryAnim._animName))
 				{
 					StopChannelLayer(channelGroup._primaryLayer);
 					channelGroup._primaryLayer._animation = StartAnimationInLayer(channelGroup._primaryLayer._layer, primaryAnim._animName, WrapMode.Default);
 				}
 
-				if (channelGroup._primaryLayer._animation != null)
-				{
-					channelGroup._state = ChannelGroup.State.Playing;
-					channelGroup._primaryLayer._animation.time = primaryAnim._time;
-					channelGroup._primaryLayer._animation.speed = primaryAnim._speed;
-					channelGroup._primaryLayer._animation.weight = primaryAnim._weight;
+				channelGroup._state = ChannelGroup.State.Playing;
+				channelGroup._primaryLayer._animation.time = primaryAnim._time;
+				channelGroup._primaryLayer._animation.speed = primaryAnim._speed;
+				channelGroup._primaryLayer._animation.weight = primaryAnim._weight;
 
-					for (int i=0; i<kNumberOfBackgroundLayers; i++)
+				for (int i=0; i<kNumberOfBackgroundLayers; i++)
+				{
+					if (i < backgroundAnims.Length)
 					{
-						if (i < backgroundAnims.Length)
+						if (!IsChannelLayerPlaying(channelGroup._backgroundLayers[i], backgroundAnims[i]._animName))
 						{
-							if (!IsChannelLayerPlaying(channelGroup._backgroundLayers[i], backgroundAnims[i]._animName))
-							{
-								StopChannelLayer(channelGroup._backgroundLayers[i]);
-								channelGroup._backgroundLayers[i]._animation = StartAnimationInLayer(channelGroup._backgroundLayers[i]._layer, backgroundAnims[i]._animName, WrapMode.Default);
-							}
+							StopChannelLayer(channelGroup._backgroundLayers[i]);
+							channelGroup._backgroundLayers[i]._animation = StartAnimationInLayer(channelGroup._backgroundLayers[i]._layer, backgroundAnims[i]._animName, WrapMode.Default);
+						}
 
-							channelGroup._backgroundLayers[i]._animation.time = backgroundAnims[i]._time;
-							channelGroup._backgroundLayers[i]._animation.speed = backgroundAnims[i]._speed;
-							channelGroup._backgroundLayers[i]._animation.weight = backgroundAnims[i]._weight;
-						}
-						else
-						{
-							StopChannelLayer(channelGroup._backgroundLayers[i]);	
-						}
+						channelGroup._backgroundLayers[i]._animation.time = backgroundAnims[i]._time;
+						channelGroup._backgroundLayers[i]._animation.speed = backgroundAnims[i]._speed;
+						channelGroup._backgroundLayers[i]._animation.weight = backgroundAnims[i]._weight;
 					}
-				}
-				else
-				{
-					StopChannel(channelGroup);
+					else
+					{
+						StopChannelLayer(channelGroup._backgroundLayers[i]);	
+					}
 				}
 			}
 			

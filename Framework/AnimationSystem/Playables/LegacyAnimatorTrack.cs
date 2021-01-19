@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEngine.Timeline;
+using System.Collections.Generic;
 
 namespace Framework
 {
@@ -13,37 +14,44 @@ namespace Framework
 		[TrackClipType(typeof(LegacyAnimationClipAsset), false)]
 		public class LegacyAnimatorTrack : TrackAsset
 		{
+			public int _animationChannel;
+			
 			public override Playable CreateTrackMixer(PlayableGraph graph, GameObject go, int inputCount)
 			{
-				EnsureMasterClipExists();
-				return TimelineUtils.CreateTrackMixer<LegacyAnimatorTrackMixer>(this, graph, go, inputCount);
-			}
+				ScriptPlayable<LegacyAnimatorTrackMixer> playable = TimelineUtils.CreateTrackMixer<LegacyAnimatorTrackMixer>(this, graph, go, inputCount);
+				LegacyAnimatorTrackMixer mixer = playable.GetBehaviour();
 
-			public void EnsureMasterClipExists()
-			{
-				TimelineClip masterClip = null;
+				SetClipReferences(this);
 
-				foreach (TimelineClip clip in GetClips())
+				List<int> channels = new List<int>();
+				channels.Add(_animationChannel);
+
+				foreach (TrackAsset child in GetChildTracks())
 				{
-					masterClip = clip;
-					break;
+					if (child is LegacyAnimatorTrack legacyAnimatorTrack)
+					{
+						channels.Add(legacyAnimatorTrack._animationChannel);
+						SetClipReferences(legacyAnimatorTrack);
+					}
 				}
 
-				if (masterClip == null)
-				{
-					masterClip = CreateDefaultClip();
-				}
+				mixer.SetChannels(channels.ToArray());
+				
 
-				//Set clips duration to match max duration of timeline
-				masterClip.start = 0;
-				masterClip.duration = 0;
-				masterClip.duration = this.timelineAsset.duration;
-				masterClip.displayName = GetMasterClipName();
+				return playable;
 			}
 
-			protected virtual string GetMasterClipName()
+			private static void SetClipReferences(LegacyAnimatorTrack asset)
 			{
-				return "(Legacy Animation)";
+				foreach (TimelineClip clip in asset.GetClips())
+				{
+					LegacyAnimationClipAsset animationClipAsset = clip.asset as LegacyAnimationClipAsset;
+					
+					if (animationClipAsset != null)
+					{
+						animationClipAsset.SetClip(clip);
+					}
+				}
 			}
 		}
 	}

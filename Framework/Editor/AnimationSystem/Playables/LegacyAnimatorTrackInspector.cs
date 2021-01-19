@@ -17,10 +17,14 @@ namespace Framework
 			[CanEditMultipleObjects]
 			public class LegacyAnimatorTrackInspector : UnityEditor.Editor
 			{
-				protected ReorderableList _channelTracks;
+				private SerializedProperty _channelProperty;
+				private ReorderableList _channelTracks;
+				
 
 				public void OnEnable()
 				{
+					_channelProperty = this.serializedObject.FindProperty("_animationChannel");
+
 					_channelTracks = new ReorderableList(new TrackAsset[0], typeof(TrackAsset), false, true, true, false)
 					{
 						drawElementCallback = new ReorderableList.ElementCallbackDelegate(OnDrawSubTrack),
@@ -40,15 +44,24 @@ namespace Framework
 						if (track == null)
 							break;
 
-						IEnumerable<TrackAsset> childTracks = track.GetChildTracks();
-						
+						if (!(track.parent is TimelineAsset))
+							break;
+
 						GUILayout.Label(track.name, EditorStyles.boldLabel);
+
+						EditorGUILayout.PropertyField(_channelProperty, new GUIContent("Base Animation Channel"));
+
+						EditorGUILayout.Separator();
+
+						GUILayout.Label(new GUIContent("Additional Animation Layers"), EditorStyles.boldLabel);
+
+						IEnumerable<TrackAsset> childTracks = track.GetChildTracks();
 						_channelTracks.list = new List<TrackAsset>(childTracks);
 						_channelTracks.DoLayoutList();
 						_channelTracks.index = -1;
-
-						track.EnsureMasterClipExists();
 					}
+
+					serializedObject.ApplyModifiedProperties();
 				}
 
 				private void OnAddChannel(ReorderableList list)
@@ -64,9 +77,9 @@ namespace Framework
 					if (animatorTrack != null)
 					{
 						//Work out next free channel to add
-						int channel = 0;
+						int channel = _channelProperty.intValue + 1;
 
-						foreach (LegacyAnimatorChannelTrack track in animatorTrack.GetChildTracks())
+						foreach (LegacyAnimatorTrack track in animatorTrack.GetChildTracks())
 						{
 							if (track != null)
 							{
@@ -74,7 +87,7 @@ namespace Framework
 							}
 						}
 
-						LegacyAnimatorChannelTrack newTrack = TimelineEditorUtils.CreateChildTrack<LegacyAnimatorChannelTrack>(animatorTrack, "Channel " + channel);
+						LegacyAnimatorTrack newTrack = TimelineEditorUtils.CreateChildTrack<LegacyAnimatorTrack>(animatorTrack, "Channel " + channel);
 						newTrack._animationChannel = channel;
 					}
 				}
@@ -92,7 +105,7 @@ namespace Framework
 				protected virtual void OnDrawSubTrack(Rect rect, int index, bool selected, bool focused)
 				{ 
 					float columnWidth = rect.width / 3f;
-					LegacyAnimatorChannelTrack track = _channelTracks.list[index] as LegacyAnimatorChannelTrack;
+					LegacyAnimatorTrack track = _channelTracks.list[index] as LegacyAnimatorTrack;
 
 					if (track != null)
 					{
