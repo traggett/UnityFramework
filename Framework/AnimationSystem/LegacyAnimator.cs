@@ -8,22 +8,22 @@ namespace Framework
 	namespace AnimationSystem
 	{
 		[RequireComponent(typeof(Animation))]
-		public class LegacyAnimator : MonoBehaviour, IAnimator
+		public class LegacyAnimator : MonoBehaviour
 		{
 			#region Public Data
 			public struct AnimationParams
 			{
-				public string _animName;
+				public AnimationClip _animation;
 				public float _time;
 				public float _speed;
 				public float _weight;
 			}
+
+			//The number of animation that can be blending at any one time per each layer
+			public static readonly int MaxBackgroundLayers = 2;
 			#endregion
 
 			#region Private Data
-			//The number of animation that can be blending at any one time per each channel
-			private static readonly int kNumberOfBackgroundLayers = 2;
-
 			private Animation _animation;
 			private Animation AnimationComponent
 			{
@@ -37,7 +37,7 @@ namespace Framework
 					return _animation;
 				}
 			}
-			private struct ChannelLayer
+			private struct LayerChannel
 			{
 				//Layer in animation component
 				public readonly int _layer;
@@ -46,7 +46,7 @@ namespace Framework
 				//Used for blending when stopping
 				public float _origWeight;		
 				
-				public ChannelLayer(int layer)
+				public LayerChannel(int layer)
 				{
 					_layer = layer;
 					_animation = null;
@@ -54,7 +54,7 @@ namespace Framework
 				}
 			}
 
-			private class ChannelGroup
+			private class LayerGroup
 			{
 				public enum State
 				{
@@ -65,15 +65,16 @@ namespace Framework
 				}
 				public State _state = State.Stopped;
 
-				public readonly int _channel;
-				public ChannelLayer _primaryLayer;
-				public ChannelLayer[] _backgroundLayers;
+				public readonly int _layer;
+				public LayerChannel _primaryLayer;
+				public LayerChannel[] _backgroundLayers;
 
 				//Primary track blending data
 				public float _lerpT;
 				public float _lerpSpeed;
 				public InterpolationType _lerpEase;
 				public float _targetWeight;
+				public PlayMode _playMode;
 
 				//Queued animation data
 				public string _queuedAnimation;
@@ -81,293 +82,323 @@ namespace Framework
 				public float _queuedAnimationBlendTime;
 				public WrapMode _queuedAnimationWrapMode;
 				public InterpolationType _queuedAnimationEase;
+				public PlayMode _queuedPlayMode;
 
-				public ChannelGroup(int channel)
+				public LayerGroup(int layer)
 				{
-					_channel = channel;
-					_primaryLayer = new ChannelLayer((channel * (kNumberOfBackgroundLayers + 1)) + kNumberOfBackgroundLayers);
-					_backgroundLayers = new ChannelLayer[kNumberOfBackgroundLayers];
-					for (int i = 0; i<kNumberOfBackgroundLayers; i++)
+					_layer = layer;
+					_primaryLayer = new LayerChannel((layer * (MaxBackgroundLayers + 1)) + MaxBackgroundLayers);
+					_backgroundLayers = new LayerChannel[MaxBackgroundLayers];
+					for (int i = 0; i<MaxBackgroundLayers; i++)
 					{
-						_backgroundLayers[i] = new ChannelLayer(_primaryLayer._layer - i - 1);
+						_backgroundLayers[i] = new LayerChannel(_primaryLayer._layer - i - 1);
 					}
 				}
 			}
-			private readonly List<ChannelGroup> _channels = new List<ChannelGroup>();
+			private readonly List<LayerGroup> _layers = new List<LayerGroup>();
 			#endregion
 
 			#region MonoBehaviour Calls
 			void Update()
 			{
-				foreach (ChannelGroup channelGroup in _channels)
+				foreach (LayerGroup layerGroup in _layers)
 				{
-					UpdateChannelBlends(channelGroup);
+					UpdatelayerBlends(layerGroup);
 				}
 			}
 			#endregion
 
-			#region IAnimator
-			public void Play(int channel, string animName, WrapMode wrapMode = WrapMode.Default, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, float weight = 1.0f, bool queued = false)
+			#region Public Interface
+			public void Play(string animName, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, PlayMode playMode = PlayMode.StopSameLayer)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				Play(0, animName, blendTime, easeType, playMode);
+			}
+
+			public void PlayQueued(string animName, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, PlayMode playMode = PlayMode.StopSameLayer)
+			{
+				Play(0, animName, blendTime, easeType, playMode, queued:true);
+			}
+
+			public void Play(int layer, string animName, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, PlayMode playMode = PlayMode.StopSameLayer, WrapMode wrapMode = WrapMode.Default, float weight = 1.0f, bool queued = false)
+			{
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
 				//If queued then store the animation queued after, wait for it to be -blend time from end then play non queued with blend time.
 				if (queued)
 				{
-					if (channelGroup != null && IsChannelLayerPlaying(channelGroup._primaryLayer))
+					if (layerGroup != null && IsLayerChannelPlaying(layerGroup._primaryLayer))
 					{
-						channelGroup._queuedAnimation = animName;
-						channelGroup._queuedAnimationWeight = weight;
-						channelGroup._queuedAnimationBlendTime = blendTime;
-						channelGroup._queuedAnimationEase = easeType;
-						channelGroup._queuedAnimationWrapMode = wrapMode;
+						layerGroup._queuedAnimation = animName;
+						layerGroup._queuedAnimationWeight = weight;
+						layerGroup._queuedAnimationBlendTime = blendTime;
+						layerGroup._queuedAnimationEase = easeType;
+						layerGroup._queuedAnimationWrapMode = wrapMode;
+						layerGroup._queuedPlayMode = playMode;
 						return;
 					}
 				}
 
 				//If no group exists, add new one and return first track index
-				if (channelGroup == null)
+				if (layerGroup == null)
 				{
-					channelGroup = new ChannelGroup(channel);
-					_channels.Add(channelGroup);
+					layerGroup = new LayerGroup(layer);
+					_layers.Add(layerGroup);
 				}
 				//Otherwise check an animation is currently playing on this group
 				else
 				{
-					//If not blending stop all animation in this channel
+					//If not blending stop all animation in this layer
 					if (blendTime <= 0.0f)
 					{
-						StopChannel(channelGroup);
+						StopLayer(layerGroup);
 					}
 
 					//Clear queue
-					channelGroup._queuedAnimation = null;
+					layerGroup._queuedAnimation = null;
 
 					//If this group is playing an animation, move it to a background track
-					if (channelGroup._state != ChannelGroup.State.Stopped)
+					if (layerGroup._state != LayerGroup.State.Stopped)
 					{
-						MovePrimaryAnimationToBackgroundTrack(channelGroup);
+						MovePrimaryAnimationToBackgroundTrack(layerGroup);
 					}
 				}
 
 				//Start animation on primary track
-				StopChannelLayer(channelGroup._primaryLayer);
-				channelGroup._primaryLayer._animation = StartAnimationInLayer(channelGroup._primaryLayer._layer, animName, wrapMode);
+				StopLayerChannel(layerGroup._primaryLayer);
+				layerGroup._primaryLayer._animation = StartAnimationInLayer(layerGroup._primaryLayer._layer, animName, wrapMode);
 
 				//if blending start with weight of zero
 				if (blendTime > 0.0f)
 				{
-					channelGroup._state = ChannelGroup.State.BlendingIn;
-					channelGroup._lerpT = 0.0f;
-					channelGroup._targetWeight = weight;
-					channelGroup._lerpSpeed = 1.0f / blendTime;
-					channelGroup._lerpEase = easeType;
+					layerGroup._state = LayerGroup.State.BlendingIn;
+					layerGroup._lerpT = 0.0f;
+					layerGroup._targetWeight = weight;
+					layerGroup._lerpSpeed = 1.0f / blendTime;
+					layerGroup._lerpEase = easeType;
+					layerGroup._playMode = playMode;
 
-					if (channelGroup._primaryLayer._animation != null)
-						channelGroup._primaryLayer._animation.weight = 0.0f;
+					if (layerGroup._primaryLayer._animation != null)
+						layerGroup._primaryLayer._animation.weight = 0.0f;
 				}
 				else
 				{
-					channelGroup._state = ChannelGroup.State.Playing;
+					layerGroup._state = LayerGroup.State.Playing;
 
-					if (channelGroup._primaryLayer._animation != null)
-						channelGroup._primaryLayer._animation.weight = weight;
+					if (layerGroup._primaryLayer._animation != null)
+						layerGroup._primaryLayer._animation.weight = weight;
+
+						
+					//If mode is stop all, stop all other layers
+					if (playMode == PlayMode.StopAll)
+					{
+						foreach (LayerGroup group in _layers)
+						{
+							if (group != layerGroup)
+								StopLayer(group);
+						}
+					}
 				}
 			}
 
-			public void Stop(int channel, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine)
+			public void Stop(float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, PlayMode playMode = PlayMode.StopSameLayer)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				Stop(0, blendTime, easeType, playMode);
+			}
 
-				if (channelGroup != null)
+			public void Stop(int layer, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, PlayMode playMode = PlayMode.StopSameLayer)
+			{
+				LayerGroup layerGroup = GetLayerGroup(layer);
+
+				if (layerGroup != null)
 				{
 					if (blendTime > 0.0f)
 					{
-						channelGroup._state = ChannelGroup.State.Stopping;
-						channelGroup._lerpSpeed = 1.0f / blendTime;
-						channelGroup._lerpT = 0.0f;
-						channelGroup._lerpEase = easeType;
+						layerGroup._state = LayerGroup.State.Stopping;
+						layerGroup._lerpSpeed = 1.0f / blendTime;
+						layerGroup._lerpT = 0.0f;
+						layerGroup._lerpEase = easeType;
+						layerGroup._playMode = playMode;
 
-						if (IsChannelLayerPlaying(channelGroup._primaryLayer))
-							channelGroup._primaryLayer._origWeight = channelGroup._primaryLayer._animation.weight;
+						if (IsLayerChannelPlaying(layerGroup._primaryLayer))
+							layerGroup._primaryLayer._origWeight = layerGroup._primaryLayer._animation.weight;
 
-						for (int i = 0; i < channelGroup._backgroundLayers.Length; i++)
+						for (int i = 0; i < layerGroup._backgroundLayers.Length; i++)
 						{
-							if (IsChannelLayerPlaying(channelGroup._backgroundLayers[i]))
-								channelGroup._backgroundLayers[i]._origWeight = channelGroup._backgroundLayers[i]._animation.weight;
+							if (IsLayerChannelPlaying(layerGroup._backgroundLayers[i]))
+								layerGroup._backgroundLayers[i]._origWeight = layerGroup._backgroundLayers[i]._animation.weight;
 						}
 					}
 					else
 					{
-						StopChannel(channelGroup);
+						StopLayer(layerGroup);
 					}
 				}
 			}
 
 			public void StopAll()
 			{
-				foreach (ChannelGroup channelGroup in _channels)
+				foreach (LayerGroup layerGroup in _layers)
 				{
-					StopChannel(channelGroup);
+					StopLayer(layerGroup);
 				}
 			}
 
-			public void SetAnimationTime(int channel, string animName, float time)
+			public void SetAnimationTime(string animName, float time, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer, animName))
 					{
-						channelGroup._primaryLayer._animation.time = time;
+						layerGroup._primaryLayer._animation.time = time;
 					}
 				}
 			}
 
-			public void SetAnimationNormalizedTime(int channel, string animName, float time)
+			public void SetAnimationNormalizedTime(string animName, float time, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer, animName))
 					{
-						channelGroup._primaryLayer._animation.normalizedTime = time;
+						layerGroup._primaryLayer._animation.normalizedTime = time;
 					}
 				}
 			}
 
-			public void SetAnimationSpeed(int channel, string animName, float speed)
+			public void SetAnimationSpeed(string animName, float speed, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer, animName))
 					{
-						channelGroup._primaryLayer._animation.speed = speed;
+						layerGroup._primaryLayer._animation.speed = speed;
 					}
 				}
 			}
 
-			public void SetAnimationNormalizedSpeed(int channel, string animName, float speed)
+			public void SetAnimationNormalizedSpeed(string animName, float speed, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer, animName))
 					{
-						channelGroup._primaryLayer._animation.normalizedSpeed = speed;
+						layerGroup._primaryLayer._animation.normalizedSpeed = speed;
 					}
 				}
 			}
 
-			public void SetAnimationWeight(int channel, string animName, float weight)
+			public void SetAnimationWeight(string animName, float weight, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer, animName))
 					{
-						channelGroup._primaryLayer._animation.weight = weight;
+						layerGroup._primaryLayer._animation.weight = weight;
 					}
 				}
 			}
 
-			public bool IsPlaying(int channel, string animName)
+			public bool IsPlaying(string animName, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					return IsChannelLayerPlaying(channelGroup._primaryLayer, animName);
+					return IsLayerChannelPlaying(layerGroup._primaryLayer, animName);
 				}
 
 				return false;
 			}
 
-			public bool DoesAnimationExist(string animName)
+			public bool DoesAnimationExist(string animName, int layer = 0)
 			{
 				return AnimationComponent[animName] != null;
 			}
 
-			public float GetAnimationLength(string animName)
+			public float GetAnimationLength(string animName, int layer = 0)
 			{
 				return AnimationComponent[animName].length;
 			}
 
-			public float GetAnimationTime(int channel, string animName)
+			public float GetAnimationTime(string animName, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer, animName))
 					{
-						return channelGroup._primaryLayer._animation.time;
+						return layerGroup._primaryLayer._animation.time;
 					}
 				}
 
 				return 0f;
 			}
 
-			public float GetAnimationNormalizedTime(int channel, string animName)
+			public float GetAnimationNormalizedTime(string animName, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer, animName))
 					{
-						return channelGroup._primaryLayer._animation.normalizedTime;
+						return layerGroup._primaryLayer._animation.normalizedTime;
 					}
 				}
 
 				return 0f;
 			}
 
-			public float GetAnimationSpeed(int channel, string animName)
+			public float GetAnimationSpeed(string animName, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer, animName))
 					{
-						return channelGroup._primaryLayer._animation.speed;
+						return layerGroup._primaryLayer._animation.speed;
 					}
 				}
 
 				return 1f;
 			}
 
-			public float GetAnimationNormalizedSpeed(int channel, string animName)
+			public float GetAnimationNormalizedSpeed(string animName, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer, animName))
 					{
-						return channelGroup._primaryLayer._animation.normalizedSpeed;
+						return layerGroup._primaryLayer._animation.normalizedSpeed;
 					}
 				}
 
 				return 0f;
 			}
 
-			public float GetAnimationWeight(int channel, string animName)
+			public float GetAnimationWeight(string animName, int layer = 0)
 			{
-				ChannelGroup channelGroup = GetChannelGroup(channel);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer, animName))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer, animName))
 					{
-						return channelGroup._primaryLayer._animation.weight;
+						return layerGroup._primaryLayer._animation.weight;
 					}
 				}
 
@@ -387,116 +418,127 @@ namespace Framework
 				return animationNames;
 			}
 #endif
-			#endregion
-
-			#region Public Interface
-			public void SetChannelData(int channel, AnimationParams primaryAnim, params AnimationParams[] backgroundAnims)
+			public void SetLayerData(int layer, AnimationParams primaryAnim, params AnimationParams[] backgroundAnims)
 			{
-				UnityEngine.Debug.Log(" a:" + primaryAnim._animName + " w:" + primaryAnim._weight + " t:" + primaryAnim._time);
+				LayerGroup layerGroup = GetLayerGroup(layer);
 
-				ChannelGroup channelGroup = GetChannelGroup(channel);
-
-				if (channelGroup == null)
+				if (layerGroup == null)
 				{
-					channelGroup = new ChannelGroup(channel);
-					_channels.Add(channelGroup);
+					layerGroup = new LayerGroup(layer);
+					_layers.Add(layerGroup);
 				}
 
-				if (string.IsNullOrEmpty(primaryAnim._animName))
+				if (primaryAnim._animation == null)
 				{
-					StopChannel(channelGroup);
+					StopLayer(layerGroup);
 					return;
-				}				
-				else if (!IsChannelLayerPlaying(channelGroup._primaryLayer, primaryAnim._animName))
-				{
-					StopChannelLayer(channelGroup._primaryLayer);
-					channelGroup._primaryLayer._animation = StartAnimationInLayer(channelGroup._primaryLayer._layer, primaryAnim._animName, WrapMode.Default);
 				}
 
-				channelGroup._state = ChannelGroup.State.Playing;
-				channelGroup._primaryLayer._animation.time = primaryAnim._time;
-				channelGroup._primaryLayer._animation.speed = primaryAnim._speed;
-				channelGroup._primaryLayer._animation.weight = primaryAnim._weight;
+				if (AddClipIfDoesntExist(primaryAnim._animation) || !IsLayerChannelPlaying(layerGroup._primaryLayer, primaryAnim._animation.name))
+				{
+					StopLayerChannel(layerGroup._primaryLayer);
+					layerGroup._primaryLayer._animation = StartAnimationInLayer(layerGroup._primaryLayer._layer, primaryAnim._animation.name, WrapMode.Default);
+				}
 
-				for (int i=0; i<kNumberOfBackgroundLayers; i++)
+				layerGroup._state = LayerGroup.State.Playing;
+				layerGroup._primaryLayer._animation.time = primaryAnim._time;
+				layerGroup._primaryLayer._animation.speed = primaryAnim._speed;
+				layerGroup._primaryLayer._animation.weight = primaryAnim._weight;
+
+				for (int i=0; i<MaxBackgroundLayers; i++)
 				{
 					if (i < backgroundAnims.Length)
 					{
-						if (!IsChannelLayerPlaying(channelGroup._backgroundLayers[i], backgroundAnims[i]._animName))
+						if (AddClipIfDoesntExist(backgroundAnims[i]._animation) || !IsLayerChannelPlaying(layerGroup._backgroundLayers[i], backgroundAnims[i]._animation.name))
 						{
-							StopChannelLayer(channelGroup._backgroundLayers[i]);
-							channelGroup._backgroundLayers[i]._animation = StartAnimationInLayer(channelGroup._backgroundLayers[i]._layer, backgroundAnims[i]._animName, WrapMode.Default);
+							StopLayerChannel(layerGroup._backgroundLayers[i]);
+							layerGroup._backgroundLayers[i]._animation = StartAnimationInLayer(layerGroup._backgroundLayers[i]._layer, backgroundAnims[i]._animation.name, WrapMode.Default);
 						}
 
-						channelGroup._backgroundLayers[i]._animation.time = backgroundAnims[i]._time;
-						channelGroup._backgroundLayers[i]._animation.speed = backgroundAnims[i]._speed;
-						channelGroup._backgroundLayers[i]._animation.weight = backgroundAnims[i]._weight;
+						layerGroup._backgroundLayers[i]._animation.time = backgroundAnims[i]._time;
+						layerGroup._backgroundLayers[i]._animation.speed = backgroundAnims[i]._speed;
+						layerGroup._backgroundLayers[i]._animation.weight = backgroundAnims[i]._weight;
 					}
 					else
 					{
-						StopChannelLayer(channelGroup._backgroundLayers[i]);	
+						StopLayerChannel(layerGroup._backgroundLayers[i]);	
 					}
 				}
-			}
-			
-			public AnimationClip GetClip(string animName)
-			{
-				return AnimationComponent.GetClip(animName);
 			}
 			#endregion
 
 			#region Private functions
-			private void UpdateChannelBlends(ChannelGroup channelGroup)
+			private void UpdatelayerBlends(LayerGroup layerGroup)
 			{
-				//Check primary animation is still valid, if not set channel to stopped
-				if (channelGroup._state != ChannelGroup.State.Stopped && !IsChannelLayerPlaying(channelGroup._primaryLayer))
+				//Check primary animation is still valid, if not set layer to stopped
+				if (layerGroup._state != LayerGroup.State.Stopped && !IsLayerChannelPlaying(layerGroup._primaryLayer))
 				{
-					StopChannel(channelGroup);
+					StopLayer(layerGroup);
 				}
 
-				switch (channelGroup._state)
+				switch (layerGroup._state)
 				{
 					//If fading in primary track...
-					case ChannelGroup.State.BlendingIn:
+					case LayerGroup.State.BlendingIn:
 						{
-							channelGroup._lerpT += channelGroup._lerpSpeed * Time.deltaTime;
+							layerGroup._lerpT += layerGroup._lerpSpeed * Time.deltaTime;
 
-							if (channelGroup._lerpT >= 1.0f)
+							if (layerGroup._lerpT >= 1.0f)
 							{
-								channelGroup._primaryLayer._animation.weight = channelGroup._targetWeight;
+								layerGroup._primaryLayer._animation.weight = layerGroup._targetWeight;
 
-								for (int i = 0; i < channelGroup._backgroundLayers.Length; i++)
+								for (int i = 0; i < layerGroup._backgroundLayers.Length; i++)
 								{
-									StopChannelLayer(channelGroup._backgroundLayers[i]);
+									StopLayerChannel(layerGroup._backgroundLayers[i]);
 								}
 
-								channelGroup._state = ChannelGroup.State.Playing;
+								layerGroup._state = LayerGroup.State.Playing;
+
+								//If mode is stop all, stop all other layers
+								if (layerGroup._playMode == PlayMode.StopAll)
+								{
+									foreach (LayerGroup group in _layers)
+									{
+										if (group != layerGroup)
+											StopLayer(group);
+									}
+								}
 							}
 							else
 							{
-								channelGroup._primaryLayer._animation.weight = MathUtils.Interpolate(channelGroup._lerpEase, 0f, channelGroup._targetWeight, channelGroup._lerpT);
+								layerGroup._primaryLayer._animation.weight = MathUtils.Interpolate(layerGroup._lerpEase, 0f, layerGroup._targetWeight, layerGroup._lerpT);
 							}
 						}
 						break;
 
 
-					case ChannelGroup.State.Stopping:
+					case LayerGroup.State.Stopping:
 						{
-							channelGroup._lerpT += channelGroup._lerpSpeed * Time.deltaTime;
+							layerGroup._lerpT += layerGroup._lerpSpeed * Time.deltaTime;
 
-							if (channelGroup._lerpT >= 1.0f)
+							if (layerGroup._lerpT >= 1.0f)
 							{
-								StopChannel(channelGroup);
-								channelGroup._state = ChannelGroup.State.Stopped;
+								StopLayer(layerGroup);
+								layerGroup._state = LayerGroup.State.Stopped;
+
+								//If mode is stop all, stop all other layers
+								if (layerGroup._playMode == PlayMode.StopAll)
+								{
+									foreach (LayerGroup group in _layers)
+									{
+										if (group != layerGroup)
+											StopLayer(group);
+									}
+								}
 							}
 							else
 							{
-								channelGroup._primaryLayer._animation.weight = MathUtils.Interpolate(channelGroup._lerpEase, channelGroup._primaryLayer._origWeight, 0f, channelGroup._lerpT);
+								layerGroup._primaryLayer._animation.weight = MathUtils.Interpolate(layerGroup._lerpEase, layerGroup._primaryLayer._origWeight, 0f, layerGroup._lerpT);
 
-								for (int i = 0; i < channelGroup._backgroundLayers.Length; i++)
+								for (int i = 0; i < layerGroup._backgroundLayers.Length; i++)
 								{
-									if (IsChannelLayerPlaying(channelGroup._backgroundLayers[i]))
-										channelGroup._backgroundLayers[i]._animation.weight = MathUtils.Interpolate(channelGroup._lerpEase, channelGroup._backgroundLayers[i]._origWeight, 0f, channelGroup._lerpT);
+									if (IsLayerChannelPlaying(layerGroup._backgroundLayers[i]))
+										layerGroup._backgroundLayers[i]._animation.weight = MathUtils.Interpolate(layerGroup._lerpEase, layerGroup._backgroundLayers[i]._origWeight, 0f, layerGroup._lerpT);
 								}
 							}
 						}
@@ -504,15 +546,15 @@ namespace Framework
 				}
 
 				//If have a queued animation,
-				if (!string.IsNullOrEmpty(channelGroup._queuedAnimation))
+				if (!string.IsNullOrEmpty(layerGroup._queuedAnimation))
 				{
 					bool queuedReady;
 					float timeRemaining;
 
-					if (IsChannelLayerPlaying(channelGroup._primaryLayer))
+					if (IsLayerChannelPlaying(layerGroup._primaryLayer))
 					{
-						timeRemaining = channelGroup._primaryLayer._animation.length - channelGroup._primaryLayer._animation.time;
-						queuedReady = timeRemaining <= channelGroup._queuedAnimationBlendTime;
+						timeRemaining = layerGroup._primaryLayer._animation.length - layerGroup._primaryLayer._animation.time;
+						queuedReady = timeRemaining <= layerGroup._queuedAnimationBlendTime;
 					}
 					else
 					{
@@ -522,23 +564,24 @@ namespace Framework
 
 					if (queuedReady)
 					{
-						Play(channelGroup._channel, channelGroup._queuedAnimation, channelGroup._queuedAnimationWrapMode, timeRemaining, channelGroup._queuedAnimationEase, channelGroup._queuedAnimationWeight);
+						Play(layerGroup._layer, layerGroup._queuedAnimation, timeRemaining, layerGroup._queuedAnimationEase, 
+								layerGroup._queuedPlayMode, layerGroup._queuedAnimationWrapMode, layerGroup._queuedAnimationWeight);
 					}
 				}
 			}
 
-			private ChannelGroup GetChannelGroup(int channel)
+			private LayerGroup GetLayerGroup(int layer)
 			{
-				foreach (ChannelGroup channelGroup in _channels)
+				foreach (LayerGroup layerGroup in _layers)
 				{
-					if (channelGroup._channel == channel)
-						return channelGroup;
+					if (layerGroup._layer == layer)
+						return layerGroup;
 				}
 
 				return null;
 			}
 
-			private void StopChannelLayer(ChannelLayer layer)
+			private void StopLayerChannel(LayerChannel layer)
 			{
 				if (layer._animation != null && layer._animation.layer == layer._layer)
 				{
@@ -549,15 +592,15 @@ namespace Framework
 				layer._animation = null;
 			}
 
-			private void StopChannel(ChannelGroup channelGroup)
+			private void StopLayer(LayerGroup layerGroup)
 			{
-				if (channelGroup != null)
+				if (layerGroup != null)
 				{
-					StopChannelLayer(channelGroup._primaryLayer);
+					StopLayerChannel(layerGroup._primaryLayer);
 
-					for (int i = 0; i < channelGroup._backgroundLayers.Length; i++)
+					for (int i = 0; i < layerGroup._backgroundLayers.Length; i++)
 					{
-						StopChannelLayer(channelGroup._backgroundLayers[i]);
+						StopLayerChannel(layerGroup._backgroundLayers[i]);
 					}
 				}
 			}
@@ -587,16 +630,16 @@ namespace Framework
 			}
 
 
-			private void MovePrimaryAnimationToBackgroundTrack(ChannelGroup channelGroup)
+			private void MovePrimaryAnimationToBackgroundTrack(LayerGroup layerGroup)
 			{
 				AnimationState lastLayerAnimation;
 				float lastLayerOrigWeight;
 
-				if (IsChannelLayerPlaying(channelGroup._primaryLayer))
+				if (IsLayerChannelPlaying(layerGroup._primaryLayer))
 				{
-					channelGroup._primaryLayer._animation.layer -= 1;
-					lastLayerAnimation = channelGroup._primaryLayer._animation;
-					lastLayerOrigWeight = channelGroup._primaryLayer._origWeight;
+					layerGroup._primaryLayer._animation.layer -= 1;
+					lastLayerAnimation = layerGroup._primaryLayer._animation;
+					lastLayerOrigWeight = layerGroup._primaryLayer._origWeight;
 				}
 				else
 				{
@@ -604,44 +647,55 @@ namespace Framework
 					lastLayerOrigWeight = 0f;
 				}
 
-				for (int i=0; i < kNumberOfBackgroundLayers ; i++)
+				for (int i=0; i < MaxBackgroundLayers ; i++)
 				{
 					AnimationState animation = null;
 					float origWeight = 0f;
 
-					if (IsChannelLayerPlaying(channelGroup._backgroundLayers[i]))
+					if (IsLayerChannelPlaying(layerGroup._backgroundLayers[i]))
 					{
-						if (i < kNumberOfBackgroundLayers - 1)
+						if (i < MaxBackgroundLayers - 1)
 						{
-							channelGroup._backgroundLayers[i]._animation.layer -= 1;
-							animation = channelGroup._backgroundLayers[i]._animation;
-							origWeight = channelGroup._backgroundLayers[i]._origWeight;
+							layerGroup._backgroundLayers[i]._animation.layer -= 1;
+							animation = layerGroup._backgroundLayers[i]._animation;
+							origWeight = layerGroup._backgroundLayers[i]._origWeight;
 						}
 						else
 						{
-							StopChannelLayer(channelGroup._backgroundLayers[i]);
+							StopLayerChannel(layerGroup._backgroundLayers[i]);
 						}
 					}
 
 					//Set new animation
-					channelGroup._backgroundLayers[i]._animation = lastLayerAnimation;
+					layerGroup._backgroundLayers[i]._animation = lastLayerAnimation;
 					if (lastLayerAnimation != null)
-						lastLayerAnimation.layer = channelGroup._backgroundLayers[i]._layer;
-					channelGroup._backgroundLayers[i]._origWeight = lastLayerOrigWeight;
+						lastLayerAnimation.layer = layerGroup._backgroundLayers[i]._layer;
+					layerGroup._backgroundLayers[i]._origWeight = lastLayerOrigWeight;
 
 					lastLayerAnimation = animation;
 					lastLayerOrigWeight = origWeight;
 				}
 			}
 
-			private bool IsChannelLayerPlaying(ChannelLayer channelLayer)
+			private bool IsLayerChannelPlaying(LayerChannel layerLayer)
 			{
-				return channelLayer._animation != null && channelLayer._animation.enabled && channelLayer._animation.layer == channelLayer._layer;
+				return layerLayer._animation != null && layerLayer._animation.enabled && layerLayer._animation.layer == layerLayer._layer;
 			}
 
-			private bool IsChannelLayerPlaying(ChannelLayer channelLayer, string animName)
+			private bool IsLayerChannelPlaying(LayerChannel layerLayer, string animName)
 			{
-				return IsChannelLayerPlaying(channelLayer) && channelLayer._animation.name == animName;
+				return IsLayerChannelPlaying(layerLayer) && layerLayer._animation.name == animName;
+			}
+
+			private bool AddClipIfDoesntExist(AnimationClip clip)
+			{
+				if (AnimationComponent.GetClip(clip.name) == null)
+				{
+					AnimationComponent.AddClip(clip, clip.name);
+					return true;
+				}
+
+				return false;
 			}
 			#endregion
 		}

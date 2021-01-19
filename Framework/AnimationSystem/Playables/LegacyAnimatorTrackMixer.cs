@@ -48,7 +48,7 @@ namespace Framework
 					_channelData[i] = new ChannelData
 					{
 						_channel = channels[i],
-						_backgroundAnimations = new List<LegacyAnimator.AnimationParams>()
+						_backgroundAnimations = new List<LegacyAnimator.AnimationParams>(LegacyAnimator.MaxBackgroundLayers)
 					};
 				}
 			}
@@ -68,7 +68,7 @@ namespace Framework
 				{
 					float inputWeight = playable.GetInputWeight(i);
 
-					if (inputWeight > 0f && TimelineUtils.IsScriptPlayable(playable.GetInput(i), out LegacyAnimatorPlayableBehaviour inputBehaviour))
+					if (inputWeight > 0f && TimelineUtils.IsScriptPlayable(playable.GetInput(i), out LegacyAnimatorPlayableBehaviour inputBehaviour) && inputBehaviour._animation != null)
 					{
 						TimelineClip clip = inputBehaviour._clipAsset.GetTimelineClip();
 
@@ -86,7 +86,7 @@ namespace Framework
 
 								if (isPrimaryClip)
 								{
-									_channelData[ch]._primaryAnimation._animName = inputBehaviour._animation.name;
+									_channelData[ch]._primaryAnimation._animation = inputBehaviour._animation;
 									_channelData[ch]._primaryAnimation._time = trackTime;
 									_channelData[ch]._primaryAnimation._weight = inputWeight;
 									_channelData[ch]._primaryAnimation._speed = inputBehaviour._animationSpeed;
@@ -95,7 +95,7 @@ namespace Framework
 								{
 									LegacyAnimator.AnimationParams backroundAnimation = new LegacyAnimator.AnimationParams
 									{
-										_animName = inputBehaviour._animation.name,
+										_animation = inputBehaviour._animation,
 										_time = trackTime,
 										_weight = 1.0f,
 										_speed = inputBehaviour._animationSpeed,
@@ -128,18 +128,16 @@ namespace Framework
 			{
 				if (Application.isPlaying)
 				{
-					_trackBinding.SetChannelData(channel._channel, channel._primaryAnimation, channel._backgroundAnimations.ToArray());
+					_trackBinding.SetLayerData(channel._channel, channel._primaryAnimation, channel._backgroundAnimations.ToArray());
 				}
 #if UNITY_EDITOR
 				//For previewing in editor can't blend between clips - the primary clip will play at full weight
 				else
 				{
-					AnimationClip clip = _trackBinding.GetClip( channel._primaryAnimation._animName);
-					
-					if (clip != null)
+					if (channel._primaryAnimation._animation != null)
 					{
 						AnimationMode.BeginSampling();
-						AnimationMode.SampleAnimationClip(_trackBinding.gameObject, clip, channel._primaryAnimation._time);
+						AnimationMode.SampleAnimationClip(_trackBinding.gameObject, channel._primaryAnimation._animation, channel._primaryAnimation._time);
 						AnimationMode.EndSampling();
 					}					
 				}
