@@ -518,17 +518,15 @@ namespace Framework
 
 							if (layerGroup._lerpT >= 1.0f)
 							{
-								StopLayer(layerGroup);
 								layerGroup._state = LayerGroup.State.Stopped;
 
-								//If mode is stop all, stop all other layers
 								if (layerGroup._playMode == PlayMode.StopAll)
 								{
-									foreach (LayerGroup group in _layers)
-									{
-										if (group != layerGroup)
-											StopLayer(group);
-									}
+									StopAll();
+								}
+								else
+								{
+									StopLayer(layerGroup);
 								}
 							}
 							else
