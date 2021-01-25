@@ -9,7 +9,6 @@ namespace Framework
 		{
 			public LegacyAnimationClipAsset _clipAsset;
 			public AnimationClip _animation;
-			public float _animationSpeed;
 		}
 	}
 }

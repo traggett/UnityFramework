@@ -89,7 +89,7 @@ namespace Framework
 									_channelData[ch]._primaryAnimation._animation = inputBehaviour._animation;
 									_channelData[ch]._primaryAnimation._time = trackTime;
 									_channelData[ch]._primaryAnimation._weight = inputWeight;
-									_channelData[ch]._primaryAnimation._speed = inputBehaviour._animationSpeed;
+									_channelData[ch]._primaryAnimation._speed = 0f;
 								}
 								else
 								{
@@ -98,7 +98,7 @@ namespace Framework
 										_animation = inputBehaviour._animation,
 										_time = trackTime,
 										_weight = 1.0f,
-										_speed = inputBehaviour._animationSpeed,
+										_speed = 0f,
 									};
 									_channelData[ch]._backgroundAnimations.Add(backroundAnimation);
 								}

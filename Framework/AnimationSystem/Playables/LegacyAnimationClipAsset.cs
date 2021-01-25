@@ -13,7 +13,6 @@ namespace Framework
 		{
 			public AnimationClip _animationClip;
 			public double _animationDuration = PlayableBinding.DefaultDuration;
-			public float _animationSpeed = 1.0f;
 
 			private TimelineClip _clip;
 
@@ -55,7 +54,6 @@ namespace Framework
 				
 				clone._clipAsset = this;
 				clone._animation = _animationClip;
-				clone._animationSpeed = _animationSpeed;
 
 				return playable;
 			}
