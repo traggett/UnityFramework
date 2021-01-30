@@ -322,17 +322,26 @@ namespace Framework
 				//TO DO also check items being destroyed
 				if (_items != null)
 				{
-					float size = StartPadding;
+					float contentHeight = StartPadding;
 
 					for (int i = 0; i < _items.Count; i++)
 					{
 						RectTransform transform = _items[i]._item.GetTransform();
-						size += transform.sizeDelta.y;
+						contentHeight += transform.sizeDelta.y;
 					}
 
-					size += EndPadding;
+					contentHeight += EndPadding;
+					RectTransformUtils.SetHeight(_scrollArea.content, contentHeight);
 
-					RectTransformUtils.SetHeight(_scrollArea.content, size);
+					if (contentHeight > _scrollArea.viewport.rect.height)
+					{
+						_scrollArea.enabled = true;
+					}
+					else
+					{
+						RectTransformUtils.SetY(_scrollArea.content, 0f);
+						_scrollArea.enabled = false;
+					}
 				}
 			}
 
