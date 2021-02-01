@@ -45,7 +45,7 @@ namespace Framework
 
 			public static float GetBottom(RectTransform transform)
 			{
-				return transform.offsetMin.x;
+				return transform.offsetMin.y;
 			}
 
 			public static void SetWidth(RectTransform transform, float width)
