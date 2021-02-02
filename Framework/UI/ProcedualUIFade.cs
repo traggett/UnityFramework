@@ -74,7 +74,7 @@ namespace Framework
 				Vector2 topRightCorner = bottomLeftCorner + (rectTransform.rect.width * Vector2.right) + (rectTransform.rect.height * Vector2.up);
 				Vector2[] uvs;
 
-				if (sprite != null && sprite.uv.Length == 4)
+				if (sprite != null && sprite.packingMode == SpritePackingMode.Rectangle)
 				{
 					uvs = sprite.uv;
 				}

@@ -333,15 +333,24 @@ namespace Framework
 					contentHeight += EndPadding;
 					RectTransformUtils.SetHeight(_scrollArea.content, contentHeight);
 
-					if (contentHeight > _scrollArea.viewport.rect.height)
-					{
-						_scrollArea.enabled = true;
-					}
-					else
-					{
-						RectTransformUtils.SetY(_scrollArea.content, 0f);
-						_scrollArea.enabled = false;
-					}
+					SetScrollAreaEnabled(contentHeight > _scrollArea.viewport.rect.height);
+				}
+			}
+
+			private void SetScrollAreaEnabled(bool enabled)
+			{
+				_scrollArea.enabled = enabled;
+				
+				if (!enabled)
+				{
+					RectTransformUtils.SetY(_scrollArea.content, 0f);
+				}
+
+				RectMask2D mask = _scrollArea.viewport.GetComponent<RectMask2D>();
+				
+				if (mask != null)
+				{
+					mask.enabled = enabled;
 				}
 			}
 
