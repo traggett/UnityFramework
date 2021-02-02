@@ -106,6 +106,7 @@ namespace Framework
 			#region Public Interface
 			public void ShowInstant()
 			{
+				this.gameObject.SetActive(true);
 				OnShown();
 			}
 
