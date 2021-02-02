@@ -14,30 +14,46 @@ namespace Framework
 			private float _lerp;
 			private float _lerpSpeed;
 
-			public void FadeAlpha(float targetAlpha, float time)
+			public void SetAlpha(float targetAlpha, float time = 0f)
 			{
-				if (_lerp <= 0f || !MathUtils.Approximately(targetAlpha, _target.a, Mathf.Epsilon))
+				if (time <= 0f)
 				{
-					_lerp = 1f;
-					_from = GetColor();
+					OnSetAlpha(targetAlpha);
+					_lerp = 0f;
 				}
+				else
+				{
+					if (_lerp <= 0f || !MathUtils.Approximately(targetAlpha, _target.a, Mathf.Epsilon))
+					{
+						_lerp = 1f;
+						_from = GetColor();
+					}
 
-				_alphaOnly = true;
-				_lerpSpeed = 1f / time;
-				_target = new Color(0f, 0f, 0f, targetAlpha);
+					_alphaOnly = true;
+					_lerpSpeed = 1f / time;
+					_target = new Color(0f, 0f, 0f, targetAlpha);
+				}			
 			}
 
-			public void FadeColor(Color target, float time)
+			public void SetColor(Color target, float time = 0f)
 			{
-				if (_lerp <= 0f || !ColorUtils.Approximately(target, _target, Mathf.Epsilon))
+				if (time <= 0f)
 				{
-					_lerp = 1f;
-					_from = GetColor();
+					OnSetColor(target);
+					_lerp = 0f;
 				}
+				else
+				{
+					if (_lerp <= 0f || !ColorUtils.Approximately(target, _target, Mathf.Epsilon))
+					{
+						_lerp = 1f;
+						_from = GetColor();
+					}
 
-				_alphaOnly = false;
-				_lerpSpeed = 1f / time;
-				_target = target;
+					_alphaOnly = false;
+					_lerpSpeed = 1f / time;
+					_target = target;
+				}
 			}
 
 			protected abstract Color GetColor();
