@@ -2,6 +2,8 @@ using UnityEngine;
 
 namespace Framework
 {
+    using Maths;
+    
     namespace Utils
     {
         public static class ColorUtils
@@ -26,6 +28,12 @@ namespace Framework
 
                 return Color.HSVToRGB(hue, s, v);
             }
+
+            public static bool Approximately(Color a, Color b, float epsilon)
+			{
+               return MathUtils.Approximately(a.r, b.r, epsilon) && MathUtils.Approximately(a.g, b.g, epsilon) && MathUtils.Approximately(a.b, b.b, epsilon);
+            }
+
         }
     }
 }
