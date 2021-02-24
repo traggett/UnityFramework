@@ -158,7 +158,7 @@ namespace Framework
 					if (_animated && _lineIndex < _lines.Length && deltaTime > 0f)
 					{
 						RectTransform currentLine = _lines[_lineIndex].rectTransform;
-						currentLine.anchoredPosition = GetLinePosition(textInfo.lineInfo[_lineIndex], out float lineWidth);
+						currentLine.anchoredPosition = GetLinePosition(textInfo, _lineIndex, out float lineWidth);
 
 						float currentWidth = RectTransformUtils.GetWidth(currentLine);
 
@@ -191,7 +191,7 @@ namespace Framework
 					//Update shown lines
 					for (int i = 0; i < Mathf.Min(_lines.Length, _lineIndex); i++)
 					{
-						_lines[i].rectTransform.anchoredPosition = GetLinePosition(textInfo.lineInfo[i], out float lineWidth);
+						_lines[i].rectTransform.anchoredPosition = GetLinePosition(textInfo, i, out float lineWidth);
 						_lines[i].rectTransform.sizeDelta = new Vector2(lineWidth, lineHeight);
 						_lines[i].color = _lineColor;
 					}
@@ -202,12 +202,14 @@ namespace Framework
 					return _lines != null && _animated && _lineIndex < _lines.Length;
 				}
 
-				private Vector2 GetLinePosition(TMP_LineInfo lineInfo, out float lineWidth)
+				private Vector2 GetLinePosition(TMP_TextInfo textInfo, int lineIndex, out float lineWidth)
 				{
 					RectTransform textTransform = (RectTransform)this.transform;
 
 					float linePadding = _linePadding * _textMesh.fontSize;
 					float lineShift = _lineShift * _textMesh.fontSize;
+
+					TMP_LineInfo lineInfo = textInfo.lineInfo[lineIndex];
 
 					lineWidth = lineInfo.lineExtents.max.x - lineInfo.lineExtents.min.x + (linePadding * 2f);
 
@@ -220,7 +222,9 @@ namespace Framework
 					switch (_lineStyle)
 					{
 						case LineStyle.Strikethrough:
-							y = lineInfo.baseline + lineShift + _textMesh.fontScale * _textMesh.font.faceInfo.strikethroughOffset;
+							float strikethroughOffset = _textMesh.font.faceInfo.strikethroughOffset;
+							float strikethroughScale = textInfo.characterInfo[lineInfo.firstVisibleCharacterIndex].scale;
+							y = lineInfo.baseline + lineShift + (strikethroughOffset * strikethroughScale);
 							break;
 						case LineStyle.Underline:
 						default:
