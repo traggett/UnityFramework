@@ -10,7 +10,7 @@ namespace Framework
 	{
 		namespace GPUAnimations
 		{
-			public class GPUAnimation : GPUAnimatorBase
+			public class GPUAnimation : GPUAnimatorBase, IEnumerable
 			{
 				#region Public Data
 				public string _defaultAnimation;
@@ -321,7 +321,9 @@ namespace Framework
 
 					return new Bounds();
 				}
+				#endregion
 
+				#region IEnumerable
 				public IEnumerator GetEnumerator()
 				{
 					return new Enumerator(this);

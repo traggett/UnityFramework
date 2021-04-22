@@ -25,6 +25,11 @@ namespace Framework
 
 			private void LateUpdate()
 			{
+				UpdateChildren();
+			}
+
+			public void UpdateChildren()
+			{
 				if (Application.isPlaying)
 					UpdateChildren(_movementTime);
 				else
@@ -44,7 +49,7 @@ namespace Framework
 						if (!_childMovers.TryGetValue(child, out RectTransformMover mover) || mover == null)
 						{
 							mover = child.GetComponent<RectTransformMover>();
-							_childMovers.Add(child, mover);
+							_childMovers[child] = mover;
 						}
 
 						activeChildren.Add(child.gameObject);
