@@ -33,10 +33,9 @@ namespace Framework
 				}
 			}
 
-			public float StartPadding 
-			{ 
-				get; set; }
+			public float StartPadding { get; set; }
 			public float EndPadding { get; set; }
+			public float ItemPadding { get; set; }
 
 			private const float kDefaultLerpTime = 0.25f;
 
@@ -127,7 +126,7 @@ namespace Framework
 			}
 
 			public static void Create(ref ScrollList<T> scrollList, ScrollRect scrollArea, PrefabInstancePool itemPool, IList<T> items = null,
-									float startPadding = 0f, float endPadding = 0f, float movementTime = kDefaultLerpTime, AnimationCurve movementCurve = null)
+									float startPadding = 0f, float itemPadding = 0f, float endPadding = 0f, float movementTime = kDefaultLerpTime, AnimationCurve movementCurve = null)
 			{
 				if (movementCurve == null)
 					movementCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
@@ -140,6 +139,7 @@ namespace Framework
 				scrollList.MovementCurve = movementCurve;
 				scrollList.MovementTime = movementTime;
 				scrollList.StartPadding = startPadding;
+				scrollList.ItemPadding = itemPadding;
 				scrollList.EndPadding = endPadding;
 
 				scrollList.Initialise(items);
@@ -312,7 +312,7 @@ namespace Framework
 							}
 						}
 
-						pos.y -= transform.sizeDelta.y;
+						pos.y -= transform.sizeDelta.y + ItemPadding;
 					}
 				}
 			}
@@ -328,6 +328,11 @@ namespace Framework
 					{
 						RectTransform transform = _items[i]._item.GetTransform();
 						contentHeight += transform.sizeDelta.y;
+
+						if (i != _items.Count -1)
+						{
+							contentHeight += ItemPadding;
+						}
 					}
 
 					contentHeight += EndPadding;
