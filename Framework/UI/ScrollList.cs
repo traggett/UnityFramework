@@ -12,8 +12,10 @@ namespace Framework
 		public interface IScrollListItem<T>
 		{
 			void Init(T item);
+			void DeInit();
+			void Update(T item);		
 			bool Matches(T item);
-			void SetItem(T item);
+			
 			RectTransform GetTransform();
 			void SetFade(float fade);
 		}
@@ -159,6 +161,7 @@ namespace Framework
 				{
 					item._lerp = 1.0f;
 					item._state = ScrollListItem.State.FadingOut;
+					item._item.DeInit();
 					_itemsBeingRemoved.Add(item);
 				}
 
@@ -220,6 +223,7 @@ namespace Framework
 				//Destroy items no longer in the list
 				foreach (ScrollListItem item in toRemove)
 				{
+					item._item.DeInit();
 					_itemPool.Destroy(item._item.GetTransform().gameObject);
 				}
 
@@ -245,14 +249,6 @@ namespace Framework
 				UpdateContentSize();
 			}
 
-			private ScrollListItem CreatItemType(T item)
-			{
-				GameObject gameObject = _itemPool.Instantiate(_scrollArea.content.transform);
-				IScrollListItem<T> newItem = gameObject.GetComponent<IScrollListItem<T>>();
-				newItem.Init(item);
-				return new ScrollListItem(newItem);
-			}
-
 			private void FindChanges(IList<T> items, out List<ScrollListItem> toAdd, out List<ScrollListItem> toRemove)
 			{
 				toAdd = new List<ScrollListItem>();
@@ -271,7 +267,6 @@ namespace Framework
 						{
 							if (button._item.Matches(items[i]))
 							{
-								button._item.SetItem(items[i]);
 								_items.Add(button);
 								toRemove.Remove(button);
 								item = button;
@@ -279,13 +274,14 @@ namespace Framework
 							}
 						}
 
-						//If no item exists for this create a new one
-						bool newItem = item == null;
 						RectTransform transform;
 
-						if (newItem)
+						//If no item exists for this create a new one
+						if (item == null)
 						{
-							item = CreatItemType(items[i]);
+							GameObject gameObject = _itemPool.Instantiate(_scrollArea.content.transform);
+							item = new ScrollListItem(gameObject.GetComponent<IScrollListItem<T>>());
+							item._item.Init(items[i]);
 							item._lerp = 0.0f;
 							item._state = ScrollListItem.State.FadingIn;
 							item._targetPosition = pos;
@@ -296,8 +292,7 @@ namespace Framework
 							_items.Add(item);
 							toAdd.Add(item);
 						}
-
-						//Update position and content size
+						//Otherwise update existing
 						else
 						{
 							transform = item._item.GetTransform();
@@ -310,6 +305,8 @@ namespace Framework
 								item._lerp = 0.0f;
 								item._item.SetFade(1.0f);
 							}
+
+							item._item.Update(items[i]);
 						}
 
 						pos.y -= transform.sizeDelta.y + ItemPadding;
