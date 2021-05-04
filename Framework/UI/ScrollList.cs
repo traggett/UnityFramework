@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,16 +12,15 @@ namespace Framework
 	{
 		public interface IScrollListItem<T>
 		{
-			void Init(T item);
-			void DeInit();
-			void Update(T item);		
-			bool Matches(T item);
-			
-			RectTransform GetTransform();
+			void OnShow(T data);
+			void OnHide();
+			void OnUpdate(T data);
+			T GetData();
 			void SetFade(float fade);
+			RectTransform GetTransform();
 		}
 
-		public class ScrollList<T> : IEnumerable<IScrollListItem<T>>
+		public class ScrollList<T> : IEnumerable<IScrollListItem<T>> where T : IComparable
 		{
 			public delegate GameObject CreatItemTypeFunc();
 
@@ -161,7 +161,7 @@ namespace Framework
 				{
 					item._lerp = 1.0f;
 					item._state = ScrollListItem.State.FadingOut;
-					item._item.DeInit();
+					item._item.OnHide();
 					_itemsBeingRemoved.Add(item);
 				}
 
@@ -223,7 +223,7 @@ namespace Framework
 				//Destroy items no longer in the list
 				foreach (ScrollListItem item in toRemove)
 				{
-					item._item.DeInit();
+					item._item.OnHide();
 					_itemPool.Destroy(item._item.GetTransform().gameObject);
 				}
 
@@ -265,7 +265,7 @@ namespace Framework
 
 						foreach (ScrollListItem button in toRemove)
 						{
-							if (button._item.Matches(items[i]))
+							if (button._item.GetData().Equals(items[i]))
 							{
 								_items.Add(button);
 								toRemove.Remove(button);
@@ -281,7 +281,7 @@ namespace Framework
 						{
 							GameObject gameObject = _itemPool.Instantiate(_scrollArea.content.transform);
 							item = new ScrollListItem(gameObject.GetComponent<IScrollListItem<T>>());
-							item._item.Init(items[i]);
+							item._item.OnShow(items[i]);
 							item._lerp = 0.0f;
 							item._state = ScrollListItem.State.FadingIn;
 							item._targetPosition = pos;
@@ -306,7 +306,7 @@ namespace Framework
 								item._item.SetFade(1.0f);
 							}
 
-							item._item.Update(items[i]);
+							item._item.OnUpdate(items[i]);
 						}
 
 						pos.y -= transform.sizeDelta.y + ItemPadding;
