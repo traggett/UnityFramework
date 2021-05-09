@@ -1,9 +1,11 @@
 {
     "name": "UnityFrameworkEditor",
+    "rootNamespace": "",
     "references": [
         "UnityFramework",
         "Unity.Timeline",
-        "Unity.Timeline.Editor"
+        "Unity.Timeline.Editor",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

@@ -27,6 +27,8 @@ namespace Framework
 			public static readonly string kDefaultLocalisationFileName = "LocalisedStrings";
 			public static readonly string kVariableStartChars = "${";
 			public static readonly string kVariableEndChars = "}";
+
+			public static Action OnLanguageChanged;
 			#endregion
 
 			#region Private Data
@@ -122,17 +124,24 @@ namespace Framework
 			public static SystemLanguage GetCurrentLanguage()
 			{
 				if (_currentLanguage == SystemLanguage.Unknown)
-					_currentLanguage = Application.systemLanguage;
-
+				{
+					SetLanguage(Application.systemLanguage);
+				}
+				
 				return _currentLanguage;
 			}
 
 			public static void SetLanguage(SystemLanguage language)
 			{
-				UnloadStrings(_currentLanguage);
-				
-				_currentLanguage = language;
-				LoadStrings(language);
+				if (_currentLanguage != language)
+				{
+					UnloadStrings(_currentLanguage);
+
+					_currentLanguage = language;
+					LoadStrings(language);
+
+					OnLanguageChanged?.Invoke();
+				}
 			}
 
 			public static void SetGlobalVaraiable(string key, string value)
