@@ -50,8 +50,7 @@ namespace Framework
 #if UNITY_EDITOR
 				private void OnValidate()
 				{
-					if (_textMesh == null)
-						_textMesh = GetComponent<TMP_Text>();
+					_textMesh = GetComponent<TMP_Text>();
 				}
 #endif
 

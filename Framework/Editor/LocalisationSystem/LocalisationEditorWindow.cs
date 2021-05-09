@@ -379,8 +379,19 @@ namespace Framework
 							//Keys Resizer
 							RenderResizer(ref _keysResizerRect);
 
-							//First Language
-							GUILayout.Button(Localisation.GetCurrentLanguage().ToString(), EditorStyles.toolbarButton, GUILayout.Width(firstLanguageWidth));
+							//Current Language
+							string label = "Current Language (" + Localisation.GetCurrentLanguage().ToString() + ")";
+							if (GUILayout.Button(label, EditorStyles.toolbarButton, GUILayout.Width(firstLanguageWidth)))
+							{
+								GenericMenu menu = new GenericMenu();
+
+								foreach (SystemLanguage lang in Enum.GetValues(typeof(SystemLanguage)))
+								{
+									menu.AddItem(new GUIContent(lang.ToString()), false, OnChangeCurrentLanguage, lang);
+								}
+
+								menu.ShowAsContext();
+							}
 
 							//Language Resizer
 							RenderResizer(ref _languageResizerRect);
@@ -390,10 +401,19 @@ namespace Framework
 							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_editorPrefs._secondLanguage, EditorStyles.toolbarPopup, GUILayout.Width(secondLangWidth));
 							if (EditorGUI.EndChangeCheck())
 							{
+								//Unload the strings if second language is not current
 								if (_editorPrefs._secondLanguage != Localisation.GetCurrentLanguage())
+								{
 									Localisation.UnloadStrings(_editorPrefs._secondLanguage);
+								}
 
 								_editorPrefs._secondLanguage = language;
+
+								//If new language isn't current load strings
+								if (language != Localisation.GetCurrentLanguage())
+								{
+									Localisation.LoadStrings(language);
+								}
 							}
 						}
 						EditorGUILayout.EndHorizontal();
@@ -944,6 +964,12 @@ namespace Framework
 					}
 
 					return true;
+				}
+
+				private void OnChangeCurrentLanguage(object value)
+				{
+					SystemLanguage language = (SystemLanguage)value;
+					Localisation.SetLanguage(language);
 				}
 			}
 		}

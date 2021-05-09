@@ -141,6 +141,10 @@ namespace Framework
 					LoadStrings(language);
 
 					OnLanguageChanged?.Invoke();
+
+#if UNITY_EDITOR
+					EditorApplication.QueuePlayerLoopUpdate();
+#endif
 				}
 			}
 

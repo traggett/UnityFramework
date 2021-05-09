@@ -80,6 +80,7 @@ namespace Framework
 								}
 
 								_language = language;
+								Localisation.LoadStrings(language);
 								_text = Localisation.GetRawString(_key, _language);
 								_hasChanges = false;
 							}

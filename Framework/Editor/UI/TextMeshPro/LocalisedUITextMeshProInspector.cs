@@ -32,13 +32,6 @@ namespace Framework
 						index = 0,
 						elementHeight = 20f
 					};
-
-					_currentLanguageStyle = new GUIStyle(EditorStyles.helpBox)
-					{
-						alignment = TextAnchor.MiddleCenter,
-						fontSize = EditorStyles.label.fontSize,
-						richText = true,
-					};
 				}
 
 				public override void OnInspectorGUI()
@@ -48,6 +41,16 @@ namespace Framework
 					LocalisedUITextMeshPro localisedUITextMesh = (LocalisedUITextMeshPro)target;
 
 					EditorGUILayout.PropertyField(_textProp);
+
+					if (_currentLanguageStyle == null)
+					{
+						_currentLanguageStyle = new GUIStyle(EditorStyles.helpBox)
+						{
+							alignment = TextAnchor.MiddleCenter,
+							fontSize = EditorStyles.label.fontSize,
+							richText = true,
+						};
+					}
 
 					_languageSettingsOverridesProp.isExpanded = EditorGUILayout.BeginFoldoutHeaderGroup(_languageSettingsOverridesProp.isExpanded, "Language Override Settings");
 					if (_languageSettingsOverridesProp.isExpanded)
