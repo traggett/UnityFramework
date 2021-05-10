@@ -35,12 +35,13 @@ namespace Framework
 			private static Dictionary<string, LocalisationMap> _localisationMaps = new Dictionary<string, LocalisationMap>();
 			private static SystemLanguage _currentLanguage = SystemLanguage.Unknown;
 
-			private struct VariableInfo
+			private struct GlobalVariable
 			{
-				public string _value;
 				public int _version;
+				public string _value;
+				public bool _localised;
 			}
-			private static Dictionary<string, VariableInfo> _globalVariables = new Dictionary<string, VariableInfo>();
+			private static Dictionary<string, GlobalVariable> _globalVariables = new Dictionary<string, GlobalVariable>();
 			private static bool _dirty;
 #if UNITY_EDITOR
 			private static string[] _editorKeys;
@@ -101,6 +102,11 @@ namespace Framework
 				return _localisationMaps[LanguageCodes.GetLanguageCode(_currentLanguage)].IsValidKey(key);
 			}
 
+			public static LocalisationLocalVariable Variable(string key, LocalisedString value)
+			{
+				return new LocalisationLocalVariable(key, value.GetLocalisationKey(), true);
+			}
+
 			public static LocalisationLocalVariable Variable(string key, string value)
 			{
 				return new LocalisationLocalVariable(key, value);
@@ -116,9 +122,20 @@ namespace Framework
 				return new LocalisationLocalVariable(key, Convert.ToString(value));
 			}
 
+			public static string Get(SystemLanguage language, string key, params LocalisationLocalVariable[] localVariables)
+			{
+				MakeSureStringsAreLoaded(language);
+
+				string text = _localisationMaps[LanguageCodes.GetLanguageCode(language)].Get(key);
+
+				text = ReplaceVariables(text, localVariables);
+
+				return text;
+			}
+
 			public static string Get(string key, params LocalisationLocalVariable[] localVariables)
 			{
-				return Get(key, _currentLanguage, localVariables);
+				return Get(_currentLanguage, key, localVariables);
 			}
 
 			public static SystemLanguage GetCurrentLanguage()
@@ -148,16 +165,15 @@ namespace Framework
 				}
 			}
 
-			public static void SetGlobalVaraiable(string key, string value)
+			public static void SetGlobalVaraiable(string key, string value, bool isLocalised = false)
 			{
-				VariableInfo info;
-
-				if (_globalVariables.TryGetValue(key, out info))
+				if (_globalVariables.TryGetValue(key, out GlobalVariable info))
 				{
 					info._version++;
 				}
 
 				info._value = value;
+				info._localised = isLocalised;
 
 				_globalVariables[key] = info;
 			}
@@ -186,7 +202,7 @@ namespace Framework
 						int variableKeyStartIndex = variableStartIndex + kVariableEndChars.Length + 1;
 						string variableKey = text.Substring(variableKeyStartIndex, variableEndIndex - variableKeyStartIndex);
 
-						VariableInfo info;
+						GlobalVariable info;
 						_globalVariables.TryGetValue(variableKey, out info);
 						keys.Add(new LocalisationGlobalVariable { _key = variableKey, _version = info._version } );
 
@@ -207,7 +223,7 @@ namespace Framework
 				{
 					for (int i = 0; i < varaiables.Length; i++)
 					{
-						VariableInfo info;
+						GlobalVariable info;
 
 						if (_globalVariables.TryGetValue(varaiables[i]._key, out info))
 						{
@@ -381,17 +397,6 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			public static string Get(string key, SystemLanguage language, params LocalisationLocalVariable[] localVariables)
-			{
-				MakeSureStringsAreLoaded(language);
-
-				string text = _localisationMaps[LanguageCodes.GetLanguageCode(language)].Get(key);
-
-				text = ReplaceVariables(text, localVariables);
-
-				return text;
-			}
-
 			private static string GetLocalisationMapName(SystemLanguage language)
 			{
 				return kDefaultLocalisationFileName + "_" + LanguageCodes.GetLanguageCode(language).ToUpper();
@@ -440,7 +445,7 @@ namespace Framework
 							{
 								if (localVariables[i]._key == variableKey)
 								{
-									fullText += localVariables[i]._value;
+									fullText += localVariables[i]._localised? Get(localVariables[i]._value) : localVariables[i]._value;
 									foundKey = true;
 									break;
 								}
@@ -449,10 +454,9 @@ namespace Framework
 							//If not found in there check global variables
 							if (!foundKey)
 							{
-								VariableInfo info;
-								if (_globalVariables.TryGetValue(variableKey, out info))
+								if (_globalVariables.TryGetValue(variableKey, out GlobalVariable variable))
 								{
-									fullText += info._value;
+									fullText += variable._localised ? Get(variable._value) : variable._value;
 								}
 								else if (Application.isPlaying)
 								{

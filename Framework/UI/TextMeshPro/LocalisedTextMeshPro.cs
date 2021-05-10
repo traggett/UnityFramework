@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 using TMPro;
 using System;
 
@@ -12,11 +15,9 @@ namespace Framework
 		{
 			[ExecuteInEditMode()]
 			[RequireComponent(typeof(TMP_Text))]
-			public class LocalisedUITextMeshPro : MonoBehaviour, ISerializationCallbackReceiver
+			public class LocalisedTextMeshPro : MonoBehaviour, ISerializationCallbackReceiver
 			{
 				#region Public Data
-				public LocalisedStringRef _text;
-
 				public TMP_Text TextMesh
 				{
 					get
@@ -24,33 +25,48 @@ namespace Framework
 						return _textMesh;
 					}
 				}
+
+				public LocalisedString Text
+				{
+					set
+					{
+						_text = value;
+						RefreshText();
+					}
+					get
+					{
+						return _text;
+					}
+				}
+
+#if UNITY_EDITOR
+				public SystemLanguage _editingLanguage = SystemLanguage.Unknown;
+#endif
 				#endregion
 
 				#region Private Data 
 				[SerializeField]
+				private LocalisedString _text;
+				[SerializeField]
 				private TMP_Text _textMesh;
 				[SerializeField]
 				public TextMeshProSettings _defaultSettings;
-
 				[Serializable]
-				public struct LanguageSettingsOverride
+				public class LanguageSettingsOverride
 				{
 					public SystemLanguage _language;
 					public TextMeshProSettings _settings;
 				}
-
 				[SerializeField]
 				public LanguageSettingsOverride[] _languageSettingsOverrides;
-#if UNITY_EDITOR
-				public SystemLanguage _editingLanguage = SystemLanguage.Unknown;
-#endif
 				#endregion
 
 				#region MonoBehaviour
 #if UNITY_EDITOR
 				private void OnValidate()
 				{
-					_textMesh = GetComponent<TMP_Text>();
+					if (_textMesh == null)
+						_textMesh = GetComponent<TMP_Text>();
 				}
 #endif
 
@@ -67,7 +83,21 @@ namespace Framework
 
 				private void Update()
 				{
-					RefreshText();
+#if UNITY_EDITOR
+					if (_editingLanguage != SystemLanguage.Unknown)
+					{
+						string text = _text.GetLocalisedString(_editingLanguage);
+
+						if (_textMesh.text != text)
+						{
+							_textMesh.text = text;
+						}
+					}
+					else
+#endif
+					{
+						RefreshText();
+					}
 				}
 				#endregion
 
@@ -94,7 +124,7 @@ namespace Framework
 				{
 #if UNITY_EDITOR
 					//If this text mesh has language override settings...
-					if (_languageSettingsOverrides != null && _languageSettingsOverrides.Length > 0)
+					if (_textMesh != null && EditorUtility.IsDirty(_textMesh) && _languageSettingsOverrides != null && _languageSettingsOverrides.Length > 0)
 					{
 						//...work out which langauage we're currently editing
 						SystemLanguage language = _editingLanguage != SystemLanguage.Unknown ? _editingLanguage : Localisation.GetCurrentLanguage();

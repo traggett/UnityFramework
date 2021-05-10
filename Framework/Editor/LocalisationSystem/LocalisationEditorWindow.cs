@@ -351,10 +351,14 @@ namespace Framework
 							{
 								string folder = LocalisationProjectSettings.Get()._localisationFolder;
 								folder = EditorUtility.OpenFolderPanel("Choose Localisation Folder", folder, "");
-								LocalisationProjectSettings.Get()._localisationFolder = AssetUtils.GetAssetPath(folder);
-								AssetDatabase.SaveAssets();
-								Localisation.ReloadStrings(true);
-								_needsRepaint = true;
+
+								if (!string.IsNullOrEmpty(folder))
+								{
+									LocalisationProjectSettings.Get()._localisationFolder = AssetUtils.GetAssetPath(folder);
+									AssetDatabase.SaveAssets();
+									Localisation.ReloadStrings(true);
+									_needsRepaint = true;
+								}
 							}
 
 							GUILayout.FlexibleSpace();

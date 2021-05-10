@@ -4,13 +4,15 @@ namespace Framework
 	{
 		public struct LocalisationLocalVariable
 		{
-			public string _key;
-			public string _value;
+			public readonly string _key;
+			public readonly string _value;
+			public readonly bool _localised;
 
-			public LocalisationLocalVariable(string key, string value)
+			public LocalisationLocalVariable(string key, string value, bool localised = false)
 			{
 				_key = key;
 				_value = value;
+				_localised = localised;
 			}
 			
 			public override string ToString()

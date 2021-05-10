@@ -10,13 +10,13 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			[SerializedObjectEditor(typeof(LocalisedStringRef), "PropertyField")]
-			public static class LocalisedStringRefEditor
+			[SerializedObjectEditor(typeof(LocalisedString), "PropertyField")]
+			public static class LocalisedStringEditor
 			{
 				#region SerializedObjectEditor
 				public static object PropertyField(object obj, GUIContent label, ref bool dataChanged, GUIStyle style, params GUILayoutOption[] options)
 				{
-					LocalisedStringRef localisedString = (LocalisedStringRef)obj;
+					LocalisedString localisedString = (LocalisedString)obj;
 					
 					bool editorCollapsed = !EditorGUILayout.Foldout(!localisedString._editorCollapsed, label);
 
@@ -54,11 +54,11 @@ namespace Framework
 							{
 								if (currentKeyIndex == 0)
 								{
-									localisedString = new LocalisedStringRef();
+									localisedString = new LocalisedString();
 								}
 								else
 								{
-									localisedString = new LocalisedStringRef(keys[currentKeyIndex]);
+									localisedString = keys[currentKeyIndex];
 								}
 
 								dataChanged = true;
@@ -84,7 +84,7 @@ namespace Framework
 								{
 									if (newFolderIndex != 0)
 									{
-										localisedString = new LocalisedStringRef(currentFolder + "/" + keyWithoutFolder);
+										localisedString = currentFolder + "/" + keyWithoutFolder;
 										localisedString.SetAutoNameParentName(editorParentName);
 										dataChanged = true;
 									}
@@ -96,7 +96,7 @@ namespace Framework
 								keyWithoutFolder = EditorGUILayout.TextField(keyWithoutFolder);
 								if (EditorGUI.EndChangeCheck())
 								{
-									localisedString = new LocalisedStringRef(currentFolder + "/" + keyWithoutFolder);
+									localisedString = currentFolder + "/" + keyWithoutFolder;
 									localisedString.SetAutoNameParentName(editorParentName);
 									dataChanged = true;
 								}							
@@ -104,7 +104,7 @@ namespace Framework
 								if (GUILayout.Button("Auto", GUILayout.Width(36)))
 								{
 									string newKey = localisedString.GetAutoKey();
-									localisedString = new LocalisedStringRef(newKey);
+									localisedString = newKey;
 									localisedString.SetAutoNameParentName(editorParentName);
 									dataChanged = true;
 								}

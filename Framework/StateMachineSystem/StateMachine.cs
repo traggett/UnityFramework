@@ -154,9 +154,9 @@ namespace Framework
 					return StateRef;
 				}
 #if UNITY_EDITOR
-				else if (obj.GetType() == typeof(LocalisedStringRef))
+				else if (obj.GetType() == typeof(LocalisedString))
 				{
-					LocalisedStringRef localisedStringRef = (LocalisedStringRef)obj;
+					LocalisedString localisedStringRef = (LocalisedString)obj;
 					localisedStringRef.SetAutoNameParentName(((StateMachine)stateMachine)._name);
 					return localisedStringRef;
 				}

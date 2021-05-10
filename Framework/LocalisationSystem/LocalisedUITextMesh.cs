@@ -10,7 +10,7 @@ namespace Framework
 		public class LocalisedUITextMesh : MonoBehaviour
 		{
 			#region Public Data
-			public LocalisedStringRef _text;
+			public LocalisedString _text;
 			#endregion
 
 			#region Private Data 

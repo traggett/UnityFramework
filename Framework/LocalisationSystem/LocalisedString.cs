@@ -6,8 +6,12 @@ namespace Framework
 	namespace LocalisationSystem
 	{
 		[Serializable]
-		public struct LocalisedStringRef
+		public struct LocalisedString
 		{
+			#region Public Data
+			public static LocalisedString Empty = new LocalisedString(string.Empty);
+			#endregion
+
 			#region Serialized Data
 			[SerializeField]
 			private string _localisationKey;
@@ -28,13 +32,13 @@ namespace Framework
 #endif
 			#endregion
 			
-			public LocalisedStringRef(string key)
+			private LocalisedString(string key, params LocalisationLocalVariable[] variables)
 			{
 				_localisationKey = key;
 				_cachedText = string.Empty;
 				_cachedLanguage = SystemLanguage.Unknown;
 				_cachedVariables = null;
-				_localVariables = new LocalisationLocalVariable[0];
+				_localVariables = variables;
 
 #if UNITY_EDITOR
 				_editorCollapsed = false;
@@ -42,30 +46,40 @@ namespace Framework
 #endif
 			}
 
-			public static implicit operator string(LocalisedStringRef property)
+			public static LocalisedString Create(string key, params LocalisationLocalVariable[] variables)
+			{
+				return new LocalisedString(key, variables);
+			}
+
+			public static implicit operator string(LocalisedString property)
 			{
 				return property.GetLocalisedString();
 			}
 
-			public static implicit operator LocalisedStringRef(string key)
+			public static implicit operator LocalisedString(string key)
 			{
-				return new LocalisedStringRef(key);
+				return new LocalisedString(key);
 			}
 
 			public string GetLocalisedString()
 			{
-				if (_cachedLanguage != Localisation.GetCurrentLanguage() || Localisation.AreGlobalVariablesOutOfDate(_cachedVariables)
+				return GetLocalisedString(Localisation.GetCurrentLanguage());
+			}
+
+			public string GetLocalisedString(SystemLanguage language)
+			{
+				if (_cachedLanguage != language || Localisation.AreGlobalVariablesOutOfDate(_cachedVariables)
 #if UNITY_EDITOR
 					|| !Application.isPlaying
 #endif
 					)
 				{
 					if (_localVariables != null && _localVariables.Length > 0)
-						_cachedText = Localisation.Get(_localisationKey, _localVariables);
+						_cachedText = Localisation.Get(language, _localisationKey, _localVariables);
 					else
-						_cachedText = Localisation.Get(_localisationKey);
+						_cachedText = Localisation.Get(language, _localisationKey);
 
-					_cachedLanguage = Localisation.GetCurrentLanguage();
+					_cachedLanguage = language;
 					_cachedVariables = Localisation.GetGlobalVariables(_cachedText);
 				}
 

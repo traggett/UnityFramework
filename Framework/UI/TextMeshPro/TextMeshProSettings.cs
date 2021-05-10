@@ -92,7 +92,7 @@ namespace Framework
 					return new TextMeshProSettings
 					{
 						_font = textMesh.font,
-						_fontMaterial = textMesh.fontMaterial,
+						_fontMaterial = textMesh.fontSharedMaterial,
 						_fontStyle = textMesh.fontStyle,
 						_fontSize = textMesh.fontSize,
 						_autoSize = textMesh.enableAutoSizing,
