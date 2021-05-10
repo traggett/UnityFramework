@@ -18,37 +18,39 @@ namespace Framework
 			#endregion
 
 			#region Private Data
+			private LocalisationLocalVariable[] _localVariables;
 			private string _cachedText;
 			private SystemLanguage _cachedLanguage;
 			private LocalisationGlobalVariable[] _cachedVariables;
-			private LocalisationLocalVariable[] _localVariables;
 			#endregion
 
-			#region Editor Data
-#if UNITY_EDITOR
-			[NonSerialized]
-			public bool _editorCollapsed;	
-			private string _editorAutoNameParentName;
-#endif
-			#endregion
-			
-			private LocalisedString(string key, params LocalisationLocalVariable[] variables)
+			private LocalisedString(string key)
 			{
 				_localisationKey = key;
+				_localVariables = null;
 				_cachedText = string.Empty;
 				_cachedLanguage = SystemLanguage.Unknown;
 				_cachedVariables = null;
-				_localVariables = variables;
-
-#if UNITY_EDITOR
-				_editorCollapsed = false;
-				_editorAutoNameParentName = null;
-#endif
+				
 			}
 
-			public static LocalisedString Create(string key, params LocalisationLocalVariable[] variables)
+			private LocalisedString(string key, params LocalisationLocalVariable[] variables)
+			{
+				_localisationKey = key;
+				_localVariables = variables;
+				_cachedText = string.Empty;
+				_cachedLanguage = SystemLanguage.Unknown;
+				_cachedVariables = null;
+			}
+
+			public static LocalisedString Dynamic(string key, params LocalisationLocalVariable[] variables)
 			{
 				return new LocalisedString(key, variables);
+			}
+
+			public static LocalisedString Dynamic(LocalisedString localisedString, params LocalisationLocalVariable[] variables)
+			{
+				return new LocalisedString(localisedString.GetLocalisationKey(), variables);
 			}
 
 			public static implicit operator string(LocalisedString property)
@@ -74,23 +76,8 @@ namespace Framework
 #endif
 					)
 				{
-					if (_localVariables != null && _localVariables.Length > 0)
-						_cachedText = Localisation.Get(language, _localisationKey, _localVariables);
-					else
-						_cachedText = Localisation.Get(language, _localisationKey);
-
-					_cachedLanguage = language;
-					_cachedVariables = Localisation.GetGlobalVariables(_cachedText);
+					UpdateCachedText(language);
 				}
-
-				return _cachedText;
-			}
-
-			public string GetLocalisedString(params LocalisationLocalVariable[] variables)
-			{
-				_cachedLanguage = Localisation.GetCurrentLanguage();
-				_cachedText = Localisation.Get(_localisationKey, variables);
-				_cachedVariables = Localisation.GetGlobalVariables(_cachedText);
 
 				return _cachedText;
 			}
@@ -110,56 +97,25 @@ namespace Framework
                 return _localisationKey;
             }
 
-			public string SetVariables(params LocalisationLocalVariable[] variables)
+			public void SetVariables(params LocalisationLocalVariable[] variables)
 			{
 				_localVariables = variables;
-				//Update cached string
-				return GetLocalisedString(_localVariables);
+				UpdateCachedText(Localisation.GetCurrentLanguage());
 			}
 
-#if UNITY_EDITOR
-            public SystemLanguage GetDebugLanguage()
+			private string UpdateCachedText(SystemLanguage language)
 			{
-				return _cachedLanguage;
-			}
+				if (_localVariables != null && _localVariables.Length > 0)
+					_cachedText = Localisation.Get(language, _localisationKey, _localVariables);
+				else
+					_cachedText = Localisation.Get(language, _localisationKey);
 
-			public string GetDebugText()
-			{
+				_cachedLanguage = language;
+				_cachedVariables = Localisation.GetGlobalVariables(_cachedText);
+
 				return _cachedText;
 			}
 
-			public void SetAutoNameParentName(string parentName)
-			{
-				_editorAutoNameParentName = parentName;
-			}
-			
-			public string GetAutoNameParentName()
-			{
-				return _editorAutoNameParentName;
-			}
-
-			public string GetAutoKey()
-			{
-				string autoKey = null;
-				
-				if (!string.IsNullOrEmpty(_editorAutoNameParentName))
-				{
-					string autoNameParent = _editorAutoNameParentName;
-
-					//Replace _ with / so each bit will appear in separate dropdown menu (eg TextConv_Hath_Birthday will go to TextConv, Hath, Birthday)
-					autoNameParent = autoNameParent.Replace('_', '/');
-
-					//Find first free key
-					int index = 0;
-					while (Localisation.Exists(autoKey = autoNameParent + "/" + index.ToString("000")))
-					{
-						index++;
-					}
-				}
-
-				return autoKey;
-			}		
-#endif
 		}
 	}
 }

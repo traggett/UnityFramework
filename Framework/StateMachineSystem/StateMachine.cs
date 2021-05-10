@@ -153,14 +153,7 @@ namespace Framework
 					StateRef.SetParentStatemachine((StateMachine)stateMachine);
 					return StateRef;
 				}
-#if UNITY_EDITOR
-				else if (obj.GetType() == typeof(LocalisedString))
-				{
-					LocalisedString localisedStringRef = (LocalisedString)obj;
-					localisedStringRef.SetAutoNameParentName(((StateMachine)stateMachine)._name);
-					return localisedStringRef;
-				}
-#endif
+
 				return obj;
 			}
 		}

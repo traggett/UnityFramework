@@ -153,7 +153,7 @@ namespace Framework
 							_readonlyTextBoxStyle = new GUIStyle(GUI.skin.GetStyle("TextArea"));
 							_readonlyTextBoxStyle.padding = new RectOffset(6, 6, 2, 0);
 							_readonlyTextBoxStyle.richText = true;
-							_readonlyTextBoxStyle.normal.textColor = new Color(0.25f, 0.25f, 0.25f, 1.0f);
+							_readonlyTextBoxStyle.normal.textColor = new Color(0.5f, 0.5f, 0.5f, 1.0f);
 						}
 
 						return _readonlyTextBoxStyle;

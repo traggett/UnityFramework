@@ -38,10 +38,10 @@ namespace Framework
 			private struct GlobalVariable
 			{
 				public int _version;
-				public string _value;
 				public bool _localised;
+				public string _value;
 			}
-			private static Dictionary<string, GlobalVariable> _globalVariables = new Dictionary<string, GlobalVariable>();
+			private static readonly Dictionary<string, GlobalVariable> _globalVariables = new Dictionary<string, GlobalVariable>();
 			private static bool _dirty;
 #if UNITY_EDITOR
 			private static string[] _editorKeys;
@@ -202,9 +202,8 @@ namespace Framework
 						int variableKeyStartIndex = variableStartIndex + kVariableEndChars.Length + 1;
 						string variableKey = text.Substring(variableKeyStartIndex, variableEndIndex - variableKeyStartIndex);
 
-						GlobalVariable info;
-						_globalVariables.TryGetValue(variableKey, out info);
-						keys.Add(new LocalisationGlobalVariable { _key = variableKey, _version = info._version } );
+						_globalVariables.TryGetValue(variableKey, out GlobalVariable info);
+						keys.Add(new LocalisationGlobalVariable(variableKey, info._version));
 
 						index = variableEndIndex + kVariableEndChars.Length;
 					}
