@@ -74,6 +74,7 @@ namespace Framework
 				{
 					SetTextMeshSettingsForLanguage();
 					Localisation.OnLanguageChanged += SetTextMeshSettingsForLanguage;
+					RefreshText();
 				}
 
 				private void OnDisable()
@@ -86,12 +87,7 @@ namespace Framework
 #if UNITY_EDITOR
 					if (_editingLanguage != SystemLanguage.Unknown)
 					{
-						string text = _text.GetLocalisedString(_editingLanguage);
-
-						if (_textMesh.text != text)
-						{
-							_textMesh.text = text;
-						}
+						_textMesh.text = _text.GetLocalisedString(_editingLanguage);
 					}
 					else
 #endif
@@ -104,12 +100,7 @@ namespace Framework
 				#region Public Methods
 				public void RefreshText()
 				{
-					string text = _text.GetLocalisedString();
-
-					if (_textMesh.text != text)
-					{
-						_textMesh.text = text;
-					}
+					_textMesh.text = _text.GetLocalisedString();
 				}
 
 				public void SetVariables(params LocalisationLocalVariable[] variables)

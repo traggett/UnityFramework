@@ -86,18 +86,18 @@ namespace Framework
 				OnUpdateAnimations(0f, false);
 			}
 
-			private void OnEnable()
+			protected virtual void OnEnable()
 			{
 				if (_showOnEnable)
 					Active = true;
 			}
 
-			private void OnDisable()
+			protected virtual void OnDisable()
 			{
 				OnHidden();
 			}
 
-			private void Update()
+			protected virtual void Update()
 			{
 				UpdateAnimations(Time.deltaTime);
 			}
