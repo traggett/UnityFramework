@@ -97,9 +97,19 @@ namespace Framework
 
 			public static bool Exists(string key)
 			{
+				return Exists(key, GetCurrentLanguage());
+			}
+
+			public static bool Exists(string key, SystemLanguage language)
+			{
 				MakeSureStringsAreLoaded();
 
-				return _localisationMaps[LanguageCodes.GetLanguageCode(_currentLanguage)].IsValidKey(key);
+				if (_localisationMaps.TryGetValue(LanguageCodes.GetLanguageCode(language), out LocalisationMap map))
+				{
+					return map.IsValidKey(key);
+				}
+
+				return false;
 			}
 
 			public static LocalisationLocalVariable Variable(string key, LocalisedString value)
@@ -126,11 +136,15 @@ namespace Framework
 			{
 				MakeSureStringsAreLoaded(language);
 
-				string text = _localisationMaps[LanguageCodes.GetLanguageCode(language)].Get(key);
+				if (_localisationMaps.TryGetValue(LanguageCodes.GetLanguageCode(language), out LocalisationMap map))
+				{
+					string text = map.Get(key);
+					text = ReplaceVariables(text, localVariables);
 
-				text = ReplaceVariables(text, localVariables);
+					return text;
+				}
 
-				return text;
+				return "No Localisation Map found for " + language;
 			}
 
 			public static string Get(string key, params LocalisationLocalVariable[] localVariables)
@@ -183,42 +197,47 @@ namespace Framework
 				_globalVariables.Remove(key);
 			}
 
-			public static LocalisationGlobalVariable[] GetGlobalVariables(LocalisedString localisedString, SystemLanguage language)
+			public static LocalisationGlobalVariable[] GetGlobalVariables(string key, SystemLanguage language)
 			{
-				int index = 0;
-
-				string text = GetRawString(localisedString.GetLocalisationKey(), language);
-
-				List<LocalisationGlobalVariable> keys = new List<LocalisationGlobalVariable>();
-
-				while (index < text.Length)
+				if (_localisationMaps.TryGetValue(LanguageCodes.GetLanguageCode(language), out LocalisationMap map))
 				{
-					int variableStartIndex = text.IndexOf(kVariableStartChars, index);
+					string text = map.Get(key, true);
 
-					if (variableStartIndex != -1)
+					List<LocalisationGlobalVariable> keys = new List<LocalisationGlobalVariable>();
+
+					int index = 0;
+
+					while (index < text.Length)
 					{
-						int variableEndIndex = text.IndexOf(kVariableEndChars, variableStartIndex);
-						if (variableEndIndex == -1)
-							throw new Exception("Can't find matching end bracket for variable in localised string");
+						int variableStartIndex = text.IndexOf(kVariableStartChars, index);
 
-						int variableKeyStartIndex = variableStartIndex + kVariableEndChars.Length + 1;
-						string variableKey = text.Substring(variableKeyStartIndex, variableEndIndex - variableKeyStartIndex);
+						if (variableStartIndex != -1)
+						{
+							int variableEndIndex = text.IndexOf(kVariableEndChars, variableStartIndex);
+							if (variableEndIndex == -1)
+								throw new Exception("Can't find matching end bracket for variable in localised string");
 
-						_globalVariables.TryGetValue(variableKey, out GlobalVariable info);
-						keys.Add(new LocalisationGlobalVariable(variableKey, info._version));
+							int variableKeyStartIndex = variableStartIndex + kVariableEndChars.Length + 1;
+							string variableKey = text.Substring(variableKeyStartIndex, variableEndIndex - variableKeyStartIndex);
 
-						index = variableEndIndex + kVariableEndChars.Length;
+							_globalVariables.TryGetValue(variableKey, out GlobalVariable info);
+							keys.Add(new LocalisationGlobalVariable(variableKey, info._version));
+
+							index = variableEndIndex + kVariableEndChars.Length;
+						}
+						else
+						{
+							break;
+						}
 					}
-					else
-					{
-						break;
-					}
+
+					return keys.ToArray();
 				}
 
-				return keys.ToArray();
+				return null;
 			}
 
-			public static bool AreGlobalVariablesOutOfDate(params LocalisationGlobalVariable[] varaiables)
+			public static bool AreGlobalVariablesOutOfDate(LocalisationGlobalVariable[] varaiables)
 			{
 				if (varaiables != null)
 				{
@@ -392,7 +411,12 @@ namespace Framework
 			{
 				MakeSureStringsAreLoaded(language);
 
-				return _localisationMaps[LanguageCodes.GetLanguageCode(language)].Get(key, true);
+				if (_localisationMaps.TryGetValue(LanguageCodes.GetLanguageCode(language), out LocalisationMap map))
+				{
+					return map.Get(key, true);
+				}
+
+				return string.Empty;
 			}
 #endif
 			#endregion

@@ -67,7 +67,7 @@ namespace Framework
 			protected void UpdateText(SystemLanguage language)
 			{
 				_cachedLanguage = language;
-				_cachedGlobalVariables = Localisation.GetGlobalVariables(_text, language);
+				_cachedGlobalVariables = Localisation.GetGlobalVariables(_text.GetLocalisationKey(), language);
 				SetText(_text.GetLocalisedString(language));
 			}
 			#endregion
