@@ -48,7 +48,7 @@ namespace Framework
 						double endTime = double.MinValue;
 						bool hasClips = false;
 
-						foreach (TrackAsset child in masterClip.parentTrack.GetChildTracks())
+						foreach (TrackAsset child in masterClip.GetParentTrack().GetChildTracks())
 						{
 							foreach (TimelineClip clip in child.GetClips())
 							{
