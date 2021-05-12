@@ -15,7 +15,7 @@ namespace Framework
 		{
 			[ExecuteInEditMode()]
 			[RequireComponent(typeof(TMP_Text))]
-			public class LocalisedTextMeshPro : MonoBehaviour, ISerializationCallbackReceiver
+			public class LocalisedTextMeshPro : LocalisedTextMesh, ISerializationCallbackReceiver
 			{
 				#region Public Data
 				public TMP_Text TextMesh
@@ -26,27 +26,12 @@ namespace Framework
 					}
 				}
 
-				public LocalisedString Text
-				{
-					set
-					{
-						_text = value;
-						RefreshText();
-					}
-					get
-					{
-						return _text;
-					}
-				}
-
 #if UNITY_EDITOR
 				public SystemLanguage _editingLanguage = SystemLanguage.Unknown;
 #endif
 				#endregion
 
 				#region Private Data 
-				[SerializeField]
-				private LocalisedString _text;
 				[SerializeField]
 				private TMP_Text _textMesh;
 				[SerializeField]
@@ -70,7 +55,7 @@ namespace Framework
 				}
 #endif
 
-				private void OnEnable()
+				protected override void OnEnable()
 				{
 					SetTextMeshSettingsForLanguage();
 					Localisation.OnLanguageChanged += SetTextMeshSettingsForLanguage;
@@ -82,31 +67,20 @@ namespace Framework
 					Localisation.OnLanguageChanged -= SetTextMeshSettingsForLanguage;
 				}
 
-				private void Update()
+				protected override void Update()
 				{
 #if UNITY_EDITOR
-					if (_editingLanguage != SystemLanguage.Unknown)
-					{
-						_textMesh.text = _text.GetLocalisedString(_editingLanguage);
-					}
-					else
+					RefreshText(_editingLanguage);
+#else
+					RefreshText();
 #endif
-					{
-						RefreshText();
-					}
 				}
 				#endregion
 
-				#region Public Methods
-				public void RefreshText()
+				#region LocalisedTextMesh
+				protected override void SetText(string text)
 				{
-					_textMesh.text = _text.GetLocalisedString();
-				}
-
-				public void SetVariables(params LocalisationLocalVariable[] variables)
-				{
-					_text.SetVariables(variables);
-					RefreshText();
+					_textMesh.text = text;
 				}
 				#endregion
 

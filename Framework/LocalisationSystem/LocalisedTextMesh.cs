@@ -4,40 +4,71 @@ namespace Framework
 {
 	namespace LocalisationSystem
 	{
-		[ExecuteInEditMode()]
-		[RequireComponent(typeof(TextMesh))]
-		public class LocalisedTextMesh : MonoBehaviour
+		public abstract class LocalisedTextMesh : MonoBehaviour
 		{
-			#region Public Data
-			public LocalisedString _text;
-			#endregion
+			public LocalisedString Text
+			{
+				set
+				{
+					_text = value;
+					UpdateText(Localisation.GetCurrentLanguage());
+				}
+				get
+				{
+					return _text;
+				}
+			}
 
 			#region Private Data 
-			private TextMesh _textMesh;
+			[SerializeField]
+			private LocalisedString _text;
+			private SystemLanguage _cachedLanguage;
+			private LocalisationGlobalVariable[] _cachedGlobalVariables;
 			#endregion
 
 			#region MonoBehaviour
-			void Awake()
+			protected virtual void OnEnable()
 			{
-				_textMesh = GetComponent<TextMesh>();
 				RefreshText();
 			}
 
-			void Update()
+			protected virtual void Update()
 			{
 				RefreshText();
 			}
 			#endregion
 
-			#region Private Methods
-			public void RefreshText()
+			#region Public Methods
+			public void RefreshText(SystemLanguage language = SystemLanguage.Unknown)
 			{
-				string text = _text.GetLocalisedString();
+				if (language == SystemLanguage.Unknown)
+					language = Localisation.GetCurrentLanguage();
 
-				if (_textMesh.text != text)
+				if (_cachedLanguage != language || Localisation.AreGlobalVariablesOutOfDate(_cachedGlobalVariables)
+#if UNITY_EDITOR
+					|| !Application.isPlaying
+#endif
+					)
 				{
-					_textMesh.text = text;
+					UpdateText(language);
 				}
+			}
+
+			public void SetVariables(params LocalisationLocalVariable[] variables)
+			{
+				_text.SetVariables(variables);
+				UpdateText(Localisation.GetCurrentLanguage());
+			}
+			#endregion
+
+			#region Protected Methods
+			protected abstract void SetText(string text);
+
+			protected void UpdateText(SystemLanguage language)
+			{
+				_cachedLanguage = language;
+				_cachedGlobalVariables = Localisation.GetGlobalVariables(_text, language);
+				SetText(_text.GetLocalisedString(language));
 			}
 			#endregion
 		}

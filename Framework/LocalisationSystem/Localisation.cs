@@ -135,7 +135,7 @@ namespace Framework
 
 			public static string Get(string key, params LocalisationLocalVariable[] localVariables)
 			{
-				return Get(_currentLanguage, key, localVariables);
+				return Get(GetCurrentLanguage(), key, localVariables);
 			}
 
 			public static SystemLanguage GetCurrentLanguage()
@@ -183,9 +183,11 @@ namespace Framework
 				_globalVariables.Remove(key);
 			}
 
-			public static LocalisationGlobalVariable[] GetGlobalVariables(string text)
+			public static LocalisationGlobalVariable[] GetGlobalVariables(LocalisedString localisedString, SystemLanguage language)
 			{
 				int index = 0;
+
+				string text = GetRawString(localisedString.GetLocalisationKey(), language);
 
 				List<LocalisationGlobalVariable> keys = new List<LocalisationGlobalVariable>();
 
@@ -412,7 +414,7 @@ namespace Framework
 					LoadStrings(language);
 			}
 
-			private static string ReplaceVariables(string text, params LocalisationLocalVariable[] localVariables)
+			private static string ReplaceVariables(string text, LocalisationLocalVariable[] localVariables)
 			{
 				string fullText = "";
 				int index = 0;
@@ -440,16 +442,19 @@ namespace Framework
 						if (Application.isPlaying)
 						{
 							//First check provided local variables
-							for (int i = 0; i < localVariables.Length; i++)
+							if (localVariables != null)
 							{
-								if (localVariables[i]._key == variableKey)
+								for (int i = 0; i < localVariables.Length; i++)
 								{
-									fullText += localVariables[i]._localised? Get(localVariables[i]._value) : localVariables[i]._value;
-									foundKey = true;
-									break;
+									if (localVariables[i]._key == variableKey)
+									{
+										fullText += localVariables[i]._localised ? Get(localVariables[i]._value) : localVariables[i]._value;
+										foundKey = true;
+										break;
+									}
 								}
 							}
-
+							
 							//If not found in there check global variables
 							if (!foundKey)
 							{

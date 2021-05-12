@@ -1,16 +1,15 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Framework
 {
 	namespace LocalisationSystem
 	{
 		[ExecuteInEditMode()]
-		[RequireComponent(typeof(Text))]
-		public class LocalisedUITextMesh : LocalisedTextMesh
+		[RequireComponent(typeof(TextMesh))]
+		public class Localised3DTextMesh : LocalisedTextMesh
 		{
 			#region Public Data
-			public Text TextMesh
+			public TextMesh TextMesh
 			{
 				get
 				{
@@ -21,7 +20,7 @@ namespace Framework
 
 			#region Private Data 
 			[SerializeField]
-			private Text _textMesh;
+			private TextMesh _textMesh;
 			#endregion
 
 			#region MonoBehaviour
@@ -29,7 +28,7 @@ namespace Framework
 			private void OnValidate()
 			{
 				if (_textMesh == null)
-					_textMesh = GetComponent<Text>();
+					_textMesh = GetComponent<TextMesh>();
 			}
 #endif
 			#endregion
