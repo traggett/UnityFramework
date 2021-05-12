@@ -60,7 +60,10 @@ namespace Framework
 
 			public string GetLocalisedString(SystemLanguage language)
 			{
-				return Localisation.Get(language, _localisationKey, _localVariables);
+				if (!string.IsNullOrEmpty(_localisationKey))
+					return Localisation.Get(language, _localisationKey, _localVariables);
+
+				return string.Empty;
 			}
 
 			public bool IsValid()
