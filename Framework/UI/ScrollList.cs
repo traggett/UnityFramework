@@ -39,6 +39,9 @@ namespace Framework
 			public float EndPadding { get; set; }
 			public float ItemPadding { get; set; }
 
+			public int NumColumns { get; set; }
+			public float ColumnWidth { get; set; }
+
 			private const float kDefaultLerpTime = 0.25f;
 
 			private readonly PrefabInstancePool _itemPool;
@@ -128,7 +131,9 @@ namespace Framework
 			}
 
 			public static void Create(ref ScrollList<T> scrollList, ScrollRect scrollArea, PrefabInstancePool itemPool, IList<T> items = null,
-									float startPadding = 0f, float itemPadding = 0f, float endPadding = 0f, float movementTime = kDefaultLerpTime, AnimationCurve movementCurve = null)
+									float startPadding = 0f, float itemPadding = 0f, float endPadding = 0f, 
+									int numColumns = 1, float columnWidth = 0f, 
+									float movementTime = kDefaultLerpTime, AnimationCurve movementCurve = null)
 			{
 				if (movementCurve == null)
 					movementCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
@@ -143,6 +148,8 @@ namespace Framework
 				scrollList.StartPadding = startPadding;
 				scrollList.ItemPadding = itemPadding;
 				scrollList.EndPadding = endPadding;
+				scrollList.NumColumns = numColumns;
+				scrollList.ColumnWidth = columnWidth;
 
 				scrollList.Initialise(items);
 			}
@@ -256,6 +263,7 @@ namespace Framework
 				_items.Clear();
 
 				Vector2 pos = new Vector2(0f, -StartPadding);
+				int currentColumn = 0;
 
 				if (items != null)
 				{
@@ -309,7 +317,19 @@ namespace Framework
 							item._item.OnUpdate(items[i]);
 						}
 
-						pos.y -= transform.sizeDelta.y + ItemPadding;
+						//Put next item in next column
+						currentColumn++;
+
+						if (currentColumn < NumColumns)
+						{
+							pos.x += ColumnWidth;
+						}
+						else
+						{
+							currentColumn = 0;
+							pos.x = 0f;
+							pos.y -= transform.sizeDelta.y + ItemPadding;
+						}			
 					}
 				}
 			}
@@ -320,15 +340,21 @@ namespace Framework
 				if (_items != null)
 				{
 					float contentHeight = StartPadding;
+					int currentColumn = 0;
 
 					for (int i = 0; i < _items.Count; i++)
 					{
-						RectTransform transform = _items[i]._item.GetTransform();
-						contentHeight += transform.sizeDelta.y;
+						currentColumn++;
 
-						if (i != _items.Count -1)
+						if (currentColumn >= NumColumns)
 						{
-							contentHeight += ItemPadding;
+							RectTransform transform = _items[i]._item.GetTransform();
+							contentHeight += transform.sizeDelta.y;
+
+							if (i != _items.Count - 1)
+							{
+								contentHeight += ItemPadding;
+							}
 						}
 					}
 
