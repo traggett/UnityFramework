@@ -17,10 +17,15 @@ namespace Framework
 				get;
 				set;
 			}
+
+			RectTransform RectTransform
+			{
+				get;
+			}
+
 			void OnShow();
 			void OnHide();
 			void SetFade(float fade);
-			RectTransform GetTransform();
 		}
 
 		public class ScrollList<T> : IEnumerable<IScrollListItem<T>> where T : IComparable
@@ -187,7 +192,7 @@ namespace Framework
 						if (item._state == ScrollListItem.State.Moving)
 						{
 							float curvedLerp = MovementCurve.Evaluate(item._lerp);
-							item._item.GetTransform().anchoredPosition = Vector2.Lerp(item._fromPosition, item._targetPosition, curvedLerp);
+							item._item.RectTransform.anchoredPosition = Vector2.Lerp(item._fromPosition, item._targetPosition, curvedLerp);
 						}
 						else if (item._state == ScrollListItem.State.FadingIn)
 						{
@@ -208,7 +213,7 @@ namespace Framework
 
 					if (_itemsBeingRemoved[i]._lerp > 1.0f)
 					{
-						_itemPool.Destroy(_itemsBeingRemoved[i]._item.GetTransform().gameObject);
+						_itemPool.Destroy(_itemsBeingRemoved[i]._item.RectTransform.gameObject);
 						_itemsBeingRemoved.RemoveAt(i);
 					}
 					else
@@ -233,20 +238,20 @@ namespace Framework
 				foreach (ScrollListItem item in toRemove)
 				{
 					item._item.OnHide();
-					_itemPool.Destroy(item._item.GetTransform().gameObject);
+					_itemPool.Destroy(item._item.RectTransform.gameObject);
 				}
 
 				//Destroy items currently getting removed
 				foreach (ScrollListItem item in _itemsBeingRemoved)
 				{
-					_itemPool.Destroy(item._item.GetTransform().gameObject);
+					_itemPool.Destroy(item._item.RectTransform.gameObject);
 				}
 				_itemsBeingRemoved.Clear();
 
 				//Set position instantly for all items
 				foreach (ScrollListItem item in _items)
 				{
-					RectTransform transform = item._item.GetTransform();
+					RectTransform transform = item._item.RectTransform;
 					item._lerp = 1.0f;
 					item._state = ScrollListItem.State.Normal;
 					item._item.SetFade(1.0f);
@@ -299,7 +304,7 @@ namespace Framework
 							item._state = ScrollListItem.State.FadingIn;
 							item._targetPosition = pos;
 							item._fromPosition = pos;
-							transform = item._item.GetTransform();
+							transform = item._item.RectTransform;
 							transform.anchoredPosition = pos;
 							item._item.SetFade(0.0f);
 							_items.Add(item);
@@ -308,7 +313,7 @@ namespace Framework
 						//Otherwise update existing
 						else
 						{
-							transform = item._item.GetTransform();
+							transform = item._item.RectTransform;
 
 							if (item._targetPosition != pos)
 							{
@@ -355,7 +360,7 @@ namespace Framework
 
 						if (currentColumn >= NumColumns)
 						{
-							RectTransform transform = _items[i]._item.GetTransform();
+							RectTransform transform = _items[i]._item.RectTransform;
 							contentHeight += transform.sizeDelta.y;
 
 							if (i != _items.Count - 1)
@@ -394,7 +399,7 @@ namespace Framework
 				{
 					for (int i = 0; i < _items.Count; i++)
 					{
-						_items[i]._item.GetTransform().SetSiblingIndex(_items.Count - i - 1);
+						_items[i]._item.RectTransform.SetSiblingIndex(_items.Count - i - 1);
 					}
 				}
 
