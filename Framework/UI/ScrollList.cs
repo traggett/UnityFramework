@@ -12,10 +12,13 @@ namespace Framework
 	{
 		public interface IScrollListItem<T>
 		{
-			void OnShow(T data);
+			T Data
+			{
+				get;
+				set;
+			}
+			void OnShow();
 			void OnHide();
-			void OnUpdate(T data);
-			T GetData();
 			void SetFade(float fade);
 			RectTransform GetTransform();
 		}
@@ -35,12 +38,9 @@ namespace Framework
 				}
 			}
 
-			public float StartPadding { get; set; }
-			public float EndPadding { get; set; }
-			public float ItemPadding { get; set; }
-
+			public RectOffset Borders { get; set; }
+			public Vector2 Spacing { get; set; }		
 			public int NumColumns { get; set; }
-			public float ColumnWidth { get; set; }
 
 			private const float kDefaultLerpTime = 0.25f;
 
@@ -127,16 +127,20 @@ namespace Framework
 			{
 				_itemPool = itemPool;
 				_scrollArea = scrollArea;
-				Initialise();
 			}
 
 			public static void Create(ref ScrollList<T> scrollList, ScrollRect scrollArea, PrefabInstancePool itemPool, IList<T> items = null,
-									float startPadding = 0f, float itemPadding = 0f, float endPadding = 0f, 
-									int numColumns = 1, float columnWidth = 0f, 
+									RectOffset borders = null, Vector2 spacing = default, int numColumns = 1,
 									float movementTime = kDefaultLerpTime, AnimationCurve movementCurve = null)
 			{
 				if (movementCurve == null)
 					movementCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
+
+				if (borders == null)
+					borders = new RectOffset(0, 0, 0, 0);
+
+				if (numColumns <= 0)
+					numColumns = 1;
 
 				if (scrollList == null)
 				{
@@ -145,11 +149,9 @@ namespace Framework
 
 				scrollList.MovementCurve = movementCurve;
 				scrollList.MovementTime = movementTime;
-				scrollList.StartPadding = startPadding;
-				scrollList.ItemPadding = itemPadding;
-				scrollList.EndPadding = endPadding;
+				scrollList.Borders = borders;
+				scrollList.Spacing = spacing;
 				scrollList.NumColumns = numColumns;
-				scrollList.ColumnWidth = columnWidth;
 
 				scrollList.Initialise(items);
 			}
@@ -173,7 +175,7 @@ namespace Framework
 				}
 
 				UpdateOrdering();
-				UpdateContentSize();
+				UpdateContentHeight();
 
 				//Lerp items to their target positions, lerp fade in
 				foreach (ScrollListItem item in _items)
@@ -253,7 +255,7 @@ namespace Framework
 				}
 
 				UpdateOrdering();
-				UpdateContentSize();
+				UpdateContentHeight();
 			}
 
 			private void FindChanges(IList<T> items, out List<ScrollListItem> toAdd, out List<ScrollListItem> toRemove)
@@ -262,8 +264,10 @@ namespace Framework
 				toRemove = new List<ScrollListItem>(_items);
 				_items.Clear();
 
-				Vector2 pos = new Vector2(0f, -StartPadding);
+				Vector2 pos = new Vector2(Borders.left, -Borders.top);
 				int currentColumn = 0;
+
+				float ColumnWidth = (((RectTransform)_scrollArea.content.transform).rect.width - Borders.horizontal) / NumColumns;
 
 				if (items != null)
 				{
@@ -273,7 +277,7 @@ namespace Framework
 
 						foreach (ScrollListItem button in toRemove)
 						{
-							if (button._item.GetData().Equals(items[i]))
+							if (button._item.Data.Equals(items[i]))
 							{
 								_items.Add(button);
 								toRemove.Remove(button);
@@ -289,7 +293,8 @@ namespace Framework
 						{
 							GameObject gameObject = _itemPool.Instantiate(_scrollArea.content.transform);
 							item = new ScrollListItem(gameObject.GetComponent<IScrollListItem<T>>());
-							item._item.OnShow(items[i]);
+							item._item.OnShow();
+							item._item.Data = items[i];
 							item._lerp = 0.0f;
 							item._state = ScrollListItem.State.FadingIn;
 							item._targetPosition = pos;
@@ -314,32 +319,34 @@ namespace Framework
 								item._item.SetFade(1.0f);
 							}
 
-							item._item.OnUpdate(items[i]);
+							item._item.Data = items[i];
 						}
+
+						float itemHeight = RectTransformUtils.GetHeight(transform);
 
 						//Put next item in next column
 						currentColumn++;
 
 						if (currentColumn < NumColumns)
 						{
-							pos.x += ColumnWidth;
+							pos.x += ColumnWidth + Spacing.x;
 						}
 						else
 						{
 							currentColumn = 0;
-							pos.x = 0f;
-							pos.y -= transform.sizeDelta.y + ItemPadding;
+							pos.x = Borders.left;
+							pos.y -= itemHeight + Spacing.y;
 						}			
 					}
 				}
 			}
 
-			private void UpdateContentSize()
+			private void UpdateContentHeight()
 			{
 				//TO DO also check items being destroyed
 				if (_items != null)
 				{
-					float contentHeight = StartPadding;
+					float contentHeight = Borders.vertical;
 					int currentColumn = 0;
 
 					for (int i = 0; i < _items.Count; i++)
@@ -353,12 +360,11 @@ namespace Framework
 
 							if (i != _items.Count - 1)
 							{
-								contentHeight += ItemPadding;
+								contentHeight += Spacing.y;
 							}
 						}
 					}
 
-					contentHeight += EndPadding;
 					RectTransformUtils.SetHeight(_scrollArea.content, contentHeight);
 
 					SetScrollAreaEnabled(contentHeight > _scrollArea.viewport.rect.height);
