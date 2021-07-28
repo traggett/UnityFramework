@@ -15,6 +15,10 @@ namespace Framework
             private SerializedProperty _fromColor;
             private SerializedProperty _sprite;
             private SerializedProperty _material;
+            private SerializedProperty _raycastTarget;
+            private SerializedProperty _raycastPadding;
+            private SerializedProperty _maskable;
+
             private static readonly GUIContent _fromColorLable = new GUIContent("From Color"); 
 
             protected override void OnEnable()
@@ -26,6 +30,9 @@ namespace Framework
                 _toColor = serializedObject.FindProperty("_toColor");
                 _direction = serializedObject.FindProperty("_direction");
                 _material = serializedObject.FindProperty("m_Material");
+                _raycastTarget = serializedObject.FindProperty("m_RaycastTarget");
+                _raycastPadding = serializedObject.FindProperty("m_RaycastPadding");
+                _maskable = serializedObject.FindProperty("m_Maskable");
             }
 
             public override void OnInspectorGUI()
@@ -37,6 +44,9 @@ namespace Framework
                 EditorGUILayout.PropertyField(_toColor);
                 EditorGUILayout.PropertyField(_direction);
                 EditorGUILayout.PropertyField(_material);
+                EditorGUILayout.PropertyField(_raycastTarget);
+                EditorGUILayout.PropertyField(_raycastPadding);
+                EditorGUILayout.PropertyField(_maskable);
 
                 serializedObject.ApplyModifiedProperties();
             }
