@@ -53,6 +53,65 @@ namespace Framework
 				return new LocalisedString(key);
 			}
 
+			#region Equality
+			public override bool Equals(object obj)
+			{
+				if (obj == null)
+					return false;
+
+				LocalisedString casted = (LocalisedString)obj;
+				return Equals(casted);
+			}
+
+			public bool Equals(LocalisedString other)
+			{
+				if (_localisationKey == other._localisationKey)
+				{
+					//If one has variables and one doesn't then not equal
+					if (_localVariables != null && other._localVariables == null
+						|| _localVariables == null && other._localVariables != null)
+						return false;
+
+					//If both have variables then check they all match
+					if (_localVariables != null && other._localVariables != null
+						&& _localVariables.Length == other._localVariables.Length)
+					{
+						for (int i = 0; i < _localVariables.Length; i++)
+						{
+							if (_localVariables[i]._key != other._localVariables[i]._key
+								|| _localVariables[i]._value != other._localVariables[i]._value)
+							{
+								return false;
+							}
+						}
+					}
+
+					return true;
+				}
+
+				return false;
+			}
+
+			public static bool operator ==(LocalisedString a, LocalisedString b)
+			{
+				// If both are null, or both are same instance, return true.
+				if (ReferenceEquals(a, b))
+					return true;
+
+				return Equals(a, b);
+			}
+
+			public static bool operator !=(LocalisedString a, LocalisedString b)
+			{
+				return !(a == b);
+			}
+
+			public override int GetHashCode()
+			{
+				return _localisationKey.GetHashCode();
+			}
+			#endregion
+
 			public string GetLocalisedString()
 			{
 				return GetLocalisedString(Localisation.GetCurrentLanguage());
@@ -69,11 +128,6 @@ namespace Framework
 			public bool IsValid()
 			{
 				return !string.IsNullOrEmpty(_localisationKey);
-			}
-
-			public bool Equals(string text)
-			{
-				return GetLocalisedString() == text;
 			}
 
             public string GetLocalisationKey()

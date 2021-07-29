@@ -343,23 +343,24 @@ namespace Framework
 					if (item is MenuItemFunction function)
 					{
 						function._function.Invoke(null, new object[0]);
+						_visuals.gameObject.SetActive(false);
 					}
 					else if (item is Menu menu)
 					{
 						_currentMenu = menu;
 						_currentItemIndex = _currentMenu._items.Count - 1;
+						RefreshMenu();
 					}
 					else if (item is MenuItemBack)
 					{
 						_currentMenu = _currentMenu._parent;
 						_currentItemIndex = _currentMenu._items.Count - 1;
+						RefreshMenu();
 					}
 					else if (item is MenuItemExit)
 					{
 						_visuals.gameObject.SetActive(false);
 					}
-
-					RefreshMenu();
 				}
 			}
 
