@@ -203,7 +203,7 @@ namespace Framework
 				{
 					string text = map.Get(key, true);
 
-					List<LocalisationGlobalVariable> keys = new List<LocalisationGlobalVariable>();
+					List<LocalisationGlobalVariable> variables = new List<LocalisationGlobalVariable>();
 
 					int index = 0;
 
@@ -221,7 +221,7 @@ namespace Framework
 							string variableKey = text.Substring(variableKeyStartIndex, variableEndIndex - variableKeyStartIndex);
 
 							_globalVariables.TryGetValue(variableKey, out GlobalVariable info);
-							keys.Add(new LocalisationGlobalVariable(variableKey, info._version));
+							variables.Add(new LocalisationGlobalVariable(variableKey, info._version));
 
 							index = variableEndIndex + kVariableEndChars.Length;
 						}
@@ -231,10 +231,22 @@ namespace Framework
 						}
 					}
 
-					return keys.ToArray();
+					return variables.ToArray();
 				}
 
 				return null;
+			}
+
+			public static LocalisationGlobalVariable[] GetGlobalVariables()
+			{
+				List<LocalisationGlobalVariable> variables = new List<LocalisationGlobalVariable>();
+
+				foreach (KeyValuePair<string, GlobalVariable> keyValuePair in _globalVariables)
+				{
+					variables.Add(new LocalisationGlobalVariable(keyValuePair.Key, keyValuePair.Value._version));
+				}
+				
+				return variables.ToArray();
 			}
 
 			public static bool AreGlobalVariablesOutOfDate(LocalisationGlobalVariable[] varaiables)

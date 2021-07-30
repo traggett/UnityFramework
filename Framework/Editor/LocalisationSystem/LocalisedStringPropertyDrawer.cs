@@ -13,9 +13,10 @@ namespace Framework
 			[CustomPropertyDrawer(typeof(LocalisedString))]
 			public class LocalisedStringPropertyDrawer : PropertyDrawer
 			{
-				private static readonly float editbuttonWidth = 50.0f;
-				private static readonly float buttonSpace = 2.0f;
-				
+				private static readonly float _editbuttonWidth = 50.0f;
+				private static readonly float _buttonSpace = 2.0f;
+				private static readonly GUIContent _editLabel = new GUIContent("Edit");
+
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 				{
 					EditorGUI.BeginProperty(position, label, property);
@@ -31,13 +32,15 @@ namespace Framework
 					int currentKey = 0;
 					{
 						string[] keys = Localisation.GetStringKeys();
+						GUIContent[] keyLabels = new GUIContent[keys.Length];
 
 						for (int i = 0; i < keys.Length; i++)
 						{
+							keyLabels[i] = new GUIContent(keys[i]);
+
 							if (keys[i] == localisationkey)
 							{
 								currentKey = i;
-								break;
 							}
 						}
 
@@ -47,7 +50,7 @@ namespace Framework
 						EditorUtils.SetBoldDefaultFont(localisationkeyProperty.prefabOverride);
 
 						EditorGUI.BeginChangeCheck();
-						currentKey = EditorGUI.Popup(typePosition, property.displayName + " (Localised String)", currentKey, keys);
+						currentKey = EditorGUI.Popup(typePosition, label, currentKey, keyLabels);
 						if (EditorGUI.EndChangeCheck())
 						{
 							if (currentKey == 0)
@@ -72,11 +75,11 @@ namespace Framework
 						float height = EditorGUIUtility.singleLineHeight;
 						float labelWidth = EditorUtils.GetLabelWidth();
 
-						Rect textPosition = new Rect(position.x + labelWidth + 2.0f, yPos, position.width - labelWidth - 2.0f - editbuttonWidth - buttonSpace, height);
+						Rect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth - _editbuttonWidth - _buttonSpace, height);
 						EditorGUI.LabelField(textPosition, text, EditorUtils.ReadOnlyTextBoxStyle);
-						Rect editTextPosition = new Rect(textPosition.x + textPosition.width + buttonSpace, yPos, editbuttonWidth, EditorGUIUtility.singleLineHeight);
+						Rect editTextPosition = new Rect(textPosition.x + textPosition.width + _buttonSpace, yPos, _editbuttonWidth, EditorGUIUtility.singleLineHeight);
 
-						if (GUI.Button(editTextPosition, "Edit"))
+						if (GUI.Button(editTextPosition, _editLabel))
 						{
 							LocalisationEditorWindow.EditString(localisationkey);
 						}
