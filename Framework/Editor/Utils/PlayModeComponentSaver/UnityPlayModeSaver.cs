@@ -93,8 +93,11 @@ namespace Framework
 				#region Constructor
 				static UnityPlayModeSaver()
 				{
+					_currentPlayModeState = Application.isPlaying ? PlayModeStateChange.EnteredPlayMode : PlayModeStateChange.EnteredEditMode;
+
 					EditorApplication.playModeStateChanged += OnModeChanged;
 					EditorSceneManager.sceneSaving += OnSceneSaved;
+
 					ClearCache();
 				}
 				#endregion
@@ -1773,7 +1776,7 @@ namespace Framework
 					private static readonly GUIContent kClearAllButton = new GUIContent("\u2716 Clear All");
 					private static readonly GUIContent kObjectNameLabel = new GUIContent("Saved Object");
 					private static readonly GUIContent kObjectPathLabel = new GUIContent("Saved Object Path");
-					private static readonly GUIContent kNoObjectsLabel = new GUIContent("No Saved Objects");
+					private static readonly GUIContent kNoObjectsLabel = new GUIContent("No Saved Objects.\nRight click on any Game Object or Component and click 'Save Play Mode Changes' to save it.");
 					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("The following objects will have their values saved upon leaving Play Mode.");
 					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Edit Mode.");
 					private const string kUnknownObj = "Unknown";
@@ -1865,7 +1868,7 @@ namespace Framework
 					{
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							GUILayout.Button(kObjectsDetailsLabel, EditorStyles.toolbarButton);
+							GUILayout.Button(kObjectsDetailsLabel, EditorStyles.toolbarSearchField);
 						}
 						EditorGUILayout.EndHorizontal();
 						
@@ -1910,15 +1913,11 @@ namespace Framework
 
 					private void DrawBottomButton()
 					{
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+						if (GUILayout.Button(kClearAllButton))
 						{
-							if (GUILayout.Button(kClearAllButton, EditorStyles.toolbarButton))
-							{
-								ClearCache();
-								_needsRepaint = true;
-							}
+							ClearCache();
+							_needsRepaint = true;
 						}
-						EditorGUILayout.EndHorizontal();
 					}
 
 					private void HandleInput()
