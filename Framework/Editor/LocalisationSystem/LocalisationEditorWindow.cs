@@ -40,14 +40,14 @@ namespace Framework
 				private Rect _keysResizerRect;
 				private Rect _languageResizerRect;
 
-				private enum eResizing
+				private enum ResizingState
 				{
 					NotResizing,
 					ResizingKeys,
 					ResizingLangauge,
 				}
 
-				private eResizing _resizing;
+				private ResizingState _resizing;
 				private int _controlID;
 				private float _resizingOffset;
 				private Vector2 _scrollPosition;
@@ -721,9 +721,9 @@ namespace Framework
 
 					EventType controlEventType = inputEvent.GetTypeForControl(_controlID);
 
-					if (_resizing != eResizing.NotResizing && inputEvent.rawType == EventType.MouseUp)
+					if (_resizing != ResizingState.NotResizing && inputEvent.rawType == EventType.MouseUp)
 					{
-						_resizing = eResizing.NotResizing;
+						_resizing = ResizingState.NotResizing;
 						_needsRepaint = true;
 					}
 
@@ -735,18 +735,18 @@ namespace Framework
 								{
 									if (_keysResizerRect.Contains(inputEvent.mousePosition))
 									{
-										_resizing = eResizing.ResizingKeys;
+										_resizing = ResizingState.ResizingKeys;
 									}
 									else if (_languageResizerRect.Contains(inputEvent.mousePosition))
 									{
-										_resizing = eResizing.ResizingLangauge;
+										_resizing = ResizingState.ResizingLangauge;
 									}
 									else
 									{
-										_resizing = eResizing.NotResizing;
+										_resizing = ResizingState.NotResizing;
 									}
 
-									if (_resizing != eResizing.NotResizing)
+									if (_resizing != ResizingState.NotResizing)
 									{
 										inputEvent.Use();
 										_resizingOffset = inputEvent.mousePosition.x;
@@ -757,24 +757,24 @@ namespace Framework
 
 						case EventType.MouseUp:
 							{
-								if (_resizing != eResizing.NotResizing)
+								if (_resizing != ResizingState.NotResizing)
 								{
 									inputEvent.Use();
-									_resizing = eResizing.NotResizing;
+									_resizing = ResizingState.NotResizing;
 								}
 							}
 							break;
 
 						case EventType.MouseDrag:
 							{
-								if (_resizing != eResizing.NotResizing)
+								if (_resizing != ResizingState.NotResizing)
 								{
-									if (_resizing == eResizing.ResizingKeys)
+									if (_resizing == ResizingState.ResizingKeys)
 									{
 										_editorPrefs._keyWidth += (inputEvent.mousePosition.x - _resizingOffset);
 										_editorPrefs._keyWidth = Math.Max(_editorPrefs._keyWidth, kMinKeysWidth);
 									}
-									else if (_resizing == eResizing.ResizingLangauge)
+									else if (_resizing == ResizingState.ResizingLangauge)
 									{
 										_editorPrefs._firstLanguageWidth += (inputEvent.mousePosition.x - _resizingOffset);
 										_editorPrefs._firstLanguageWidth = Math.Max(_editorPrefs._firstLanguageWidth, kMinKeysWidth);
