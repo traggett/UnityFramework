@@ -36,17 +36,18 @@ namespace Framework
 							index = 0,
 							elementHeight = 20f
 						};
+					}
 
+					public override void OnInspectorGUI()
+					{
 						_currentLanguageStyle = new GUIStyle(EditorStyles.helpBox)
 						{
 							alignment = TextAnchor.MiddleCenter,
 							fontSize = EditorStyles.label.fontSize,
 							richText = true,
 						};
-					}
 
-					public override void OnInspectorGUI()
-					{
+
 						EditorGUI.BeginChangeCheck();
 
 						DrawLocalisedTextMeshProperties();

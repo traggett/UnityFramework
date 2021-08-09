@@ -2,6 +2,7 @@
 
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEditor.SceneManagement;
 
@@ -86,8 +87,9 @@ namespace Framework
 					Busy,
 				}
 				private static State _state;
+				private static PlayModeStateChange _currentPlayModeState;
 				#endregion
-				
+
 				#region Constructor
 				static UnityPlayModeSaver()
 				{
@@ -213,6 +215,8 @@ namespace Framework
 				#region Editor Functions
 				private static void OnModeChanged(PlayModeStateChange state)
 				{
+					_currentPlayModeState = state;
+
 					switch (state)
 					{
 						case PlayModeStateChange.ExitingEditMode:
@@ -1179,6 +1183,9 @@ namespace Framework
 
 						//Revert any lost material refs
 						ApplyMaterialsRefs(data._object, materialRefs);
+
+						//Refresh Canvas renderers
+						DirtyCanvasRenderers(data._object);
 					}
 				}
 
@@ -1254,7 +1261,34 @@ namespace Framework
 
 					serializedObject.ApplyModifiedPropertiesWithoutUndo();
 				}
-				
+
+				private static void DirtyCanvasRenderers(Object obj)
+				{
+					if (obj is Graphic graphic)
+					{
+						graphic.SetAllDirty();
+					}
+					else if (obj is GameObject gameObject)
+					{
+						DirtyCanvasRenderers(gameObject);
+					}
+				}
+
+				private static void DirtyCanvasRenderers(GameObject gameObject)
+				{
+					Graphic[] graphicComponents = gameObject.GetComponents<Graphic>();
+
+					for (int i = 0; i < graphicComponents.Length; i++)
+					{
+						graphicComponents[i].SetAllDirty();
+					}
+
+					foreach (Transform child in gameObject.transform)
+					{
+						DirtyCanvasRenderers(child.gameObject);
+					}
+				}
+
 				#region Runtime Objects
 				private static GameObject RestoreRuntimeGameObject(GameObject gameObject, string editorPrefKey, string sceneStr, GameObject prefabRoot)
 				{
@@ -1733,7 +1767,7 @@ namespace Framework
 				{
 					#region Constants
 					private const float kClearButtonWidth = 24f;
-					private const float kDefaultNameWidth = 160f;
+					private const float kDefaultNameWidth = 240f;
 					private const float kMinNameWidth = 50f;
 					private static readonly GUIContent kClearButton = new GUIContent("\u2716");
 					private static readonly GUIContent kClearAllButton = new GUIContent("\u2716 Clear All");
@@ -1741,6 +1775,7 @@ namespace Framework
 					private static readonly GUIContent kObjectPathLabel = new GUIContent("Saved Object Path");
 					private static readonly GUIContent kNoObjectsLabel = new GUIContent("No Saved Objects");
 					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("The following objects will have their values saved upon leaving Play Mode.");
+					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Edit Mode.");
 					private const string kUnknownObj = "Unknown";
 					private static readonly float kResizerWidth = 8.0f;
 					#endregion
@@ -1761,7 +1796,6 @@ namespace Framework
 					private float _resizingOffset;
 					private GUIStyle _buttonStyle;
 					private GUIStyle _noObjectsStyle;
-					private GUIStyle _labelStyle;
 					#endregion
 
 					#region Public Interface
@@ -1783,16 +1817,23 @@ namespace Framework
 					{
 						_needsRepaint = false;
 
-						EditorGUILayout.BeginVertical();
+						if (_currentPlayModeState == PlayModeStateChange.EnteredPlayMode)
 						{
-							DrawTitleBar();
-							DrawTable();
-							DrawBottomButton();
+							EditorGUILayout.BeginVertical();
+							{
+								DrawTitleBar();
+								DrawTable();
+								DrawBottomButton();
+							}
+							EditorGUILayout.EndVertical();
+
+							HandleInput();
 						}
-						EditorGUILayout.EndVertical();
-
-						HandleInput();
-
+						else
+						{
+							EditorGUILayout.LabelField(kNotInEditModeLabel, _noObjectsStyle, GUILayout.ExpandHeight(true));
+						}
+						
 						if (_needsRepaint)
 							Repaint();
 					}
@@ -1818,20 +1859,16 @@ namespace Framework
 								alignment = TextAnchor.MiddleCenter
 							};
 						}
-
-						if (_labelStyle == null)
-						{
-							_labelStyle = new GUIStyle(EditorStyles.helpBox)
-							{
-								alignment = TextAnchor.MiddleCenter
-							};
-						}
 					}
 
 					private void DrawTitleBar()
 					{
-						EditorGUILayout.LabelField(kObjectsDetailsLabel, _labelStyle);
-
+						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+						{
+							GUILayout.Button(kObjectsDetailsLabel, EditorStyles.toolbarButton);
+						}
+						EditorGUILayout.EndHorizontal();
+						
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
 							EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(kClearButtonWidth));
