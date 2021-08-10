@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 
 using UnityEditor;
 using UnityEngine;
@@ -1769,34 +1769,40 @@ namespace Framework
 				public class UnityPlayModeSaverWindow : EditorWindow
 				{
 					#region Constants
-					private const float kClearButtonWidth = 24f;
+					private const float kButtonWidth = 24f;
 					private const float kDefaultNameWidth = 240f;
 					private const float kMinNameWidth = 50f;
 					private static readonly GUIContent kClearButton = new GUIContent("\u2716");
+					private static readonly GUIContent kFindButton = new GUIContent("?");
 					private static readonly GUIContent kClearAllButton = new GUIContent("\u2716 Clear All");
-					private static readonly GUIContent kObjectNameLabel = new GUIContent("Saved Object");
-					private static readonly GUIContent kObjectPathLabel = new GUIContent("Saved Object Path");
-					private static readonly GUIContent kNoObjectsLabel = new GUIContent("No Saved Objects.\nRight click on any Game Object or Component and click 'Save Play Mode Changes' to save it.");
+					private static readonly GUIContent kObjectNameLabel = new GUIContent("Name");
+					private static readonly GUIContent kObjectTypeLabel = new GUIContent("Type");
+					private static readonly GUIContent kObjectPathLabel = new GUIContent("Path");
+					private static readonly GUIContent kNoObjectsLabel = new GUIContent("Either right click on any Game Object or Component and click 'Save Play Mode Changes'\nor drag any Game Object or Component into this window.");
 					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("The following objects will have their values saved upon leaving Play Mode.");
-					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Edit Mode.");
+					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Play Mode.");
 					private const string kUnknownObj = "Unknown";
-					private static readonly float kResizerWidth = 8.0f;
+					private static readonly float kResizerWidth = 6.0f;
 					#endregion
 
 					#region Private Data
 					private Vector2 _scrollPosition = Vector2.zero;
 					private float _nameWidth = kDefaultNameWidth;
+					private float _typeWidth = kDefaultNameWidth;
 					private Rect _nameResizerRect;
+					private Rect _typeResizerRect;
 					private bool _needsRepaint;
 					private enum ResizingState
 					{
 						NotResizing,
 						ResizingName,
+						ResizingType,
 					}
 
 					private ResizingState _resizing;
 					private int _controlID;
 					private float _resizingOffset;
+					private GUIStyle _toolBarInfoStyle;
 					private GUIStyle _buttonStyle;
 					private GUIStyle _noObjectsStyle;
 					#endregion
@@ -1847,11 +1853,20 @@ namespace Framework
 					{
 						minSize = new Vector2(kDefaultNameWidth, kDefaultNameWidth);
 
+						if (_toolBarInfoStyle == null)
+						{
+							_toolBarInfoStyle = new GUIStyle(EditorStyles.toolbarTextField)
+							{
+								alignment = TextAnchor.MiddleLeft,
+								stretchWidth = true
+							};
+						}
+
 						if (_buttonStyle == null)
 						{
 							_buttonStyle = new GUIStyle(EditorStyles.toolbarButton)
 							{
-								alignment = TextAnchor.MiddleLeft
+								alignment = TextAnchor.MiddleLeft,
 							};
 						}
 
@@ -1859,7 +1874,9 @@ namespace Framework
 						{
 							_noObjectsStyle = new GUIStyle(EditorStyles.label)
 							{
-								alignment = TextAnchor.MiddleCenter
+								alignment = TextAnchor.MiddleCenter,
+								stretchWidth = true,
+								stretchHeight = true
 							};
 						}
 					}
@@ -1868,23 +1885,25 @@ namespace Framework
 					{
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							GUILayout.Button(kObjectsDetailsLabel, EditorStyles.toolbarSearchField);
+							GUILayout.Label(kObjectsDetailsLabel, _toolBarInfoStyle);
 						}
 						EditorGUILayout.EndHorizontal();
 						
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(kClearButtonWidth));
+							EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(kButtonWidth * 2f));
 
-							float nameWidth = _nameWidth - (kResizerWidth * 0.5f);
-							nameWidth -= _scrollPosition.x;
-
-							GUILayout.Button(kObjectNameLabel, _buttonStyle, GUILayout.Width(nameWidth));
+							GUILayout.Label(kObjectNameLabel, _buttonStyle, GUILayout.Width(_nameWidth - _scrollPosition.x));
 
 							//Keys Resizer
 							RenderResizer(ref _nameResizerRect);
 
-							GUILayout.Button(kObjectPathLabel, _buttonStyle);
+							GUILayout.Label(kObjectTypeLabel, _buttonStyle, GUILayout.Width(_typeWidth - kResizerWidth * 0.5f));
+
+							//Type Resizer
+							RenderResizer(ref _typeResizerRect);
+
+							GUILayout.Label(kObjectPathLabel, _buttonStyle);
 						}
 						EditorGUILayout.EndHorizontal();
 					}
@@ -1945,6 +1964,10 @@ namespace Framework
 										{
 											_resizing = ResizingState.ResizingName;
 										}
+										else if (_typeResizerRect.Contains(inputEvent.mousePosition))
+										{
+											_resizing = ResizingState.ResizingType;
+										}
 										else
 										{
 											_resizing = ResizingState.NotResizing;
@@ -1978,10 +2001,49 @@ namespace Framework
 											_nameWidth += (inputEvent.mousePosition.x - _resizingOffset);
 											_nameWidth = Math.Max(_nameWidth, kMinNameWidth);
 										}
+										else if (_resizing == ResizingState.ResizingType)
+										{
+											_typeWidth += (inputEvent.mousePosition.x - _resizingOffset);
+											_typeWidth = Math.Max(_typeWidth, kMinNameWidth);
+										}
 
 										_resizingOffset = inputEvent.mousePosition.x;
 										_needsRepaint = true;
 									}
+								}
+								break;
+							case EventType.DragUpdated:
+								{
+									bool objectsAreAllowed = true;
+
+									foreach (Object obj in DragAndDrop.objectReferences)
+									{
+										if (!(obj is GameObject) && !(obj is Component))
+										{
+											objectsAreAllowed = false;
+											break;
+										}
+									}
+
+									DragAndDrop.visualMode = objectsAreAllowed ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.Rejected;
+								}
+								break;
+
+							case EventType.DragPerform:
+								{
+									foreach (Object obj in DragAndDrop.objectReferences)
+									{
+										if (obj is GameObject gameObject)
+										{
+											RegisterSavedObject(gameObject, gameObject.scene.path);
+										}
+										else if (obj is Component component)
+										{
+											RegisterSavedObject(component, component.gameObject.scene.path);
+										}
+									}
+
+									DragAndDrop.AcceptDrag();
 								}
 								break;
 						}
@@ -2018,33 +2080,31 @@ namespace Framework
 
 					private void DrawObjectGUI(int saveObjIndex, Object obj)
 					{
-						string name, path;
+						string name, path, type;
 
 						if (obj is GameObject gameObject)
 						{
 							name = gameObject.name;
+							type = "Game Object";
 							path = GetGameObjectPath(gameObject);
 						}
 						else if (obj is Component component)
 						{
-							name = component.gameObject.name + '.' + component.GetType().Name;
-							path = GetGameObjectPath(component.gameObject) + '.' + component.GetType().Name;
+							type = component.GetType().Name;
+							name = component.gameObject.name + '.' + type;
+							path = GetGameObjectPath(component.gameObject) + '.' + type;
 						}
 						else
 						{
 							name = kUnknownObj;
 							path = kUnknownObj;
+							type = kUnknownObj;
 						}
 
-						DrawObjectGUI(saveObjIndex, name, path);
-					}
-
-					private void DrawObjectGUI(int saveObjIndex, string name, string path)
-					{
 						//Draw Name (GameoBject name or GameobjectName.Component), then path
 						EditorGUILayout.BeginHorizontal();
 						{
-							if (GUILayout.Button(kClearButton, GUILayout.Width(kClearButtonWidth)))
+							if (GUILayout.Button(kClearButton, GUILayout.Width(kButtonWidth)))
 							{
 								//Remove item for saved objects
 								string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
@@ -2052,7 +2112,13 @@ namespace Framework
 								_needsRepaint = true;
 							}
 
+							if (GUILayout.Button(kFindButton, GUILayout.Width(kButtonWidth)))
+							{
+								FocusOnObject(saveObjIndex);
+							}
+
 							EditorGUILayout.LabelField(name, EditorStyles.toolbarTextField, GUILayout.Width(_nameWidth));
+							EditorGUILayout.LabelField(type, EditorStyles.toolbarTextField, GUILayout.Width(_typeWidth));
 							EditorGUILayout.LabelField(path, EditorStyles.toolbarTextField);
 						}
 						EditorGUILayout.EndHorizontal();
@@ -2063,6 +2129,41 @@ namespace Framework
 						GUILayout.Box(string.Empty, EditorStyles.toolbar, GUILayout.Width(kResizerWidth), GUILayout.ExpandHeight(true));
 						rect = GUILayoutUtility.GetLastRect();
 						EditorGUIUtility.AddCursorRect(rect, MouseCursor.SplitResizeLeftRight);
+					}
+
+					private static void FocusOnObject(int saveObjIndex)
+					{
+						string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
+						Object obj = null;
+
+						if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectScene))
+						{
+							string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
+
+							if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectSceneId))
+							{
+								if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabInstanceId))
+								{
+									int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
+									string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
+									obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr, true);
+								}
+								else
+								{
+									int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsObjectSceneId, -1);
+									obj = FindSceneObject(sceneStr, identifier, true);
+								}
+							}
+							else
+							{
+								int instanceId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, -1);
+								obj = FindRuntimeObject(sceneStr, instanceId);
+							}
+						}
+
+
+						Selection.activeObject = obj;
+						SceneView.FrameLastActiveSceneView();
 					}
 
 					private static string GetGameObjectPath(GameObject gameObject)

@@ -84,6 +84,8 @@ namespace Framework
 				{
 					UpdateText(language);
 				}
+
+				//If update the table need to make everything update
 			}
 
 			public void SetVariables(params LocalisationLocalVariable[] variables)
