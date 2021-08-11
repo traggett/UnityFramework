@@ -56,6 +56,9 @@ namespace Framework
 
 			private SystemLanguage _cachedLanguage;
 			private LocalisationGlobalVariable[] _cachedGlobalVariables;
+#if UNITY_EDITOR
+			private int _cachedEditorVersion;
+#endif
 			#endregion
 
 			#region MonoBehaviour
@@ -78,14 +81,12 @@ namespace Framework
 
 				if (_cachedLanguage != language || Localisation.AreGlobalVariablesOutOfDate(_cachedGlobalVariables)
 #if UNITY_EDITOR
-					|| !Application.isPlaying
+					|| Localisation.HaveStringsUpdated(_cachedEditorVersion)
 #endif
 					)
 				{
 					UpdateText(language);
 				}
-
-				//If update the table need to make everything update
 			}
 
 			public void SetVariables(params LocalisationLocalVariable[] variables)
@@ -108,6 +109,9 @@ namespace Framework
 			protected void UpdateText(SystemLanguage language)
 			{
 				_cachedLanguage = language;
+#if UNITY_EDITOR
+				_cachedEditorVersion = Localisation.GetEditorVersion();
+#endif
 
 				//List of strings
 				if (_textListMode)

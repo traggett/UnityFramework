@@ -44,6 +44,7 @@ namespace Framework
 			private static readonly Dictionary<string, GlobalVariable> _globalVariables = new Dictionary<string, GlobalVariable>();
 			private static bool _dirty;
 #if UNITY_EDITOR
+			private static int _editorVersion = 1;
 			private static string[] _editorKeys;
 			private static string[] _editorFolders;
 			private static LocalisationUndoState _undoObject;
@@ -80,6 +81,7 @@ namespace Framework
 				_localisationMaps[LanguageCodes.GetLanguageCode(language)] = localisationMap;
 
 #if UNITY_EDITOR
+				_editorVersion++;
 				RefreshEditorKeys();
 #endif
 			}
@@ -273,6 +275,16 @@ namespace Framework
 
 			#region Public Editor Interface
 #if UNITY_EDITOR
+			public static int GetEditorVersion()
+			{
+				return _editorVersion;
+			}
+
+			public static bool HaveStringsUpdated(int versionNumber)
+			{
+				return versionNumber < _editorVersion;
+			}
+
 			public static void Set(string key, SystemLanguage language, string text)
 			{
 				OnPreEditorChange();
@@ -340,6 +352,10 @@ namespace Framework
 						Serializer.ToFile(languagePair.Value, filePath);
 					}
 				}
+
+#if UNITY_EDITOR
+				_editorVersion++;
+#endif
 
 				_dirty = false;
 			}
