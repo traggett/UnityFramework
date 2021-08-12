@@ -287,7 +287,7 @@ namespace Framework
 
 							EditorGUILayout.Separator();
 
-							GUILayout.Button("Scale", EditorStyles.toolbarButton);
+							GUILayout.Label("Scale", EditorStyles.toolbarButton);
 
 							int fontSize = EditorGUILayout.IntSlider(_editorPrefs._tableFontSize, kMinFontSize, kMaxFontSize);
 
@@ -306,7 +306,7 @@ namespace Framework
 
 							EditorGUILayout.Separator();
 
-							GUILayout.Button("Font", EditorStyles.toolbarButton);
+							GUILayout.Label("Font", EditorStyles.toolbarButton);
 
 							Font currentFont = _editorPrefs._font.GetAsset();
 							Font font = (Font)EditorGUILayout.ObjectField(currentFont, typeof(Font), false);
@@ -330,7 +330,7 @@ namespace Framework
 						//Filters
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							GUILayout.Button("Filter", EditorStyles.toolbarButton);
+							GUILayout.Label("Filter", EditorStyles.toolbarButton);
 
 							EditorGUI.BeginChangeCheck();
 							_filter = EditorGUILayout.TextField(_filter, EditorStyles.toolbarSearchField);
@@ -378,6 +378,7 @@ namespace Framework
 							if (GUILayout.Button("Key", EditorStyles.toolbarButton, GUILayout.Width(Mathf.Max(keyWidth, 0f))))
 							{
 								_sortOrder = _sortOrder == eKeySortOrder.Desc ? eKeySortOrder.Asc : eKeySortOrder.Desc;
+								UpdateKeys();
 							}
 
 							//Keys Resizer
@@ -672,7 +673,7 @@ namespace Framework
 				{
 					EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 					{
-						GUILayout.Button("Add New Key:", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
+						GUILayout.Label("Add New Key:", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
 
 						string[] folders = Localisation.GetStringFolders();
 						Localisation.GetFolderIndex(_addNewKey, out int currentFolderIndex, out string keyWithoutFolder);
