@@ -1774,8 +1774,7 @@ namespace Framework
 					private const float kButtonWidth = 24f;
 					private const float kDefaultNameWidth = 240f;
 					private const float kMinNameWidth = 50f;
-					private static readonly GUIContent kClearButton = new GUIContent("\u2716");
-					private static readonly GUIContent kFindButton = new GUIContent("?");
+					private static readonly GUIContent kClearButton = new GUIContent("\u2716", "Forget object changes");
 					private static readonly GUIContent kClearAllButton = new GUIContent("\u2716 Clear All");
 					private static readonly GUIContent kObjectNameLabel = new GUIContent("Name");
 					private static readonly GUIContent kObjectTypeLabel = new GUIContent("Type");
@@ -1783,8 +1782,10 @@ namespace Framework
 					private static readonly GUIContent kNoObjectsLabel = new GUIContent("Either right click on any Game Object or Component and click 'Save Play Mode Changes'\nor drag any Game Object or Component into this window.");
 					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("The following objects will have their values saved upon leaving Play Mode.");
 					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Play Mode.");
+					private static readonly string kFindButtonToolTip = "Show object in scene";
 					private const string kUnknownObj = "Unknown";
 					private static readonly float kResizerWidth = 6.0f;
+					private static readonly float kItemSpacing = 2.0f;
 					#endregion
 
 					#region Private Data
@@ -1805,8 +1806,9 @@ namespace Framework
 					private int _controlID;
 					private float _resizingOffset;
 					private GUIStyle _toolBarInfoStyle;
-					private GUIStyle _buttonStyle;
+					private GUIStyle _headerStyle;
 					private GUIStyle _noObjectsStyle;
+					private GUIStyle _itemStyle;
 					#endregion
 
 					#region Public Interface
@@ -1857,18 +1859,32 @@ namespace Framework
 
 						if (_toolBarInfoStyle == null)
 						{
-							_toolBarInfoStyle = new GUIStyle(EditorStyles.toolbarTextField)
+							_toolBarInfoStyle = new GUIStyle(EditorStyles.toolbarButton)
 							{
 								alignment = TextAnchor.MiddleLeft,
+								padding = new RectOffset(8, 0, 0, 0),
 								stretchWidth = true
 							};
 						}
 
-						if (_buttonStyle == null)
+						if (_headerStyle == null)
 						{
-							_buttonStyle = new GUIStyle(EditorStyles.toolbarButton)
+							_headerStyle = new GUIStyle(EditorStyles.toolbarButton)
 							{
 								alignment = TextAnchor.MiddleLeft,
+							};
+						}
+
+						if (_itemStyle == null)
+						{
+							_itemStyle = new GUIStyle(EditorStyles.toolbarTextField)
+							{
+								alignment = TextAnchor.MiddleLeft,
+								margin = new RectOffset(0, 0, 1, 2),
+								padding = new RectOffset(8, 8, 0, 0),
+								fixedHeight = 0,
+								stretchHeight = true,
+								stretchWidth = true
 							};
 						}
 
@@ -1893,19 +1909,19 @@ namespace Framework
 						
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							EditorGUILayout.LabelField(GUIContent.none, GUILayout.Width(kButtonWidth * 2f));
+							EditorGUILayout.Space(kButtonWidth * 2f, false);
 
-							GUILayout.Label(kObjectNameLabel, _buttonStyle, GUILayout.Width(_nameWidth - _scrollPosition.x));
+							GUILayout.Label(kObjectNameLabel, _headerStyle, GUILayout.Width(_nameWidth - _scrollPosition.x - kResizerWidth * 0.5f));
 
 							//Keys Resizer
 							RenderResizer(ref _nameResizerRect);
 
-							GUILayout.Label(kObjectTypeLabel, _buttonStyle, GUILayout.Width(_typeWidth - kResizerWidth * 0.5f));
+							GUILayout.Label(kObjectTypeLabel, _headerStyle, GUILayout.Width(_typeWidth - kResizerWidth));
 
 							//Type Resizer
 							RenderResizer(ref _typeResizerRect);
 
-							GUILayout.Label(kObjectPathLabel, _buttonStyle);
+							GUILayout.Label(kObjectPathLabel, _headerStyle);
 						}
 						EditorGUILayout.EndHorizontal();
 					}
@@ -2104,9 +2120,9 @@ namespace Framework
 						}
 
 						//Draw Name (GameoBject name or GameobjectName.Component), then path
-						EditorGUILayout.BeginHorizontal();
+						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							if (GUILayout.Button(kClearButton, GUILayout.Width(kButtonWidth)))
+							if (GUILayout.Button(kClearButton, EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
 							{
 								//Remove item for saved objects
 								string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
@@ -2114,14 +2130,18 @@ namespace Framework
 								_needsRepaint = true;
 							}
 
-							if (GUILayout.Button(kFindButton, GUILayout.Width(kButtonWidth)))
+							if (GUILayout.Button(new GUIContent(EditorGUIUtility.FindTexture("animationvisibilitytoggleon"), kFindButtonToolTip), EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
 							{
 								FocusOnObject(saveObjIndex);
 							}
 
-							EditorGUILayout.LabelField(name, EditorStyles.toolbarTextField, GUILayout.Width(_nameWidth));
-							EditorGUILayout.LabelField(type, EditorStyles.toolbarTextField, GUILayout.Width(_typeWidth));
-							EditorGUILayout.LabelField(path, EditorStyles.toolbarTextField);
+							GUILayout.Space(kItemSpacing);
+							GUILayout.Label(name, _itemStyle, GUILayout.Width(_nameWidth - kItemSpacing * 1.5f));
+							GUILayout.Space(kItemSpacing);
+							GUILayout.Label(type, _itemStyle, GUILayout.Width(_typeWidth - kItemSpacing * 1f));
+							GUILayout.Space(kItemSpacing);
+							GUILayout.Label(path, _itemStyle, GUILayout.ExpandWidth(true));
+							GUILayout.Space(kItemSpacing);
 						}
 						EditorGUILayout.EndHorizontal();
 					}

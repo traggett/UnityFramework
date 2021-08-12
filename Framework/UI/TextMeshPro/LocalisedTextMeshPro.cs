@@ -22,6 +22,11 @@ namespace Framework
 				{
 					get
 					{
+						if (_textMesh == null)
+						{
+							_textMesh = GetComponent<TMP_Text>();
+						}
+
 						return _textMesh;
 					}
 				}
@@ -111,12 +116,7 @@ namespace Framework
 				#region LocalisedTextMesh
 				protected override void SetText(string text)
 				{
-					if (_textMesh == null)
-					{
-						_textMesh = GetComponent<TMP_Text>();
-					}
-
-					_textMesh.text = text;
+					TextMesh.text = text;
 				}
 				#endregion
 
@@ -124,13 +124,8 @@ namespace Framework
 				public void OnBeforeSerialize()
 				{
 #if UNITY_EDITOR
-					if (_textMesh == null)
-					{
-						_textMesh = GetComponent<TMP_Text>();
-					}
-
 					//If this text mesh has language override settings...
-					if (EditorUtility.IsDirty(_textMesh) && _languageSettingsOverrides != null && _languageSettingsOverrides.Length > 0)
+					if (EditorUtility.IsDirty(TextMesh) && _languageSettingsOverrides != null && _languageSettingsOverrides.Length > 0)
 					{
 						//...work out which langauage we're currently editing
 						SystemLanguage language = _editingLanguage;
@@ -145,7 +140,7 @@ namespace Framework
 						{
 							if (_languageSettingsOverrides[i]._language == language)
 							{
-								_languageSettingsOverrides[i]._settings = TextMeshProSettings.FromTextMesh(_textMesh);
+								_languageSettingsOverrides[i]._settings = TextMeshProSettings.FromTextMesh(TextMesh);
 								foundLanguage = true;
 								break;
 							}
@@ -154,7 +149,7 @@ namespace Framework
 						//otherwise save them to default settings
 						if (!foundLanguage)
 						{
-							_defaultSettings = TextMeshProSettings.FromTextMesh(_textMesh);
+							_defaultSettings = TextMeshProSettings.FromTextMesh(TextMesh);
 						}
 					}
 #endif
@@ -188,7 +183,7 @@ namespace Framework
 						{
 							if (_languageSettingsOverrides[i]._language == language)
 							{
-								_languageSettingsOverrides[i]._settings.Apply(_textMesh);
+								_languageSettingsOverrides[i]._settings.Apply(TextMesh);
 								foundLanguage = true;
 								break;
 							}
@@ -197,7 +192,7 @@ namespace Framework
 						//otherwise save them to default settings
 						if (!foundLanguage)
 						{
-							_defaultSettings.Apply(_textMesh);
+							_defaultSettings.Apply(TextMesh);
 						}
 					}
 				}
