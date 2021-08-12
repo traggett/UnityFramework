@@ -85,7 +85,7 @@ namespace Framework
 				array = newArray;
 			}
 
-			public static void Randomise<T>(ref T[] array)
+			public static void Randomise<T>(T[] array)
 			{
 				int n = array.Length;
 				while (n > 1)

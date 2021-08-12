@@ -47,10 +47,9 @@ namespace Framework
 							richText = true,
 						};
 
+						DrawLocalisedTextMeshProperties();
 
 						EditorGUI.BeginChangeCheck();
-
-						DrawLocalisedTextMeshProperties();
 
 						LocalisedTextMeshPro localisedUITextMesh = (LocalisedTextMeshPro)target;
 
@@ -68,9 +67,16 @@ namespace Framework
 							{
 								EditorGUILayout.BeginHorizontal();
 								{
-									EditorGUILayout.LabelField("Editing Text Mesh Settings for <b>" + localisedUITextMesh._editingLanguage.ToString() + "</b>", _currentLanguageStyle);
-
-									if (localisedUITextMesh._editingLanguage != SystemLanguage.Unknown && GUILayout.Button("Cancel"))
+									if (localisedUITextMesh.EditingLanguage == SystemLanguage.Unknown)
+									{
+										EditorGUILayout.LabelField("Editing Text Mesh Settings for <b>" + Localisation.GetCurrentLanguage().ToString() + "</b> (Current Language)", _currentLanguageStyle);
+									}
+									else
+									{
+										EditorGUILayout.LabelField("Editing Text Mesh Settings for <b>" + localisedUITextMesh.EditingLanguage.ToString() + "</b>", _currentLanguageStyle);
+									}
+									
+									if (localisedUITextMesh.EditingLanguage != SystemLanguage.Unknown && GUILayout.Button("Cancel"))
 									{
 										SwitchToEditingLanguage(SystemLanguage.Unknown);
 									}
@@ -92,24 +98,25 @@ namespace Framework
 					private bool IsEditingOverrideSettings()
 					{
 						LocalisedTextMeshPro localisedUITextMesh = (LocalisedTextMeshPro)target;
-						SystemLanguage language = localisedUITextMesh._editingLanguage;
+						SystemLanguage language = localisedUITextMesh.EditingLanguage;
 
 						if (language == SystemLanguage.Unknown)
 							language = Localisation.GetCurrentLanguage();
 
-						if (localisedUITextMesh._languageSettingsOverrides != null)
+						if (localisedUITextMesh.LanguageSettingsOverrides != null)
 						{
-							for (int i = 0; i < localisedUITextMesh._languageSettingsOverrides.Length; i++)
+							for (int i = 0; i < localisedUITextMesh.LanguageSettingsOverrides.Length; i++)
 							{
-								if (localisedUITextMesh._languageSettingsOverrides[i]._language == language)
+								if (localisedUITextMesh.LanguageSettingsOverrides[i]._language == language)
 								{
 									return true;
 								}
 							}
 						}
 
-						if (localisedUITextMesh._editingLanguage != SystemLanguage.Unknown)
-							localisedUITextMesh._editingLanguage = SystemLanguage.Unknown;
+						//Can't find override settings for language, edit defualts instead?
+						if (localisedUITextMesh.EditingLanguage != SystemLanguage.Unknown)
+							localisedUITextMesh.EditingLanguage = SystemLanguage.Unknown;
 
 						return false;
 					}
@@ -131,15 +138,17 @@ namespace Framework
 						};
 
 						//If this is the first language settings also save current settings to default
-						if (localisedUITextMesh._languageSettingsOverrides == null || localisedUITextMesh._languageSettingsOverrides.Length == 0)
+						if (localisedUITextMesh.LanguageSettingsOverrides == null || localisedUITextMesh.LanguageSettingsOverrides.Length == 0)
 						{
-							localisedUITextMesh._defaultSettings = settings;
-							localisedUITextMesh._languageSettingsOverrides = new LocalisedTextMeshPro.LanguageSettingsOverride[] { languageSettingsOverride };
+							localisedUITextMesh.DefaultSettings = settings;
+							localisedUITextMesh.LanguageSettingsOverrides = new LocalisedTextMeshPro.LanguageSettingsOverride[] { languageSettingsOverride };
 						}
 						//Otherwise add new settings to overrides
 						else
 						{
-							ArrayUtils.Add(ref localisedUITextMesh._languageSettingsOverrides, languageSettingsOverride);
+							LocalisedTextMeshPro.LanguageSettingsOverride[] languageSettingsOverrides = localisedUITextMesh.LanguageSettingsOverrides;
+							ArrayUtils.Add(ref languageSettingsOverrides, languageSettingsOverride);
+							localisedUITextMesh.LanguageSettingsOverrides = languageSettingsOverrides;
 						}
 
 						//Then switch to editing this new language
@@ -150,13 +159,15 @@ namespace Framework
 					{
 						LocalisedTextMeshPro localisedUITextMesh = (LocalisedTextMeshPro)target;
 
+						if (language == Localisation.GetCurrentLanguage())
+							language = SystemLanguage.Unknown;
+
 						//OnBeforeSerialize will save the current language settings to the correct override
 						localisedUITextMesh.OnBeforeSerialize();
 
 						//The load settings from new language
 						Undo.RecordObject(localisedUITextMesh, "Edit language override");
-						localisedUITextMesh._editingLanguage = language;
-						localisedUITextMesh.SetTextMeshSettingsForLanguage(language);
+						localisedUITextMesh.EditingLanguage = language;
 
 						//Force the text mesh to rebuild
 						EditorUtility.SetDirty(localisedUITextMesh.TextMesh);
@@ -171,7 +182,7 @@ namespace Framework
 					{
 						LocalisedTextMeshPro localisedUITextMesh = (LocalisedTextMeshPro)target;
 
-						SystemLanguage language = localisedUITextMesh._languageSettingsOverrides[index]._language;
+						SystemLanguage language = localisedUITextMesh.LanguageSettingsOverrides[index]._language;
 
 						rect.width -= _previewButtonWidth;
 
@@ -180,7 +191,14 @@ namespace Framework
 						rect.x = rect.width;
 						rect.width = _previewButtonWidth;
 
-						if (localisedUITextMesh._editingLanguage != language)
+						SystemLanguage editingLanguage = localisedUITextMesh.EditingLanguage;
+
+						if (editingLanguage == SystemLanguage.Unknown)
+						{
+							editingLanguage = Localisation.GetCurrentLanguage();
+						}
+
+						if (language != editingLanguage)
 						{
 							if (GUI.Button(rect, "Edit"))
 							{
@@ -210,7 +228,7 @@ namespace Framework
 						Undo.RecordObject(localisedUITextMesh, "Removed language override");
 
 						//If currently editing this language then revert to default
-						if (localisedUITextMesh._editingLanguage == localisedUITextMesh._languageSettingsOverrides[list.index]._language)
+						if (localisedUITextMesh.EditingLanguage == localisedUITextMesh.LanguageSettingsOverrides[list.index]._language)
 						{
 							SwitchToEditingLanguage(SystemLanguage.Unknown);
 						}
@@ -218,13 +236,15 @@ namespace Framework
 						//If was last lanauage clear array and clear default settings
 						if (list.count == 1)
 						{
-							localisedUITextMesh._languageSettingsOverrides = null;
-							localisedUITextMesh._defaultSettings = null;
+							localisedUITextMesh.LanguageSettingsOverrides = null;
+							localisedUITextMesh.DefaultSettings = null;
 						}
 						//Otherwise Remove from array
 						else
 						{
-							ArrayUtils.RemoveAt(ref localisedUITextMesh._languageSettingsOverrides, list.index);
+							LocalisedTextMeshPro.LanguageSettingsOverride[] languageSettingsOverrides = localisedUITextMesh.LanguageSettingsOverrides;
+							ArrayUtils.RemoveAt(ref languageSettingsOverrides, list.index);
+							localisedUITextMesh.LanguageSettingsOverrides = languageSettingsOverrides;
 						}
 					}
 
@@ -239,11 +259,11 @@ namespace Framework
 							{
 								bool alreadyExists = false;
 
-								if (localisedUITextMesh._languageSettingsOverrides != null)
+								if (localisedUITextMesh.LanguageSettingsOverrides != null)
 								{
-									for (int i = 0; i < localisedUITextMesh._languageSettingsOverrides.Length; i++)
+									for (int i = 0; i < localisedUITextMesh.LanguageSettingsOverrides.Length; i++)
 									{
-										if (localisedUITextMesh._languageSettingsOverrides[i]._language == language)
+										if (localisedUITextMesh.LanguageSettingsOverrides[i]._language == language)
 										{
 											alreadyExists = true;
 											break;

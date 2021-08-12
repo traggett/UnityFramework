@@ -1189,6 +1189,8 @@ namespace Framework
 
 						//Refresh Canvas renderers
 						DirtyCanvasRenderers(data._object);
+
+						EditorUtility.SetDirty(data._object);
 					}
 				}
 

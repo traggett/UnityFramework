@@ -35,14 +35,7 @@ namespace Framework
 
 				public override void OnInspectorGUI()
 				{
-					EditorGUI.BeginChangeCheck();
-
 					DrawLocalisedTextMeshProperties();
-
-					if (EditorGUI.EndChangeCheck())
-					{
-						serializedObject.ApplyModifiedProperties();
-					}
 				}
 
 				protected void DrawLocalisedTextMeshProperties()
@@ -67,6 +60,14 @@ namespace Framework
 					else
 					{
 						EditorGUILayout.PropertyField(_textProp);
+					}
+
+					if (EditorGUI.EndChangeCheck())
+					{
+						serializedObject.ApplyModifiedProperties();
+
+						LocalisedTextMesh localisedTextMesh = (LocalisedTextMesh)target;
+						localisedTextMesh.UpdateText();
 					}
 				}
 			}

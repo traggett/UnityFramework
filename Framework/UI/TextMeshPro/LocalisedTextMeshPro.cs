@@ -25,17 +25,12 @@ namespace Framework
 						return _textMesh;
 					}
 				}
-
-#if UNITY_EDITOR
-				public SystemLanguage _editingLanguage = SystemLanguage.Unknown;
-#endif
 				#endregion
 
 				#region Private Data 
-				[SerializeField]
 				private TMP_Text _textMesh;
 				[SerializeField]
-				public TextMeshProSettings _defaultSettings;
+				private TextMeshProSettings _defaultSettings;
 				[Serializable]
 				public class LanguageSettingsOverride
 				{
@@ -43,17 +38,54 @@ namespace Framework
 					public TextMeshProSettings _settings;
 				}
 				[SerializeField]
-				public LanguageSettingsOverride[] _languageSettingsOverrides;
+				private LanguageSettingsOverride[] _languageSettingsOverrides;
+#if UNITY_EDITOR
+				private SystemLanguage _editingLanguage = SystemLanguage.Unknown;
+#endif
+				#endregion
+
+				#region Editor Only Properties
+#if UNITY_EDITOR
+				public SystemLanguage EditingLanguage
+				{
+					get
+					{
+						return _editingLanguage;
+					}
+					set
+					{
+						_editingLanguage = value;
+						SetTextMeshSettingsForLanguage(value);
+					}
+				}
+
+				public TextMeshProSettings DefaultSettings
+				{
+					get
+					{
+						return _defaultSettings;
+					}
+					set
+					{
+						_defaultSettings = value;
+					}
+				}
+
+				public LanguageSettingsOverride[] LanguageSettingsOverrides
+				{
+					get
+					{
+						return _languageSettingsOverrides;
+					}
+					set
+					{
+						_languageSettingsOverrides = value;
+					}
+				}
+#endif
 				#endregion
 
 				#region MonoBehaviour
-#if UNITY_EDITOR
-				private void OnValidate()
-				{
-					_textMesh = GetComponent<TMP_Text>();
-				}
-#endif
-
 				protected override void OnEnable()
 				{
 					SetTextMeshSettingsForLanguage();
@@ -79,6 +111,11 @@ namespace Framework
 				#region LocalisedTextMesh
 				protected override void SetText(string text)
 				{
+					if (_textMesh == null)
+					{
+						_textMesh = GetComponent<TMP_Text>();
+					}
+
 					_textMesh.text = text;
 				}
 				#endregion
@@ -87,11 +124,20 @@ namespace Framework
 				public void OnBeforeSerialize()
 				{
 #if UNITY_EDITOR
+					if (_textMesh == null)
+					{
+						_textMesh = GetComponent<TMP_Text>();
+					}
+
 					//If this text mesh has language override settings...
-					if (_textMesh != null && EditorUtility.IsDirty(_textMesh) && _languageSettingsOverrides != null && _languageSettingsOverrides.Length > 0)
+					if (EditorUtility.IsDirty(_textMesh) && _languageSettingsOverrides != null && _languageSettingsOverrides.Length > 0)
 					{
 						//...work out which langauage we're currently editing
-						SystemLanguage language = _editingLanguage != SystemLanguage.Unknown ? _editingLanguage : Localisation.GetCurrentLanguage();
+						SystemLanguage language = _editingLanguage;
+						
+						if (language == SystemLanguage.Unknown)
+							language = Localisation.GetCurrentLanguage();
+
 						bool foundLanguage = false;
 
 						//check if we have an override for this language, if so save the current text mesh settings to that language
@@ -126,8 +172,11 @@ namespace Framework
 					SetTextMeshSettingsForLanguage(Localisation.GetCurrentLanguage());
 				}
 
-				public void SetTextMeshSettingsForLanguage(SystemLanguage language)
+				private void SetTextMeshSettingsForLanguage(SystemLanguage language)
 				{
+					if (language == SystemLanguage.Unknown)
+						language = Localisation.GetCurrentLanguage();
+
 					//If this text mesh has language override settings...
 					if (_languageSettingsOverrides != null && _languageSettingsOverrides.Length > 0)
 					{

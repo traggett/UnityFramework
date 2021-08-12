@@ -101,6 +101,13 @@ namespace Framework
 					UpdateText(Localisation.GetCurrentLanguage());
 				}
 			}
+
+#if UNITY_EDITOR
+			public void UpdateText()
+			{
+				UpdateText(Localisation.GetCurrentLanguage());
+			}
+#endif
 			#endregion
 
 			#region Protected Methods
