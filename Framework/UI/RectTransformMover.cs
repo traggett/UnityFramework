@@ -10,6 +10,17 @@ namespace Framework
 		{
 			#region Public Data
 			public float _targetTolerance = 1f;
+
+			public RectTransform RectTransform
+			{
+				get
+				{
+					if (_rectTransform == null)
+						_rectTransform = (RectTransform)this.transform;
+
+					return _rectTransform;
+				}
+			}
 			#endregion
 
 			#region Private Data
@@ -65,7 +76,7 @@ namespace Framework
 			#region Public Interface
 			public void SetAnchoredPosition(Vector2 anchoredPosition, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				Vector2 currentAnchoredPosition = GetRectTransform().anchoredPosition;
+				Vector2 currentAnchoredPosition = RectTransform.anchoredPosition;
 
 				if (time > 0f)
 				{
@@ -74,13 +85,13 @@ namespace Framework
 				else
 				{
 					_anchorTarget.Clear();
-					GetRectTransform().anchoredPosition = anchoredPosition;
+					RectTransform.anchoredPosition = anchoredPosition;
 				}
 			}
 
 			public void SetOffsetMin(Vector2 offsetMin, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				Vector2 currentOffsetMin = GetRectTransform().offsetMin;
+				Vector2 currentOffsetMin = RectTransform.offsetMin;
 
 				if (time > 0f)
 				{
@@ -89,13 +100,13 @@ namespace Framework
 				else
 				{
 					_offsetMinTarget.Clear();
-					GetRectTransform().offsetMin = offsetMin;
+					RectTransform.offsetMin = offsetMin;
 				}
 			}
 
 			public void SetOffsetMax(Vector2 offsetMax, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				Vector2 currentOffsetMax = GetRectTransform().offsetMax;
+				Vector2 currentOffsetMax = RectTransform.offsetMax;
 
 				if (time > 0f)
 				{
@@ -104,13 +115,13 @@ namespace Framework
 				else
 				{
 					_offsetMaxTarget.Clear();
-					GetRectTransform().offsetMax = offsetMax;
+					RectTransform.offsetMax = offsetMax;
 				}
 			}
 
 			public void SetSizeDelta(Vector2 sizeDelta, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				Vector2 currentSizeDelta = GetRectTransform().sizeDelta;
+				Vector2 currentSizeDelta = RectTransform.sizeDelta;
 
 				if (time > 0f)
 				{
@@ -119,56 +130,48 @@ namespace Framework
 				else
 				{
 					_sizeDeltaTarget.Clear();
-					GetRectTransform().sizeDelta = sizeDelta;
+					RectTransform.sizeDelta = sizeDelta;
 				}
 			}
 
 			public void SetX(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				SetAnchoredPosition(new Vector2(target, GetRectTransform().anchoredPosition.y), time, interpolationType);
+				SetAnchoredPosition(new Vector2(target, RectTransform.anchoredPosition.y), time, interpolationType);
 			}
 
 			public void SetY(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				SetAnchoredPosition(new Vector2(GetRectTransform().anchoredPosition.x, target), time, interpolationType);
+				SetAnchoredPosition(new Vector2(RectTransform.anchoredPosition.x, target), time, interpolationType);
 			}
 
 			public void SetBottom(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				SetOffsetMin(new Vector2(GetRectTransform().offsetMin.x, target), time, interpolationType);
+				SetOffsetMin(new Vector2(RectTransform.offsetMin.x, target), time, interpolationType);
 			}
 
 			public void SetTop(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				SetOffsetMax(new Vector2(GetRectTransform().offsetMax.x, -target), time, interpolationType);
+				SetOffsetMax(new Vector2(RectTransform.offsetMax.x, -target), time, interpolationType);
 			}
 
 			public void SetLeft(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				SetOffsetMin(new Vector2(target, GetRectTransform().offsetMin.y), time, interpolationType);
+				SetOffsetMin(new Vector2(target, RectTransform.offsetMin.y), time, interpolationType);
 			}
 
 			public void SetRight(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				SetOffsetMax(new Vector2(-target, GetRectTransform().offsetMax.y), time, interpolationType);
+				SetOffsetMax(new Vector2(-target, RectTransform.offsetMax.y), time, interpolationType);
 			}
 
 			public void SetWidth(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				SetSizeDelta(new Vector2(target, GetRectTransform().sizeDelta.y), time, interpolationType);
+				SetSizeDelta(new Vector2(target, RectTransform.sizeDelta.y), time, interpolationType);
 			}
 
 			public void SetHeight(float target, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 			{
-				SetSizeDelta(new Vector2(GetRectTransform().sizeDelta.x, target), time, interpolationType);
-			}
-
-			public RectTransform GetRectTransform()
-			{
-				if (_rectTransform == null)
-					_rectTransform = (RectTransform)this.transform;
-
-				return _rectTransform;
+				SetSizeDelta(new Vector2(RectTransform.sizeDelta.x, target), time, interpolationType);
 			}
 			#endregion
 
@@ -177,7 +180,7 @@ namespace Framework
 			{
 				float deltaTime = Time.deltaTime;
 
-				RectTransform rectTransform = GetRectTransform();
+				RectTransform rectTransform = RectTransform;
 
 				if (_anchorTarget.IsLerping())
 				{
