@@ -48,6 +48,7 @@ namespace Framework
 				private const string kEditorPrefsObjectJson = ".Json";
 				private const string kEditorPrefsObjectRefs = ".ObjRefs";
 				private const string kEditorPrefsObjectMaterialRefs = ".Materials";
+				private const string kEditorPrefsRuntimeObjectRefs = ".RuntimeRefs";
 
 				private const char kItemSplitChar = '?';
 				private const char kObjectPathSplitChar = ':';
@@ -63,16 +64,12 @@ namespace Framework
 					public Object _object;
 					public Type _createdObjectType;
 					public Object _parentObject;
+					public GameObject _rootGameObject;
 					public string _json;
 					public string _scenePath;
 					public string _missingObjectRefs;
 					public string _missingMaterials;
-				}
-
-				private struct ObjectRefProperty
-				{
-					public string _propertyPath;
-					public int _objectId;	
+					public string _runtimeInternalRefs;
 				}
 
 				private struct MaterialRef
@@ -579,12 +576,12 @@ namespace Framework
 								//If the new component belongs to a scene object, just save the new component
 								if (component.gameObject == sceneParent)
 								{
-									SaveRuntimeComponent(editorPrefKey, component, sceneParent);
+									SaveRuntimeComponent(editorPrefKey, component, sceneParent,  sceneParent);
 								}
 								//Otherwise need to save the whole new gameobject hierarchy
 								else
 								{
-									SaveRuntimeGameObject(editorPrefKey, topOfHieracy, sceneParent, null);
+									SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
 								}
 							}
 							else if (obj is GameObject gameObject)
@@ -597,19 +594,20 @@ namespace Framework
 									EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, GetInstanceId(topOfHieracy));
 								}
 
-								SaveRuntimeGameObject(editorPrefKey, topOfHieracy, sceneParent, null);
+								SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
 							}
 						}
 					}
 				}
 
-				private static void SaveObjectValues(string editorPrefKey, Object obj)
+				private static void SaveObjectValues(string editorPrefKey, Object obj, bool runtimeObject = false, GameObject runtimeObjectTopOfHeirachy = null)
 				{
-					RestoredObjectData data = GetObjectData(obj);
+					RestoredObjectData data = GetObjectData(obj, runtimeObject, runtimeObjectTopOfHeirachy);
 
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectJson, data._json);
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectRefs, data._missingObjectRefs);
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectMaterialRefs, data._missingMaterials);
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectRefs, data._runtimeInternalRefs);
 				}
 
 				private static bool ShouldUseEditorSerialiser(Object obj)
@@ -620,55 +618,12 @@ namespace Framework
 					return false;
 				}
 
-				private static RestoredObjectData GetObjectData(Object obj)
+				private static RestoredObjectData GetObjectData(Object obj, bool runtimeObject, GameObject runtimeObjectTopOfHierarchy)
 				{
 					RestoredObjectData data = new RestoredObjectData();
 
 					bool unityType = ShouldUseEditorSerialiser(obj);
 
-					List<string> materials = new List<string>();
-					List<ObjectRefProperty> objectProperties = unityType ? new List<ObjectRefProperty>() : null;
-
-					GetSpecialCaseProperties(obj, materials, objectProperties);
-
-					//If Component is a Unity in built type we have to restore any scene links as they won't be serialized by EditorJsonUtility
-					if (unityType)
-					{
-						data._json = EditorJsonUtility.ToJson(obj);
-
-						//Build missing object refs string
-						data._missingObjectRefs = "";
-
-						foreach (ObjectRefProperty prop in objectProperties)
-						{
-							if (!string.IsNullOrEmpty(data._missingObjectRefs))
-								data._missingObjectRefs += kItemSplitChar;
-
-							data._missingObjectRefs += Convert.ToString(prop._objectId) + kObjectPathSplitChar + prop._propertyPath;
-						}
-					}
-					else
-					{
-						data._json = JsonUtility.ToJson(obj);
-						data._missingObjectRefs = "";
-					}
-
-					//Build missing materials string
-					data._missingMaterials = "";
-
-					foreach (string material in materials)
-					{
-						if (!string.IsNullOrEmpty(data._missingMaterials))
-							data._missingMaterials += kItemSplitChar;
-
-						data._missingMaterials += material;
-					}
-
-					return data;
-				}
-
-				private static void GetSpecialCaseProperties(Object obj, List<string> materials, List<ObjectRefProperty> objectProperties)
-				{
 					SerializedObject serializedObject = new SerializedObject(obj);
 					SerializedProperty propertry = serializedObject.GetIterator();
 
@@ -678,30 +633,66 @@ namespace Framework
 						if (propertry.type == "PPtr<Material>")
 						{
 							if (propertry.objectReferenceValue != null && propertry.objectReferenceValue.name.EndsWith("(Instance)"))
-								materials.Add(propertry.propertyPath);
+							{
+								if (!string.IsNullOrEmpty(data._missingMaterials))
+									data._missingMaterials += kItemSplitChar;
+
+								data._missingMaterials += propertry.propertyPath;
+							}
 						}
 						//Save any object ptr properties that point at scene objects
-						else if (objectProperties != null && propertry.type.StartsWith("PPtr<"))
+						else if (propertry.type.StartsWith("PPtr<") && propertry.objectReferenceValue != null)
 						{
-							//Only store the object if the reference is within the same scene 
-							Scene objScne = GetObjectScene(obj);
-
-							if (objScne.IsValid() && objScne == GetObjectScene(propertry.objectReferenceValue))
+							if (unityType)
 							{
-								int objId = GetSceneIdentifier(propertry.objectReferenceValue);
+								//Only store the object if the reference is within the same scene 
+								Scene objScne = GetObjectScene(obj);
 
-								if (objId != -1)
+								if (objScne.IsValid() && objScne == GetObjectScene(propertry.objectReferenceValue))
 								{
-									ObjectRefProperty objRef = new ObjectRefProperty
+									int objId = GetSceneIdentifier(propertry.objectReferenceValue);
+
+									if (objId != -1)
 									{
-										_objectId = objId,
-										_propertyPath = propertry.propertyPath
-									};
-									objectProperties.Add(objRef);
+										if (!string.IsNullOrEmpty(data._missingObjectRefs))
+											data._missingObjectRefs += kItemSplitChar;
+
+										data._missingObjectRefs += Convert.ToString(objId) + kObjectPathSplitChar + propertry.propertyPath;
+									}
+								}
+							}
+
+							if (runtimeObject)
+							{
+								//If object ref is part of hierachy then need to tsav
+								if (GetChildObjectPath(string.Empty, runtimeObjectTopOfHierarchy, propertry.objectReferenceValue, false, out string path))
+								{
+									if (!string.IsNullOrEmpty(data._runtimeInternalRefs))
+										data._runtimeInternalRefs += kItemSplitChar;
+
+									data._runtimeInternalRefs += path + kObjectPathSplitChar + propertry.propertyPath;
 								}
 							}
 						}
 					}
+
+					//If Object is a Unity builtin Component we have to restore any scene links as they won't be serialized by EditorJsonUtility
+					if (unityType)
+					{
+						data._json = EditorJsonUtility.ToJson(obj);
+					}
+					else
+					{
+						data._json = JsonUtility.ToJson(obj);
+					}
+
+					//If Object is a runtime component then need to save any internal object refs (refs poiting at other runtime objects in the same hierachy)
+					if (runtimeObject)
+					{
+						//Find 
+					}
+
+					return data;
 				}
 
 				#region Scene Objects
@@ -776,7 +767,7 @@ namespace Framework
 							int instanceId = GetInstanceId(components[i]);
 							string scenePath = gameObject.scene.path;
 							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
-							SaveRuntimeComponent(editorPrefKey, components[i], gameObject);
+							SaveRuntimeComponent(editorPrefKey, components[i], gameObject, gameObject);
 						}
 					}
 
@@ -797,7 +788,7 @@ namespace Framework
 							int instanceId = GetInstanceId(child.gameObject);
 							string scenePath = gameObject.scene.path;
 							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
-							SaveRuntimeGameObject(editorPrefKey, child.gameObject, gameObject, null);
+							SaveRuntimeGameObject(editorPrefKey, child.gameObject, child.gameObject, gameObject, null);
 						}
 					}
 				}
@@ -812,7 +803,7 @@ namespace Framework
 
 						if (prefabInstance != null)
 						{
-							return GetScenePrefabChildObject(prefabInstance, prefabObjPath);
+							return GetChildObject(prefabInstance, prefabObjPath);
 						}
 					}
 
@@ -866,10 +857,10 @@ namespace Framework
 					return null;
 				}
 
-				private static void SaveRuntimeGameObject(string editorPrefKey, GameObject gameObject, GameObject parentSceneObject, GameObject parentPrefab)
+				private static void SaveRuntimeGameObject(string editorPrefKey, GameObject gameObject, GameObject topOfHieracy, GameObject parentSceneObject, GameObject parentPrefab)
 				{
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectType, GetTypeString(gameObject.GetType()));
-					SaveObjectValues(editorPrefKey, gameObject);
+					SaveObjectValues(editorPrefKey, gameObject, true, topOfHieracy);
 
 					SaveRuntimeGameObjectParent(editorPrefKey, gameObject, parentSceneObject);
 
@@ -893,7 +884,7 @@ namespace Framework
 					{
 						bool isPartOfCurrentPrefabHieracy = parentPrefab != null && PrefabUtility.GetNearestPrefabInstanceRoot(components[i]) == parentPrefab;
 
-						SaveRuntimeComponent(editorPrefKey + "." + Convert.ToString(childObjectIndex), components[i], null);
+						SaveRuntimeComponent(editorPrefKey + "." + Convert.ToString(childObjectIndex), components[i], topOfHieracy, null);
 
 						if (isPartOfCurrentPrefabHieracy)
 							EditorPrefs.SetInt(editorPrefKey + "." + Convert.ToString(childObjectIndex) + kEditorPrefsRuntimeObjectPrefabObjIndex, GetPrefabComponentIndex(parentPrefab, components[i]));
@@ -905,19 +896,21 @@ namespace Framework
 					{
 						bool isPartOfCurrentPrefabHieracy = parentPrefab != null && PrefabUtility.GetNearestPrefabInstanceRoot(child.gameObject) == parentPrefab;
 
-						SaveRuntimeGameObject(editorPrefKey + "." + Convert.ToString(childObjectIndex), child.gameObject, null, isPartOfCurrentPrefabHieracy ? parentPrefab : null);
+						SaveRuntimeGameObject(editorPrefKey + "." + Convert.ToString(childObjectIndex), child.gameObject, topOfHieracy, null, isPartOfCurrentPrefabHieracy ? parentPrefab : null);
 
 						if (isPartOfCurrentPrefabHieracy)
 							EditorPrefs.SetInt(editorPrefKey + "." + Convert.ToString(childObjectIndex) + kEditorPrefsRuntimeObjectPrefabObjIndex, GetPrefabChildIndex(parentPrefab, child.gameObject));
 
 						childObjectIndex++;
 					}
+
+					//If a component contains object ref and ref is part of this runtime objects heiracy then save a ref to it somehow?
 				}
 
-				private static void SaveRuntimeComponent(string editorPrefKey, Component component, GameObject parentSceneObject)
+				private static void SaveRuntimeComponent(string editorPrefKey, Component component, GameObject topOfHieracy, GameObject parentSceneObject)
 				{
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectType, GetTypeString(component.GetType()));
-					SaveObjectValues(editorPrefKey, component);
+					SaveObjectValues(editorPrefKey, component, true, topOfHieracy);
 					SaveRuntimeGameObjectParent(editorPrefKey, component.gameObject, parentSceneObject);
 				}
 
@@ -1020,16 +1013,7 @@ namespace Framework
 									if (obj != null)
 									{
 										restoredObjects.Add(obj);
-
-										RestoredObjectData data = new RestoredObjectData
-										{
-											_object = obj,
-											_json = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson),
-											_scenePath = sceneStr,
-											_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
-											_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs)
-										};
-										restoredObjectsData.Add(data);
+										restoredObjectsData.Add(CreateSceneObjectRestoredData(editorPrefKey, obj, sceneStr));
 									}
 								}
 								//Normal Scene object
@@ -1042,16 +1026,7 @@ namespace Framework
 									if (obj != null)
 									{
 										restoredObjects.Add(obj);
-
-										RestoredObjectData data = new RestoredObjectData
-										{
-											_object = obj,
-											_json = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson),
-											_scenePath = sceneStr,
-											_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
-											_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs)
-										};
-										restoredObjectsData.Add(data);
+										restoredObjectsData.Add(CreateSceneObjectRestoredData(editorPrefKey, obj, sceneStr));
 									}
 								}
 							}
@@ -1063,6 +1038,7 @@ namespace Framework
 								Type objType = GetType(typeStr);
 								GameObject parentObj = GetRuntimeObjectParent(editorPrefKey, sceneStr, true) as GameObject;
 
+								//New runtime gameobject hierachy
 								if (objType == typeof(GameObject))
 								{
 									GameObject gameObject = null;
@@ -1101,38 +1077,28 @@ namespace Framework
 										gameObject.transform.SetSiblingIndex(sceneRootIndex);
 									}
 
-									//Restore the game objects data
-									RestoredObjectData data = new RestoredObjectData
+									List<RestoredObjectData> runtimeRestoredObjects = new List<RestoredObjectData>
 									{
-										_object = gameObject,
-										_json = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson),
-										_scenePath = sceneStr,
-										_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
-										_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs)
+										CreateRuntimeObjectRestoredData(editorPrefKey, gameObject, gameObject, sceneStr)
 									};
-									RestoreObjectFromData(data);
 
-									//Then restore all its children
-									gameObject = RestoreRuntimeGameObject(gameObject, editorPrefKey, sceneStr, isPrefab ? gameObject : null);
+									//Create the new objects heirachy
+									gameObject = RestoreRuntimeGameObject(gameObject, editorPrefKey, sceneStr, gameObject, runtimeRestoredObjects);
 
+									//Then restore all the new objects data
+									for (int j = 0; j < runtimeRestoredObjects.Count; j++)
+									{
+										RestoreObjectFromData(runtimeRestoredObjects[j]);
+									}
+									
 									Undo.RegisterCreatedObjectUndo(gameObject, kUndoText);
 								}
+								//New runtime component on an existing scene object
 								else if (typeof(Component).IsAssignableFrom(objType))
 								{
 									if (parentObj != null)
 									{
-										RestoredObjectData data = new RestoredObjectData
-										{
-											_object = null,
-											_createdObjectType = objType,
-											_parentObject = parentObj,
-											_json = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson),
-											_scenePath = sceneStr,
-											_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
-											_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs)
-										};
-
-										restoredObjectsData.Add(data);
+										restoredObjectsData.Add(CreateRuntimeCopmonentRestoredData(editorPrefKey, objType, parentObj, sceneStr));
 									}
 								}
 							}
@@ -1183,6 +1149,9 @@ namespace Framework
 						{
 							JsonUtility.FromJsonOverwrite(data._json, data._object);
 						}
+
+						//Apply runtime internal refs
+						ApplyRuntimeObjectRefs(data._object, data._rootGameObject, data._runtimeInternalRefs);
 
 						//Revert any lost material refs
 						ApplyMaterialsRefs(data._object, materialRefs);
@@ -1250,6 +1219,32 @@ namespace Framework
 					serializedObject.ApplyModifiedPropertiesWithoutUndo();
 				}
 
+				private static void ApplyRuntimeObjectRefs(Object obj, GameObject rootGameObject, string objectRefStr)
+				{
+					SerializedObject serializedObject = new SerializedObject(obj);
+					string[] objectRefs = objectRefStr.Split(kItemSplitChar);
+
+					foreach (string objectRef in objectRefs)
+					{
+						int split = objectRef.IndexOf(kObjectPathSplitChar);
+
+						if (split != -1)
+						{
+							string runtimeHierarchyPath = objectRef.Substring(0, split);
+							string objPath = objectRef.Substring(split + 1, objectRef.Length - split - 1);
+							
+							SerializedProperty localIdProp = serializedObject.FindProperty(objPath);
+
+							if (localIdProp != null)
+							{
+								localIdProp.objectReferenceValue = GetChildObject(rootGameObject, runtimeHierarchyPath);
+							}
+						}
+					}
+
+					serializedObject.ApplyModifiedPropertiesWithoutUndo();
+				}
+
 				private static void ApplyMaterialsRefs(Object obj, List<MaterialRef> materialRefs)
 				{
 					SerializedObject serializedObject = new SerializedObject(obj);
@@ -1294,8 +1289,58 @@ namespace Framework
 					}
 				}
 
+				#region Scene Objects
+				private static RestoredObjectData CreateSceneObjectRestoredData(string editorPrefKey, Object obj, string sceneStr)
+				{
+					return new RestoredObjectData
+					{
+						_object = obj,
+						_createdObjectType = null,
+						_parentObject = null,
+						_rootGameObject = null,
+						_json = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson),
+						_scenePath = sceneStr,
+						_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
+						_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs),
+						_runtimeInternalRefs = null
+					};
+				}
+				#endregion
+
 				#region Runtime Objects
-				private static GameObject RestoreRuntimeGameObject(GameObject gameObject, string editorPrefKey, string sceneStr, GameObject prefabRoot)
+				private static RestoredObjectData CreateRuntimeObjectRestoredData(string editorPrefKey, Object obj, GameObject rootObject, string sceneStr)
+				{
+					return new RestoredObjectData
+					{
+						_object = obj,
+						_createdObjectType = null,
+						_parentObject = null,
+						_rootGameObject = rootObject,
+						_json = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson),
+						_scenePath = sceneStr,
+						_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
+						_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs),
+						_runtimeInternalRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectRefs)
+					};
+				}
+
+				private static RestoredObjectData CreateRuntimeCopmonentRestoredData(string editorPrefKey, Type componentType, GameObject parentGameObject, string sceneStr)
+				{
+					return new RestoredObjectData
+					{
+						_object = null,
+						_createdObjectType = componentType,
+						_parentObject = parentGameObject,
+						_rootGameObject = null,
+						_json = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectJson),
+						_scenePath = sceneStr,
+						_missingObjectRefs = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectRefs),
+						_missingMaterials = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectMaterialRefs),
+						_runtimeInternalRefs = null
+					};
+				}
+
+				private static GameObject RestoreRuntimeGameObject(GameObject gameObject, string editorPrefKey, string sceneStr, GameObject runtimeObjectRoot, List<RestoredObjectData> restoredObjectsData)
 				{
 					int childIndex = 0;
 					string childeditorPrefKey;
@@ -1317,7 +1362,7 @@ namespace Framework
 							if (EditorPrefs.HasKey(childeditorPrefKey + kEditorPrefsRuntimeObjectPrefabObjIndex))
 							{
 								int componentIndex = EditorPrefs.GetInt(childeditorPrefKey + kEditorPrefsRuntimeObjectPrefabObjIndex, -1);
-								obj = GetPrefabComponent(prefabRoot, gameObject, objType, componentIndex);
+								obj = GetPrefabComponent(runtimeObjectRoot, gameObject, objType, componentIndex);
 							}
 
 							if (obj == null)
@@ -1339,7 +1384,7 @@ namespace Framework
 								{
 									childGameObject = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
 									childGameObject.transform.parent = gameObject.transform;
-									prefabRoot = childGameObject;
+									runtimeObjectRoot = childGameObject;
 								}
 							}
 
@@ -1347,7 +1392,7 @@ namespace Framework
 							if (EditorPrefs.HasKey(childeditorPrefKey + kEditorPrefsRuntimeObjectPrefabObjIndex))
 							{
 								int childGameObjectIndex = EditorPrefs.GetInt(childeditorPrefKey + kEditorPrefsRuntimeObjectPrefabObjIndex, -1);
-								childGameObject = GetPrefabChild(prefabRoot, gameObject, childGameObjectIndex);
+								childGameObject = GetPrefabChild(runtimeObjectRoot, gameObject, childGameObjectIndex);
 							}
 
 							if (childGameObject == null)
@@ -1357,20 +1402,11 @@ namespace Framework
 							}
 
 							obj = childGameObject;
-							RestoreRuntimeGameObject(childGameObject, childeditorPrefKey, sceneStr, prefabRoot);
+							RestoreRuntimeGameObject(childGameObject, childeditorPrefKey, sceneStr, runtimeObjectRoot, restoredObjectsData);
 						}
 
-						RestoredObjectData data = new RestoredObjectData
-						{
-							_object = obj,
-							_json = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectJson),
-							_scenePath = sceneStr,
-							_missingObjectRefs = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectRefs),
-							_missingMaterials = EditorPrefs.GetString(childeditorPrefKey + kEditorPrefsObjectMaterialRefs)
-						};
-
-						RestoreObjectFromData(data);
-
+						restoredObjectsData.Add(CreateRuntimeObjectRestoredData(childeditorPrefKey, obj, runtimeObjectRoot, sceneStr));
+						
 						DeleteObjectEditorPrefs(childeditorPrefKey);
 
 						childIndex++;
@@ -1394,6 +1430,7 @@ namespace Framework
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectJson);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectRefs);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectMaterialRefs);
+					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectRefs);
 				}
 				#endregion
 
@@ -1415,122 +1452,12 @@ namespace Framework
 
 				private static string GetScenePrefabChildObjectPath(GameObject prefab, Object obj)
 				{
-					string path;
-
-					GetScenePrefabChildObjectPath(string.Empty, prefab, obj, out path);
-
-					return path;
-				}
-
-				private static bool GetScenePrefabChildObjectPath(string path, GameObject prefabGameObject, Object obj, out string fullPath)
-				{
-					//Check gameobject itself matches object
-					if (prefabGameObject == obj)
+					if (GetChildObjectPath(string.Empty, prefab, obj, true, out string path))
 					{
-						fullPath = path;
-						return true;
+						return path;
 					}
 
-					//Check any of the gameobjects components matches object
-					Component[] components = prefabGameObject.GetComponents<Component>();
-					int componentIndex = 0;
-
-					for (int i = 0; i < components.Length; i++)
-					{
-						//Only index scene components (not ones created at runtime)
-						int identifier = GetSceneIdentifier(obj);
-
-						if (identifier != -1)
-						{
-							if (components[i] == obj)
-							{
-								fullPath = path + '.' + Convert.ToString(componentIndex);
-								return true;
-							}
-
-							componentIndex++;
-						}
-					}
-
-					//Check any of the child's children matches object
-					int childIndex = 0;
-
-					foreach (Transform child in prefabGameObject.transform)
-					{
-						//Only index scene gameobjects (not ones created at runtime)
-						int identifier = GetSceneIdentifier(child.gameObject);
-
-						if (identifier != -1)
-						{
-							string childPath = path + '[' + Convert.ToString(childIndex) + ']';
-
-							//Check this child's children
-							if (GetScenePrefabChildObjectPath(childPath, child.gameObject, obj, out fullPath))
-								return true;
-
-							childIndex++;
-						}
-
-					}
-
-					fullPath = string.Empty;
-					return false;
-				}
-
-				private static Object GetScenePrefabChildObject(GameObject prefabGameObject, string path)
-				{
-					if (string.IsNullOrEmpty(path))
-						return prefabGameObject;
-					
-					GameObject gameObject = prefabGameObject;
-					int j = 0;
-
-					while (j < path.Length)
-					{
-						int i = path.IndexOf('[', j);
-
-						if (i == -1)
-							break;
-						
-						j = path.IndexOf(']', i);
-
-						if (j == -1)
-							break;
-
-						string childIndexStr = path.Substring(i + 1, j - i - 1);
-						int childIndex = SafeConvertToInt(childIndexStr);
-
-						if (childIndex >= 0 && childIndex < gameObject.transform.childCount)
-						{
-							gameObject = gameObject.transform.GetChild(childIndex).gameObject;
-						}
-						else
-						{
-							return null;
-						}
-					}
-
-					int dotIndex = path.LastIndexOf('.');
-
-					if (dotIndex != -1)
-					{
-						int componentIndex = SafeConvertToInt(path.Substring(dotIndex + 1));
-
-						Component[] components = gameObject.GetComponents<Component>();
-
-						if (componentIndex >= 0 && componentIndex < components.Length)
-						{
-							return components[componentIndex];
-						}
-						else
-						{
-							return null;
-						}
-					}
-					else
-					{
-						return gameObject;
-					}
+					return string.Empty;
 				}
 				#endregion
 
@@ -1765,6 +1692,113 @@ namespace Framework
 
 					_state = State.Idle;
 				}
+
+
+				private static bool GetChildObjectPath(string path, GameObject rootObject, Object obj, bool sceneObjectsOnly, out string fullPath)
+				{
+					//Check gameobject itself matches object
+					if (rootObject == obj)
+					{
+						fullPath = path;
+						return true;
+					}
+
+					//Check any of the gameobjects components matches object
+					Component[] components = rootObject.GetComponents<Component>();
+					int componentIndex = 0;
+
+					for (int i = 0; i < components.Length; i++)
+					{
+						if (!sceneObjectsOnly || GetSceneIdentifier(obj) != -1)
+						{
+							if (components[i] == obj)
+							{
+								fullPath = path + '.' + Convert.ToString(componentIndex);
+								return true;
+							}
+
+							componentIndex++;
+						}
+					}
+
+					//Check any of the child's children matches object
+					int childIndex = 0;
+
+					foreach (Transform child in rootObject.transform)
+					{
+						//Only index scene gameobjects (not ones created at runtime)
+						if (!sceneObjectsOnly || GetSceneIdentifier(obj) != -1)
+						{
+							string childPath = path + '[' + Convert.ToString(childIndex) + ']';
+
+							//Check this child's children
+							if (GetChildObjectPath(childPath, child.gameObject, obj, sceneObjectsOnly, out fullPath))
+								return true;
+
+							childIndex++;
+						}
+
+					}
+
+					fullPath = string.Empty;
+					return false;
+				}
+
+				private static Object GetChildObject(GameObject rootObject, string path)
+				{
+					if (string.IsNullOrEmpty(path))
+						return rootObject;
+
+					GameObject gameObject = rootObject;
+					int j = 0;
+
+					while (j < path.Length)
+					{
+						int i = path.IndexOf('[', j);
+
+						if (i == -1)
+							break;
+
+						j = path.IndexOf(']', i);
+
+						if (j == -1)
+							break;
+
+						string childIndexStr = path.Substring(i + 1, j - i - 1);
+						int childIndex = SafeConvertToInt(childIndexStr);
+
+						if (childIndex >= 0 && childIndex < gameObject.transform.childCount)
+						{
+							gameObject = gameObject.transform.GetChild(childIndex).gameObject;
+						}
+						else
+						{
+							return null;
+						}
+					}
+
+					int dotIndex = path.LastIndexOf('.');
+
+					if (dotIndex != -1)
+					{
+						int componentIndex = SafeConvertToInt(path.Substring(dotIndex + 1));
+
+						Component[] components = gameObject.GetComponents<Component>();
+
+						if (componentIndex >= 0 && componentIndex < components.Length)
+						{
+							return components[componentIndex];
+						}
+						else
+						{
+							return null;
+						}
+					}
+					else
+					{
+						return gameObject;
+					}
+				}
 				#endregion
 
 				#region Editor Window
@@ -1776,7 +1810,7 @@ namespace Framework
 					private const float kMinNameWidth = 50f;
 					private static readonly GUIContent kClearButton = new GUIContent("\u2716", "Forget object changes");
 					private static readonly GUIContent kClearAllButton = new GUIContent("\u2716 Clear All");
-					private static readonly GUIContent kObjectNameLabel = new GUIContent("Name");
+					private static readonly GUIContent kObjectNameLabel = new GUIContent("Object");
 					private static readonly GUIContent kObjectTypeLabel = new GUIContent("Type");
 					private static readonly GUIContent kObjectPathLabel = new GUIContent("Path");
 					private static readonly GUIContent kNoObjectsLabel = new GUIContent("Either right click on any Game Object or Component and click 'Save Play Mode Changes'\nor drag any Game Object or Component into this window.");
