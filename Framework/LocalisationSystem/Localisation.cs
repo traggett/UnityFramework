@@ -516,7 +516,7 @@ namespace Framework
 								}
 								else if (Application.isPlaying)
 								{
-									UnityEngine.Debug.LogError("Can't find variable to replace key '" + variableKey + "'");
+									UnityEngine.Debug.LogWarning("Can't find variable to replace key '" + variableKey + "'");
 								}
 							}
 						}
