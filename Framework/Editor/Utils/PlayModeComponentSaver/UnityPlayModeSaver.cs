@@ -505,6 +505,8 @@ namespace Framework
 						numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 					}
 
+					_savedObjects.Clear();
+
 					_state = State.Idle;
 				}
 
@@ -960,6 +962,8 @@ namespace Framework
 				private static void RestoreSavedObjects()
 				{
 					_state = State.Busy;
+
+
 					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 
 					List<Object> restoredObjects = new List<Object>();
@@ -1661,6 +1665,8 @@ namespace Framework
 
 				private static void ClearCache()
 				{
+					_savedObjects.Clear();
+
 					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 
 					for (int i = 0; i < numSavedObjects; i++)
@@ -1943,23 +1949,90 @@ namespace Framework
 
 					private void DrawTable()
 					{
-						//List of all currentlyh saved objects with buttons to clear
 						_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
 						{
-							int drawnObjects = 0;
+							bool drawnObject = false;
 
-							foreach (Object obj in _savedObjects)
+							for (int i=0; i<_savedObjects.Count;)
 							{
-								if (DrawObjectGUI(obj))
-									drawnObjects++;
+								if (_savedObjects[i] is GameObject gameObject)
+								{
+									string name = gameObject.name;
+									string type = "Game Object";
+									string path = GetGameObjectPath(gameObject);
+
+									drawnObject = true;
+
+									if (DrawObjectGUI(_savedObjects[i], name, type, path))
+									{
+										_savedObjects.RemoveAt(i);
+										_needsRepaint = true;
+									}
+									else
+									{
+										i++;
+									}
+								}
+								else if (_savedObjects[i] is Component component)
+								{
+									string type = component.GetType().Name;
+									string name = component.gameObject.name + '.' + type;
+									string path = GetGameObjectPath(component.gameObject) + '.' + type;
+
+									drawnObject = true;
+
+									if (DrawObjectGUI(_savedObjects[i], name, type, path))
+									{
+										_savedObjects.RemoveAt(i);
+										_needsRepaint = true;
+									}
+									else
+									{
+										i++;
+									}
+								}
+								else
+								{
+									i++;
+								}
 							}
 
-							if (drawnObjects == 0)
+							if (!drawnObject)
 							{
 								EditorGUILayout.LabelField(kNoObjectsLabel, _noObjectsStyle, GUILayout.ExpandHeight(true));
 							}
 						}
 						EditorGUILayout.EndScrollView();
+					}
+
+					private bool DrawObjectGUI(Object obj, string name, string type, string path)
+					{
+						bool itemRemoved = false;
+
+						//Draw Name (GameoBject name or GameobjectName.Component), then path
+						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+						{
+							if (GUILayout.Button(kClearButton, EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
+							{
+								itemRemoved = true;
+							}
+
+							if (GUILayout.Button(new GUIContent(EditorGUIUtility.FindTexture("animationvisibilitytoggleon"), kFindButtonToolTip), EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
+							{
+								FocusOnObject(obj);
+							}
+
+							GUILayout.Space(kItemSpacing);
+							GUILayout.Label(name, _itemStyle, GUILayout.Width(_nameWidth - kItemSpacing * 1.5f));
+							GUILayout.Space(kItemSpacing);
+							GUILayout.Label(type, _itemStyle, GUILayout.Width(_typeWidth - kItemSpacing * 1f));
+							GUILayout.Space(kItemSpacing);
+							GUILayout.Label(path, _itemStyle, GUILayout.ExpandWidth(true));
+							GUILayout.Space(kItemSpacing);
+						}
+						EditorGUILayout.EndHorizontal();
+
+						return itemRemoved;
 					}
 
 					private void DrawBottomButton()
@@ -2079,60 +2152,6 @@ namespace Framework
 								}
 								break;
 						}
-					}
-
-					private bool DrawObjectGUI(Object obj)
-					{
-						if (obj == null)
-							return false;
-
-						string name, path, type;
-
-						if (obj is GameObject gameObject)
-						{
-							name = gameObject.name;
-							type = "Game Object";
-							path = GetGameObjectPath(gameObject);
-						}
-						else if (obj is Component component)
-						{
-							type = component.GetType().Name;
-							name = component.gameObject.name + '.' + type;
-							path = GetGameObjectPath(component.gameObject) + '.' + type;
-						}
-						else
-						{
-							name = kUnknownObj;
-							path = kUnknownObj;
-							type = kUnknownObj;
-						}
-
-						//Draw Name (GameoBject name or GameobjectName.Component), then path
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-						{
-							if (GUILayout.Button(kClearButton, EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
-							{
-								//Remove item for saved objects
-								_savedObjects.Remove(obj);
-								_needsRepaint = true;
-							}
-
-							if (GUILayout.Button(new GUIContent(EditorGUIUtility.FindTexture("animationvisibilitytoggleon"), kFindButtonToolTip), EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
-							{
-								FocusOnObject(obj);
-							}
-
-							GUILayout.Space(kItemSpacing);
-							GUILayout.Label(name, _itemStyle, GUILayout.Width(_nameWidth - kItemSpacing * 1.5f));
-							GUILayout.Space(kItemSpacing);
-							GUILayout.Label(type, _itemStyle, GUILayout.Width(_typeWidth - kItemSpacing * 1f));
-							GUILayout.Space(kItemSpacing);
-							GUILayout.Label(path, _itemStyle, GUILayout.ExpandWidth(true));
-							GUILayout.Space(kItemSpacing);
-						}
-						EditorGUILayout.EndHorizontal();
-
-						return true;
 					}
 
 					private void RenderResizer(ref Rect rect)
