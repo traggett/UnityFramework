@@ -70,7 +70,9 @@ namespace Framework
 					StopCoroutine(_process);
 					_process = null;
 				}
-				
+
+				_current = null;
+				_next = null;
 				_state = State.NotRunning;
 			}
 
