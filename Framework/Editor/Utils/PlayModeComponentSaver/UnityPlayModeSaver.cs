@@ -1046,6 +1046,7 @@ namespace Framework
 										restoredObjects.Add(obj);
 										restoredObjectsData.Add(CreateSceneObjectRestoredData(editorPrefKey, obj, sceneStr));
 
+										//If its a game object also restore any saved child objects
 										if (obj is GameObject gameObject)
 										{
 											RestoreSavedObjectChildren(editorPrefKey, gameObject, sceneStr, ref restoredObjects, ref restoredObjectsData);
@@ -1064,6 +1065,7 @@ namespace Framework
 										restoredObjects.Add(obj);
 										restoredObjectsData.Add(CreateSceneObjectRestoredData(editorPrefKey, obj, sceneStr));
 
+										//If its a game object also restore any saved child objects
 										if (obj is GameObject gameObject)
 										{
 											RestoreSavedObjectChildren(editorPrefKey, gameObject, sceneStr, ref restoredObjects, ref restoredObjectsData);
