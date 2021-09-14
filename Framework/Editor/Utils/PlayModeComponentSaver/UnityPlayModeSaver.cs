@@ -345,13 +345,10 @@ namespace Framework
 				}
 
 				#region Scene Objects
-				private static int RegisterSceneObject(Object obj, string scenePath, int identifier)
+				private static string RegisterSceneObject(Object obj, string scenePath, int identifier)
 				{
-					GameObject prefab;
-					int prefabSceneId;
-
 					//Check scene object is a prefab instance...
-					if (IsScenePrefab(obj, scenePath, out prefab, out prefabSceneId))
+					if (IsScenePrefab(obj, scenePath, out GameObject prefab, out int prefabSceneId))
 					{
 						return RegisterScenePrefabObject(scenePath, identifier, prefab, prefabSceneId, obj);
 					}
@@ -369,11 +366,11 @@ namespace Framework
 						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
 						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
 
-						return saveObjIndex;
+						return editorPrefKey;
 					}
 				}
 
-				private static int RegisterDeletedSceneObject(string scenePath, int identifier)
+				private static string RegisterDeletedSceneObject(string scenePath, int identifier)
 				{
 					int saveObjIndex = GetSavedSceneObjectIndex(identifier, scenePath);
 
@@ -388,7 +385,7 @@ namespace Framework
 					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
 					EditorPrefs.SetBool(editorPrefKey + kEditorPrefsObjectDeleted, true);
 					
-					return saveObjIndex;
+					return editorPrefKey;
 				}
 
 				private static int GetSavedSceneObjectIndex(int localIdentifier, string scenePath)
@@ -425,7 +422,7 @@ namespace Framework
 					return false;
 				}
 
-				private static int RegisterScenePrefabObject(string scenePath, int identifier, GameObject prefabInstance, int prefabSceneId, Object obj)
+				private static string RegisterScenePrefabObject(string scenePath, int identifier, GameObject prefabInstance, int prefabSceneId, Object obj)
 				{
 					string prefabObjPath = GetScenePrefabChildObjectPath(prefabInstance, obj);
 
@@ -443,7 +440,7 @@ namespace Framework
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath, prefabObjPath);
 					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, prefabSceneId);
 
-					return saveObjIndex;
+					return editorPrefKey;
 				}
 
 				private static int GetSavedScenePrefabObjectIndex(int localIdentifier, string scenePath, string prefabPath, int prefabId)
@@ -470,7 +467,7 @@ namespace Framework
 				#endregion
 
 				#region Runtime Objects
-				private static int RegisterRuntimeObject(string scenePath, int instanceId)
+				private static string RegisterRuntimeObject(string scenePath, int instanceId)
 				{
 					int saveObjIndex = GetSavedRuntimeObjectIndex(instanceId, scenePath);
 
@@ -484,7 +481,7 @@ namespace Framework
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
 					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, instanceId);
 
-					return saveObjIndex;
+					return editorPrefKey;
 				}
 
 				private static int GetSavedRuntimeObjectIndex(int instanceId, string scenePath)
@@ -515,17 +512,24 @@ namespace Framework
 				{
 					_state = State.Busy;
 
-					//Regiester all saved objects (might also add children)
+					//Save all saved objects into editor prefs (might also add children)
 					foreach (SavedObject obj in _savedObjects)
 					{
-						//Regiester scene object
+						//Save scene object
 						if (obj._sceneIdentifier != -1)
 						{
 							//Object is still valid
 							if (obj._object != null)
 							{
-								int saveObjIndex = RegisterSceneObject(obj._object, obj._scenePath, obj._sceneIdentifier);
-								SaveObjectValues(saveObjIndex);
+								string editorPrefKey = RegisterSceneObject(obj._object, obj._scenePath, obj._sceneIdentifier);
+								
+								SaveObjectValues(editorPrefKey, obj._object);
+
+								//If its a GameObject then add its components and child GameObjects (some of which might be runtime)
+								if (obj._object is GameObject gameObject)
+								{
+									AddSceneGameObjectChildObjectValues(gameObject);
+								}
 							}
 							//Object has been deleted
 							else
@@ -533,15 +537,46 @@ namespace Framework
 								RegisterDeletedSceneObject(obj._scenePath, obj._sceneIdentifier);
 							}				
 						}
-						//Regiester runtime object
+						//Save runtime object
 						else
 						{
 							//Object is still valid
 							if (obj._object != null)
 							{
 								int instanceId = GetInstanceId(obj._object);
-								int saveObjIndex = RegisterRuntimeObject(obj._scenePath, instanceId);
-								SaveObjectValues(saveObjIndex);
+								string editorPrefKey = RegisterRuntimeObject(obj._scenePath, instanceId);
+								
+								GameObject sceneParent;
+								GameObject topOfHieracy;
+
+								if (obj._object is Component component)
+								{
+									topOfHieracy = component.gameObject;
+									FindRuntimeObjectParent(component.gameObject, out sceneParent, ref topOfHieracy);
+
+									//If the new component belongs to a scene object, just save the new component
+									if (component.gameObject == sceneParent)
+									{
+										SaveRuntimeComponent(editorPrefKey, component, sceneParent, sceneParent);
+									}
+									//Otherwise need to save the whole new gameobject hierarchy
+									else
+									{
+										SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
+									}
+								}
+								else if (obj._object is GameObject gameObject)
+								{
+									topOfHieracy = gameObject;
+									FindRuntimeObjectParent(gameObject, out sceneParent, ref topOfHieracy);
+
+									if (topOfHieracy != gameObject)
+									{
+										EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, GetInstanceId(topOfHieracy));
+									}
+
+									SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
+								}
 							}
 						}
 					}
@@ -549,73 +584,6 @@ namespace Framework
 					_savedObjects.Clear();
 
 					_state = State.Idle;
-				}
-
-				private static void SaveObjectValues(int saveObjIndex)
-				{
-					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
-					string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
-
-					//Scene object
-					if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectSceneId))
-					{
-						int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsObjectSceneId, -1);
-
-						Object obj = FindSceneObject(sceneStr, identifier);
-
-						if (obj != null)
-						{
-							SaveObjectValues(editorPrefKey, obj);
-
-							//If its a GameObject then add its components and child GameObjects (some of which might be runtime)
-							if (obj is GameObject gameObject)
-							{
-								AddSceneGameObjectChildObjectValues(gameObject);
-							}
-						}
-					}
-					//Runtime object
-					else if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsRuntimeObjectId))
-					{
-						int instanceId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, -1);
-
-						Object obj = FindRuntimeObject(sceneStr, instanceId);
-
-						if (obj != null)
-						{
-							GameObject sceneParent;
-							GameObject topOfHieracy;
-
-							if (obj is Component component)
-							{
-								topOfHieracy = component.gameObject;
-								FindRuntimeObjectParent(component.gameObject, out sceneParent, ref topOfHieracy);
-
-								//If the new component belongs to a scene object, just save the new component
-								if (component.gameObject == sceneParent)
-								{
-									SaveRuntimeComponent(editorPrefKey, component, sceneParent,  sceneParent);
-								}
-								//Otherwise need to save the whole new gameobject hierarchy
-								else
-								{
-									SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
-								}
-							}
-							else if (obj is GameObject gameObject)
-							{
-								topOfHieracy = gameObject;
-								FindRuntimeObjectParent(gameObject, out sceneParent, ref topOfHieracy);
-
-								if (topOfHieracy != gameObject)
-								{
-									EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, GetInstanceId(topOfHieracy));
-								}
-
-								SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
-							}
-						}
-					}
 				}
 
 				private static void SaveObjectValues(string editorPrefKey, Object obj, bool runtimeObject = false, GameObject runtimeObjectTopOfHeirachy = null)
@@ -771,16 +739,14 @@ namespace Framework
 						if (identifier != -1)
 						{
 							//Need to check is scene prefab instance
-							int saveObjIndex = RegisterSceneObject(components[i], gameObject.scene.path, identifier);
-							string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
+							string editorPrefKey = RegisterSceneObject(components[i], gameObject.scene.path, identifier);
 							SaveObjectValues(editorPrefKey, components[i]);
 						}
 						else
 						{
 							int instanceId = GetInstanceId(components[i]);
 							string scenePath = gameObject.scene.path;
-							int saveObjIndex = RegisterRuntimeObject(scenePath, instanceId);
-							string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
+							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
 							SaveRuntimeComponent(editorPrefKey, components[i], gameObject, gameObject);
 						}
 					}
@@ -793,8 +759,7 @@ namespace Framework
 						if (identifier != -1)
 						{
 							//Need to check is scene prefab instance
-							int saveObjIndex = RegisterSceneObject(child.gameObject, child.gameObject.scene.path, identifier);
-							string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
+							string editorPrefKey = RegisterSceneObject(child.gameObject, child.gameObject.scene.path, identifier);
 							SaveObjectValues(editorPrefKey, child.gameObject);
 							AddSceneGameObjectChildObjectValues(child.gameObject);
 						}
@@ -802,8 +767,7 @@ namespace Framework
 						{
 							int instanceId = GetInstanceId(child.gameObject);
 							string scenePath = gameObject.scene.path;
-							int saveObjIndex = RegisterRuntimeObject(scenePath, instanceId);
-							string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
+							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
 							SaveRuntimeGameObject(editorPrefKey, child.gameObject, child.gameObject, gameObject, null);
 						}
 					}
