@@ -37,6 +37,7 @@ namespace Framework
 
 				private const string kEditorPrefsObjectScene = ".Scene";
 				private const string kEditorPrefsObjectSceneId = ".SceneId";
+				private const string kEditorPrefsObjectDeleted = ".Deleted";
 				private const string kEditorPrefsScenePrefabInstanceId = ".PrefabInstId";
 				private const string kEditorPrefsScenePrefabInstanceChildPath = ".PrefabInstPath";
 				private const string kEditorPrefsRuntimeObjectId = ".RuntimeId";
@@ -65,6 +66,7 @@ namespace Framework
 					public Type _createdObjectType;
 					public Object _parentObject;
 					public GameObject _rootGameObject;
+					public bool _deleted;
 					public string _json;
 					public string _scenePath;
 					public string _missingObjectRefs;
@@ -78,14 +80,31 @@ namespace Framework
 					public Material _material;
 				}
 
+				private struct SavedObject : IEquatable<Object>
+				{
+					public Object _object;
+					public int _sceneIdentifier;
+					public string _scenePath;
+					public Type _type;
+					public string _path;
+
+					public bool Equals(Object other)
+					{
+						return _object == other;
+					}
+				}
+
 				private enum State
 				{ 
 					Idle,
 					Busy,
 				}
+				#endregion
+
+				#region Private Data
 				private static State _state;
 				private static PlayModeStateChange _currentPlayModeState;
-				private static List<Object> _savedObjects = new List<Object>();
+				private static List<SavedObject> _savedObjects = new List<SavedObject>();
 				#endregion
 
 				#region Constructor
@@ -289,17 +308,31 @@ namespace Framework
 				#region Object Registering
 				private static bool IsObjectRegistered(Object obj)
 				{
-					return _savedObjects.Contains(obj);
+					return _savedObjects.FindIndex(x => x._object == obj) != -1;
 				}
 				
 				private static void RegisterSavedObject(Object obj)
 				{
-					_savedObjects.Add(obj);
+					SavedObject savedObject = new SavedObject
+					{
+						_object = obj,
+						_sceneIdentifier = GetSceneIdentifier(obj),
+						_scenePath = GetScenePath(obj),
+						_type = obj.GetType(),
+						_path = GetObjectPath(obj),
+					};
+
+					_savedObjects.Add(savedObject);
 				}
 
 				private static void UnregisterObject(Object obj)
 				{
-					_savedObjects.Remove(obj);
+					int index = _savedObjects.FindIndex(x => x._object == obj);
+
+					if (index != -1)
+					{
+						_savedObjects.RemoveAt(index);
+					}
 				}
 
 				private static int AddSaveObject()
@@ -312,7 +345,7 @@ namespace Framework
 				}
 
 				#region Scene Objects
-				private static string RegisterSceneObject(Object obj, string scenePath, int identifier)
+				private static int RegisterSceneObject(Object obj, string scenePath, int identifier)
 				{
 					GameObject prefab;
 					int prefabSceneId;
@@ -336,8 +369,26 @@ namespace Framework
 						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
 						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
 
-						return editorPrefKey;
+						return saveObjIndex;
 					}
+				}
+
+				private static int RegisterDeletedSceneObject(string scenePath, int identifier)
+				{
+					int saveObjIndex = GetSavedSceneObjectIndex(identifier, scenePath);
+
+					if (saveObjIndex == -1)
+					{
+						saveObjIndex = AddSaveObject();
+					}
+
+					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
+
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
+					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
+					EditorPrefs.SetBool(editorPrefKey + kEditorPrefsObjectDeleted, true);
+					
+					return saveObjIndex;
 				}
 
 				private static int GetSavedSceneObjectIndex(int localIdentifier, string scenePath)
@@ -374,7 +425,7 @@ namespace Framework
 					return false;
 				}
 
-				private static string RegisterScenePrefabObject(string scenePath, int identifier, GameObject prefabInstance, int prefabSceneId, Object obj)
+				private static int RegisterScenePrefabObject(string scenePath, int identifier, GameObject prefabInstance, int prefabSceneId, Object obj)
 				{
 					string prefabObjPath = GetScenePrefabChildObjectPath(prefabInstance, obj);
 
@@ -392,7 +443,7 @@ namespace Framework
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath, prefabObjPath);
 					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, prefabSceneId);
 
-					return editorPrefKey;
+					return saveObjIndex;
 				}
 
 				private static int GetSavedScenePrefabObjectIndex(int localIdentifier, string scenePath, string prefabPath, int prefabId)
@@ -419,7 +470,7 @@ namespace Framework
 				#endregion
 
 				#region Runtime Objects
-				private static string RegisterRuntimeObject(string scenePath, int instanceId)
+				private static int RegisterRuntimeObject(string scenePath, int instanceId)
 				{
 					int saveObjIndex = GetSavedRuntimeObjectIndex(instanceId, scenePath);
 
@@ -433,7 +484,7 @@ namespace Framework
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
 					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, instanceId);
 
-					return editorPrefKey;
+					return saveObjIndex;
 				}
 
 				private static int GetSavedRuntimeObjectIndex(int instanceId, string scenePath)
@@ -465,44 +516,34 @@ namespace Framework
 					_state = State.Busy;
 
 					//Regiester all saved objects (might also add children)
-					foreach (Object obj in _savedObjects)
+					foreach (SavedObject obj in _savedObjects)
 					{
-						if (obj != null)
+						//Regiester scene object
+						if (obj._sceneIdentifier != -1)
 						{
-							int identifier = GetSceneIdentifier(obj);
-
-							string scenePath = null;
-
-							if (obj is GameObject gameObject)
+							//Object is still valid
+							if (obj._object != null)
 							{
-								scenePath = gameObject.scene.path;
+								int saveObjIndex = RegisterSceneObject(obj._object, obj._scenePath, obj._sceneIdentifier);
+								SaveObjectValues(saveObjIndex);
 							}
-							else if (obj is Component component)
-							{
-								scenePath = component.gameObject.scene.path;
-							}
-							
-							if (identifier != -1)
-							{
-								RegisterSceneObject(obj, scenePath, identifier);
-							}
+							//Object has been deleted
 							else
 							{
-								int instanceId = GetInstanceId(obj);
-								RegisterRuntimeObject(scenePath, instanceId);
+								RegisterDeletedSceneObject(obj._scenePath, obj._sceneIdentifier);
+							}				
+						}
+						//Regiester runtime object
+						else
+						{
+							//Object is still valid
+							if (obj._object != null)
+							{
+								int instanceId = GetInstanceId(obj._object);
+								int saveObjIndex = RegisterRuntimeObject(obj._scenePath, instanceId);
+								SaveObjectValues(saveObjIndex);
 							}
 						}
-					}
-
-					//Save data for all regiestered objects
-					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
-
-					for (int i = 0; i < numSavedObjects; i++)
-					{
-						SaveObjectValues(i);
-
-						//Saving object values can result in more objects being added to list so re-grab the count.
-						numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 					}
 
 					_savedObjects.Clear();
@@ -663,12 +704,6 @@ namespace Framework
 						data._json = JsonUtility.ToJson(obj);
 					}
 
-					//If Object is a runtime component then need to save any internal object refs (refs poiting at other runtime objects in the same hierachy)
-					if (runtimeObject)
-					{
-						//Find 
-					}
-
 					return data;
 				}
 
@@ -736,14 +771,16 @@ namespace Framework
 						if (identifier != -1)
 						{
 							//Need to check is scene prefab instance
-							string editorPrefKey = RegisterSceneObject(components[i], gameObject.scene.path, identifier);
+							int saveObjIndex = RegisterSceneObject(components[i], gameObject.scene.path, identifier);
+							string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
 							SaveObjectValues(editorPrefKey, components[i]);
 						}
 						else
 						{
 							int instanceId = GetInstanceId(components[i]);
 							string scenePath = gameObject.scene.path;
-							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
+							int saveObjIndex = RegisterRuntimeObject(scenePath, instanceId);
+							string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
 							SaveRuntimeComponent(editorPrefKey, components[i], gameObject, gameObject);
 						}
 					}
@@ -756,7 +793,8 @@ namespace Framework
 						if (identifier != -1)
 						{
 							//Need to check is scene prefab instance
-							string editorPrefKey = RegisterSceneObject(child.gameObject, child.gameObject.scene.path, identifier);
+							int saveObjIndex = RegisterSceneObject(child.gameObject, child.gameObject.scene.path, identifier);
+							string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
 							SaveObjectValues(editorPrefKey, child.gameObject);
 							AddSceneGameObjectChildObjectValues(child.gameObject);
 						}
@@ -764,7 +802,8 @@ namespace Framework
 						{
 							int instanceId = GetInstanceId(child.gameObject);
 							string scenePath = gameObject.scene.path;
-							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
+							int saveObjIndex = RegisterRuntimeObject(scenePath, instanceId);
+							string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
 							SaveRuntimeGameObject(editorPrefKey, child.gameObject, child.gameObject, gameObject, null);
 						}
 					}
@@ -963,7 +1002,6 @@ namespace Framework
 				{
 					_state = State.Busy;
 
-
 					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 
 					List<Object> restoredObjects = new List<Object>();
@@ -980,23 +1018,8 @@ namespace Framework
 							//Scene object
 							if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsObjectSceneId))
 							{
-								//Scene Prefab object
-								if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabInstanceId))
-								{
-									//Get prefab from scene
-									int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
-									string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
-
-									Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr, true);
-
-									if (obj != null)
-									{
-										restoredObjects.Add(obj);
-										restoredObjectsData.Add(CreateSceneObjectRestoredData(editorPrefKey, obj, sceneStr));
-									}
-								}
-								//Normal Scene object
-								else
+								//Has object been deleted?
+								if (EditorPrefs.GetBool(editorPrefKey + kEditorPrefsObjectDeleted, false))
 								{
 									int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsObjectSceneId, -1);
 
@@ -1005,7 +1028,39 @@ namespace Framework
 									if (obj != null)
 									{
 										restoredObjects.Add(obj);
-										restoredObjectsData.Add(CreateSceneObjectRestoredData(editorPrefKey, obj, sceneStr));
+										restoredObjectsData.Add(CreateDeletedSceneObjectRestoredData(obj, sceneStr));
+									}
+								}
+								//Otherwise restore as normal
+								else
+								{
+									//Scene Prefab object
+									if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabInstanceId))
+									{
+										//Get prefab from scene
+										int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
+										string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
+
+										Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr, true);
+
+										if (obj != null)
+										{
+											restoredObjects.Add(obj);
+											restoredObjectsData.Add(CreateSceneObjectRestoredData(editorPrefKey, obj, sceneStr));
+										}
+									}
+									//Normal Scene object
+									else
+									{
+										int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsObjectSceneId, -1);
+
+										Object obj = FindSceneObject(sceneStr, identifier, true);
+
+										if (obj != null)
+										{
+											restoredObjects.Add(obj);
+											restoredObjectsData.Add(CreateSceneObjectRestoredData(editorPrefKey, obj, sceneStr));
+										}
 									}
 								}
 							}
@@ -1114,31 +1169,38 @@ namespace Framework
 
 					if (data._object != null)
 					{
-						bool unityType = ShouldUseEditorSerialiser(data._object);
-
-						//Find any lost material refs
-						List<MaterialRef> materialRefs = FindOriginalMaterials(data._object, data._missingMaterials);
-
-						if (unityType)
+						if (data._deleted)
 						{
-							EditorJsonUtility.FromJsonOverwrite(data._json, data._object);
-							ApplyObjectRefs(data._object, data._scenePath, data._missingObjectRefs);
+							Undo.DestroyObjectImmediate(data._object);
 						}
 						else
 						{
-							JsonUtility.FromJsonOverwrite(data._json, data._object);
-						}
+							bool unityType = ShouldUseEditorSerialiser(data._object);
 
-						//Apply runtime internal refs
-						ApplyRuntimeObjectRefs(data._object, data._rootGameObject, data._runtimeInternalRefs);
+							//Find any lost material refs
+							List<MaterialRef> materialRefs = FindOriginalMaterials(data._object, data._missingMaterials);
 
-						//Revert any lost material refs
-						ApplyMaterialsRefs(data._object, materialRefs);
+							if (unityType)
+							{
+								EditorJsonUtility.FromJsonOverwrite(data._json, data._object);
+								ApplyObjectRefs(data._object, data._scenePath, data._missingObjectRefs);
+							}
+							else
+							{
+								JsonUtility.FromJsonOverwrite(data._json, data._object);
+							}
 
-						//Refresh Canvas renderers
-						DirtyCanvasRenderers(data._object);
+							//Apply runtime internal refs
+							ApplyRuntimeObjectRefs(data._object, data._rootGameObject, data._runtimeInternalRefs);
 
-						EditorUtility.SetDirty(data._object);
+							//Revert any lost material refs
+							ApplyMaterialsRefs(data._object, materialRefs);
+
+							//Refresh Canvas renderers
+							DirtyCanvasRenderers(data._object);
+
+							EditorUtility.SetDirty(data._object);
+						}					
 					}
 				}
 
@@ -1290,6 +1352,23 @@ namespace Framework
 						_runtimeInternalRefs = null
 					};
 				}
+
+				private static RestoredObjectData CreateDeletedSceneObjectRestoredData(Object obj, string sceneStr)
+				{
+					return new RestoredObjectData
+					{
+						_object = obj,
+						_deleted = true,
+						_createdObjectType = null,
+						_parentObject = null,
+						_rootGameObject = null,
+						_json = null,
+						_scenePath = sceneStr,
+						_missingObjectRefs = null,
+						_missingMaterials = null,
+						_runtimeInternalRefs = null
+					};
+				}
 				#endregion
 
 				#region Runtime Objects
@@ -1404,6 +1483,7 @@ namespace Framework
 				{
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectScene);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectSceneId);
+					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectDeleted);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsScenePrefabInstanceId);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectId);
@@ -1524,6 +1604,52 @@ namespace Framework
 					}
 					
 					return new Scene();
+				}
+
+				private static string GetScenePath(Object obj)
+				{
+					string scenePath = null;
+
+					if (obj is GameObject gameObject)
+					{
+						scenePath = gameObject.scene.path;
+					}
+					else if (obj is Component component)
+					{
+						scenePath = component.gameObject.scene.path;
+					}
+
+					return scenePath;
+				}
+
+				private static string GetObjectPath(Object obj)
+				{
+					GameObject gameObject = null;
+
+					if (obj is GameObject gameObj)
+					{
+						gameObject = gameObj;
+					}
+					else if (obj is Component component)
+					{
+						gameObject = component.gameObject;
+					}
+					else
+					{
+						return null;
+					}
+
+					string path = gameObject.name;
+
+					while (gameObject.transform.parent != null)
+					{
+						gameObject = gameObject.transform.parent.gameObject;
+						path = gameObject.name + '/' + path;
+					}
+
+					path = gameObject.scene.name + '/' + path;
+
+					return path;
 				}
 
 				private static int SafeConvertToInt(string str)
@@ -1804,7 +1930,7 @@ namespace Framework
 					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("The following objects will have their values saved upon leaving Play Mode.");
 					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Play Mode.");
 					private static readonly string kFindButtonToolTip = "Show object in scene";
-					private const string kUnknownObj = "Unknown";
+					private const string kDeletedObj = "(Object Deleted)";
 					private static readonly float kResizerWidth = 6.0f;
 					private static readonly float kItemSpacing = 2.0f;
 					#endregion
@@ -1955,15 +2081,12 @@ namespace Framework
 
 							for (int i=0; i<_savedObjects.Count;)
 							{
-								if (_savedObjects[i] is GameObject gameObject)
+								//Deleted object
+								if (_savedObjects[i]._object == null)
 								{
-									string name = gameObject.name;
-									string type = "Game Object";
-									string path = GetGameObjectPath(gameObject);
-
 									drawnObject = true;
 
-									if (DrawObjectGUI(_savedObjects[i], name, type, path))
+									if (DrawObjectGUI(_savedObjects[i], kDeletedObj))
 									{
 										_savedObjects.RemoveAt(i);
 										_needsRepaint = true;
@@ -1973,15 +2096,27 @@ namespace Framework
 										i++;
 									}
 								}
-								else if (_savedObjects[i] is Component component)
+								//Game object
+								else if (_savedObjects[i]._object is GameObject gameObject)
 								{
-									string type = component.GetType().Name;
-									string name = component.gameObject.name + '.' + type;
-									string path = GetGameObjectPath(component.gameObject) + '.' + type;
-
 									drawnObject = true;
 
-									if (DrawObjectGUI(_savedObjects[i], name, type, path))
+									if (DrawObjectGUI(_savedObjects[i], gameObject.name))
+									{
+										_savedObjects.RemoveAt(i);
+										_needsRepaint = true;
+									}
+									else
+									{
+										i++;
+									}
+								}
+								//Component
+								else if (_savedObjects[i]._object is Component component)
+								{
+									drawnObject = true;
+
+									if (DrawObjectGUI(_savedObjects[i], component.gameObject.name + '.' + _savedObjects[i]._type.Name))
 									{
 										_savedObjects.RemoveAt(i);
 										_needsRepaint = true;
@@ -2005,7 +2140,7 @@ namespace Framework
 						EditorGUILayout.EndScrollView();
 					}
 
-					private bool DrawObjectGUI(Object obj, string name, string type, string path)
+					private bool DrawObjectGUI(SavedObject obj, string name)
 					{
 						bool itemRemoved = false;
 
@@ -2017,17 +2152,26 @@ namespace Framework
 								itemRemoved = true;
 							}
 
+							bool origGUIenabled = GUI.enabled;
+
+							if (obj._object == null)
+							{
+								GUI.enabled = false;
+							}
+							
 							if (GUILayout.Button(new GUIContent(EditorGUIUtility.FindTexture("animationvisibilitytoggleon"), kFindButtonToolTip), EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
 							{
-								FocusOnObject(obj);
+								FocusOnObject(obj._object);
 							}
+
+							GUI.enabled = origGUIenabled;
 
 							GUILayout.Space(kItemSpacing);
 							GUILayout.Label(name, _itemStyle, GUILayout.Width(_nameWidth - kItemSpacing * 1.5f));
 							GUILayout.Space(kItemSpacing);
-							GUILayout.Label(type, _itemStyle, GUILayout.Width(_typeWidth - kItemSpacing * 1f));
+							GUILayout.Label(obj._type.Name, _itemStyle, GUILayout.Width(_typeWidth - kItemSpacing * 1f));
 							GUILayout.Space(kItemSpacing);
-							GUILayout.Label(path, _itemStyle, GUILayout.ExpandWidth(true));
+							GUILayout.Label(obj._path, _itemStyle, GUILayout.ExpandWidth(true));
 							GUILayout.Space(kItemSpacing);
 						}
 						EditorGUILayout.EndHorizontal();
@@ -2167,20 +2311,6 @@ namespace Framework
 						SceneView.FrameLastActiveSceneView();
 					}
 
-					private static string GetGameObjectPath(GameObject gameObject)
-					{
-						string path = gameObject.name;
-
-						while (gameObject.transform.parent != null)
-						{
-							gameObject = gameObject.transform.parent.gameObject;
-							path = gameObject.name + '/' + path;
-						}
-
-						path = gameObject.scene.name + '/' + path;
-
-						return path;
-					}
 					#endregion
 				}
 				#endregion
