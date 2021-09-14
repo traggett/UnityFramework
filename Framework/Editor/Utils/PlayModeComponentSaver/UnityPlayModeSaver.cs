@@ -35,7 +35,6 @@ namespace Framework
 				private const string kEditorPrefsKey = "UnityPlayModeSaver.";
 				private const string kEditorPrefsObjectCountKey = kEditorPrefsKey + "SavedObjects";
 
-				
 				private const string kEditorPrefsObjectDeleted = ".Deleted";
 				private const string kEditorPrefsObjectScene = ".Scene";
 				private const string kEditorPrefsObjectSceneId = ".SceneId";
@@ -82,18 +81,13 @@ namespace Framework
 					public Material _material;
 				}
 
-				private struct SavedObject : IEquatable<Object>
+				private struct SavedObject
 				{
 					public Object _object;
 					public int _sceneIdentifier;
 					public string _scenePath;
 					public Type _type;
 					public string _path;
-
-					public bool Equals(Object other)
-					{
-						return _object == other;
-					}
 				}
 
 				private enum State
