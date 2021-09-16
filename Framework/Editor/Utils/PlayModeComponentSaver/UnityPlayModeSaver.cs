@@ -23,11 +23,14 @@ namespace Framework
 			{
 				#region Constants
 				private const string kSaveMenuString = "\u2714  Save Play Mode Changes";
+				private const string kSaveSnapshotMenuString = "\u2714  Save Play Mode Snapshot";
 				private const string kRevertMenuString = "\u2716  Forget Play Mode Changes";
 
 				private const string kSaveComponentMenuString = "CONTEXT/Component/" + kSaveMenuString;
+				private const string kSaveComponentSnapshotMenuString = "CONTEXT/Component/" + kSaveSnapshotMenuString; 
 				private const string kRevertComponentMenuString = "CONTEXT/Component/" + kRevertMenuString;
 				private const string kSaveGameObjectMenuString = "GameObject/" + kSaveMenuString;
+				private const string kSaveGameObjectSnapshotMenuString = "GameObject/" + kSaveSnapshotMenuString;
 				private const string kRevertGameObjectMenuString = "GameObject/" + kRevertMenuString;
 				private const string kWindowMenuString = "Tools/Play Mode Saver";
 
@@ -90,6 +93,7 @@ namespace Framework
 					public Type _type;
 					public string _path;
 					public bool _hasSnapshot;
+					public string _snapshotEditorPrefKey;
 				}
 
 				private enum State
@@ -131,7 +135,21 @@ namespace Framework
 					}	
 				}
 
+				[MenuItem(kSaveComponentSnapshotMenuString, false, 12)]
+				public static void SaveComponentSnapshot(MenuCommand command)
+				{
+					Component component = command.context as Component;
+
+					if (Application.isPlaying && component != null)
+					{
+						RegisterSavedObject(component);
+						SaveSnapshot(_savedObjects.Count - 1);
+						UnityPlayModeSaverWindow.Open(false);
+					}
+				}
+
 				[MenuItem(kSaveComponentMenuString, true)]
+				[MenuItem(kSaveComponentSnapshotMenuString, true)]
 				public static bool ValidateSaveComponent(MenuCommand command)
 				{
 					Component component = command.context as Component;
@@ -170,16 +188,32 @@ namespace Framework
 				{
 					if (Application.isPlaying && Selection.gameObjects != null)
 					{
-						foreach (GameObject go in Selection.gameObjects)
+						foreach (GameObject gameObject in Selection.gameObjects)
 						{
-							RegisterSavedObject(go);
+							RegisterSavedObject(gameObject);
 						}
 
 						UnityPlayModeSaverWindow.Open(false);
 					}	
 				}
 
+				[MenuItem(kSaveGameObjectSnapshotMenuString, false, -100)]
+				public static void SaveGameObjectSnapshot()
+				{
+					if (Application.isPlaying && Selection.gameObjects != null)
+					{
+						foreach (GameObject gameObject in Selection.gameObjects)
+						{
+							RegisterSavedObject(gameObject);
+							SaveSnapshot(_savedObjects.Count - 1);
+						}
+
+						UnityPlayModeSaverWindow.Open(false);
+					}
+				}
+
 				[MenuItem(kSaveGameObjectMenuString, true)]
+				[MenuItem(kSaveGameObjectSnapshotMenuString, true)]
 				public static bool ValidateSaveGameObject()
 				{
 					if (Application.isPlaying && Selection.gameObjects != null)
@@ -281,7 +315,7 @@ namespace Framework
 
 				private static void OnSceneUnload(Scene scene)
 				{
-					//Remove all saved objects from this scene
+					//Remove all saved objects from this scene that don't have snapshots
 					for (int i=0; i<_savedObjects.Count;)
 					{
 						if (!_savedObjects[i]._hasSnapshot && _savedObjects[i]._scenePath == scene.path)
@@ -325,7 +359,7 @@ namespace Framework
 				{
 					return _savedObjects.FindIndex(x => x._object == obj) != -1;
 				}
-				
+
 				private static void RegisterSavedObject(Object obj)
 				{
 					string objectName = null;
@@ -581,75 +615,87 @@ namespace Framework
 					//Save all saved objects into editor prefs (might also add children)
 					foreach (SavedObject obj in _savedObjects)
 					{
-						//Save scene object
-						if (obj._sceneIdentifier != -1)
+						if (!obj._hasSnapshot)
 						{
-							//Object is still valid
-							if (obj._object != null)
-							{
-								string editorPrefKey = RegisterSceneObject(obj._object, obj._scenePath, obj._sceneIdentifier);
-								
-								SaveObjectValues(editorPrefKey, obj._object);
-
-								//If its a GameObject then add its components and child GameObjects (some of which might be runtime)
-								if (obj._object is GameObject gameObject)
-								{
-									AddSceneGameObjectChildObjectValues(editorPrefKey, gameObject);
-								}
-							}
-							//Object has been deleted
-							else
-							{
-								RegisterDeletedSceneObject(obj._scenePath, obj._sceneIdentifier);
-							}				
-						}
-						//Save runtime object
-						else
-						{
-							//Object is still valid
-							if (obj._object != null)
-							{
-								int instanceId = GetInstanceId(obj._object);
-								string editorPrefKey = RegisterRuntimeObject(obj._scenePath, instanceId);
-								
-								GameObject sceneParent;
-								GameObject topOfHieracy;
-
-								if (obj._object is Component component)
-								{
-									topOfHieracy = component.gameObject;
-									FindRuntimeObjectParent(component.gameObject, out sceneParent, ref topOfHieracy);
-
-									//If the new component belongs to a scene object, just save the new component
-									if (component.gameObject == sceneParent)
-									{
-										SaveRuntimeComponent(editorPrefKey, component, sceneParent, sceneParent);
-									}
-									//Otherwise need to save the whole new gameobject hierarchy
-									else
-									{
-										SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
-									}
-								}
-								else if (obj._object is GameObject gameObject)
-								{
-									topOfHieracy = gameObject;
-									FindRuntimeObjectParent(gameObject, out sceneParent, ref topOfHieracy);
-
-									if (topOfHieracy != gameObject)
-									{
-										EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, GetInstanceId(topOfHieracy));
-									}
-
-									SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
-								}
-							}
+							SaveObjectValues(obj);
 						}
 					}
 
 					_savedObjects.Clear();
 
 					_state = State.Idle;
+				}
+
+				private static string SaveObjectValues(SavedObject obj)
+				{
+					string editorPrefKey = null;
+
+					//Save scene object
+					if (obj._sceneIdentifier != -1)
+					{
+						//Object is still valid
+						if (obj._object != null)
+						{
+							editorPrefKey = RegisterSceneObject(obj._object, obj._scenePath, obj._sceneIdentifier);
+
+							SaveObjectValues(editorPrefKey, obj._object);
+
+							//If its a GameObject then add its components and child GameObjects (some of which might be runtime)
+							if (obj._object is GameObject gameObject)
+							{
+								AddSceneGameObjectChildObjectValues(editorPrefKey, gameObject);
+							}
+						}
+						//Object has been deleted
+						else
+						{
+							RegisterDeletedSceneObject(obj._scenePath, obj._sceneIdentifier);
+						}
+					}
+					//Save runtime object
+					else
+					{
+						//Object is still valid
+						if (obj._object != null)
+						{
+							int instanceId = GetInstanceId(obj._object);
+							editorPrefKey = RegisterRuntimeObject(obj._scenePath, instanceId);
+
+							GameObject sceneParent;
+							GameObject topOfHieracy;
+
+							if (obj._object is Component component)
+							{
+								topOfHieracy = component.gameObject;
+								FindRuntimeObjectParent(component.gameObject, out sceneParent, ref topOfHieracy);
+
+								//If the new component belongs to a scene object, just save the new component
+								if (component.gameObject == sceneParent)
+								{
+									SaveRuntimeComponent(editorPrefKey, component, sceneParent, sceneParent);
+								}
+								//Otherwise need to save the whole new gameobject hierarchy
+								else
+								{
+									SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
+								}
+							}
+							else if (obj._object is GameObject gameObject)
+							{
+								topOfHieracy = gameObject;
+								FindRuntimeObjectParent(gameObject, out sceneParent, ref topOfHieracy);
+
+								if (topOfHieracy != gameObject)
+								{
+									EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, GetInstanceId(topOfHieracy));
+								}
+
+								SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
+							}
+						}
+					}
+
+					return editorPrefKey;
 				}
 
 				private static void SaveObjectValues(string editorPrefKey, Object obj, bool runtimeObject = false, GameObject runtimeObjectTopOfHeirachy = null)
@@ -1671,31 +1717,26 @@ namespace Framework
 				{
 					SavedObject savedObject = _savedObjects[saveObjIndex];
 
-					//Save values to prefs
+					if (savedObject._object != null)
+					{
+						//Save values to prefs
+						string editorPrefKey = SaveObjectValues(savedObject);
 
-					//Save children as well
+						savedObject._hasSnapshot = true;
+						savedObject._snapshotEditorPrefKey = editorPrefKey;
 
-					//If child object is saved no snapshot as well then???
-					//Want to save it normally too???
-
-					savedObject._hasSnapshot = true;
-
-					_savedObjects[saveObjIndex] = savedObject;
+						_savedObjects[saveObjIndex] = savedObject;
+					}
 				}
 
 				private static void ClearSnapshot(int saveObjIndex)
 				{
 					SavedObject savedObject = _savedObjects[saveObjIndex];
 
-					//Remove values from prefs
-
-					//Find object in saved prefs, remove it and its children.
-
-					//Set 
-
-
+					DeleteObjectEditorPrefs(savedObject._snapshotEditorPrefKey);
 
 					savedObject._hasSnapshot = false;
+					savedObject._snapshotEditorPrefKey = null;
 
 					_savedObjects[saveObjIndex] = savedObject;
 				}
@@ -2096,13 +2137,13 @@ namespace Framework
 					private const float kButtonWidth = 24f;
 					private const float kSnapshotButtonWidth = 116f;
 					private const float kClearSnapshotButtonWidth = 100f;
-					private const float kDefaultNameWidth = 240f;
-					private const float kDefaultTypeWidth = 100f;
+					private const float kDefaultNameWidth = 280f;
+					private const float kDefaultTypeWidth = 120f;
 					private const float kMinNameWidth = 50f;
 					private static readonly GUIContent kClearButton = new GUIContent("\u2716", "Forget object changes");
 					private static readonly GUIContent kClearAllButton = new GUIContent("\u2716 Clear All Saved Objects");
 					private static readonly GUIContent kSaveSnapshot = new GUIContent("Save Snapshot");
-					private static readonly GUIContent kUpdateSnapshot = new GUIContent("Save Snapshot");
+					private static readonly GUIContent kUpdateSnapshot = new GUIContent("Update Snapshot");
 					private static readonly GUIContent kClearSnapshot = new GUIContent("Clear Snapshot");
 					private static readonly GUIContent kObjectLabel = new GUIContent("Saved Object"); 
 					private static readonly GUIContent kObjectTypeLabel = new GUIContent("Object Type");
@@ -2111,6 +2152,7 @@ namespace Framework
 					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("These objects will have their values saved upon leaving Play Mode.\nIf an object has a snapshot saved it will restore to that, otherwise it will keep the values it had upon exiting Play Mode.");
 					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Play Mode.");
 					private const string kDeletedObj = " <i>(Deleted)</i>";
+					private const string kSceneNotLoadedObj = " <i>(Scene not loaded)</i>";
 					private static readonly float kResizerWidth = 6.0f;
 					#endregion
 
@@ -2211,6 +2253,7 @@ namespace Framework
 								fixedHeight = 0,
 								stretchHeight = true,
 								stretchWidth = true,
+								richText = true,
 							};
 						}
 
@@ -2303,7 +2346,17 @@ namespace Framework
 										if (_savedObjects[i]._object == null)
 										{
 											GUI.enabled = false;
-											name += kDeletedObj;
+
+											Scene scene = SceneManager.GetSceneByPath(_savedObjects[i]._scenePath);
+
+											if (!scene.IsValid() || !scene.isLoaded)
+											{
+												name += kSceneNotLoadedObj;
+											}
+											else
+											{
+												name += kDeletedObj;
+											}
 										}
 
 										if (GUILayout.Button(name, _objectStyle, GUILayout.Width(_nameWidth - kResizerWidth)))
@@ -2319,10 +2372,17 @@ namespace Framework
 
 									//Snap shot buttons
 									{
+										if (_savedObjects[i]._object == null)
+										{
+											GUI.enabled = false;
+										}
+
 										if (GUILayout.Button(_savedObjects[i]._hasSnapshot ? kUpdateSnapshot : kSaveSnapshot, EditorStyles.toolbarButton, GUILayout.Width(kSnapshotButtonWidth)))
 										{
 											SaveSnapshot(i);
 										}
+
+										GUI.enabled = origGUIenabled;
 
 										if (!_savedObjects[i]._hasSnapshot)
 										{
@@ -2332,6 +2392,14 @@ namespace Framework
 										if (GUILayout.Button(kClearSnapshot, EditorStyles.toolbarButton, GUILayout.Width(kClearSnapshotButtonWidth)))
 										{
 											ClearSnapshot(i);
+
+											//Check objects scene is still loaded, if not remove object
+											Scene scene = SceneManager.GetSceneByPath(_savedObjects[i]._scenePath);
+
+											if (!scene.IsValid() || !scene.isLoaded)
+											{
+												itemRemoved = true;
+											}
 										}
 
 										GUI.enabled = origGUIenabled;
