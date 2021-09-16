@@ -1719,6 +1719,12 @@ namespace Framework
 
 					if (savedObject._object != null)
 					{
+						//Delete current snapshot
+						if (savedObject._hasSnapshot)
+						{
+							DeleteObjectEditorPrefs(savedObject._snapshotEditorPrefKey);
+						}
+
 						//Save values to prefs
 						string editorPrefKey = SaveObjectValues(savedObject);
 
