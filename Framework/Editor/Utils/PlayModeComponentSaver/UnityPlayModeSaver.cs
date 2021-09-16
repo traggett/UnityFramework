@@ -86,6 +86,7 @@ namespace Framework
 					public Object _object;
 					public int _sceneIdentifier;
 					public string _scenePath;
+					public string _name;
 					public Type _type;
 					public string _path;
 				}
@@ -110,11 +111,12 @@ namespace Framework
 
 					EditorApplication.playModeStateChanged += OnModeChanged;
 					EditorSceneManager.sceneSaving += OnSceneSaved;
+					SceneManager.sceneUnloaded += delegate (Scene scene) { OnSceneUnload(scene); };
 
 					ClearCache();
 				}
 				#endregion
-				
+
 				#region Menu Functions
 				[MenuItem(kSaveComponentMenuString, false, 12)]
 				public static void SaveComponent(MenuCommand command)
@@ -276,6 +278,22 @@ namespace Framework
 					UnityPlayModeSaverSceneUtils.CacheScenePrefabInstances(scene);
 				}
 
+				private static void OnSceneUnload(Scene scene)
+				{
+					//Remove all saved objects from this scene
+					for (int i=0; i<_savedObjects.Count;)
+					{
+						if (_savedObjects[i]._scenePath == scene.path)
+						{
+							_savedObjects.RemoveAt(i);
+						}
+						else
+						{
+							i++;
+						}
+					}
+				}
+
 				private static void RepaintEditorWindows()
 				{
 					SceneView.RepaintAll();
@@ -309,11 +327,23 @@ namespace Framework
 				
 				private static void RegisterSavedObject(Object obj)
 				{
+					string objectName = null;
+
+					if (obj is GameObject gameObject)
+					{
+						objectName = gameObject.name;
+					}
+					else if (obj is Component component)
+					{
+						objectName = component.gameObject.name + '.' + component.GetType().Name;
+					}
+
 					SavedObject savedObject = new SavedObject
 					{
 						_object = obj,
 						_sceneIdentifier = GetSceneIdentifier(obj),
 						_scenePath = GetScenePath(obj),
+						_name = objectName,
 						_type = obj.GetType(),
 						_path = GetObjectPath(obj),
 					};
@@ -1045,7 +1075,7 @@ namespace Framework
 									{
 										restoredObjects.Add(obj);
 										restoredObjectsData.Add(CreateSceneObjectRestoredData(editorPrefKey, obj, sceneStr));
-
+										
 										//If its a game object also restore any saved child objects
 										if (obj is GameObject gameObject)
 										{
@@ -2018,6 +2048,7 @@ namespace Framework
 					#region Constants
 					private const float kButtonWidth = 24f;
 					private const float kDefaultNameWidth = 240f;
+					private const float kDefaultTypeWidth = 100f;
 					private const float kMinNameWidth = 50f;
 					private static readonly GUIContent kClearButton = new GUIContent("\u2716", "Forget object changes");
 					private static readonly GUIContent kClearAllButton = new GUIContent("\u2716 Clear All");
@@ -2028,7 +2059,7 @@ namespace Framework
 					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("The following objects will have their values saved upon leaving Play Mode.");
 					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Play Mode.");
 					private static readonly string kFindButtonToolTip = "Show object in scene";
-					private const string kDeletedObj = "(Object Deleted)";
+					private const string kDeletedObj = " <i>(Deleted)</i>";
 					private static readonly float kResizerWidth = 6.0f;
 					private static readonly float kItemSpacing = 2.0f;
 					#endregion
@@ -2036,7 +2067,7 @@ namespace Framework
 					#region Private Data
 					private Vector2 _scrollPosition = Vector2.zero;
 					private float _nameWidth = kDefaultNameWidth;
-					private float _typeWidth = kDefaultNameWidth;
+					private float _typeWidth = kDefaultTypeWidth;
 					private Rect _nameResizerRect;
 					private Rect _typeResizerRect;
 					private bool _needsRepaint;
@@ -2046,7 +2077,6 @@ namespace Framework
 						ResizingName,
 						ResizingType,
 					}
-
 					private ResizingState _resizing;
 					private int _controlID;
 					private float _resizingOffset;
@@ -2129,7 +2159,8 @@ namespace Framework
 								padding = new RectOffset(8, 8, 0, 0),
 								fixedHeight = 0,
 								stretchHeight = true,
-								stretchWidth = true
+								stretchWidth = true,
+								richText = true,
 							};
 						}
 
@@ -2175,54 +2206,12 @@ namespace Framework
 					{
 						_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
 						{
-							bool drawnObject = false;
-
 							for (int i=0; i<_savedObjects.Count;)
 							{
-								//Deleted object
-								if (_savedObjects[i]._object == null)
+								if (DrawObjectGUI(_savedObjects[i]))
 								{
-									drawnObject = true;
-
-									if (DrawObjectGUI(_savedObjects[i], kDeletedObj))
-									{
-										_savedObjects.RemoveAt(i);
-										_needsRepaint = true;
-									}
-									else
-									{
-										i++;
-									}
-								}
-								//Game object
-								else if (_savedObjects[i]._object is GameObject gameObject)
-								{
-									drawnObject = true;
-
-									if (DrawObjectGUI(_savedObjects[i], gameObject.name))
-									{
-										_savedObjects.RemoveAt(i);
-										_needsRepaint = true;
-									}
-									else
-									{
-										i++;
-									}
-								}
-								//Component
-								else if (_savedObjects[i]._object is Component component)
-								{
-									drawnObject = true;
-
-									if (DrawObjectGUI(_savedObjects[i], component.gameObject.name + '.' + _savedObjects[i]._type.Name))
-									{
-										_savedObjects.RemoveAt(i);
-										_needsRepaint = true;
-									}
-									else
-									{
-										i++;
-									}
+									_savedObjects.RemoveAt(i);
+									_needsRepaint = true;
 								}
 								else
 								{
@@ -2230,7 +2219,7 @@ namespace Framework
 								}
 							}
 
-							if (!drawnObject)
+							if (_savedObjects.Count == 0)
 							{
 								EditorGUILayout.LabelField(kNoObjectsLabel, _noObjectsStyle, GUILayout.ExpandHeight(true));
 							}
@@ -2238,13 +2227,15 @@ namespace Framework
 						EditorGUILayout.EndScrollView();
 					}
 
-					private bool DrawObjectGUI(SavedObject obj, string name)
+					private bool DrawObjectGUI(SavedObject obj)
 					{
 						bool itemRemoved = false;
 
 						//Draw Name (GameoBject name or GameobjectName.Component), then path
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
+							string name = obj._name;
+
 							if (GUILayout.Button(kClearButton, EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
 							{
 								itemRemoved = true;
@@ -2255,6 +2246,7 @@ namespace Framework
 							if (obj._object == null)
 							{
 								GUI.enabled = false;
+								name += kDeletedObj;
 							}
 							
 							if (GUILayout.Button(new GUIContent(EditorGUIUtility.FindTexture("animationvisibilitytoggleon"), kFindButtonToolTip), EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
