@@ -89,6 +89,7 @@ namespace Framework
 					public string _name;
 					public Type _type;
 					public string _path;
+					public bool _hasSnapshot;
 				}
 
 				private enum State
@@ -283,7 +284,7 @@ namespace Framework
 					//Remove all saved objects from this scene
 					for (int i=0; i<_savedObjects.Count;)
 					{
-						if (_savedObjects[i]._scenePath == scene.path)
+						if (!_savedObjects[i]._hasSnapshot && _savedObjects[i]._scenePath == scene.path)
 						{
 							_savedObjects.RemoveAt(i);
 						}
@@ -357,7 +358,7 @@ namespace Framework
 
 					if (index != -1)
 					{
-						_savedObjects.RemoveAt(index);
+						ClearSavedObject(index);
 					}
 				}
 
@@ -1625,6 +1626,17 @@ namespace Framework
 
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsSceneObjectChildren);
 				}
+
+				private static void ClearSavedObject(int saveObjIndex)
+				{
+					//Remove values from prefs
+					if (_savedObjects[saveObjIndex]._hasSnapshot)
+					{
+						ClearSnapshot(saveObjIndex);
+					}
+					
+					_savedObjects.RemoveAt(saveObjIndex);
+				}
 				#endregion
 
 				#endregion
@@ -1651,6 +1663,41 @@ namespace Framework
 					}
 
 					return string.Empty;
+				}
+				#endregion
+
+				#region Snapshots
+				private static void SaveSnapshot(int saveObjIndex)
+				{
+					SavedObject savedObject = _savedObjects[saveObjIndex];
+
+					//Save values to prefs
+
+					//Save children as well
+
+					//If child object is saved no snapshot as well then???
+					//Want to save it normally too???
+
+					savedObject._hasSnapshot = true;
+
+					_savedObjects[saveObjIndex] = savedObject;
+				}
+
+				private static void ClearSnapshot(int saveObjIndex)
+				{
+					SavedObject savedObject = _savedObjects[saveObjIndex];
+
+					//Remove values from prefs
+
+					//Find object in saved prefs, remove it and its children.
+
+					//Set 
+
+
+
+					savedObject._hasSnapshot = false;
+
+					_savedObjects[saveObjIndex] = savedObject;
 				}
 				#endregion
 
@@ -2047,21 +2094,24 @@ namespace Framework
 				{
 					#region Constants
 					private const float kButtonWidth = 24f;
+					private const float kSnapshotButtonWidth = 116f;
+					private const float kClearSnapshotButtonWidth = 100f;
 					private const float kDefaultNameWidth = 240f;
 					private const float kDefaultTypeWidth = 100f;
 					private const float kMinNameWidth = 50f;
 					private static readonly GUIContent kClearButton = new GUIContent("\u2716", "Forget object changes");
-					private static readonly GUIContent kClearAllButton = new GUIContent("\u2716 Clear All");
-					private static readonly GUIContent kObjectNameLabel = new GUIContent("Object");
-					private static readonly GUIContent kObjectTypeLabel = new GUIContent("Type");
-					private static readonly GUIContent kObjectPathLabel = new GUIContent("Path");
+					private static readonly GUIContent kClearAllButton = new GUIContent("\u2716 Clear All Saved Objects");
+					private static readonly GUIContent kSaveSnapshot = new GUIContent("Save Snapshot");
+					private static readonly GUIContent kUpdateSnapshot = new GUIContent("Save Snapshot");
+					private static readonly GUIContent kClearSnapshot = new GUIContent("Clear Snapshot");
+					private static readonly GUIContent kObjectLabel = new GUIContent("Saved Object"); 
+					private static readonly GUIContent kObjectTypeLabel = new GUIContent("Object Type");
+					private static readonly GUIContent kObjectPathLabel = new GUIContent("Object Path");
 					private static readonly GUIContent kNoObjectsLabel = new GUIContent("Either right click on any Game Object or Component and click 'Save Play Mode Changes'\nor drag any Game Object or Component into this window.");
-					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("The following objects will have their values saved upon leaving Play Mode.");
+					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("These objects will have their values saved upon leaving Play Mode.\nIf an object has a snapshot saved it will restore to that, otherwise it will keep the values it had upon exiting Play Mode.");
 					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Play Mode.");
-					private static readonly string kFindButtonToolTip = "Show object in scene";
 					private const string kDeletedObj = " <i>(Deleted)</i>";
 					private static readonly float kResizerWidth = 6.0f;
-					private static readonly float kItemSpacing = 2.0f;
 					#endregion
 
 					#region Private Data
@@ -2083,8 +2133,9 @@ namespace Framework
 					private GUIStyle _toolBarInfoStyle;
 					private GUIStyle _headerStyle;
 					private GUIStyle _noObjectsStyle;
+					private GUIStyle _objectStyle;
 					private GUIStyle _itemStyle;
-					private GUIContent _findObjectIcon;
+					private GUIStyle _itemSpaceStyle;
 					#endregion
 
 					#region Public Interface
@@ -2135,11 +2186,10 @@ namespace Framework
 
 						if (_toolBarInfoStyle == null)
 						{
-							_toolBarInfoStyle = new GUIStyle(EditorStyles.toolbarButton)
+							_toolBarInfoStyle = new GUIStyle(EditorStyles.helpBox)
 							{
-								alignment = TextAnchor.MiddleLeft,
-								padding = new RectOffset(8, 0, 0, 0),
-								stretchWidth = true
+								alignment = TextAnchor.MiddleCenter,
+								fontSize = 12,
 							};
 						}
 
@@ -2151,17 +2201,38 @@ namespace Framework
 							};
 						}
 
+						if (_objectStyle == null)
+						{
+							_objectStyle = new GUIStyle(EditorStyles.toolbarSearchField)
+							{
+								fontSize = 12,
+								margin = new RectOffset(0, 0, 2, 3),
+								padding = new RectOffset(16, 8, 0, 0),
+								fixedHeight = 0,
+								stretchHeight = true,
+								stretchWidth = true,
+							};
+						}
+
 						if (_itemStyle == null)
 						{
 							_itemStyle = new GUIStyle(EditorStyles.toolbarTextField)
 							{
 								alignment = TextAnchor.MiddleLeft,
-								margin = new RectOffset(0, 0, 1, 2),
+								margin = new RectOffset(0, 0, 2, 3),
 								padding = new RectOffset(8, 8, 0, 0),
 								fixedHeight = 0,
 								stretchHeight = true,
 								stretchWidth = true,
-								richText = true,
+							};
+						}
+
+						if (_itemSpaceStyle == null)
+						{
+							_itemSpaceStyle = new GUIStyle(EditorStyles.label)
+							{
+								margin = new RectOffset(0, 0, 0, 0),
+								padding = new RectOffset(0, 0, 0, 0),
 							};
 						}
 
@@ -2173,11 +2244,6 @@ namespace Framework
 								stretchWidth = true,
 								stretchHeight = true
 							};
-						}
-
-						if (_findObjectIcon == null)
-						{
-							_findObjectIcon = new GUIContent(EditorGUIUtility.FindTexture("animationvisibilitytoggleon"), kFindButtonToolTip);
 						}						
 					}
 
@@ -2185,24 +2251,25 @@ namespace Framework
 					{
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							GUILayout.Label(kObjectsDetailsLabel, _toolBarInfoStyle);
-						}
-						EditorGUILayout.EndHorizontal();
-						
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-						{
-							EditorGUILayout.Space(kButtonWidth * 2f, false);
+							//Clear Button
+							EditorGUILayout.Space(kButtonWidth, false);
 
-							GUILayout.Label(kObjectNameLabel, _headerStyle, GUILayout.Width(_nameWidth - _scrollPosition.x - kResizerWidth * 0.5f));
+							//Object name
+							GUILayout.Label(kObjectLabel, _headerStyle, GUILayout.Width(_nameWidth - _scrollPosition.x));
 
-							//Keys Resizer
+							//Name Resizer
 							RenderResizer(ref _nameResizerRect);
 
-							GUILayout.Label(kObjectTypeLabel, _headerStyle, GUILayout.Width(_typeWidth - kResizerWidth));
+							//Snapshot buttons
+							GUILayout.Label(GUIContent.none, _headerStyle, GUILayout.Width(kSnapshotButtonWidth + kClearSnapshotButtonWidth));
+
+							//Object Type
+							GUILayout.Label(kObjectTypeLabel, _headerStyle, GUILayout.Width(_typeWidth + kResizerWidth * 0.5f));
 
 							//Type Resizer
 							RenderResizer(ref _typeResizerRect);
 
+							//Object Path
 							GUILayout.Label(kObjectPathLabel, _headerStyle);
 						}
 						EditorGUILayout.EndHorizontal();
@@ -2210,6 +2277,8 @@ namespace Framework
 
 					private void DrawTable()
 					{
+						bool origGUIenabled = GUI.enabled;
+
 						_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
 						{
 							for (int i=0; i<_savedObjects.Count;)
@@ -2218,41 +2287,73 @@ namespace Framework
 
 								EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 								{
-									string name = _savedObjects[i]._name;
-
+									//Clear object button
 									if (GUILayout.Button(kClearButton, EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
 									{
 										itemRemoved = true;
 									}
 
-									bool origGUIenabled = GUI.enabled;
+									//Spacer
+									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kResizerWidth));
 
-									if (_savedObjects[i]._object == null)
+									// Object button
 									{
-										GUI.enabled = false;
-										name += kDeletedObj;
+										string name = _savedObjects[i]._name;
+										
+										if (_savedObjects[i]._object == null)
+										{
+											GUI.enabled = false;
+											name += kDeletedObj;
+										}
+
+										if (GUILayout.Button(name, _objectStyle, GUILayout.Width(_nameWidth - kResizerWidth)))
+										{
+											FocusOnObject(_savedObjects[i]._object);
+										}
+
+										GUI.enabled = origGUIenabled;
 									}
 
-									if (GUILayout.Button(_findObjectIcon, EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
+									//Spacer
+									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kResizerWidth));
+
+									//Snap shot buttons
 									{
-										FocusOnObject(_savedObjects[i]._object);
+										if (GUILayout.Button(_savedObjects[i]._hasSnapshot ? kUpdateSnapshot : kSaveSnapshot, EditorStyles.toolbarButton, GUILayout.Width(kSnapshotButtonWidth)))
+										{
+											SaveSnapshot(i);
+										}
+
+										if (!_savedObjects[i]._hasSnapshot)
+										{
+											GUI.enabled = false;
+										}
+
+										if (GUILayout.Button(kClearSnapshot, EditorStyles.toolbarButton, GUILayout.Width(kClearSnapshotButtonWidth)))
+										{
+											ClearSnapshot(i);
+										}
+
+										GUI.enabled = origGUIenabled;
 									}
 
-									GUI.enabled = origGUIenabled;
+									//Resizer
+									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kResizerWidth));
 
-									GUILayout.Space(kItemSpacing);
-									GUILayout.Label(name, _itemStyle, GUILayout.Width(_nameWidth - kItemSpacing * 1.5f));
-									GUILayout.Space(kItemSpacing);
-									GUILayout.Label(_savedObjects[i]._type.Name, _itemStyle, GUILayout.Width(_typeWidth - kItemSpacing * 1f));
-									GUILayout.Space(kItemSpacing);
+									//Object type
+									GUILayout.Label(_savedObjects[i]._type.Name, _itemStyle, GUILayout.Width(_typeWidth - kResizerWidth * 0.5f));
+									
+									//Spacer
+									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kResizerWidth));
+
+									//Object path
 									GUILayout.Label(_savedObjects[i]._path, _itemStyle, GUILayout.ExpandWidth(true));
-									GUILayout.Space(kItemSpacing);
 								}
 								EditorGUILayout.EndHorizontal();
 
 								if (itemRemoved)
 								{
-									_savedObjects.RemoveAt(i);
+									ClearSavedObject(i);
 									_needsRepaint = true;
 								}
 								else
@@ -2271,6 +2372,8 @@ namespace Framework
 
 					private void DrawBottomButton()
 					{
+						GUILayout.Label(kObjectsDetailsLabel, _toolBarInfoStyle);
+
 						if (GUILayout.Button(kClearAllButton))
 						{
 							ClearCache();
@@ -2390,7 +2493,7 @@ namespace Framework
 
 					private void RenderResizer(ref Rect rect)
 					{
-						GUILayout.Box(string.Empty, EditorStyles.toolbar, GUILayout.Width(kResizerWidth), GUILayout.ExpandHeight(true));
+						GUILayout.Box(GUIContent.none, EditorStyles.toolbar, GUILayout.Width(kResizerWidth), GUILayout.ExpandHeight(true));
 						rect = GUILayoutUtility.GetLastRect();
 						EditorGUIUtility.AddCursorRect(rect, MouseCursor.SplitResizeLeftRight);
 					}
