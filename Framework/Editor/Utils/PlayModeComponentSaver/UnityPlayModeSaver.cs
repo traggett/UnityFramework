@@ -2084,6 +2084,7 @@ namespace Framework
 					private GUIStyle _headerStyle;
 					private GUIStyle _noObjectsStyle;
 					private GUIStyle _itemStyle;
+					private GUIContent _findObjectIcon;
 					#endregion
 
 					#region Public Interface
@@ -2173,6 +2174,11 @@ namespace Framework
 								stretchHeight = true
 							};
 						}
+
+						if (_findObjectIcon == null)
+						{
+							_findObjectIcon = new GUIContent(EditorGUIUtility.FindTexture("animationvisibilitytoggleon"), kFindButtonToolTip);
+						}						
 					}
 
 					private void DrawTitleBar()
@@ -2208,7 +2214,43 @@ namespace Framework
 						{
 							for (int i=0; i<_savedObjects.Count;)
 							{
-								if (DrawObjectGUI(_savedObjects[i]))
+								bool itemRemoved = false;
+
+								EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+								{
+									string name = _savedObjects[i]._name;
+
+									if (GUILayout.Button(kClearButton, EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
+									{
+										itemRemoved = true;
+									}
+
+									bool origGUIenabled = GUI.enabled;
+
+									if (_savedObjects[i]._object == null)
+									{
+										GUI.enabled = false;
+										name += kDeletedObj;
+									}
+
+									if (GUILayout.Button(_findObjectIcon, EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
+									{
+										FocusOnObject(_savedObjects[i]._object);
+									}
+
+									GUI.enabled = origGUIenabled;
+
+									GUILayout.Space(kItemSpacing);
+									GUILayout.Label(name, _itemStyle, GUILayout.Width(_nameWidth - kItemSpacing * 1.5f));
+									GUILayout.Space(kItemSpacing);
+									GUILayout.Label(_savedObjects[i]._type.Name, _itemStyle, GUILayout.Width(_typeWidth - kItemSpacing * 1f));
+									GUILayout.Space(kItemSpacing);
+									GUILayout.Label(_savedObjects[i]._path, _itemStyle, GUILayout.ExpandWidth(true));
+									GUILayout.Space(kItemSpacing);
+								}
+								EditorGUILayout.EndHorizontal();
+
+								if (itemRemoved)
 								{
 									_savedObjects.RemoveAt(i);
 									_needsRepaint = true;
@@ -2225,48 +2267,6 @@ namespace Framework
 							}
 						}
 						EditorGUILayout.EndScrollView();
-					}
-
-					private bool DrawObjectGUI(SavedObject obj)
-					{
-						bool itemRemoved = false;
-
-						//Draw Name (GameoBject name or GameobjectName.Component), then path
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-						{
-							string name = obj._name;
-
-							if (GUILayout.Button(kClearButton, EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
-							{
-								itemRemoved = true;
-							}
-
-							bool origGUIenabled = GUI.enabled;
-
-							if (obj._object == null)
-							{
-								GUI.enabled = false;
-								name += kDeletedObj;
-							}
-							
-							if (GUILayout.Button(new GUIContent(EditorGUIUtility.FindTexture("animationvisibilitytoggleon"), kFindButtonToolTip), EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
-							{
-								FocusOnObject(obj._object);
-							}
-
-							GUI.enabled = origGUIenabled;
-
-							GUILayout.Space(kItemSpacing);
-							GUILayout.Label(name, _itemStyle, GUILayout.Width(_nameWidth - kItemSpacing * 1.5f));
-							GUILayout.Space(kItemSpacing);
-							GUILayout.Label(obj._type.Name, _itemStyle, GUILayout.Width(_typeWidth - kItemSpacing * 1f));
-							GUILayout.Space(kItemSpacing);
-							GUILayout.Label(obj._path, _itemStyle, GUILayout.ExpandWidth(true));
-							GUILayout.Space(kItemSpacing);
-						}
-						EditorGUILayout.EndHorizontal();
-
-						return itemRemoved;
 					}
 
 					private void DrawBottomButton()
@@ -2399,6 +2399,7 @@ namespace Framework
 					{
 						Selection.activeObject = obj;
 						SceneView.FrameLastActiveSceneView();
+						EditorGUIUtility.PingObject(obj);
 					}
 
 					#endregion
