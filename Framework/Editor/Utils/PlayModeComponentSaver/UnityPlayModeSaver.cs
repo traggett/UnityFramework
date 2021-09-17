@@ -22,9 +22,9 @@ namespace Framework
 			public static class UnityPlayModeSaver
 			{
 				#region Constants
-				private const string kSaveMenuString = "\u2714  Save Play Mode Changes";
-				private const string kSaveSnapshotMenuString = "\u2714  Save Play Mode Snapshot";
-				private const string kRevertMenuString = "\u2716  Forget Play Mode Changes";
+				private const string kSaveMenuString = "\u2347  Save Play Mode Changes";
+				private const string kSaveSnapshotMenuString = "\u2397  Save Play Mode Snapshot";
+				private const string kRevertMenuString = "\u236f  Forget Play Mode Changes";
 
 				private const string kSaveComponentMenuString = "CONTEXT/Component/" + kSaveMenuString;
 				private const string kSaveComponentSnapshotMenuString = "CONTEXT/Component/" + kSaveSnapshotMenuString; 
@@ -59,8 +59,6 @@ namespace Framework
 				private const char kObjectPathSplitChar = ':';
 				private const string kIdentifierProperty = "m_LocalIdentfierInFile";   //note the misspelling!
 				private const string kInspectorProperty = "inspectorMode";
-
-				private const string kWindowTitle = "Play Mode Saver";
 				#endregion
 
 				#region Helper Structs
@@ -362,23 +360,13 @@ namespace Framework
 
 				private static void RegisterSavedObject(Object obj)
 				{
-					string objectName = null;
-
-					if (obj is GameObject gameObject)
-					{
-						objectName = gameObject.name;
-					}
-					else if (obj is Component component)
-					{
-						objectName = component.gameObject.name + '.' + component.GetType().Name;
-					}
 
 					SavedObject savedObject = new SavedObject
 					{
 						_object = obj,
 						_sceneIdentifier = GetSceneIdentifier(obj),
 						_scenePath = GetScenePath(obj),
-						_name = objectName,
+						_name = GetObjectName(obj),
 						_type = obj.GetType(),
 						_path = GetObjectPath(obj),
 					};
@@ -1846,8 +1834,8 @@ namespace Framework
 
 				private static string GetObjectPath(Object obj)
 				{
-					GameObject gameObject = null;
-
+					GameObject gameObject;
+					
 					if (obj is GameObject gameObj)
 					{
 						gameObject = gameObj;
@@ -1861,7 +1849,7 @@ namespace Framework
 						return null;
 					}
 
-					string path = gameObject.name;
+					string path = string.Empty;
 
 					while (gameObject.transform.parent != null)
 					{
@@ -1869,9 +1857,25 @@ namespace Framework
 						path = gameObject.name + '/' + path;
 					}
 
-					path = gameObject.scene.name + '/' + path;
+					path = gameObject.scene.name + ".unity/" + path;
 
 					return path;
+				}
+
+				private static string GetObjectName(Object obj)
+				{
+					string objectName = null;
+
+					if (obj is GameObject gameObject)
+					{
+						objectName = gameObject.name;
+					}
+					else if (obj is Component component)
+					{
+						objectName = component.gameObject.name + '.' + component.GetType().Name;
+					}
+
+					return objectName;
 				}
 
 				private static int SafeConvertToInt(string str)
@@ -2140,50 +2144,52 @@ namespace Framework
 				public class UnityPlayModeSaverWindow : EditorWindow
 				{
 					#region Constants
-					private const float kButtonWidth = 24f;
-					private const float kSnapshotButtonWidth = 116f;
-					private const float kClearSnapshotButtonWidth = 100f;
+					private const float kClearButtonWidth = 24f;
+					private const float kClearAllButtonWidth = 220f;
+					private const float kSaveModeWidth = 102f;
+					private const float kSnapshotButtonWidth = 114f;
 					private const float kDefaultNameWidth = 280f;
-					private const float kDefaultTypeWidth = 120f;
 					private const float kMinNameWidth = 50f;
-					private static readonly GUIContent kClearButton = new GUIContent("\u2716", "Forget object changes");
-					private static readonly GUIContent kClearAllButton = new GUIContent("\u2716 Clear All Saved Objects");
-					private static readonly GUIContent kSaveSnapshot = new GUIContent("Save Snapshot");
-					private static readonly GUIContent kUpdateSnapshot = new GUIContent("Update Snapshot");
-					private static readonly GUIContent kClearSnapshot = new GUIContent("Clear Snapshot");
+					private const string kWindowTitle = "Play Mode Saver";				
 					private static readonly GUIContent kObjectLabel = new GUIContent("Saved Object"); 
-					private static readonly GUIContent kObjectTypeLabel = new GUIContent("Object Type");
 					private static readonly GUIContent kObjectPathLabel = new GUIContent("Object Path");
 					private static readonly GUIContent kNoObjectsLabel = new GUIContent("Either right click on any Game Object or Component and click 'Save Play Mode Changes'\nor drag any Game Object or Component into this window.");
 					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("These objects will have their values saved upon leaving Play Mode.\nIf an object has a snapshot saved it will restore to that, otherwise it will keep the values it had upon exiting Play Mode.");
 					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Play Mode.");
+					private static readonly string[] kSaveModeOptions = new string[] { "Save on Exit", "Snapshot" };
 					private const string kDeletedObj = " <i>(Deleted)</i>";
 					private const string kSceneNotLoadedObj = " <i>(Scene not loaded)</i>";
+					private const string kSaveSnapshot = "Save Snapshot";
+					private const string kClearAllButton = "Clear All Saved Objects";
 					private static readonly float kResizerWidth = 6.0f;
+					private static readonly float kTextFieldSpace = 6.0f;
 					#endregion
 
 					#region Private Data
 					private Vector2 _scrollPosition = Vector2.zero;
 					private float _nameWidth = kDefaultNameWidth;
-					private float _typeWidth = kDefaultTypeWidth;
 					private Rect _nameResizerRect;
-					private Rect _typeResizerRect;
 					private bool _needsRepaint;
 					private enum ResizingState
 					{
 						NotResizing,
 						ResizingName,
-						ResizingType,
 					}
 					private ResizingState _resizing;
 					private int _controlID;
 					private float _resizingOffset;
-					private GUIStyle _toolBarInfoStyle;
-					private GUIStyle _headerStyle;
-					private GUIStyle _noObjectsStyle;
-					private GUIStyle _objectStyle;
-					private GUIStyle _itemStyle;
+					private GUIStyle _bottomBarInfoStyle;
+					private GUIStyle _bottomBarInfoTextStyle;
+					private GUIStyle _headerStyle;			
+					private GUIStyle _itemNameStyle;
+					private GUIStyle _itemButtonStyle;
+					private GUIStyle _itemPathStyle;
 					private GUIStyle _itemSpaceStyle;
+					private GUIStyle _noObjectsStyle;
+					
+					private GUIContent _clearButtonContent;
+					private GUIContent _clearAllButtonContent;
+					private GUIContent _saveSnapshotContent;
 					#endregion
 
 					#region Public Interface
@@ -2230,32 +2236,26 @@ namespace Framework
 					#region Private Functions
 					private void Initialize()
 					{
+						titleContent = new GUIContent(kWindowTitle, EditorGUIUtility.IconContent("SaveAs").image);
 						minSize = new Vector2(kDefaultNameWidth, kDefaultNameWidth);
-
-						if (_toolBarInfoStyle == null)
-						{
-							_toolBarInfoStyle = new GUIStyle(EditorStyles.helpBox)
-							{
-								alignment = TextAnchor.MiddleCenter,
-								fontSize = 12,
-							};
-						}
 
 						if (_headerStyle == null)
 						{
 							_headerStyle = new GUIStyle(EditorStyles.toolbarButton)
 							{
 								alignment = TextAnchor.MiddleLeft,
+								padding = new RectOffset(8, 8, 0, 0),
+								fontStyle = FontStyle.Italic,
 							};
 						}
 
-						if (_objectStyle == null)
+						if (_itemNameStyle == null)
 						{
-							_objectStyle = new GUIStyle(EditorStyles.toolbarSearchField)
+							_itemNameStyle = new GUIStyle(EditorStyles.toolbarTextField)
 							{
-								fontSize = 12,
+								alignment = TextAnchor.MiddleLeft,
 								margin = new RectOffset(0, 0, 2, 3),
-								padding = new RectOffset(16, 8, 0, 0),
+								padding = new RectOffset(8, 8, 0, 0),
 								fixedHeight = 0,
 								stretchHeight = true,
 								stretchWidth = true,
@@ -2263,13 +2263,21 @@ namespace Framework
 							};
 						}
 
-						if (_itemStyle == null)
+						if (_itemButtonStyle == null)
 						{
-							_itemStyle = new GUIStyle(EditorStyles.toolbarTextField)
+							_itemButtonStyle = new GUIStyle(EditorStyles.toolbarButton)
 							{
 								alignment = TextAnchor.MiddleLeft,
+							};
+						}
+
+						if (_itemPathStyle == null)
+						{
+							_itemPathStyle = new GUIStyle(EditorStyles.toolbarSearchField)
+							{
+								fontSize = 12,
 								margin = new RectOffset(0, 0, 2, 3),
-								padding = new RectOffset(8, 8, 0, 0),
+								padding = new RectOffset(16, 8, 0, 0),
 								fixedHeight = 0,
 								stretchHeight = true,
 								stretchWidth = true,
@@ -2293,7 +2301,31 @@ namespace Framework
 								stretchWidth = true,
 								stretchHeight = true
 							};
-						}						
+						}
+
+						if (_bottomBarInfoStyle == null)
+						{
+							_bottomBarInfoStyle = new GUIStyle(EditorStyles.toolbar)
+							{
+								fixedHeight = 42,
+							};
+						}
+
+						if (_bottomBarInfoTextStyle == null)
+						{
+							_bottomBarInfoTextStyle = new GUIStyle(EditorStyles.toolbarButton)
+							{
+								alignment = TextAnchor.MiddleCenter,
+								fixedHeight = 40,
+								fontStyle = FontStyle.Italic
+							};
+						}
+
+						_saveSnapshotContent = new GUIContent(kSaveSnapshot, EditorGUIUtility.IconContent("SaveAs").image);
+
+						_clearButtonContent = EditorGUIUtility.IconContent("TreeEditor.Trash");
+
+						_clearAllButtonContent = new GUIContent(kClearAllButton, _clearButtonContent.image);
 					}
 
 					private void DrawTitleBar()
@@ -2301,7 +2333,7 @@ namespace Framework
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
 							//Clear Button
-							EditorGUILayout.Space(kButtonWidth, false);
+							EditorGUILayout.Space(kClearButtonWidth, false);
 
 							//Object name
 							GUILayout.Label(kObjectLabel, _headerStyle, GUILayout.Width(_nameWidth - _scrollPosition.x));
@@ -2309,14 +2341,11 @@ namespace Framework
 							//Name Resizer
 							RenderResizer(ref _nameResizerRect);
 
+							//Save Mode
+							GUILayout.Label("Save Mode", _headerStyle, GUILayout.Width(kSaveModeWidth));
+
 							//Snapshot buttons
-							GUILayout.Label(GUIContent.none, _headerStyle, GUILayout.Width(kSnapshotButtonWidth + kClearSnapshotButtonWidth));
-
-							//Object Type
-							GUILayout.Label(kObjectTypeLabel, _headerStyle, GUILayout.Width(_typeWidth + kResizerWidth * 0.5f));
-
-							//Type Resizer
-							RenderResizer(ref _typeResizerRect);
+							GUILayout.Label(GUIContent.none, _headerStyle, GUILayout.Width(kSnapshotButtonWidth));
 
 							//Object Path
 							GUILayout.Label(kObjectPathLabel, _headerStyle);
@@ -2334,26 +2363,28 @@ namespace Framework
 							{
 								bool itemRemoved = false;
 
+								SavedObject savedObject = _savedObjects[i];
+
 								EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 								{
 									//Clear object button
-									if (GUILayout.Button(kClearButton, EditorStyles.toolbarButton, GUILayout.Width(kButtonWidth)))
+									if (GUILayout.Button(_clearButtonContent, EditorStyles.toolbarButton, GUILayout.Width(kClearButtonWidth)))
 									{
 										itemRemoved = true;
 									}
 
 									//Spacer
-									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kResizerWidth));
+									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kTextFieldSpace));
 
 									// Object button
 									{
-										string name = _savedObjects[i]._name;
+										string name = GetObjectName(savedObject);
 										
-										if (_savedObjects[i]._object == null)
+										if (savedObject._object == null)
 										{
 											GUI.enabled = false;
 
-											Scene scene = SceneManager.GetSceneByPath(_savedObjects[i]._scenePath);
+											Scene scene = SceneManager.GetSceneByPath(savedObject._scenePath);
 
 											if (!scene.IsValid() || !scene.isLoaded)
 											{
@@ -2365,9 +2396,18 @@ namespace Framework
 											}
 										}
 
-										if (GUILayout.Button(name, _objectStyle, GUILayout.Width(_nameWidth - kResizerWidth)))
+										Texture icon = EditorGUIUtility.ObjectContent(null, savedObject._type).image;
+
+										if (icon == null)
 										{
-											FocusOnObject(_savedObjects[i]._object);
+											icon = EditorGUIUtility.IconContent("cs Script Icon").image;
+										}
+
+										GUIContent buttonContent = new GUIContent(name, icon);
+
+										if (GUILayout.Button(buttonContent, _itemNameStyle, GUILayout.Width(_nameWidth - kResizerWidth)))
+										{
+											FocusOnObject(savedObject._object);
 										}
 
 										GUI.enabled = origGUIenabled;
@@ -2376,52 +2416,57 @@ namespace Framework
 									//Spacer
 									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kResizerWidth));
 
-									//Snap shot buttons
+									//Save Mode
 									{
-										if (_savedObjects[i]._object == null)
+										int selected = savedObject._hasSnapshot ? 1 : 0;
+										int newSelected = EditorGUILayout.Popup(selected, kSaveModeOptions, EditorStyles.toolbarDropDown, GUILayout.Width(kSaveModeWidth));
+
+										if (selected != newSelected)
+										{
+											if (newSelected == 1)
+											{
+												SaveSnapshot(i);
+											}
+											else
+											{
+												ClearSnapshot(i);
+
+												//Check objects scene is still loaded, if not remove object
+												Scene scene = SceneManager.GetSceneByPath(savedObject._scenePath);
+
+												if (!scene.IsValid() || !scene.isLoaded)
+												{
+													itemRemoved = true;
+												}
+											}
+										}
+									}
+
+									//Snap shot button
+									{
+										if (savedObject._object == null)
 										{
 											GUI.enabled = false;
 										}
 
-										if (GUILayout.Button(_savedObjects[i]._hasSnapshot ? kUpdateSnapshot : kSaveSnapshot, EditorStyles.toolbarButton, GUILayout.Width(kSnapshotButtonWidth)))
+										if (GUILayout.Button(_saveSnapshotContent, _itemButtonStyle, GUILayout.Width(kSnapshotButtonWidth)))
 										{
 											SaveSnapshot(i);
 										}
 
 										GUI.enabled = origGUIenabled;
-
-										if (!_savedObjects[i]._hasSnapshot)
-										{
-											GUI.enabled = false;
-										}
-
-										if (GUILayout.Button(kClearSnapshot, EditorStyles.toolbarButton, GUILayout.Width(kClearSnapshotButtonWidth)))
-										{
-											ClearSnapshot(i);
-
-											//Check objects scene is still loaded, if not remove object
-											Scene scene = SceneManager.GetSceneByPath(_savedObjects[i]._scenePath);
-
-											if (!scene.IsValid() || !scene.isLoaded)
-											{
-												itemRemoved = true;
-											}
-										}
-
-										GUI.enabled = origGUIenabled;
 									}
 
-									//Resizer
-									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kResizerWidth));
-
-									//Object type
-									GUILayout.Label(_savedObjects[i]._type.Name, _itemStyle, GUILayout.Width(_typeWidth - kResizerWidth * 0.5f));
-									
 									//Spacer
-									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kResizerWidth));
+									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kTextFieldSpace));
 
 									//Object path
-									GUILayout.Label(_savedObjects[i]._path, _itemStyle, GUILayout.ExpandWidth(true));
+									if (GUILayout.Button(savedObject._path + GetObjectName(savedObject), _itemPathStyle, GUILayout.ExpandWidth(true)))
+									{
+										FocusOnObject(savedObject._object);
+									}
+
+									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kTextFieldSpace));
 								}
 								EditorGUILayout.EndHorizontal();
 
@@ -2446,13 +2491,25 @@ namespace Framework
 
 					private void DrawBottomButton()
 					{
-						GUILayout.Label(kObjectsDetailsLabel, _toolBarInfoStyle);
-
-						if (GUILayout.Button(kClearAllButton))
+						EditorGUILayout.BeginHorizontal(_bottomBarInfoStyle);
 						{
-							ClearCache();
-							_needsRepaint = true;
+							GUILayout.Label(kObjectsDetailsLabel, _bottomBarInfoTextStyle);
 						}
+						EditorGUILayout.EndHorizontal();
+
+						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+						{
+							GUILayout.FlexibleSpace();
+
+							if (GUILayout.Button(_clearAllButtonContent, GUILayout.Width(kClearAllButtonWidth)))
+							{
+								ClearCache();
+								_needsRepaint = true;
+							}
+
+							GUILayout.FlexibleSpace();
+						}
+						EditorGUILayout.EndHorizontal();
 					}
 
 					private void HandleInput()
@@ -2479,10 +2536,6 @@ namespace Framework
 										if (_nameResizerRect.Contains(inputEvent.mousePosition))
 										{
 											_resizing = ResizingState.ResizingName;
-										}
-										else if (_typeResizerRect.Contains(inputEvent.mousePosition))
-										{
-											_resizing = ResizingState.ResizingType;
 										}
 										else
 										{
@@ -2516,11 +2569,6 @@ namespace Framework
 										{
 											_nameWidth += (inputEvent.mousePosition.x - _resizingOffset);
 											_nameWidth = Math.Max(_nameWidth, kMinNameWidth);
-										}
-										else if (_resizing == ResizingState.ResizingType)
-										{
-											_typeWidth += (inputEvent.mousePosition.x - _resizingOffset);
-											_typeWidth = Math.Max(_typeWidth, kMinNameWidth);
 										}
 
 										_resizingOffset = inputEvent.mousePosition.x;
@@ -2579,6 +2627,17 @@ namespace Framework
 						EditorGUIUtility.PingObject(obj);
 					}
 
+					private string GetObjectName(SavedObject savedObject)
+					{
+						if (savedObject._object == null)
+						{
+							return savedObject._name;
+						}
+						else
+						{
+							return UnityPlayModeSaver.GetObjectName(savedObject._object);
+						}
+					}
 					#endregion
 				}
 				#endregion
