@@ -2323,9 +2323,9 @@ namespace Framework
 
 						_saveSnapshotContent = new GUIContent(kSaveSnapshot, EditorGUIUtility.IconContent("SaveAs").image);
 
-						_clearButtonContent = EditorGUIUtility.IconContent("TreeEditor.Trash");
+						_clearButtonContent = EditorGUIUtility.IconContent("d_winbtn_win_close");
 
-						_clearAllButtonContent = new GUIContent(kClearAllButton, _clearButtonContent.image);
+						_clearAllButtonContent = new GUIContent(kClearAllButton);
 					}
 
 					private void DrawTitleBar()
