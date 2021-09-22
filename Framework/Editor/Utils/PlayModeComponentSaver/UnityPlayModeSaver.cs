@@ -128,7 +128,11 @@ namespace Framework
 
 					if (Application.isPlaying && component != null)
 					{
-						RegisterSavedObject(component);
+						if (IsObjectRegistered(component, out _))
+						{
+							RegisterSavedObject(component);
+						}
+						
 						UnityPlayModeSaverWindow.Open(false);
 					}	
 				}
@@ -140,8 +144,12 @@ namespace Framework
 
 					if (Application.isPlaying && component != null)
 					{
-						RegisterSavedObject(component);
-						SaveSnapshot(_savedObjects.Count - 1);
+						if (IsObjectRegistered(component, out int index))
+						{
+							index = RegisterSavedObject(component);
+						}
+
+						SaveSnapshot(index);
 						UnityPlayModeSaverWindow.Open(false);
 					}
 				}
@@ -153,7 +161,7 @@ namespace Framework
 					Component component = command.context as Component;
 
 					if (Application.isPlaying && component != null)
-						return !IsObjectRegistered(component);
+						return !IsObjectRegistered(component, out _);
 
 					return false;
 				}
@@ -176,7 +184,7 @@ namespace Framework
 					Component component = command.context as Component;
 
 					if (Application.isPlaying && component != null)
-						return IsObjectRegistered(component);
+						return IsObjectRegistered(component, out _);
 
 					return false;
 				}
@@ -188,7 +196,10 @@ namespace Framework
 					{
 						foreach (GameObject gameObject in Selection.gameObjects)
 						{
-							RegisterSavedObject(gameObject);
+							if (!IsObjectRegistered(gameObject, out _))
+							{
+								RegisterSavedObject(gameObject);
+							}
 						}
 
 						UnityPlayModeSaverWindow.Open(false);
@@ -202,8 +213,12 @@ namespace Framework
 					{
 						foreach (GameObject gameObject in Selection.gameObjects)
 						{
-							RegisterSavedObject(gameObject);
-							SaveSnapshot(_savedObjects.Count - 1);
+							if (!IsObjectRegistered(gameObject, out int index))
+							{
+								index = RegisterSavedObject(gameObject);
+							}
+
+							SaveSnapshot(index);
 						}
 
 						UnityPlayModeSaverWindow.Open(false);
@@ -218,7 +233,7 @@ namespace Framework
 					{
 						foreach (GameObject go in Selection.gameObjects)
 						{
-							if (!IsObjectRegistered(go))
+							if (!IsObjectRegistered(go, out _))
 								return true;
 						}
 					}					
@@ -247,7 +262,7 @@ namespace Framework
 					{
 						foreach (GameObject go in Selection.gameObjects)
 						{
-							if (IsObjectRegistered(go))
+							if (IsObjectRegistered(go, out _))
 								return true;
 						}
 					}
@@ -353,14 +368,14 @@ namespace Framework
 				#endregion
 
 				#region Object Registering
-				private static bool IsObjectRegistered(Object obj)
+				private static bool IsObjectRegistered(Object obj, out int saveObjIndex)
 				{
-					return _savedObjects.FindIndex(x => x._object == obj) != -1;
+					saveObjIndex = _savedObjects.FindIndex(x => x._object == obj);
+					return saveObjIndex != -1;
 				}
 
-				private static void RegisterSavedObject(Object obj)
+				private static int RegisterSavedObject(Object obj)
 				{
-
 					SavedObject savedObject = new SavedObject
 					{
 						_object = obj,
@@ -372,13 +387,12 @@ namespace Framework
 					};
 
 					_savedObjects.Add(savedObject);
+					return _savedObjects.Count - 1;
 				}
 
 				private static void UnregisterObject(Object obj)
 				{
-					int index = _savedObjects.FindIndex(x => x._object == obj);
-
-					if (index != -1)
+					if (IsObjectRegistered(obj, out int index))
 					{
 						ClearSavedObject(index);
 					}
@@ -407,9 +421,9 @@ namespace Framework
 				private static string RegisterSceneObject(Object obj, string scenePath, int identifier)
 				{
 					//Check scene object is a prefab instance...
-					if (IsScenePrefab(obj, scenePath, out GameObject prefab, out int prefabSceneId))
+					if (IsScenePrefab(obj, scenePath, out GameObject prefabInstance, out int prefabSceneId))
 					{
-						return RegisterScenePrefabObject(scenePath, identifier, prefab, prefabSceneId, obj);
+						return RegisterScenePrefabObject(scenePath, identifier, prefabInstance, prefabSceneId, obj);
 					}
 					else
 					{
@@ -432,9 +446,29 @@ namespace Framework
 				private static string RegisterChildSceneObject(string parentEditorPrefKey, Object obj, string scenePath, int identifier)
 				{
 					//Check scene object is a prefab instance...
-					if (IsScenePrefab(obj, scenePath, out GameObject prefab, out int prefabSceneId))
+					if (IsScenePrefab(obj, scenePath, out GameObject prefabInstance, out int prefabSceneId))
 					{
-						return RegisterScenePrefabObject(scenePath, identifier, prefab, prefabSceneId, obj);
+						string prefabObjPath = GetScenePrefabChildObjectPath(prefabInstance, obj);
+
+						//First check object is already saved
+						int saveObjIndex = GetSavedScenePrefabObjectIndex(identifier, scenePath, prefabObjPath, prefabSceneId);
+
+						if (saveObjIndex != -1)
+						{
+							//If so delete the origanal saved object (save in heirachy instead)
+							string origEditorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
+							DeleteObjectEditorPrefs(origEditorPrefKey);
+						}
+
+						int childObjIndex = AddChildSaveObject(parentEditorPrefKey);
+						string editorPrefKey = parentEditorPrefKey + '.' + Convert.ToString(childObjIndex);
+
+						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
+						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
+						EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath, prefabObjPath);
+						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, prefabSceneId);
+
+						return editorPrefKey;
 					}
 					else
 					{
@@ -1245,6 +1279,7 @@ namespace Framework
 					{
 						if (data._deleted)
 						{
+							UnityEngine.Debug.Log("Play Mode Saver deleting " + data._object);
 							Undo.DestroyObjectImmediate(data._object);
 						}
 						else
@@ -1334,7 +1369,8 @@ namespace Framework
 						{
 							restoredObjectsData.Add(componentRestoredObjectData);
 						}
-						else
+						//If don't have saved data for the component then delete it (unless its a Transform which can't be deleted)
+						else if (components[i].GetType() != typeof(Transform))
 						{
 							restoredObjectsData.Add(CreateDeletedSceneObjectRestoredData(components[i], sceneStr));
 						}
@@ -1345,12 +1381,13 @@ namespace Framework
 					{
 						restoredObjects.Add(child.gameObject);
 
-						if (childrenData.TryGetValue(gameObject, out RestoredObjectData restoredObjectData))
+						if (childrenData.TryGetValue(child.gameObject, out RestoredObjectData restoredObjectData))
 						{
 							restoredObjectsData.Add(restoredObjectData);
 							
 							RestoreChildSavedObject(child.gameObject, sceneStr, childrenData, ref restoredObjects, ref restoredObjectsData);
 						}
+						//If don't have saved data for the child GameObject then delete it
 						else
 						{
 							restoredObjectsData.Add(CreateDeletedSceneObjectRestoredData(gameObject, sceneStr));
@@ -2597,13 +2634,16 @@ namespace Framework
 								{
 									foreach (Object obj in DragAndDrop.objectReferences)
 									{
-										if (obj is GameObject gameObject)
+										if (!IsObjectRegistered(obj, out _))
 										{
-											RegisterSavedObject(gameObject);
-										}
-										else if (obj is Component component)
-										{
-											RegisterSavedObject(component);
+											if (obj is GameObject gameObject)
+											{
+												RegisterSavedObject(gameObject);
+											}
+											else if (obj is Component component)
+											{
+												RegisterSavedObject(component);
+											}
 										}
 									}
 
