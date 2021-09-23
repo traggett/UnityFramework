@@ -22,9 +22,9 @@ namespace Framework
 			public static class UnityPlayModeSaver
 			{
 				#region Constants
-				private const string kSaveMenuString = "\u2347  Save Play Mode Changes";
-				private const string kSaveSnapshotMenuString = "\u2397  Save Play Mode Snapshot";
-				private const string kRevertMenuString = "\u236f  Forget Play Mode Changes";
+				private const string kSaveMenuString = "\U0001F5AB  Save Play Mode Changes";
+				private const string kSaveSnapshotMenuString = "\U0001F5AB  Save Play Mode Snapshot";
+				private const string kRevertMenuString = "\U0001F5D9  Forget Play Mode Changes";
 
 				private const string kSaveComponentMenuString = "CONTEXT/Component/" + kSaveMenuString;
 				private const string kSaveComponentSnapshotMenuString = "CONTEXT/Component/" + kSaveSnapshotMenuString; 
@@ -32,7 +32,7 @@ namespace Framework
 				private const string kSaveGameObjectMenuString = "GameObject/" + kSaveMenuString;
 				private const string kSaveGameObjectSnapshotMenuString = "GameObject/" + kSaveSnapshotMenuString;
 				private const string kRevertGameObjectMenuString = "GameObject/" + kRevertMenuString;
-				private const string kWindowMenuString = "Tools/Play Mode Saver";
+				private const string kWindowMenuString = "Window/Play Mode Saver";
 
 				private const string kUndoText = "Play Mode Changes";
 				private const string kEditorPrefsKey = "UnityPlayModeSaver.";
@@ -59,6 +59,11 @@ namespace Framework
 				private const char kObjectPathSplitChar = ':';
 				private const string kIdentifierProperty = "m_LocalIdentfierInFile";   //note the misspelling!
 				private const string kInspectorProperty = "inspectorMode";
+
+				private const string kPrefabUnpackWarningTitle = "Play Mode Saver";
+				private const string kPrefabUnpackWarningMsg = "You removed a Component or child GameObject from a prefab during Play Mode which can't be applied without unpacking the prefab.\nDo you want to do this or ignore this change?";
+				private const string kPrefabUnpackWarningUnpack = "Unpack";
+				private const string kPrefabUnpackWarningIgnore = "Ignore";
 				#endregion
 
 				#region Helper Structs
@@ -128,7 +133,7 @@ namespace Framework
 
 					if (Application.isPlaying && component != null)
 					{
-						if (IsObjectRegistered(component, out _))
+						if (!IsObjectRegistered(component, out _))
 						{
 							RegisterSavedObject(component);
 						}
@@ -144,7 +149,7 @@ namespace Framework
 
 					if (Application.isPlaying && component != null)
 					{
-						if (IsObjectRegistered(component, out int index))
+						if (!IsObjectRegistered(component, out int index))
 						{
 							index = RegisterSavedObject(component);
 						}
@@ -463,7 +468,6 @@ namespace Framework
 						int childObjIndex = AddChildSaveObject(parentEditorPrefKey);
 						string editorPrefKey = parentEditorPrefKey + '.' + Convert.ToString(childObjIndex);
 
-						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
 						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
 						EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath, prefabObjPath);
 						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, prefabSceneId);
@@ -485,7 +489,6 @@ namespace Framework
 						int childObjIndex = AddChildSaveObject(parentEditorPrefKey);
 						string editorPrefKey = parentEditorPrefKey + '.' + Convert.ToString(childObjIndex);
 
-						EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
 						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
 
 						return editorPrefKey;
@@ -1279,8 +1282,24 @@ namespace Framework
 					{
 						if (data._deleted)
 						{
-							UnityEngine.Debug.Log("Play Mode Saver deleting " + data._object);
-							Undo.DestroyObjectImmediate(data._object);
+							//If object is part of prefab instance then cant destory it without breaking prefab instance
+							GameObject prefabInstance = PrefabUtility.GetNearestPrefabInstanceRoot(data._object);
+
+							if (prefabInstance != null)
+							{
+								if (EditorUtility.DisplayDialog(kPrefabUnpackWarningTitle, kPrefabUnpackWarningMsg, kPrefabUnpackWarningUnpack, kPrefabUnpackWarningIgnore))
+								{
+									//Unpack prefab.
+									PrefabUtility.UnpackPrefabInstance(prefabInstance, PrefabUnpackMode.OutermostRoot, InteractionMode.UserAction);
+
+									//Destory object
+									Undo.DestroyObjectImmediate(data._object);
+								}
+							}
+							else
+							{
+								Undo.DestroyObjectImmediate(data._object);
+							}
 						}
 						else
 						{
@@ -1390,7 +1409,7 @@ namespace Framework
 						//If don't have saved data for the child GameObject then delete it
 						else
 						{
-							restoredObjectsData.Add(CreateDeletedSceneObjectRestoredData(gameObject, sceneStr));
+							restoredObjectsData.Add(CreateDeletedSceneObjectRestoredData(child.gameObject, sceneStr));
 						}
 					}
 				}
@@ -2184,7 +2203,7 @@ namespace Framework
 					private const float kClearButtonWidth = 24f;
 					private const float kClearAllButtonWidth = 220f;
 					private const float kSaveModeWidth = 102f;
-					private const float kSnapshotButtonWidth = 114f;
+					private const float kSnapshotButtonWidth = 116f;
 					private const float kDefaultNameWidth = 280f;
 					private const float kMinNameWidth = 50f;
 					private const string kWindowTitle = "Play Mode Saver";				
@@ -2196,7 +2215,7 @@ namespace Framework
 					private static readonly string[] kSaveModeOptions = new string[] { "Save on Exit", "Snapshot" };
 					private const string kDeletedObj = " <i>(Deleted)</i>";
 					private const string kSceneNotLoadedObj = " <i>(Scene not loaded)</i>";
-					private const string kSaveSnapshot = "Save Snapshot";
+					private const string kSaveSnapshot = " Save Snapshot";
 					private const string kClearAllButton = "Clear All Saved Objects";
 					private static readonly float kResizerWidth = 6.0f;
 					private static readonly float kTextFieldSpace = 6.0f;
@@ -2227,6 +2246,7 @@ namespace Framework
 					private GUIContent _clearButtonContent;
 					private GUIContent _clearAllButtonContent;
 					private GUIContent _saveSnapshotContent;
+					private Texture _scriptIcon;
 					#endregion
 
 					#region Public Interface
@@ -2363,6 +2383,8 @@ namespace Framework
 						_clearButtonContent = EditorGUIUtility.IconContent("d_winbtn_win_close");
 
 						_clearAllButtonContent = new GUIContent(kClearAllButton);
+
+						_scriptIcon = EditorGUIUtility.IconContent("cs Script Icon").image;
 					}
 
 					private void DrawTitleBar()
@@ -2415,7 +2437,7 @@ namespace Framework
 
 									// Object button
 									{
-										string name = GetObjectName(savedObject);
+										string name = " " + GetObjectName(savedObject);
 										
 										if (savedObject._object == null)
 										{
@@ -2437,7 +2459,7 @@ namespace Framework
 
 										if (icon == null)
 										{
-											icon = EditorGUIUtility.IconContent("cs Script Icon").image;
+											icon = _scriptIcon;
 										}
 
 										GUIContent buttonContent = new GUIContent(name, icon);
