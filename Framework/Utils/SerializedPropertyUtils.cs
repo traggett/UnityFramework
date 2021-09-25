@@ -226,10 +226,11 @@ namespace Framework
 						//First get array
 						string arrayPropertyName = propertyName.Substring(0, arrayStartIndex);
 						Array array = GetValue(sourceObj, arrayPropertyName) as Array;
+						
 						//Then find index of object
 						int index = Convert.ToInt32(propertyName.Substring(arrayStartIndex + 1, arrayEndIndex - arrayStartIndex - 1));
 						
-						//If there are child objects update them
+						//If there is a child object, update its value
 						if (elements.Length > 1)
 						{
 							object childObject = array.GetValue(index);
@@ -238,13 +239,13 @@ namespace Framework
 							value = SetSerializedPropertyValue(childObject, childPropertyPath, value);
 						}
 
-
 						array.SetValue(value, index);
+
 						return SetValue(sourceObj, arrayPropertyName, array);
 					}
 					else
 					{
-						//If there are child objects update them
+						//If there is a child object, update its value
 						if (elements.Length > 1)
 						{
 							object childObject = GetValue(sourceObj, propertyName);
