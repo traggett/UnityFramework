@@ -14,47 +14,25 @@ namespace Framework
 		{
 			public static class SerializedPropertyUtils
 			{
+				private const string ARRAY_START_TAG = ".Array.data[";
+
 				#region Public Interface
-				public static Type GetSerializedPropertyType(SerializedProperty prop)
-				{
-					string path = prop.propertyPath.Replace(".Array.data[", "[");
-					object obj = prop.serializedObject.targetObject;
-					Type propertyType = null;
-
-					if (obj != null)
-					{
-						string[] elements = path.Split('.');
-						propertyType = obj.GetType();
-
-						for (int i = 0; i < elements.Length; i++)
-						{
-							if (elements[i].Contains("["))
-							{
-								string elementName = elements[i].Substring(0, elements[i].IndexOf("["));
-								propertyType = GetPropertyElementType(propertyType, elementName).GetElementType();
-							}
-							else
-							{
-								propertyType = GetPropertyElementType(propertyType, elements[i]);
-							}
-						}
-					}
-
-					return propertyType;
-				}
-
 				public static T GetSerializedPropertyValue<T>(SerializedProperty prop) where T : new ()
 				{
-					string path = prop.propertyPath.Replace(".Array.data[", "[");
+					string path = prop.propertyPath.Replace(ARRAY_START_TAG, "[");
 					object obj = prop.serializedObject.targetObject;
 					string[] elements = path.Split('.');
-
+					
 					for (int i = 0; i < elements.Length; i++)
 					{
-						if (elements[i].Contains("["))
+						int arrayStartIndex = elements[i].IndexOf('[');
+						int arrayEndIndex = arrayStartIndex != -1 ? elements[i].IndexOf(']') : -1;
+
+						if (arrayEndIndex != -1)
 						{
-							string elementName = elements[i].Substring(0, elements[i].IndexOf("["));
-							int index = Convert.ToInt32(elements[i].Substring(elements[i].IndexOf("[")).Replace("[", "").Replace("]", ""));
+							string elementName = elements[i].Substring(0, arrayStartIndex);
+							int index = Convert.ToInt32(elements[i].Substring(arrayStartIndex + 1, arrayEndIndex - arrayStartIndex - 1));
+
 							obj = GetValue(obj, elementName, index);
 						}
 						else
@@ -73,7 +51,7 @@ namespace Framework
 				{
 					Undo.RecordObjects(prop.serializedObject.targetObjects, "Change " + prop.name);
 
-					string path = prop.propertyPath.Replace(".Array.data[", "[");
+					string path = prop.propertyPath.Replace(ARRAY_START_TAG, "[");
 
 					foreach (UnityEngine.Object obj in prop.serializedObject.targetObjects)
 					{
@@ -82,12 +60,43 @@ namespace Framework
 					}
 				}
 
+				public static Type GetSerializedPropertyType(SerializedProperty prop)
+				{
+					string path = prop.propertyPath.Replace(ARRAY_START_TAG, "[");
+					object obj = prop.serializedObject.targetObject;
+					Type propertyType = null;
+
+					if (obj != null)
+					{
+						string[] elements = path.Split('.');
+						propertyType = obj.GetType();
+
+						for (int i = 0; i < elements.Length; i++)
+						{
+							int arrayStartIndex = elements[i].IndexOf('[');
+							int arrayEndIndex = arrayStartIndex != -1 ? elements[i].IndexOf(']') : -1;
+
+							if (arrayEndIndex != -1)
+							{
+								string elementName = elements[i].Substring(0, arrayStartIndex);
+								propertyType = GetPropertyElementType(propertyType, elementName).GetElementType();
+							}
+							else
+							{
+								propertyType = GetPropertyElementType(propertyType, elements[i]);
+							}
+						}
+					}
+
+					return propertyType;
+				}
+
 				public static T GetPropertyDrawerTargetObject<T>(PropertyDrawer propertyDrawer, SerializedProperty property)
 				{
 					return (T)propertyDrawer.fieldInfo.GetValue(property.serializedObject.targetObject);
 				}
 
-				public static T[] GetSelectedPropertyDrawerTargetObject<T>(PropertyDrawer propertyDrawer, SerializedProperty property)
+				public static T[] GetPropertyDrawerTargetObjects<T>(PropertyDrawer propertyDrawer, SerializedProperty property)
 				{
 					T[] selectedStructs = new T[property.serializedObject.targetObjects.Length];
 
@@ -104,7 +113,7 @@ namespace Framework
 					propertyDrawer.fieldInfo.SetValue(property.serializedObject.targetObject, newValue);
 				}
 
-				public static void SaveSelectedPropertyDrawerTargetObject<T>(PropertyDrawer propertyDrawer, SerializedProperty property, T[] newValues)
+				public static void SavePropertyDrawerTargetObjects<T>(PropertyDrawer propertyDrawer, SerializedProperty property, T[] newValues)
 				{
 					for (int i = 0; i < property.serializedObject.targetObjects.Length; i++)
 					{
@@ -129,6 +138,7 @@ namespace Framework
 				}
 				#endregion
 
+				#region Private Functinos
 				private static Type GetPropertyElementType(Type type, string elementName)
 				{
 					while (type != null)
@@ -257,6 +267,7 @@ namespace Framework
 						return SetValue(sourceObj, propertyName, value);
 					}
 				}
+				#endregion
 			}
 		}
 	}
