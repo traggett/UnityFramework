@@ -146,7 +146,7 @@ namespace Framework
 					bool enterChildren = true;
 					while (iterator.NextVisible(enterChildren))
 					{
-						using (new EditorGUI.DisabledScope("m_Script" == iterator.propertyPath))
+						if (iterator.propertyPath != "m_Script")
 						{
 							rect.height = EditorGUI.GetPropertyHeight(iterator);
 							EditorGUI.PropertyField(rect, iterator, true);
@@ -169,7 +169,7 @@ namespace Framework
 					bool enterChildren = true;
 					while (iterator.NextVisible(enterChildren))
 					{
-						using (new EditorGUI.DisabledScope("m_Script" == iterator.propertyPath))
+						if (iterator.propertyPath != "m_Script")
 						{
 							height += EditorGUI.GetPropertyHeight(iterator);
 						}
