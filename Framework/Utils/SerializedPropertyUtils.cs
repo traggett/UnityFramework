@@ -136,6 +136,48 @@ namespace Framework
 					if (property != null)
 						property.intValue = EditorGUILayout.MaskField(new GUIContent(property.displayName), property.intValue, property.enumDisplayNames, options);
 				}
+
+				public static bool DrawSerialisedObjectProperties(SerializedObject obj, Rect rect)
+				{
+					EditorGUI.BeginChangeCheck();
+					obj.UpdateIfRequiredOrScript();
+
+					SerializedProperty iterator = obj.GetIterator();
+					bool enterChildren = true;
+					while (iterator.NextVisible(enterChildren))
+					{
+						using (new EditorGUI.DisabledScope("m_Script" == iterator.propertyPath))
+						{
+							rect.height = EditorGUI.GetPropertyHeight(iterator);
+							EditorGUI.PropertyField(rect, iterator, true);
+							rect.y += rect.height;
+						}
+						enterChildren = false;
+					}
+					obj.ApplyModifiedProperties();
+
+					return EditorGUI.EndChangeCheck();
+				}
+
+				public static float GetSerialisedObjectPropertiesHeight(SerializedObject obj)
+				{
+					float height = 0f;
+
+					obj.UpdateIfRequiredOrScript();
+
+					SerializedProperty iterator = obj.GetIterator();
+					bool enterChildren = true;
+					while (iterator.NextVisible(enterChildren))
+					{
+						using (new EditorGUI.DisabledScope("m_Script" == iterator.propertyPath))
+						{
+							height += EditorGUI.GetPropertyHeight(iterator);
+						}
+						enterChildren = false;
+					}
+
+					return height;
+				}
 				#endregion
 
 				#region Private Functinos
