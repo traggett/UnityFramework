@@ -138,7 +138,10 @@ namespace Framework
 						CreateWindow();
 
 					_instance._filter = null;
+					_instance.UpdateKeys();
 					_instance.SelectKey(key);
+
+					_instance.OpenTextEditor(key, Localisation.GetCurrentLanguage());
 				}
 
 				public LocalisationEditorPrefs GetEditorPrefs()
