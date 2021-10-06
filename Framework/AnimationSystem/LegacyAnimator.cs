@@ -405,6 +405,11 @@ namespace Framework
 				return 0f;
 			}
 
+			public void Sample()
+			{
+				AnimationComponent.Sample();
+			}
+
 #if UNITY_EDITOR
 			public string[] GetAnimationNames()
 			{
