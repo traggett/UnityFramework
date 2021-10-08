@@ -48,7 +48,8 @@ namespace Framework
 					{
 						font = _parent.GetEditorPrefs()._font,
 						fontSize = _parent.GetEditorPrefs()._editorFontSize,
-						richText = _richText
+						richText = _richText,
+						padding = new RectOffset(8, 8, 6, 6),
 					};
 
 					_text = Localisation.GetRawString(_key, _language);
