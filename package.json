@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "license": "MIT",
   "dependencies": {
-	}
+	},
   "displayName": "Unity Framework",
   "description": "Useful utilities and framework for Unity projects",
   "unity": "2020.1",
-  "author": "Tom Raggett (https://github.com/traggett)",
+  "author": "Tom Raggett (https://github.com/traggett)"
 }
