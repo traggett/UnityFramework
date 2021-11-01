@@ -122,14 +122,21 @@ namespace Framework
 
 			public static void DestroyChildPrefabs(Transform parent, bool instant = true)
 			{
+				List<PooledPrefab> children = new List<PooledPrefab>();
+
 				for (int i = 0; i < parent.childCount; i++)
 				{
 					PooledPrefab prefab = parent.GetChild(i).GetComponent<PooledPrefab>();
 
 					if (prefab != null)
 					{
-						prefab._parentPool.Destroy(prefab.gameObject, instant);
+						children.Add(prefab);
 					}
+				}
+
+				foreach (PooledPrefab prefab in children)
+				{
+					prefab._parentPool.Destroy(prefab.gameObject, instant);
 				}
 			}
 
