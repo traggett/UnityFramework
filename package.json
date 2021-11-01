@@ -3,7 +3,7 @@
   "version": "1.0.1",
   "license": "MIT",
   "dependencies": {
-    " com.unity.inputsystem": "1.0.0",
+    " com.unity.inputsystem": "1.0.0"
   }
   "displayName": "Unity Framework",
   "description": "Useful utilities and framework for Unity projects",
