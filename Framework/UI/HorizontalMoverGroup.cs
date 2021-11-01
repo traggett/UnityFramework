@@ -54,14 +54,16 @@ namespace Framework
 
 						activeChildren.Add(child.gameObject);
 
+						float x = xPos + child.pivot.x * RectTransformUtils.GetWidth(child);
+
 						if (mover != null)
 						{
 							bool wasActive = _activeChildren.Contains(child.gameObject);
-							mover.SetX(xPos, wasActive ? movementTime : -1f, _movementInterpolationType);
+							mover.SetX(x, wasActive ? movementTime : -1f, _movementInterpolationType);
 						}
 						else
 						{
-							RectTransformUtils.SetX(child, xPos);
+							RectTransformUtils.SetX(child, x);
 						}
 
 						xPos += RectTransformUtils.GetWidth(child) + _spacing;
@@ -79,7 +81,9 @@ namespace Framework
 				{
 					if (child.gameObject.activeSelf)
 					{
-						RectTransformUtils.SetX(child, xPos);
+						float x = xPos + child.pivot.x * RectTransformUtils.GetWidth(child);
+
+						RectTransformUtils.SetX(child, x);
 						xPos += RectTransformUtils.GetWidth(child) + _spacing;
 					}
 				}
@@ -94,8 +98,7 @@ namespace Framework
 					case TextAnchor.LowerCenter:
 						{
 							float contentWidth = GetContentWidth();
-							float width = ((RectTransform)this.transform).rect.width;
-							return (width * 0.5f) - (contentWidth * 0.5f);
+							return (contentWidth) * -0.5f;
 						}
 					case TextAnchor.UpperRight:
 					case TextAnchor.MiddleRight:
