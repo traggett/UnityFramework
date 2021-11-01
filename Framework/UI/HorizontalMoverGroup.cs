@@ -14,6 +14,7 @@ namespace Framework
 			public float _spacing;
 			public float _movementTime;
 			public InterpolationType _movementInterpolationType;
+			public bool _includeDisabledGameObjects;
 
 			private Dictionary<RectTransform, RectTransformMover> _childMovers = new Dictionary<RectTransform, RectTransformMover>();
 			private List<GameObject> _activeChildren = new List<GameObject>();
@@ -44,7 +45,7 @@ namespace Framework
 
 				foreach (RectTransform child in this.transform)
 				{
-					if (child != null && child.gameObject.activeSelf)
+					if (child != null && (_includeDisabledGameObjects || child.gameObject.activeSelf))
 					{
 						if (!_childMovers.TryGetValue(child, out RectTransformMover mover) || mover == null)
 						{
@@ -79,7 +80,7 @@ namespace Framework
 
 				foreach (RectTransform child in this.transform)
 				{
-					if (child.gameObject.activeSelf)
+					if (_includeDisabledGameObjects || child.gameObject.activeSelf)
 					{
 						float x = xPos + child.pivot.x * RectTransformUtils.GetWidth(child);
 
@@ -108,7 +109,7 @@ namespace Framework
 							float width = ((RectTransform)this.transform).rect.width;
 							return width - contentWidth;
 						}
-					
+
 					case TextAnchor.UpperLeft:
 					case TextAnchor.MiddleLeft:
 					case TextAnchor.LowerLeft:
