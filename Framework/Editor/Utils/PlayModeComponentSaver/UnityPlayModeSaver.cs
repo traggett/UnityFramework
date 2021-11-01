@@ -26,12 +26,16 @@ namespace Framework
 				private const string kSaveSnapshotMenuString = "\U0001F5AB  Save Play Mode Snapshot";
 				private const string kRevertMenuString = "\U0001F5D9  Forget Play Mode Changes";
 
+				private const int kSaveComponentMenuPriority = 12;
 				private const string kSaveComponentMenuString = "CONTEXT/Component/" + kSaveMenuString;
 				private const string kSaveComponentSnapshotMenuString = "CONTEXT/Component/" + kSaveSnapshotMenuString; 
 				private const string kRevertComponentMenuString = "CONTEXT/Component/" + kRevertMenuString;
+
+				private const int kSaveGameObjectMenuPriority = -100;
 				private const string kSaveGameObjectMenuString = "GameObject/" + kSaveMenuString;
 				private const string kSaveGameObjectSnapshotMenuString = "GameObject/" + kSaveSnapshotMenuString;
 				private const string kRevertGameObjectMenuString = "GameObject/" + kRevertMenuString;
+
 				private const string kWindowMenuString = "Window/Play Mode Saver";
 
 				private const string kUndoText = "Play Mode Changes";
@@ -126,7 +130,7 @@ namespace Framework
 				#endregion
 
 				#region Menu Functions
-				[MenuItem(kSaveComponentMenuString, false, 12)]
+				[MenuItem(kSaveComponentMenuString, false, kSaveComponentMenuPriority)]
 				public static void SaveComponent(MenuCommand command)
 				{
 					Component component = command.context as Component;
@@ -142,7 +146,7 @@ namespace Framework
 					}	
 				}
 
-				[MenuItem(kSaveComponentSnapshotMenuString, false, 12)]
+				[MenuItem(kSaveComponentSnapshotMenuString, false, kSaveComponentMenuPriority)]
 				public static void SaveComponentSnapshot(MenuCommand command)
 				{
 					Component component = command.context as Component;
@@ -171,7 +175,7 @@ namespace Framework
 					return false;
 				}
 
-				[MenuItem(kRevertComponentMenuString, false, 12)]
+				[MenuItem(kRevertComponentMenuString, false, kSaveComponentMenuPriority)]
 				public static void RevertComponent(MenuCommand command)
 				{
 					Component component = command.context as Component;
@@ -194,7 +198,7 @@ namespace Framework
 					return false;
 				}
 
-				[MenuItem(kSaveGameObjectMenuString, false, -100)]
+				[MenuItem(kSaveGameObjectMenuString, false, kSaveGameObjectMenuPriority)]
 				public static void SaveGameObject()
 				{
 					if (Application.isPlaying && Selection.gameObjects != null)
@@ -211,7 +215,7 @@ namespace Framework
 					}	
 				}
 
-				[MenuItem(kSaveGameObjectSnapshotMenuString, false, -100)]
+				[MenuItem(kSaveGameObjectSnapshotMenuString, false, kSaveGameObjectMenuPriority)]
 				public static void SaveGameObjectSnapshot()
 				{
 					if (Application.isPlaying && Selection.gameObjects != null)
@@ -246,7 +250,7 @@ namespace Framework
 					return false;
 				}
 
-				[MenuItem(kRevertGameObjectMenuString, false, -100)]
+				[MenuItem(kRevertGameObjectMenuString, false, kSaveGameObjectMenuPriority)]
 				public static void RevertGameObject()
 				{
 					if (Application.isPlaying && Selection.gameObjects != null)

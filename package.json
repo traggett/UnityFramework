@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "license": "MIT",
   "dependencies": {
-	},
+    " com.unity.inputsystem": "1.0.0",
+  }
   "displayName": "Unity Framework",
   "description": "Useful utilities and framework for Unity projects",
   "unity": "2020.1",
