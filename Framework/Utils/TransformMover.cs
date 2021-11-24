@@ -60,7 +60,7 @@ namespace Framework
 		#region Public Interface
 		public void SetLocalPosition(Vector3 position, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 		{
-			Vector2 currentPosition = this.transform.localPosition;
+			Vector3 currentPosition = this.transform.localPosition;
 
 			if (time > 0f)
 			{
@@ -79,7 +79,7 @@ namespace Framework
 
 		public void SetWorldPosition(Vector3 position, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 		{
-			Vector2 currentPosition = this.transform.position;
+			Vector3 currentPosition = this.transform.position;
 
 			if (time > 0f)
 			{
