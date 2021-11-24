@@ -7,7 +7,7 @@ namespace Framework
 	public class TransformMover : MonoBehaviour
 	{
 		#region Public Data
-		public float _targetTolerance = Mathf.Epsilon;
+		public float _targetTolerance = 0.001f;
 		#endregion
 
 		#region Private Data
@@ -58,7 +58,7 @@ namespace Framework
 		#endregion
 
 		#region Public Interface
-		public void SetLocalPosition(Vector2 position, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
+		public void SetLocalPosition(Vector3 position, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 		{
 			Vector2 currentPosition = this.transform.localPosition;
 
@@ -77,7 +77,7 @@ namespace Framework
 			}
 		}
 
-		public void SetWorldPosition(Vector2 position, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
+		public void SetWorldPosition(Vector3 position, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
 		{
 			Vector2 currentPosition = this.transform.position;
 
