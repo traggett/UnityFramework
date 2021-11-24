@@ -30,7 +30,7 @@ namespace Framework
 				private Vector3 _worldBoundingSphereCentre;
 				#endregion
 
-				#region MonoBehaviour
+				#region Unity Messages
 				private void Awake()
 				{
 					CachedTransformData(this.transform);

@@ -60,7 +60,7 @@ namespace Framework
 			protected abstract void OnSetColor(Color color);
 			protected abstract void OnSetAlpha(float alpha);
 
-			#region MonoBehaviour
+			#region Unity Messages
 			private void Update()
 			{
 				if (_lerp > 0f)

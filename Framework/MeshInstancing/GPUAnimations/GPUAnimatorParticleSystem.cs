@@ -44,7 +44,7 @@ namespace Framework
 				private static readonly Vector4 kDefaultData = new Vector4(-1.0f, 0.0f, 1.0f, 0.0f);
 				#endregion
 
-				#region Monobehaviour
+				#region Unity Messages
 				private void Update()
 				{
 					InitialiseIfNeeded();

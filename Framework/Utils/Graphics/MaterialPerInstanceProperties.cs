@@ -102,7 +102,7 @@ namespace Framework
 			public TextureProperty[] _textureProperties;
 			#endregion
 
-			#region MonoBehaviour
+			#region Unity Messages
 			private void OnEnable()
 			{
 				UpdateProperties();

@@ -175,7 +175,7 @@ namespace Framework
 			}
 			#endregion
 
-			#region MonoBehaviour
+			#region Unity Messages
 			private void Update()
 			{
 				float deltaTime = Time.deltaTime;

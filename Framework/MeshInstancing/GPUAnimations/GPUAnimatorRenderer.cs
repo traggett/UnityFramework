@@ -18,7 +18,7 @@ namespace Framework
 				private float[] _backgroundAnimationFrames;
 				#endregion
 
-				#region MonoBehaviour
+				#region Unity Messages
 				private void LateUpdate()
 				{
 #if UNITY_EDITOR

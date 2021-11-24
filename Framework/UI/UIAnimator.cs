@@ -77,7 +77,7 @@ namespace Framework
 			private bool _initialised;
 			#endregion
 
-			#region MonoBehaviour
+			#region Unity Messages
 			protected virtual void Awake()
 			{
 				_initialised = true;

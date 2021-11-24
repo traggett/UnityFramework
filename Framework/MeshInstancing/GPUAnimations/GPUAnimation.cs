@@ -77,7 +77,7 @@ namespace Framework
 				private float _queuedAnimationCrossFadeLength;
 				#endregion
 
-				#region MonoBehaviour
+				#region Unity Messages
 				private void Update()
 				{
 					UpdateAnimations(Time.deltaTime);

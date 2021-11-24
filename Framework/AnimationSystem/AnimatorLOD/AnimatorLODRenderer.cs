@@ -12,7 +12,7 @@ namespace Framework
             public AnimatorLODGroup _animatorLOD;
             #endregion
 
-            #region MonoBehaviour
+            #region Unity Messages
             private void OnWillRenderObject()
             {
                 _animatorLOD.OnLODRendered(this, Camera.current);

@@ -20,7 +20,7 @@ namespace Framework
 			protected Camera _vertexBufferCamera;
 			#endregion
 			
-			#region Monobehaviour
+			#region Unity Messages
 			private void Start()
 			{
 				CreateVertexBuffer();

@@ -62,7 +62,7 @@ namespace Framework
 			private float[] _frustumPlaneDistances;
 			#endregion
 
-			#region Monobehaviour
+			#region Unity Messages
 			private void Awake()
 			{
 				Initialise();

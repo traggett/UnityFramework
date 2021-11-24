@@ -90,7 +90,7 @@ namespace Framework
 #endif
 				#endregion
 
-				#region MonoBehaviour
+				#region Unity Messages
 				protected override void OnEnable()
 				{
 					SetTextMeshSettingsForLanguage();

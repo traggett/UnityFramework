@@ -231,7 +231,7 @@ namespace Framework
 
 			#endregion
 
-			#region MonoBehaviour
+			#region Unity Messages
 			void OnEnable()
 			{
 				if (Application.isPlaying && _nodegraph == null)

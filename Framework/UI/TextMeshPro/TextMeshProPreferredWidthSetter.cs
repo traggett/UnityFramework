@@ -15,7 +15,7 @@ namespace Framework
 				private TextMeshProUGUI _textMesh;
 				#endregion
 
-				#region MonoBehaviour
+				#region Unity Messages
 				private void OnEnable()
 				{
 					if (_textMesh == null)

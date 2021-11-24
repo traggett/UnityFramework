@@ -40,7 +40,7 @@ namespace Framework
             private static List<AnimatorLODControllerOverrides> _controllerOverrides = new List<AnimatorLODControllerOverrides>();
             #endregion
 
-            #region MonoBehaviour
+            #region Unity Messages
             private void Awake()
             {
                 _controllerOverrides.Add(this);

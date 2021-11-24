@@ -37,7 +37,7 @@ namespace Framework
 				return _camera;
 			}
 
-			#region MonoBehaviour Calls
+			#region Unity Messages
 			public void OnPreCull()
 			{
 				_onPreCull(this, new CameraEvent(GetCamera()));

@@ -24,7 +24,7 @@ namespace Framework
             private int _currentLODLevel;
             #endregion
 
-            #region MonoBehaviour
+            #region Unity Messages
             private void Awake()
             {
                 _animator = GetComponent<Animator>();

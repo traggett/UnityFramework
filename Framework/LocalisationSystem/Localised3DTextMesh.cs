@@ -23,7 +23,7 @@ namespace Framework
 			private TextMesh _textMesh;
 			#endregion
 
-			#region MonoBehaviour
+			#region Unity Messages
 #if UNITY_EDITOR
 			private void OnValidate()
 			{

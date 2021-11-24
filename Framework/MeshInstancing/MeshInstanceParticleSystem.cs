@@ -53,7 +53,7 @@ namespace Framework
 			private float[] _frustrumPlaneDistances ;
 			#endregion
 
-			#region Monobehaviour
+			#region Unity Messages
 			private void Update()
 			{
 				InitialiseIfNeeded();

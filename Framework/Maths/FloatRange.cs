@@ -77,6 +77,16 @@ namespace Framework
 				return Mathf.Lerp(_min, _max, t);
 			}
 
+			public float GetT(float value)
+			{
+				return (value - _min) / (_max - _min);
+			}
+
+			public float GetClampedT(float value)
+			{
+				return Mathf.Clamp01(GetT(value));
+			}
+
 			public bool Contains(float value)
 			{
 				return _min <= value && value <= _max;

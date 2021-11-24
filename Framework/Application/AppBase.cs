@@ -7,7 +7,7 @@ namespace Framework
 	
 	public abstract class AppBase : MonoBehaviour
 	{
-		#region MonoBehaviour Calls
+		#region Unity Messages
 		void Awake()
 		{
 			

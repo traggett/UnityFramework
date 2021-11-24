@@ -25,7 +25,7 @@ namespace Framework
 			private Coroutine _process;
 			#endregion
 
-			#region MonoBehaviour
+			#region Unity Messages
 			void Start()
 			{
 				if (_initialState.IsValid())

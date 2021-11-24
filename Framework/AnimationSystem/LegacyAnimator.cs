@@ -98,7 +98,7 @@ namespace Framework
 			private readonly List<LayerGroup> _layers = new List<LayerGroup>();
 			#endregion
 
-			#region MonoBehaviour Calls
+			#region Unity Messages
 			void Update()
 			{
 				foreach (LayerGroup layerGroup in _layers)

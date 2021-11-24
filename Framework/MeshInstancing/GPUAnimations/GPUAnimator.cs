@@ -26,7 +26,7 @@ namespace Framework
 				private GPUAnimatorLayer[] _layers;
 				#endregion
 				
-				#region MonoBehaviour
+				#region Unity Messages
 				private void LateUpdate()
 				{
 					if (_initialised)

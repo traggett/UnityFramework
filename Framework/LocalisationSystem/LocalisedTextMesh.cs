@@ -61,7 +61,7 @@ namespace Framework
 #endif
 			#endregion
 
-			#region MonoBehaviour
+			#region Unity Messages
 			protected virtual void OnEnable()
 			{
 				RefreshText();

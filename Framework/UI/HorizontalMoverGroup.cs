@@ -128,7 +128,7 @@ namespace Framework
 
 				foreach (RectTransform child in this.transform)
 				{
-					if (child != null && child.gameObject.activeSelf)
+					if (child != null && (_includeDisabledGameObjects ||child.gameObject.activeSelf))
 					{
 						if (first)
 							first = false;

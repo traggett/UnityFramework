@@ -24,7 +24,7 @@ namespace Framework
 				private int _exposedBoneNumSamples;
 				#endregion
 
-				#region MonoBehaviour
+				#region Unity Messages
 				private void Awake()
 				{
 					if (_animator != null)
