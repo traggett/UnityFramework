@@ -42,8 +42,17 @@ namespace Framework
 				{
 					if (!IsAwake(textMesh))
 					{
+						//Manually call awake
 						MethodInfo awakeMethod = textMesh.GetType().GetMethod("Awake", BindingFlags.NonPublic | BindingFlags.Instance);
 						awakeMethod.Invoke(textMesh, new object[0]);
+					}
+
+					//Need to also cache canvas - might be inactive
+					if (textMesh.canvas == null)
+					{
+						Canvas canvas = textMesh.GetComponentInParent<Canvas>(true);
+						FieldInfo canvasField = typeof(UnityEngine.UI.Graphic).GetField("m_Canvas", BindingFlags.NonPublic | BindingFlags.Instance);
+						canvasField.SetValue(textMesh, canvas);
 					}
 				}
 
