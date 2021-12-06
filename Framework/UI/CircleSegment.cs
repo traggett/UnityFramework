@@ -68,12 +68,12 @@ namespace Framework
 				vert.color = color;
 				vertexHelper.AddVert(vert);
 
-				vert.position = center + new Vector2(Mathf.Cos(fromAngle) * radius, Mathf.Sin(fromAngle) * radius);
+				vert.position = center + new Vector2(Mathf.Sin(fromAngle) * radius, Mathf.Cos(fromAngle) * radius);
 				vert.position.y *= yScale;
 				vert.color = color;
 				vertexHelper.AddVert(vert);
 
-				vert.position = center + new Vector2(Mathf.Cos(toAngle) * radius, Mathf.Sin(toAngle) * radius);
+				vert.position = center + new Vector2(Mathf.Sin(toAngle) * radius, Mathf.Cos(toAngle) * radius);
 				vert.position.y *= yScale;
 				vert.color = color;
 				vertexHelper.AddVert(vert);

@@ -68,6 +68,49 @@ namespace Framework
 				Gizmos.color = origColor;
 				Gizmos.matrix = Matrix4x4.identity;
 			}
+
+			public static void DrawWireArc(Vector3 position, float fromAngle, float toAngle, float radius, float numSegments = 20)
+			{
+				fromAngle *= Mathf.Deg2Rad;
+				toAngle *= Mathf.Deg2Rad;
+
+				if (toAngle < fromAngle)
+				{
+					float a = toAngle;
+					toAngle = fromAngle;
+					fromAngle = a;
+				}
+				
+				float visibleRange = toAngle - fromAngle;
+
+				if (numSegments < 1)
+					numSegments = 1;
+
+				float segmentAngle = visibleRange / numSegments;
+
+				Vector3 positionA = position + new Vector3(Mathf.Sin(fromAngle) * radius, 0f, Mathf.Cos(fromAngle) * radius);
+
+				Gizmos.DrawLine(position, positionA);
+
+				for (int i = 0; i < numSegments; i++)
+				{
+					float nextAngle;
+
+					if (i == numSegments - 1)
+						nextAngle = toAngle;
+					else
+						nextAngle = fromAngle + segmentAngle;
+
+					Vector3 positionB = position + new Vector3(Mathf.Sin(nextAngle) * radius, 0f, Mathf.Cos(nextAngle) * radius);
+
+					Gizmos.DrawLine(positionA, positionB);
+
+					positionA = positionB;
+					fromAngle = nextAngle;
+				}
+
+				Gizmos.DrawLine(position, positionA);
+			}
 		}
 	}
 }
