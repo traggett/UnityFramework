@@ -39,7 +39,7 @@ namespace Framework
 
 					return null;
 				}
-				public static float GetXMLNodeAttribute(XmlNode node, string tag, float defValue)
+				public static float GetXMLNodeAttribute(XmlNode node, string tag, float defautValue)
 				{
 					XmlNode att = node.Attributes.GetNamedItem(tag);
 					if (att != null)
@@ -47,10 +47,10 @@ namespace Framework
 						return Convert.ToSingle(att.Value);
 					}
 
-					return defValue;
+					return defautValue;
 				}
 
-				public static int GetXMLNodeAttribute(XmlNode node, string tag, int defValue)
+				public static int GetXMLNodeAttribute(XmlNode node, string tag, int defautValue)
 				{
 					XmlNode att = node.Attributes.GetNamedItem(tag);
 					if (att != null)
@@ -58,10 +58,10 @@ namespace Framework
 						return Convert.ToInt32(att.Value);
 					}
 
-					return defValue;
+					return defautValue;
 				}
 
-				public static bool GetXMLNodeAttribute(XmlNode node, string tag, bool defValue)
+				public static bool GetXMLNodeAttribute(XmlNode node, string tag, bool defautValue)
 				{
 					XmlNode att = node.Attributes.GetNamedItem(tag);
 					if (att != null)
@@ -69,10 +69,10 @@ namespace Framework
 						return Convert.ToBoolean(att.Value);
 					}
 
-					return defValue;
+					return defautValue;
 				}
 
-				public static string GetXMLNodeAttribute(XmlNode node, string tag, string defValue)
+				public static string GetXMLNodeAttribute(XmlNode node, string tag, string defautValue)
 				{
 					XmlNode att = node.Attributes.GetNamedItem(tag);
 					if (att != null)
@@ -80,7 +80,7 @@ namespace Framework
 						return att.Value;
 					}
 
-					return defValue;
+					return defautValue;
 				}
 
 				public static void AddAttribute(XmlDocument xmldoc, XmlNode node, string tag, float value)

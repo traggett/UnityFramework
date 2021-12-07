@@ -17,6 +17,7 @@ namespace Framework
 			public static class XmlConverter
 			{
 				#region Public Data
+				public static readonly string kXmlAssemblyAttributeTag = "assembly";
 				public static readonly string kXmlFieldIdAttributeTag = "id";
 				public static readonly string kXmlArrayTag = "Array";
 				public delegate void OnConvertToXmlDelegate(object obj, XmlNode node);
@@ -38,9 +39,12 @@ namespace Framework
 						_shouldWrite = shouldWrite;
 					}
 				}
-				private static Dictionary<string, Type> _tagToTypeMap = null;
-				private static Dictionary<Type, string> _typeToTagMap = null;
 				private static Dictionary<Type, ObjectConverter> _converterMap;
+				private static Dictionary<string, Type> _converterTypeToTagMap = null;
+				private static Dictionary<Type, string> _converterTagToTypeMap = null;
+
+				private static Dictionary<Assembly, Dictionary<string, Type>> _assemblyTagToTypeMap;
+
 				private static readonly string kXmlNodeRuntimeTypeAttributeTag = "runtimeType";
 				#endregion
 
@@ -309,6 +313,9 @@ namespace Framework
 									//Otherwise convert each field
 									else
 									{
+										//Add assembly 
+										XmlUtils.AddAttribute(xmlDoc, node, kXmlAssemblyAttributeTag, objType.Assembly.GetName().Name);
+
 										SerializedObjectMemberInfo[] xmlFields = SerializedObjectMemberInfo.GetSerializedFields(objType);
 
 										//Create a default version of this to compare with?
@@ -435,31 +442,44 @@ namespace Framework
 				#endregion
 
 				#region Private Functions
-				private static string GetXmlTag(Type type)
+				private static string GetXmlTagFromType(Type type)
 				{
-					string xmlTag = null;
+					string xmlTag = type.Name;
 
-					BuildTypeMap();
-
-					Type objType = GetObjectConversionType(type);
-
-					if (!_typeToTagMap.TryGetValue(objType, out xmlTag))
+					if (type.IsGenericType)
 					{
-						throw new Exception("Type '" + objType.Name + "' is not mapped to an XML tag, check it is marked as [Serializable] or has a XmlObjectConverter class.");
+						string name = type.Name;
+						int index = name.IndexOf('`');
+						xmlTag = index == -1 ? name : name.Substring(0, index);
 					}
 
 					return xmlTag;
 				}
 
-				private static void BuildTypeMap()
+				private static string GetXmlTag(Type type)
 				{
-					//Build list of types of classes / structs with the Serializable  attribute
-					if (_tagToTypeMap == null || _typeToTagMap == null || _converterMap == null)
-					{
-						_tagToTypeMap = new Dictionary<string, Type>();
-						_typeToTagMap = new Dictionary<Type, string>();
-						_converterMap = new Dictionary<Type, ObjectConverter>();
+					BuildConverterMap();
 
+					Type objType = GetObjectConversionType(type);
+
+					if (_converterTagToTypeMap.TryGetValue(objType, out string converterXmlTag))
+					{
+						return converterXmlTag;
+					}
+					else
+					{
+						return GetXmlTagFromType(type);
+					}
+				}
+
+				private static void BuildConverterMap()
+				{
+					if (_converterTypeToTagMap == null || _converterTagToTypeMap == null || _converterMap == null)
+					{
+						_converterMap = new Dictionary<Type, ObjectConverter>();
+						_converterTypeToTagMap = new Dictionary<string, Type>();
+						_converterTagToTypeMap = new Dictionary<Type, string>();
+						
 						Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 						
 						for (int i=0; i<assemblies.Length; i++)
@@ -479,34 +499,6 @@ namespace Framework
 								continue;
 							}
 
-							//First build dictionary of types marked with [Serializable] attribute
-							foreach (Type type in types)
-							{
-								if (Attribute.IsDefined(type, typeof(SerializableAttribute), false))
-								{
-									string xmlTag = type.Name;
-
-									if (type.IsGenericType)
-									{
-										string name = type.Name;
-										int index = name.IndexOf('`');
-										xmlTag = index == -1 ? name : name.Substring(0, index);
-									}
-
-									if (!_tagToTypeMap.ContainsKey(xmlTag) && !_typeToTagMap.ContainsKey(type))
-									{
-										_tagToTypeMap.Add(xmlTag, type);
-										_typeToTagMap.Add(type, xmlTag);
-									}
-#if DEBUG
-									else
-									{
-										//Debug.Log("Can't serialize type " + type.FullName + " as it shares a name with another class (" + _tagToTypeMap[xmlTag].FullName + ")");
-									}
-#endif
-								}
-							}
-
 							//Then find all XmlObjectConverterAttribute for those types
 							foreach (Type type in types)
 							{
@@ -520,31 +512,85 @@ namespace Framework
 																					SystemUtils.GetStaticMethodAsDelegate<ShouldWriteDelegate>(type, converterAttribute.ShouldWriteMethod));
 
 									_converterMap[converterAttribute.ObjectType] = converter;
-									_tagToTypeMap[converterAttribute.XmlTag] = converterAttribute.ObjectType;
-									_typeToTagMap[converterAttribute.ObjectType] = converterAttribute.XmlTag;
+									_converterTypeToTagMap[converterAttribute.XmlTag] = converterAttribute.ObjectType;
+									_converterTagToTypeMap[converterAttribute.ObjectType] = converterAttribute.XmlTag;
 								}
 							}
 						}
 					}
 				}
 
+				private static Type GetXmlTypeFromAssembly(Assembly assembly, string xmlTag)
+				{
+					if (_assemblyTagToTypeMap == null)
+					{
+						_assemblyTagToTypeMap = new Dictionary<Assembly, Dictionary<string, Type>>();
+					}
+
+					if (!_assemblyTagToTypeMap.TryGetValue(assembly, out Dictionary<string, Type> map))
+					{
+						map = new Dictionary<string, Type>();
+
+						Type[] types = assembly.GetTypes();
+
+						foreach (Type type in types)
+						{
+							if (Attribute.IsDefined(type, typeof(SerializableAttribute), false))
+							{
+								string typeXmlTag = GetXmlTagFromType(type);
+								map[typeXmlTag] = type;
+							}
+						}
+					}
+
+					if (map.TryGetValue(xmlTag, out Type assemblyType))
+					{
+						return assemblyType;
+					}
+					else
+					{
+						return null;
+					}
+				}
+
 				private static Type GetRuntimeType(XmlNode node)
 				{
-					Type type = null;
-
 					if (node != null)
 					{
 						string xmlTag = node.Name;
 
-						BuildTypeMap();
+						BuildConverterMap();
 
-						if (!_tagToTypeMap.TryGetValue(xmlTag, out type))
+						//First check converters
+						if (_converterTypeToTagMap.TryGetValue(xmlTag, out Type converterType))
 						{
-							UnityEngine.Debug.LogError("XML Node tag '" + xmlTag + "' is not mapped to a type, check a class has a XmlTagAttribute with the same tag");
+							return converterType;
+						}
+						//Otherwise get assebml
+						else
+						{
+							string assembly = XmlUtils.GetXMLNodeAttribute(node, kXmlAssemblyAttributeTag, string.Empty);
+
+							if (!string.IsNullOrEmpty(assembly))
+							{
+								//Find assembly by name
+								Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+								for (int i = 0; i < assemblies.Length; i++)
+								{
+									if (assemblies[i].ReflectionOnly)
+										continue;
+
+									if (assemblies[i].GetName().Name == assembly)
+									{
+										return GetXmlTypeFromAssembly(assemblies[i], xmlTag);
+									}
+								}
+							}
 						}
 					}
 
-					return type;
+					return null;
 				}
 
 				private static bool ShouldWriteObject(Type objType, ObjectConverter converter, object obj, object defualtObj)
@@ -629,7 +675,7 @@ namespace Framework
 				{
 					ObjectConverter converter;
 
-					BuildTypeMap();
+					BuildConverterMap();
 
 					Type objectType = GetObjectConversionType(type);
 
