@@ -83,8 +83,8 @@ namespace Framework
 				}
 			}
 
-			private List<ScrollListItem> _items = new List<ScrollListItem>();
-			private List<ScrollListItem> _itemsBeingRemoved = new List<ScrollListItem>();
+			private readonly List<ScrollListItem> _items = new List<ScrollListItem>();
+			private readonly List<ScrollListItem> _itemsBeingRemoved = new List<ScrollListItem>();
 
 			private class ScrollListEnumerator : IEnumerator<IScrollListItem<T>>
 			{
@@ -144,11 +144,15 @@ namespace Framework
 									float fadeTime = kDefaultFadeTime)
 			{
 				if (borders == null)
+				{
 					borders = new RectOffset(0, 0, 0, 0);
-
+				}
+					
 				if (numColumns <= 0)
+				{
 					numColumns = 1;
-
+				}
+				
 				if (scrollList == null)
 				{
 					scrollList = new ScrollList<T>(scrollArea, itemPool);
