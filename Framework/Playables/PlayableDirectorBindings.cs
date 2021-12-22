@@ -60,7 +60,7 @@ namespace Framework
 
 			private PlayableAssetData GetAssetData(PlayableAsset asset)
 			{
-				if (asset != null)
+				if (asset != null && _playableAssetData != null)
 				{
 					for (int i = 0; i < _playableAssetData.Length; i++)
 					{

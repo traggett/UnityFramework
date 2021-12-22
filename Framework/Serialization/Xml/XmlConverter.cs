@@ -16,10 +16,9 @@ namespace Framework
 		{
 			public static class XmlConverter
 			{
-				#region Public Data
-				public static readonly string kXmlAssemblyAttributeTag = "assembly";
-				public static readonly string kXmlFieldIdAttributeTag = "id";
-				public static readonly string kXmlArrayTag = "Array";
+				#region Public Data		
+				public const string kXmlFieldIdAttributeTag = "id";
+				public const string kXmlArrayTag = "Array";
 				public delegate void OnConvertToXmlDelegate(object obj, XmlNode node);
 				public delegate object OnConvertFromXmlDelegate(object obj, XmlNode node);
 				public delegate bool ShouldWriteDelegate(object obj, object defaultObj);
@@ -45,7 +44,8 @@ namespace Framework
 
 				private static Dictionary<Assembly, Dictionary<string, Type>> _assemblyTagToTypeMap;
 
-				private static readonly string kXmlNodeRuntimeTypeAttributeTag = "runtimeType";
+				private const string kXmlAssemblyAttributeTag = "assembly";
+				private const string kXmlNodeRuntimeTypeAttributeTag = "runtimeType";
 				#endregion
 
 				#region Public Interface

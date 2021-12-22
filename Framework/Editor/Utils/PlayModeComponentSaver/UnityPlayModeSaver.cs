@@ -28,7 +28,7 @@ namespace Framework
 
 				private const int kSaveComponentMenuPriority = 12;
 				private const string kSaveComponentMenuString = "CONTEXT/Component/" + kSaveMenuString;
-				private const string kSaveComponentSnapshotMenuString = "CONTEXT/Component/" + kSaveSnapshotMenuString; 
+				private const string kSaveComponentSnapshotMenuString = "CONTEXT/Component/" + kSaveSnapshotMenuString;
 				private const string kRevertComponentMenuString = "CONTEXT/Component/" + kRevertMenuString;
 
 				private const int kSaveGameObjectMenuPriority = -100;
@@ -70,7 +70,37 @@ namespace Framework
 				private const string kPrefabUnpackWarningIgnore = "Ignore";
 				#endregion
 
+				#region Interanl Properties (For Editor Window)
+				internal static PlayModeStateChange CurrentPlayModeState
+				{
+					get
+					{
+						return _currentPlayModeState;
+					}		
+				}
+
+				internal static List<SavedObject> SavedObjects
+				{
+					get
+					{
+						return _savedObjects;
+					}
+				}
+				#endregion
+
 				#region Helper Structs
+				internal struct SavedObject
+				{
+					public Object _object;
+					public int _sceneIdentifier;
+					public string _scenePath;
+					public string _name;
+					public Type _type;
+					public string _path;
+					public bool _hasSnapshot;
+					public string _snapshotEditorPrefKey;
+				}
+
 				private struct RestoredObjectData
 				{
 					public Object _object;
@@ -90,27 +120,15 @@ namespace Framework
 					public string _propertyPath;
 					public Material _material;
 				}
-
-				private struct SavedObject
-				{
-					public Object _object;
-					public int _sceneIdentifier;
-					public string _scenePath;
-					public string _name;
-					public Type _type;
-					public string _path;
-					public bool _hasSnapshot;
-					public string _snapshotEditorPrefKey;
-				}
-
-				private enum State
-				{ 
-					Idle,
-					Busy,
-				}
 				#endregion
 
 				#region Private Data
+				private enum State
+				{
+					Idle,
+					Busy,
+				}
+
 				private static State _state;
 				private static PlayModeStateChange _currentPlayModeState;
 				private static List<SavedObject> _savedObjects = new List<SavedObject>();
@@ -287,6 +305,118 @@ namespace Framework
 				}
 				#endregion
 
+				#region Internal Interface (For Editor Window)
+				internal static string GetObjectName(Object obj)
+				{
+					string objectName = null;
+
+					if (obj is GameObject gameObject)
+					{
+						objectName = gameObject.name;
+					}
+					else if (obj is Component component)
+					{
+						objectName = component.gameObject.name + '.' + component.GetType().Name;
+					}
+
+					return objectName;
+				}
+
+				internal static bool IsObjectRegistered(Object obj, out int saveObjIndex)
+				{
+					saveObjIndex = _savedObjects.FindIndex(x => x._object == obj);
+					return saveObjIndex != -1;
+				}
+
+				internal static int RegisterSavedObject(Object obj)
+				{
+					SavedObject savedObject = new SavedObject
+					{
+						_object = obj,
+						_sceneIdentifier = GetSceneIdentifier(obj),
+						_scenePath = GetScenePath(obj),
+						_name = GetObjectName(obj),
+						_type = obj.GetType(),
+						_path = GetObjectPath(obj),
+					};
+
+					_savedObjects.Add(savedObject);
+					return _savedObjects.Count - 1;
+				}
+
+				internal static void UnregisterObject(Object obj)
+				{
+					if (IsObjectRegistered(obj, out int index))
+					{
+						ClearSavedObject(index);
+					}
+				}
+
+				internal static void ClearSavedObject(int saveObjIndex)
+				{
+					//Remove values from prefs
+					if (_savedObjects[saveObjIndex]._hasSnapshot)
+					{
+						ClearSnapshot(saveObjIndex);
+					}
+
+					_savedObjects.RemoveAt(saveObjIndex);
+				}
+
+				internal static void ClearCache()
+				{
+					_savedObjects.Clear();
+
+					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
+
+					for (int i = 0; i < numSavedObjects; i++)
+					{
+						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
+						DeleteObjectEditorPrefs(editorPrefKey);
+					}
+
+					SafeDeleteEditorPref(kEditorPrefsObjectCountKey);
+
+					_state = State.Idle;
+				}
+
+				internal static void SaveSnapshot(int saveObjIndex)
+				{
+					SavedObject savedObject = _savedObjects[saveObjIndex];
+
+					if (savedObject._object != null)
+					{
+						//Delete current snapshot
+						if (savedObject._hasSnapshot)
+						{
+							DeleteObjectEditorPrefs(savedObject._snapshotEditorPrefKey);
+						}
+
+						//Save values to prefs
+						string editorPrefKey = SaveObjectValues(savedObject);
+
+						savedObject._hasSnapshot = true;
+						savedObject._snapshotEditorPrefKey = editorPrefKey;
+
+						_savedObjects[saveObjIndex] = savedObject;
+					}
+				}
+
+				internal static void ClearSnapshot(int saveObjIndex)
+				{
+					SavedObject savedObject = _savedObjects[saveObjIndex];
+
+					DeleteObjectEditorPrefs(savedObject._snapshotEditorPrefKey);
+
+					savedObject._hasSnapshot = false;
+					savedObject._snapshotEditorPrefKey = null;
+
+					_savedObjects[saveObjIndex] = savedObject;
+				}
+				#endregion
+
+				#region Private Functions
+
 				#region Editor Functions
 				private static void OnModeChanged(PlayModeStateChange state)
 				{
@@ -322,7 +452,7 @@ namespace Framework
 								{
 									ClearCache();
 								}
-								
+
 								RepaintEditorWindows();
 							}
 							break;
@@ -338,7 +468,7 @@ namespace Framework
 				private static void OnSceneUnload(Scene scene)
 				{
 					//Remove all saved objects from this scene that don't have snapshots
-					for (int i=0; i<_savedObjects.Count;)
+					for (int i = 0; i < _savedObjects.Count;)
 					{
 						if (!_savedObjects[i]._hasSnapshot && _savedObjects[i]._scenePath == scene.path)
 						{
@@ -377,36 +507,6 @@ namespace Framework
 				#endregion
 
 				#region Object Registering
-				private static bool IsObjectRegistered(Object obj, out int saveObjIndex)
-				{
-					saveObjIndex = _savedObjects.FindIndex(x => x._object == obj);
-					return saveObjIndex != -1;
-				}
-
-				private static int RegisterSavedObject(Object obj)
-				{
-					SavedObject savedObject = new SavedObject
-					{
-						_object = obj,
-						_sceneIdentifier = GetSceneIdentifier(obj),
-						_scenePath = GetScenePath(obj),
-						_name = GetObjectName(obj),
-						_type = obj.GetType(),
-						_path = GetObjectPath(obj),
-					};
-
-					_savedObjects.Add(savedObject);
-					return _savedObjects.Count - 1;
-				}
-
-				private static void UnregisterObject(Object obj)
-				{
-					if (IsObjectRegistered(obj, out int index))
-					{
-						ClearSavedObject(index);
-					}
-				}
-
 				private static int AddSaveObject()
 				{
 					int objectCount = EditorPrefs.GetInt(kEditorPrefsObjectCountKey);
@@ -1720,17 +1820,6 @@ namespace Framework
 
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsSceneObjectChildren);
 				}
-
-				private static void ClearSavedObject(int saveObjIndex)
-				{
-					//Remove values from prefs
-					if (_savedObjects[saveObjIndex]._hasSnapshot)
-					{
-						ClearSnapshot(saveObjIndex);
-					}
-					
-					_savedObjects.RemoveAt(saveObjIndex);
-				}
 				#endregion
 
 				#endregion
@@ -1757,42 +1846,6 @@ namespace Framework
 					}
 
 					return string.Empty;
-				}
-				#endregion
-
-				#region Snapshots
-				private static void SaveSnapshot(int saveObjIndex)
-				{
-					SavedObject savedObject = _savedObjects[saveObjIndex];
-
-					if (savedObject._object != null)
-					{
-						//Delete current snapshot
-						if (savedObject._hasSnapshot)
-						{
-							DeleteObjectEditorPrefs(savedObject._snapshotEditorPrefKey);
-						}
-
-						//Save values to prefs
-						string editorPrefKey = SaveObjectValues(savedObject);
-
-						savedObject._hasSnapshot = true;
-						savedObject._snapshotEditorPrefKey = editorPrefKey;
-
-						_savedObjects[saveObjIndex] = savedObject;
-					}
-				}
-
-				private static void ClearSnapshot(int saveObjIndex)
-				{
-					SavedObject savedObject = _savedObjects[saveObjIndex];
-
-					DeleteObjectEditorPrefs(savedObject._snapshotEditorPrefKey);
-
-					savedObject._hasSnapshot = false;
-					savedObject._snapshotEditorPrefKey = null;
-
-					_savedObjects[saveObjIndex] = savedObject;
 				}
 				#endregion
 
@@ -1920,22 +1973,6 @@ namespace Framework
 					path = gameObject.scene.name + ".unity/" + path;
 
 					return path;
-				}
-
-				private static string GetObjectName(Object obj)
-				{
-					string objectName = null;
-
-					if (obj is GameObject gameObject)
-					{
-						objectName = gameObject.name;
-					}
-					else if (obj is Component component)
-					{
-						objectName = component.gameObject.name + '.' + component.GetType().Name;
-					}
-
-					return objectName;
 				}
 
 				private static int SafeConvertToInt(string str)
@@ -2075,24 +2112,6 @@ namespace Framework
 					return null;
 				}
 
-				private static void ClearCache()
-				{
-					_savedObjects.Clear();
-
-					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
-
-					for (int i = 0; i < numSavedObjects; i++)
-					{
-						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
-						DeleteObjectEditorPrefs(editorPrefKey);
-					}
-
-					SafeDeleteEditorPref(kEditorPrefsObjectCountKey);
-
-					_state = State.Idle;
-				}
-
-
 				private static bool GetChildObjectPath(string path, GameObject rootObject, Object obj, bool sceneObjectsOnly, out string fullPath)
 				{
 					//Check gameobject itself matches object
@@ -2200,512 +2219,6 @@ namespace Framework
 				}
 				#endregion
 
-				#region Editor Window
-				public class UnityPlayModeSaverWindow : EditorWindow
-				{
-					#region Constants
-					private const float kClearButtonWidth = 24f;
-					private const float kClearAllButtonWidth = 220f;
-					private const float kSaveModeWidth = 102f;
-					private const float kSnapshotButtonWidth = 116f;
-					private const float kDefaultNameWidth = 280f;
-					private const float kMinNameWidth = 50f;
-					private const string kWindowTitle = "Play Mode Saver";				
-					private static readonly GUIContent kObjectLabel = new GUIContent("Saved Object"); 
-					private static readonly GUIContent kObjectPathLabel = new GUIContent("Object Path");
-					private static readonly GUIContent kNoObjectsLabel = new GUIContent("Either right click on any Game Object or Component and click 'Save Play Mode Changes'\nor drag any Game Object or Component into this window.");
-					private static readonly GUIContent kObjectsDetailsLabel = new GUIContent("These objects will have their values saved upon leaving Play Mode.\nIf an object has a snapshot saved it will restore to that, otherwise it will keep the values it had upon exiting Play Mode.");
-					private static readonly GUIContent kNotInEditModeLabel = new GUIContent("Not in Play Mode.");
-					private static readonly string[] kSaveModeOptions = new string[] { "Save on Exit", "Snapshot" };
-					private const string kDeletedObj = " <i>(Deleted)</i>";
-					private const string kSceneNotLoadedObj = " <i>(Scene not loaded)</i>";
-					private const string kSaveSnapshot = " Save Snapshot";
-					private const string kClearAllButton = "Clear All Saved Objects";
-					private static readonly float kResizerWidth = 6.0f;
-					private static readonly float kTextFieldSpace = 6.0f;
-					#endregion
-
-					#region Private Data
-					private Vector2 _scrollPosition = Vector2.zero;
-					private float _nameWidth = kDefaultNameWidth;
-					private Rect _nameResizerRect;
-					private bool _needsRepaint;
-					private enum ResizingState
-					{
-						NotResizing,
-						ResizingName,
-					}
-					private ResizingState _resizing;
-					private int _controlID;
-					private float _resizingOffset;
-					private GUIStyle _bottomBarInfoStyle;
-					private GUIStyle _bottomBarInfoTextStyle;
-					private GUIStyle _headerStyle;			
-					private GUIStyle _itemNameStyle;
-					private GUIStyle _itemButtonStyle;
-					private GUIStyle _itemPathStyle;
-					private GUIStyle _itemSpaceStyle;
-					private GUIStyle _noObjectsStyle;
-					
-					private GUIContent _clearButtonContent;
-					private GUIContent _clearAllButtonContent;
-					private GUIContent _saveSnapshotContent;
-					private Texture _scriptIcon;
-					#endregion
-
-					#region Public Interface
-					public static UnityPlayModeSaverWindow Open(bool focus)
-					{
-						UnityPlayModeSaverWindow window = (UnityPlayModeSaverWindow)GetWindow(typeof(UnityPlayModeSaverWindow),
-																					   false, kWindowTitle, focus);
-						window.Initialize();
-
-						if (!focus)
-							window.Repaint();
-
-						return window;
-					}
-					#endregion
-
-					#region Unity Events
-					private void OnGUI()
-					{
-						_needsRepaint = false;
-
-						if (_currentPlayModeState == PlayModeStateChange.EnteredPlayMode)
-						{
-							EditorGUILayout.BeginVertical();
-							{
-								DrawTitleBar();
-								DrawTable();
-								DrawBottomButton();
-							}
-							EditorGUILayout.EndVertical();
-
-							HandleInput();
-						}
-						else
-						{
-							EditorGUILayout.LabelField(kNotInEditModeLabel, _noObjectsStyle, GUILayout.ExpandHeight(true));
-						}
-						
-						if (_needsRepaint)
-							Repaint();
-					}
-					#endregion
-
-					#region Private Functions
-					private void Initialize()
-					{
-						titleContent = new GUIContent(kWindowTitle, EditorGUIUtility.IconContent("SaveAs").image);
-						minSize = new Vector2(kDefaultNameWidth, kDefaultNameWidth);
-
-						if (_headerStyle == null)
-						{
-							_headerStyle = new GUIStyle(EditorStyles.toolbarButton)
-							{
-								alignment = TextAnchor.MiddleLeft,
-								padding = new RectOffset(8, 8, 0, 0),
-								fontStyle = FontStyle.Italic,
-							};
-						}
-
-						if (_itemNameStyle == null)
-						{
-							_itemNameStyle = new GUIStyle(EditorStyles.toolbarTextField)
-							{
-								alignment = TextAnchor.MiddleLeft,
-								margin = new RectOffset(0, 0, 2, 3),
-								padding = new RectOffset(8, 8, 0, 0),
-								fixedHeight = 0,
-								stretchHeight = true,
-								stretchWidth = true,
-								richText = true,
-							};
-						}
-
-						if (_itemButtonStyle == null)
-						{
-							_itemButtonStyle = new GUIStyle(EditorStyles.toolbarButton)
-							{
-								alignment = TextAnchor.MiddleLeft,
-							};
-						}
-
-						if (_itemPathStyle == null)
-						{
-							_itemPathStyle = new GUIStyle(EditorStyles.toolbarSearchField)
-							{
-								fontSize = 12,
-								margin = new RectOffset(0, 0, 2, 3),
-								padding = new RectOffset(16, 8, 0, 0),
-								fixedHeight = 0,
-								stretchHeight = true,
-								stretchWidth = true,
-							};
-						}
-
-						if (_itemSpaceStyle == null)
-						{
-							_itemSpaceStyle = new GUIStyle(EditorStyles.label)
-							{
-								margin = new RectOffset(0, 0, 0, 0),
-								padding = new RectOffset(0, 0, 0, 0),
-							};
-						}
-
-						if (_noObjectsStyle == null)
-						{
-							_noObjectsStyle = new GUIStyle(EditorStyles.label)
-							{
-								alignment = TextAnchor.MiddleCenter,
-								stretchWidth = true,
-								stretchHeight = true
-							};
-						}
-
-						if (_bottomBarInfoStyle == null)
-						{
-							_bottomBarInfoStyle = new GUIStyle(EditorStyles.toolbar)
-							{
-								fixedHeight = 42,
-							};
-						}
-
-						if (_bottomBarInfoTextStyle == null)
-						{
-							_bottomBarInfoTextStyle = new GUIStyle(EditorStyles.toolbarButton)
-							{
-								alignment = TextAnchor.MiddleCenter,
-								fixedHeight = 40,
-								fontStyle = FontStyle.Italic
-							};
-						}
-
-						_saveSnapshotContent = new GUIContent(kSaveSnapshot, EditorGUIUtility.IconContent("SaveAs").image);
-
-						_clearButtonContent = EditorGUIUtility.IconContent("d_winbtn_win_close");
-
-						_clearAllButtonContent = new GUIContent(kClearAllButton);
-
-						_scriptIcon = EditorGUIUtility.IconContent("cs Script Icon").image;
-					}
-
-					private void DrawTitleBar()
-					{
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-						{
-							//Clear Button
-							EditorGUILayout.Space(kClearButtonWidth, false);
-
-							//Object name
-							GUILayout.Label(kObjectLabel, _headerStyle, GUILayout.Width(_nameWidth - _scrollPosition.x));
-
-							//Name Resizer
-							RenderResizer(ref _nameResizerRect);
-
-							//Save Mode
-							GUILayout.Label("Save Mode", _headerStyle, GUILayout.Width(kSaveModeWidth));
-
-							//Snapshot buttons
-							GUILayout.Label(GUIContent.none, _headerStyle, GUILayout.Width(kSnapshotButtonWidth));
-
-							//Object Path
-							GUILayout.Label(kObjectPathLabel, _headerStyle);
-						}
-						EditorGUILayout.EndHorizontal();
-					}
-
-					private void DrawTable()
-					{
-						bool origGUIenabled = GUI.enabled;
-
-						_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
-						{
-							for (int i=0; i<_savedObjects.Count;)
-							{
-								bool itemRemoved = false;
-
-								SavedObject savedObject = _savedObjects[i];
-
-								EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-								{
-									//Clear object button
-									if (GUILayout.Button(_clearButtonContent, EditorStyles.toolbarButton, GUILayout.Width(kClearButtonWidth)))
-									{
-										itemRemoved = true;
-									}
-
-									//Spacer
-									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kTextFieldSpace));
-
-									// Object button
-									{
-										string name = " " + GetObjectName(savedObject);
-										
-										if (savedObject._object == null)
-										{
-											GUI.enabled = false;
-
-											Scene scene = SceneManager.GetSceneByPath(savedObject._scenePath);
-
-											if (!scene.IsValid() || !scene.isLoaded)
-											{
-												name += kSceneNotLoadedObj;
-											}
-											else
-											{
-												name += kDeletedObj;
-											}
-										}
-
-										Texture icon = EditorGUIUtility.ObjectContent(null, savedObject._type).image;
-
-										if (icon == null)
-										{
-											icon = _scriptIcon;
-										}
-
-										GUIContent buttonContent = new GUIContent(name, icon);
-
-										if (GUILayout.Button(buttonContent, _itemNameStyle, GUILayout.Width(_nameWidth - kResizerWidth)))
-										{
-											FocusOnObject(savedObject._object);
-										}
-
-										GUI.enabled = origGUIenabled;
-									}
-
-									//Spacer
-									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kResizerWidth));
-
-									//Save Mode
-									{
-										int selected = savedObject._hasSnapshot ? 1 : 0;
-										int newSelected = EditorGUILayout.Popup(selected, kSaveModeOptions, EditorStyles.toolbarDropDown, GUILayout.Width(kSaveModeWidth));
-
-										if (selected != newSelected)
-										{
-											if (newSelected == 1)
-											{
-												SaveSnapshot(i);
-											}
-											else
-											{
-												ClearSnapshot(i);
-
-												//Check objects scene is still loaded, if not remove object
-												Scene scene = SceneManager.GetSceneByPath(savedObject._scenePath);
-
-												if (!scene.IsValid() || !scene.isLoaded)
-												{
-													itemRemoved = true;
-												}
-											}
-										}
-									}
-
-									//Snap shot button
-									{
-										if (savedObject._object == null)
-										{
-											GUI.enabled = false;
-										}
-
-										if (GUILayout.Button(_saveSnapshotContent, _itemButtonStyle, GUILayout.Width(kSnapshotButtonWidth)))
-										{
-											SaveSnapshot(i);
-										}
-
-										GUI.enabled = origGUIenabled;
-									}
-
-									//Spacer
-									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kTextFieldSpace));
-
-									//Object path
-									if (GUILayout.Button(savedObject._path + GetObjectName(savedObject), _itemPathStyle, GUILayout.ExpandWidth(true)))
-									{
-										FocusOnObject(savedObject._object);
-									}
-
-									GUILayout.Label(GUIContent.none, _itemSpaceStyle, GUILayout.Width(kTextFieldSpace));
-								}
-								EditorGUILayout.EndHorizontal();
-
-								if (itemRemoved)
-								{
-									ClearSavedObject(i);
-									_needsRepaint = true;
-								}
-								else
-								{
-									i++;
-								}
-							}
-
-							if (_savedObjects.Count == 0)
-							{
-								EditorGUILayout.LabelField(kNoObjectsLabel, _noObjectsStyle, GUILayout.ExpandHeight(true));
-							}
-						}
-						EditorGUILayout.EndScrollView();
-					}
-
-					private void DrawBottomButton()
-					{
-						EditorGUILayout.BeginHorizontal(_bottomBarInfoStyle);
-						{
-							GUILayout.Label(kObjectsDetailsLabel, _bottomBarInfoTextStyle);
-						}
-						EditorGUILayout.EndHorizontal();
-
-						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-						{
-							GUILayout.FlexibleSpace();
-
-							if (GUILayout.Button(_clearAllButtonContent, GUILayout.Width(kClearAllButtonWidth)))
-							{
-								ClearCache();
-								_needsRepaint = true;
-							}
-
-							GUILayout.FlexibleSpace();
-						}
-						EditorGUILayout.EndHorizontal();
-					}
-
-					private void HandleInput()
-					{
-						Event inputEvent = Event.current;
-
-						if (inputEvent == null)
-							return;
-
-						EventType controlEventType = inputEvent.GetTypeForControl(_controlID);
-
-						if (_resizing != ResizingState.NotResizing && inputEvent.rawType == EventType.MouseUp)
-						{
-							_resizing = ResizingState.NotResizing;
-							_needsRepaint = true;
-						}
-
-						switch (controlEventType)
-						{
-							case EventType.MouseDown:
-								{
-									if (inputEvent.button == 0)
-									{
-										if (_nameResizerRect.Contains(inputEvent.mousePosition))
-										{
-											_resizing = ResizingState.ResizingName;
-										}
-										else
-										{
-											_resizing = ResizingState.NotResizing;
-										}
-
-										if (_resizing != ResizingState.NotResizing)
-										{
-											inputEvent.Use();
-											_resizingOffset = inputEvent.mousePosition.x;
-										}
-									}
-								}
-								break;
-
-							case EventType.MouseUp:
-								{
-									if (_resizing != ResizingState.NotResizing)
-									{
-										inputEvent.Use();
-										_resizing = ResizingState.NotResizing;
-									}
-								}
-								break;
-
-							case EventType.MouseDrag:
-								{
-									if (_resizing != ResizingState.NotResizing)
-									{
-										if (_resizing == ResizingState.ResizingName)
-										{
-											_nameWidth += (inputEvent.mousePosition.x - _resizingOffset);
-											_nameWidth = Math.Max(_nameWidth, kMinNameWidth);
-										}
-
-										_resizingOffset = inputEvent.mousePosition.x;
-										_needsRepaint = true;
-									}
-								}
-								break;
-							case EventType.DragUpdated:
-								{
-									bool objectsAreAllowed = true;
-
-									foreach (Object obj in DragAndDrop.objectReferences)
-									{
-										if (!(obj is GameObject) && !(obj is Component))
-										{
-											objectsAreAllowed = false;
-											break;
-										}
-									}
-
-									DragAndDrop.visualMode = objectsAreAllowed ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.Rejected;
-								}
-								break;
-
-							case EventType.DragPerform:
-								{
-									foreach (Object obj in DragAndDrop.objectReferences)
-									{
-										if (!IsObjectRegistered(obj, out _))
-										{
-											if (obj is GameObject gameObject)
-											{
-												RegisterSavedObject(gameObject);
-											}
-											else if (obj is Component component)
-											{
-												RegisterSavedObject(component);
-											}
-										}
-									}
-
-									DragAndDrop.AcceptDrag();
-								}
-								break;
-						}
-					}
-
-					private void RenderResizer(ref Rect rect)
-					{
-						GUILayout.Box(GUIContent.none, EditorStyles.toolbar, GUILayout.Width(kResizerWidth), GUILayout.ExpandHeight(true));
-						rect = GUILayoutUtility.GetLastRect();
-						EditorGUIUtility.AddCursorRect(rect, MouseCursor.SplitResizeLeftRight);
-					}
-
-					private static void FocusOnObject(Object obj)
-					{
-						Selection.activeObject = obj;
-						SceneView.FrameLastActiveSceneView();
-						EditorGUIUtility.PingObject(obj);
-					}
-
-					private string GetObjectName(SavedObject savedObject)
-					{
-						if (savedObject._object == null)
-						{
-							return savedObject._name;
-						}
-						else
-						{
-							return UnityPlayModeSaver.GetObjectName(savedObject._object);
-						}
-					}
-					#endregion
-				}
 				#endregion
 			}
 		}
