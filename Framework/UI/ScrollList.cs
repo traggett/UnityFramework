@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 namespace Framework
 {
+	using Framework.Maths;
 	using Utils;
 
 	namespace UI
@@ -25,49 +26,56 @@ namespace Framework
 
 			void OnShow();
 			void OnHide();
+			void OnRemoved();
 			void SetFade(float fade);
 		}
 
 		public class ScrollList<T> : IEnumerable<IScrollListItem<T>> where T : IComparable
 		{
+			#region Public Data
 			public delegate GameObject CreatItemTypeFunc();
 
-			public AnimationCurve MovementCurve { get; set; }
+			public InterpolationType MovementInterpolation { get; set; }
 
 			public float MovementTime
 			{
 				set
 				{
 					if (value > 0.0f)
-						_lerpSpeed = 1.0f / value;
+						_movementLerpSpeed = 1.0f / value;
+				}
+			}
+
+			public float FadeTime
+			{
+				set
+				{
+					if (value > 0.0f)
+						_fadeLerpSpeed = 1.0f / value;
 				}
 			}
 
 			public RectOffset Borders { get; set; }
 			public Vector2 Spacing { get; set; }		
 			public int NumColumns { get; set; }
+			#endregion
 
-			private const float kDefaultLerpTime = 0.25f;
+			#region Private Data
+			private const float kDefaultMovementTime = 0.25f;
+			private const float kDefaultFadeTime = 0.25f;
 
 			private readonly PrefabInstancePool _itemPool;
 			private readonly ScrollRect _scrollArea;
-			private float _lerpSpeed;
+			private float _movementLerpSpeed;
+			private float _fadeLerpSpeed;
 
 			private class ScrollListItem
 			{
-				public enum State
-				{
-					Normal,
-					FadingIn,
-					FadingOut,
-					Moving,
-				}
-
 				public IScrollListItem<T> _item;
 				public Vector2 _fromPosition;
 				public Vector2 _targetPosition;
-				public float _lerp;
-				public State _state;
+				public float _movementLerp;
+				public float _fade;
 
 				public ScrollListItem(IScrollListItem<T> item)
 				{
@@ -127,20 +135,14 @@ namespace Framework
 				}
 				#endregion
 			}
+			#endregion
 
-			private ScrollList(ScrollRect scrollArea, PrefabInstancePool itemPool)
-			{
-				_itemPool = itemPool;
-				_scrollArea = scrollArea;
-			}
-
+			#region Public Interface
 			public static void Create(ref ScrollList<T> scrollList, ScrollRect scrollArea, PrefabInstancePool itemPool, IList<T> items = null,
 									RectOffset borders = null, Vector2 spacing = default, int numColumns = 1,
-									float movementTime = kDefaultLerpTime, AnimationCurve movementCurve = null)
+									float movementTime = kDefaultMovementTime, InterpolationType movementInterpolation = InterpolationType.InOutSine,
+									float fadeTime = kDefaultFadeTime)
 			{
-				if (movementCurve == null)
-					movementCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
-
 				if (borders == null)
 					borders = new RectOffset(0, 0, 0, 0);
 
@@ -152,8 +154,9 @@ namespace Framework
 					scrollList = new ScrollList<T>(scrollArea, itemPool);
 				}
 
-				scrollList.MovementCurve = movementCurve;
+				scrollList.MovementInterpolation = movementInterpolation;
 				scrollList.MovementTime = movementTime;
+				scrollList.FadeTime = fadeTime;
 				scrollList.Borders = borders;
 				scrollList.Spacing = spacing;
 				scrollList.NumColumns = numColumns;
@@ -173,8 +176,6 @@ namespace Framework
 				//Fade out and destroy old ones
 				foreach (ScrollListItem item in toRemove)
 				{
-					item._lerp = 1.0f;
-					item._state = ScrollListItem.State.FadingOut;
 					item._item.OnHide();
 					_itemsBeingRemoved.Add(item);
 				}
@@ -185,23 +186,33 @@ namespace Framework
 				//Lerp items to their target positions, lerp fade in
 				foreach (ScrollListItem item in _items)
 				{
-					if (item._lerp < 1.0f)
+					//Update fading in
+					if (item._fade < 1f)
 					{
-						item._lerp = Mathf.Clamp01(item._lerp + _lerpSpeed * deltaTime);
-
-						if (item._state == ScrollListItem.State.Moving)
+						if (_fadeLerpSpeed > 0f)
 						{
-							float curvedLerp = MovementCurve.Evaluate(item._lerp);
-							item._item.RectTransform.anchoredPosition = Vector2.Lerp(item._fromPosition, item._targetPosition, curvedLerp);
+							item._fade = Mathf.Clamp01(item._fade + _fadeLerpSpeed * deltaTime);
+							item._item.SetFade(item._fade);
 						}
-						else if (item._state == ScrollListItem.State.FadingIn)
+						else
 						{
-							item._item.SetFade(item._lerp);
+							item._fade = 1f;
+							item._item.SetFade(1f);
 						}
+					}
 
-						if (item._lerp >= 1.0f)
+					//Update movment
+					if (item._movementLerp < 1f)
+					{
+						if (_movementLerpSpeed > 0f)
 						{
-							item._state = ScrollListItem.State.Normal;
+							item._movementLerp = Mathf.Clamp01(item._movementLerp + _movementLerpSpeed * deltaTime);
+							item._item.RectTransform.anchoredPosition = MathUtils.Interpolate(MovementInterpolation, item._fromPosition, item._targetPosition, item._movementLerp);
+						}
+						else
+						{
+							item._movementLerp = 1f;
+							item._item.RectTransform.anchoredPosition = item._targetPosition;
 						}
 					}
 				}
@@ -209,17 +220,27 @@ namespace Framework
 				//Lerp fade out for items being removed, destroy any that are no zero
 				for (int i = 0; i < _itemsBeingRemoved.Count;)
 				{
-					_itemsBeingRemoved[i]._lerp += _lerpSpeed * deltaTime;
-
-					if (_itemsBeingRemoved[i]._lerp > 1.0f)
+					if (_fadeLerpSpeed > 0f)
 					{
-						_itemPool.Destroy(_itemsBeingRemoved[i]._item.RectTransform.gameObject);
-						_itemsBeingRemoved.RemoveAt(i);
+						_itemsBeingRemoved[i]._fade -= _fadeLerpSpeed * deltaTime;
+
+						if (_itemsBeingRemoved[i]._fade <= 0f)
+						{
+							_itemsBeingRemoved[i]._item.OnRemoved();
+							_itemPool.Destroy(_itemsBeingRemoved[i]._item.RectTransform.gameObject);
+							_itemsBeingRemoved.RemoveAt(i);
+						}
+						else
+						{
+							_itemsBeingRemoved[i]._item.SetFade(_itemsBeingRemoved[i]._fade);
+							i++;
+						}
 					}
 					else
 					{
-						_itemsBeingRemoved[i]._item.SetFade(1.0f - _itemsBeingRemoved[i]._lerp);
-						i++;
+						_itemsBeingRemoved[i]._item.OnRemoved();
+						_itemPool.Destroy(_itemsBeingRemoved[i]._item.RectTransform.gameObject);
+						_itemsBeingRemoved.RemoveAt(i);
 					}
 				}
 			}
@@ -228,8 +249,15 @@ namespace Framework
 			{
 				return _scrollArea.content.sizeDelta.y;
 			}
+			#endregion
 
 			#region Private Functions
+			private ScrollList(ScrollRect scrollArea, PrefabInstancePool itemPool)
+			{
+				_itemPool = itemPool;
+				_scrollArea = scrollArea;
+			}
+
 			private void Initialise(IList<T> items = null)
 			{
 				FindChanges(items, out _, out List<ScrollListItem> toRemove);
@@ -238,6 +266,7 @@ namespace Framework
 				foreach (ScrollListItem item in toRemove)
 				{
 					item._item.OnHide();
+					item._item.OnRemoved();
 					_itemPool.Destroy(item._item.RectTransform.gameObject);
 				}
 
@@ -248,13 +277,15 @@ namespace Framework
 				}
 				_itemsBeingRemoved.Clear();
 
-				//Set position instantly for all items
+				//Set position and fade instantly for all items
 				foreach (ScrollListItem item in _items)
 				{
 					RectTransform transform = item._item.RectTransform;
-					item._lerp = 1.0f;
-					item._state = ScrollListItem.State.Normal;
+					
+					item._fade = 1.0f;
 					item._item.SetFade(1.0f);
+
+					item._movementLerp = 1.0f;
 					item._fromPosition = item._targetPosition;
 					transform.anchoredPosition = item._targetPosition;
 				}
@@ -298,15 +329,28 @@ namespace Framework
 						{
 							GameObject gameObject = _itemPool.Instantiate(_scrollArea.content.transform);
 							item = new ScrollListItem(gameObject.GetComponent<IScrollListItem<T>>());
-							item._item.OnShow();
 							item._item.Data = items[i];
-							item._lerp = 0.0f;
-							item._state = ScrollListItem.State.FadingIn;
+							item._item.OnShow();
+
+							//Optionally fade the item in
+							if (_fadeLerpSpeed > 0f)
+							{
+								item._fade = 0f;
+								item._item.SetFade(0f);
+							}
+							else
+							{
+								item._fade = 1f;
+								item._item.SetFade(1f);
+							}
+
+							item._movementLerp = 1f;
 							item._targetPosition = pos;
 							item._fromPosition = pos;
 							transform = item._item.RectTransform;
 							transform.anchoredPosition = pos;
-							item._item.SetFade(0.0f);
+
+							
 							_items.Add(item);
 							toAdd.Add(item);
 						}
@@ -314,14 +358,22 @@ namespace Framework
 						else
 						{
 							transform = item._item.RectTransform;
-
+							
 							if (item._targetPosition != pos)
 							{
-								item._targetPosition = pos;
-								item._fromPosition = transform.anchoredPosition;
-								item._state = ScrollListItem.State.Moving;
-								item._lerp = 0.0f;
-								item._item.SetFade(1.0f);
+								if (_movementLerpSpeed > 0f)
+								{
+									item._targetPosition = pos;
+									item._fromPosition = transform.anchoredPosition;
+									item._movementLerp = 0.0f;
+
+								}
+								else
+								{
+									item._targetPosition = pos;
+									item._fromPosition = pos;
+									item._movementLerp = 1f;
+								}
 							}
 
 							item._item.Data = items[i];
