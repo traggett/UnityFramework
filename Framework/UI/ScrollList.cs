@@ -33,11 +33,13 @@ namespace Framework
 		public class ScrollList<T> : IEnumerable<IScrollListItem<T>> where T : IComparable
 		{
 			#region Public Data
-			public delegate GameObject CreatItemTypeFunc();
+			public RectOffset Borders { get; set; }
 
-			public InterpolationType MovementInterpolation { get; set; }
+			public int NumColumns { get; set; }
 
-			public float MovementTime
+			public Vector2 ItemSpacing { get; set; }
+
+			public float ItemMovementTime
 			{
 				set
 				{
@@ -46,7 +48,9 @@ namespace Framework
 				}
 			}
 
-			public float FadeTime
+			public InterpolationType ItemMovementInterpolation { get; set; }
+
+			public float ItemFadeTime
 			{
 				set
 				{
@@ -54,10 +58,6 @@ namespace Framework
 						_fadeLerpSpeed = 1.0f / value;
 				}
 			}
-
-			public RectOffset Borders { get; set; }
-			public Vector2 Spacing { get; set; }		
-			public int NumColumns { get; set; }
 			#endregion
 
 			#region Private Data
@@ -85,56 +85,6 @@ namespace Framework
 
 			private readonly List<ScrollListItem> _items = new List<ScrollListItem>();
 			private readonly List<ScrollListItem> _itemsBeingRemoved = new List<ScrollListItem>();
-
-			private class ScrollListEnumerator : IEnumerator<IScrollListItem<T>>
-			{
-				private readonly List<ScrollListItem> _items = new List<ScrollListItem>();
-				private int _index;
-
-				public ScrollListEnumerator(List<ScrollListItem> items)
-				{
-					_items = items;
-					_index = -1;
-				}
-
-				#region IEnumerator
-				public object Current
-				{
-					get
-					{
-						return _items[_index]._item;
-					}
-				}
-
-				IScrollListItem<T> IEnumerator<IScrollListItem<T>>.Current
-				{
-					get
-					{
-						return _items[_index]._item;
-					}
-				}
-
-				public void Dispose()
-				{
-
-				}
-
-				public bool MoveNext()
-				{
-					_index++;
-
-					if (_index >= _items.Count)
-						return false;
-					else
-						return true;
-				}
-
-				public void Reset()
-				{
-					_index = -1;
-				}
-				#endregion
-			}
 			#endregion
 
 			#region Public Interface
@@ -158,11 +108,11 @@ namespace Framework
 					scrollList = new ScrollList<T>(scrollArea, itemPool);
 				}
 
-				scrollList.MovementInterpolation = movementInterpolation;
-				scrollList.MovementTime = movementTime;
-				scrollList.FadeTime = fadeTime;
+				scrollList.ItemMovementInterpolation = movementInterpolation;
+				scrollList.ItemMovementTime = movementTime;
+				scrollList.ItemFadeTime = fadeTime;
 				scrollList.Borders = borders;
-				scrollList.Spacing = spacing;
+				scrollList.ItemSpacing = spacing;
 				scrollList.NumColumns = numColumns;
 
 				scrollList.Initialise(items);
@@ -211,7 +161,7 @@ namespace Framework
 						if (_movementLerpSpeed > 0f)
 						{
 							item._movementLerp = Mathf.Clamp01(item._movementLerp + _movementLerpSpeed * deltaTime);
-							item._item.RectTransform.anchoredPosition = MathUtils.Interpolate(MovementInterpolation, item._fromPosition, item._targetPosition, item._movementLerp);
+							item._item.RectTransform.anchoredPosition = MathUtils.Interpolate(ItemMovementInterpolation, item._fromPosition, item._targetPosition, item._movementLerp);
 						}
 						else
 						{
@@ -390,13 +340,13 @@ namespace Framework
 
 						if (currentColumn < NumColumns)
 						{
-							pos.x += ColumnWidth + Spacing.x;
+							pos.x += ColumnWidth + ItemSpacing.x;
 						}
 						else
 						{
 							currentColumn = 0;
 							pos.x = Borders.left;
-							pos.y -= itemHeight + Spacing.y;
+							pos.y -= itemHeight + ItemSpacing.y;
 						}			
 					}
 				}
@@ -421,7 +371,7 @@ namespace Framework
 
 							if (i != _items.Count - 1)
 							{
-								contentHeight += Spacing.y;
+								contentHeight += ItemSpacing.y;
 							}
 						}
 					}
@@ -459,6 +409,58 @@ namespace Framework
 					}
 				}
 
+			}
+			#endregion
+
+			#region Enumerator Class
+			private class ScrollListEnumerator : IEnumerator<IScrollListItem<T>>
+			{
+				private readonly List<ScrollListItem> _items = new List<ScrollListItem>();
+				private int _index;
+
+				public ScrollListEnumerator(List<ScrollListItem> items)
+				{
+					_items = items;
+					_index = -1;
+				}
+
+				#region IEnumerator
+				public object Current
+				{
+					get
+					{
+						return _items[_index]._item;
+					}
+				}
+
+				IScrollListItem<T> IEnumerator<IScrollListItem<T>>.Current
+				{
+					get
+					{
+						return _items[_index]._item;
+					}
+				}
+
+				public void Dispose()
+				{
+
+				}
+
+				public bool MoveNext()
+				{
+					_index++;
+
+					if (_index >= _items.Count)
+						return false;
+					else
+						return true;
+				}
+
+				public void Reset()
+				{
+					_index = -1;
+				}
+				#endregion
 			}
 			#endregion
 
