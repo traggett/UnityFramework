@@ -88,7 +88,7 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			public static void Create(ref SortedUIList<T> scrollList, RectTransform listRoot, PrefabInstancePool itemPool, IList<T> items = null,
+			public static void Create(ref SortedList<T> scrollList, RectTransform listRoot, PrefabInstancePool itemPool, IList<T> items = null,
 									RectOffset borders = null, Vector2 spacing = default, int numColumns = 1,
 									float movementTime = kDefaultMovementTime, InterpolationType movementInterpolation = InterpolationType.InOutSine,
 									float fadeTime = kDefaultFadeTime)
@@ -105,7 +105,7 @@ namespace Framework
 				
 				if (scrollList == null)
 				{
-					scrollList = new SortedUIList<T>(contentArea, itemPool);
+					scrollList = new SortedList<T>(contentArea, itemPool);
 				}
 
 				scrollList.ItemMovementInterpolation = movementInterpolation;
@@ -206,7 +206,7 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private SortedUIList(RectTransform listRoot, PrefabInstancePool itemPool)
+			private SortedList(RectTransform listRoot, PrefabInstancePool itemPool)
 			{
 				_itemPool = itemPool;
 				_contentArea = listRoot;
