@@ -105,7 +105,7 @@ namespace Framework
 				
 				if (scrollList == null)
 				{
-					scrollList = new SortedList<T>(contentArea, itemPool);
+					scrollList = new SortedList<T>(listRoot, itemPool);
 				}
 
 				scrollList.ItemMovementInterpolation = movementInterpolation;
