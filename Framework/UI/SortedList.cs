@@ -30,7 +30,7 @@ namespace Framework
 			void SetFade(float fade);
 		}
 
-		public class SortedUIList<T> : IEnumerable<IListItem<T>> where T : IComparable
+		public class SortedList<T> : IEnumerable<IListItem<T>> where T : IComparable
 		{
 			#region Public Data
 			public RectOffset Borders { get; set; }
