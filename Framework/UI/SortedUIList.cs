@@ -11,7 +11,7 @@ namespace Framework
 
 	namespace UI
 	{
-		public interface IScrollListItem<T>
+		public interface IListItem<T>
 		{
 			T Data
 			{
@@ -30,7 +30,7 @@ namespace Framework
 			void SetFade(float fade);
 		}
 
-		public class ScrollList<T> : IEnumerable<IScrollListItem<T>> where T : IComparable
+		public class SortedUIList<T> : IEnumerable<IListItem<T>> where T : IComparable
 		{
 			#region Public Data
 			public RectOffset Borders { get; set; }
@@ -65,19 +65,19 @@ namespace Framework
 			private const float kDefaultFadeTime = 0.25f;
 
 			private readonly PrefabInstancePool _itemPool;
-			private readonly ScrollRect _scrollArea;
+			private readonly RectTransform _contentArea;
 			private float _movementLerpSpeed;
 			private float _fadeLerpSpeed;
 
 			private class ScrollListItem
 			{
-				public IScrollListItem<T> _item;
+				public IListItem<T> _item;
 				public Vector2 _fromPosition;
 				public Vector2 _targetPosition;
 				public float _movementLerp;
 				public float _fade;
 
-				public ScrollListItem(IScrollListItem<T> item)
+				public ScrollListItem(IListItem<T> item)
 				{
 					_item = item;
 				}
@@ -88,7 +88,7 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			public static void Create(ref ScrollList<T> scrollList, ScrollRect scrollArea, PrefabInstancePool itemPool, IList<T> items = null,
+			public static void Create(ref SortedUIList<T> scrollList, RectTransform listRoot, PrefabInstancePool itemPool, IList<T> items = null,
 									RectOffset borders = null, Vector2 spacing = default, int numColumns = 1,
 									float movementTime = kDefaultMovementTime, InterpolationType movementInterpolation = InterpolationType.InOutSine,
 									float fadeTime = kDefaultFadeTime)
@@ -105,7 +105,7 @@ namespace Framework
 				
 				if (scrollList == null)
 				{
-					scrollList = new ScrollList<T>(scrollArea, itemPool);
+					scrollList = new SortedUIList<T>(contentArea, itemPool);
 				}
 
 				scrollList.ItemMovementInterpolation = movementInterpolation;
@@ -201,15 +201,15 @@ namespace Framework
 
 			public float GetContentHeight()
 			{
-				return _scrollArea.content.sizeDelta.y;
+				return RectTransformUtils.GetHeight(_contentArea);
 			}
 			#endregion
 
 			#region Private Functions
-			private ScrollList(ScrollRect scrollArea, PrefabInstancePool itemPool)
+			private SortedUIList(RectTransform listRoot, PrefabInstancePool itemPool)
 			{
 				_itemPool = itemPool;
-				_scrollArea = scrollArea;
+				_contentArea = listRoot;
 			}
 
 			private void Initialise(IList<T> items = null)
@@ -257,7 +257,7 @@ namespace Framework
 				Vector2 pos = new Vector2(Borders.left, -Borders.top);
 				int currentColumn = 0;
 
-				float ColumnWidth = (((RectTransform)_scrollArea.content.transform).rect.width - Borders.horizontal) / NumColumns;
+				float ColumnWidth = (_contentArea.rect.width - Borders.horizontal) / NumColumns;
 
 				if (items != null)
 				{
@@ -281,8 +281,8 @@ namespace Framework
 						//If no item exists for this create a new one
 						if (item == null)
 						{
-							GameObject gameObject = _itemPool.Instantiate(_scrollArea.content.transform);
-							item = new ScrollListItem(gameObject.GetComponent<IScrollListItem<T>>());
+							GameObject gameObject = _itemPool.Instantiate(_contentArea);
+							item = new ScrollListItem(gameObject.GetComponent<IListItem<T>>());
 							item._item.Data = items[i];
 							item._item.OnShow();
 
@@ -376,26 +376,7 @@ namespace Framework
 						}
 					}
 
-					RectTransformUtils.SetHeight(_scrollArea.content, contentHeight);
-
-					SetScrollAreaEnabled(contentHeight > _scrollArea.viewport.rect.height);
-				}
-			}
-
-			private void SetScrollAreaEnabled(bool enabled)
-			{
-				_scrollArea.enabled = enabled;
-				
-				if (!enabled)
-				{
-					RectTransformUtils.SetY(_scrollArea.content, 0f);
-				}
-
-				RectMask2D mask = _scrollArea.viewport.GetComponent<RectMask2D>();
-				
-				if (mask != null)
-				{
-					mask.enabled = enabled;
+					RectTransformUtils.SetHeight(_contentArea, contentHeight);
 				}
 			}
 
@@ -413,7 +394,7 @@ namespace Framework
 			#endregion
 
 			#region Enumerator Class
-			private class ScrollListEnumerator : IEnumerator<IScrollListItem<T>>
+			private class ScrollListEnumerator : IEnumerator<IListItem<T>>
 			{
 				private readonly List<ScrollListItem> _items = new List<ScrollListItem>();
 				private int _index;
@@ -433,7 +414,7 @@ namespace Framework
 					}
 				}
 
-				IScrollListItem<T> IEnumerator<IScrollListItem<T>>.Current
+				IListItem<T> IEnumerator<IListItem<T>>.Current
 				{
 					get
 					{
@@ -465,7 +446,7 @@ namespace Framework
 			#endregion
 
 			#region IEnumerator
-			public IEnumerator<IScrollListItem<T>> GetEnumerator()
+			public IEnumerator<IListItem<T>> GetEnumerator()
 			{
 				return new ScrollListEnumerator(_items);
 			}
