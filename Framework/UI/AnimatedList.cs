@@ -11,7 +11,7 @@ namespace Framework
 
 	namespace UI
 	{
-		public interface IListItem<T>
+		public interface IAnimatedListItem<T>
 		{
 			T Data
 			{
@@ -30,7 +30,7 @@ namespace Framework
 			void SetFade(float fade);
 		}
 
-		public class SortedList<T> : IEnumerable<IListItem<T>> where T : IComparable
+		public class AnimatedList<T> : IEnumerable<IAnimatedListItem<T>> where T : IComparable
 		{
 			#region Public Data
 			public RectOffset Borders { get; set; }
@@ -71,13 +71,13 @@ namespace Framework
 
 			private class ScrollListItem
 			{
-				public IListItem<T> _item;
+				public IAnimatedListItem<T> _item;
 				public Vector2 _fromPosition;
 				public Vector2 _targetPosition;
 				public float _movementLerp;
 				public float _fade;
 
-				public ScrollListItem(IListItem<T> item)
+				public ScrollListItem(IAnimatedListItem<T> item)
 				{
 					_item = item;
 				}
@@ -88,7 +88,7 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			public static void Create(ref SortedList<T> scrollList, RectTransform listRoot, PrefabInstancePool itemPool, IList<T> items = null,
+			public static void Create(ref AnimatedList<T> scrollList, RectTransform listRoot, PrefabInstancePool itemPool, IList<T> items = null,
 									RectOffset borders = null, Vector2 spacing = default, int numColumns = 1,
 									float movementTime = kDefaultMovementTime, InterpolationType movementInterpolation = InterpolationType.InOutSine,
 									float fadeTime = kDefaultFadeTime)
@@ -105,7 +105,7 @@ namespace Framework
 				
 				if (scrollList == null)
 				{
-					scrollList = new SortedList<T>(listRoot, itemPool);
+					scrollList = new AnimatedList<T>(listRoot, itemPool);
 				}
 
 				scrollList.ItemMovementInterpolation = movementInterpolation;
@@ -206,7 +206,7 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private SortedList(RectTransform listRoot, PrefabInstancePool itemPool)
+			private AnimatedList(RectTransform listRoot, PrefabInstancePool itemPool)
 			{
 				_itemPool = itemPool;
 				_contentArea = listRoot;
@@ -282,7 +282,7 @@ namespace Framework
 						if (item == null)
 						{
 							GameObject gameObject = _itemPool.Instantiate(_contentArea);
-							item = new ScrollListItem(gameObject.GetComponent<IListItem<T>>());
+							item = new ScrollListItem(gameObject.GetComponent<IAnimatedListItem<T>>());
 							item._item.Data = items[i];
 							item._item.OnShow();
 
@@ -394,7 +394,7 @@ namespace Framework
 			#endregion
 
 			#region Enumerator Class
-			private class ScrollListEnumerator : IEnumerator<IListItem<T>>
+			private class ScrollListEnumerator : IEnumerator<IAnimatedListItem<T>>
 			{
 				private readonly List<ScrollListItem> _items = new List<ScrollListItem>();
 				private int _index;
@@ -414,7 +414,7 @@ namespace Framework
 					}
 				}
 
-				IListItem<T> IEnumerator<IListItem<T>>.Current
+				IAnimatedListItem<T> IEnumerator<IAnimatedListItem<T>>.Current
 				{
 					get
 					{
@@ -446,7 +446,7 @@ namespace Framework
 			#endregion
 
 			#region IEnumerator
-			public IEnumerator<IListItem<T>> GetEnumerator()
+			public IEnumerator<IAnimatedListItem<T>> GetEnumerator()
 			{
 				return new ScrollListEnumerator(_items);
 			}
