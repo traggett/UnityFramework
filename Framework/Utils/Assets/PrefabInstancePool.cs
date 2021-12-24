@@ -60,10 +60,20 @@ namespace Framework
 
 				if (parent != null && parent != newInstance.transform.parent)
 				{
-					newInstance.transform.SetParent(parent, false);
 					newInstance.transform.localPosition = _prefab.transform.localPosition;
 					newInstance.transform.localRotation = _prefab.transform.localRotation;
 					newInstance.transform.localScale = _prefab.transform.localScale;
+
+					if (newInstance.transform is RectTransform rectTransform && _prefab.transform is RectTransform prefabRectTransform)
+					{
+						rectTransform.anchoredPosition = prefabRectTransform.anchoredPosition;
+						rectTransform.anchorMin = prefabRectTransform.anchorMin;
+						rectTransform.anchorMax = prefabRectTransform.anchorMax;
+						rectTransform.sizeDelta = prefabRectTransform.sizeDelta;
+						rectTransform.pivot = prefabRectTransform.pivot;
+					}
+
+					newInstance.transform.SetParent(parent, false);
 				}
 
 				newInstance.SetActive(true);
