@@ -1,8 +1,8 @@
- using System;
-
+using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 #if UNITY_EDITOR
+using UnityEditor;
 using UnityEditor.SceneManagement;
 #endif
 
@@ -15,11 +15,18 @@ namespace Framework
 		{
 			#region Public Data
 			[SerializeField]
+			private UnityEngine.Object _sceneAsset;
+			[SerializeField]
 			private string _scenePath;
 			#endregion
 
 			public SceneRef(string scenePath)
 			{
+#if UNITY_EDITOR
+				_sceneAsset = AssetDatabase.LoadAssetAtPath(scenePath, typeof(SceneAsset));
+#else
+				_sceneAsset = null;
+#endif
 				_scenePath = scenePath;
 			}
 
@@ -27,17 +34,39 @@ namespace Framework
 			{
 				if (scene.IsValid())
 				{
+#if UNITY_EDITOR
+					_sceneAsset = AssetDatabase.LoadAssetAtPath(scene.path, typeof(SceneAsset));
+#else
+					_sceneAsset = null;
+#endif
 					_scenePath = scene.path;
 				}
 				else
 				{
+					_sceneAsset = null;
 					_scenePath = null;
 				}
 			}
 
+#if UNITY_EDITOR
+			public SceneRef(SceneAsset sceneAsset)
+			{
+				if (sceneAsset != null)
+				{
+					_sceneAsset = sceneAsset;
+					_scenePath = AssetDatabase.GetAssetPath(sceneAsset);
+				}
+				else
+				{
+					_sceneAsset = null;
+					_scenePath = null;
+				}
+			}
+#endif
+
 			public static implicit operator string(SceneRef property)
 			{
-				return property.IsSceneRefValid() ? SceneUtils.GetSceneNameFromPath(property._scenePath) : "No Scene";
+				return property.IsSceneRefValid() ? property.GetSceneName() : "None";
 			}
 
 			public bool IsSceneLoaded()
@@ -52,7 +81,7 @@ namespace Framework
 
 				if (IsSceneRefValid())
 				{
-					scene = SceneManager.GetSceneByPath(_scenePath);
+					scene = SceneManager.GetSceneByPath(GetScenePath());
 				}
 
 				return scene;
@@ -60,7 +89,12 @@ namespace Framework
 
 			public string GetSceneName()
 			{
-				return SceneUtils.GetSceneNameFromPath(_scenePath);
+				return SceneUtils.GetSceneNameFromPath(GetScenePath());
+			}
+
+			public string GetScenePath()
+			{
+				return _scenePath;
 			}
 
 			public bool IsSceneRefValid()
@@ -69,16 +103,11 @@ namespace Framework
 			}
 
 #if UNITY_EDITOR
-			public string GetScenePath()
-			{
-				return _scenePath;
-			}
-
 			public void OpenSceneInEditor()
 			{
-				if (IsSceneRefValid())
+				if (_sceneAsset != null)
 				{
-					EditorSceneManager.OpenScene(_scenePath, OpenSceneMode.Additive);
+					EditorSceneManager.OpenScene(AssetDatabase.GetAssetPath(_sceneAsset), OpenSceneMode.Additive);
 				}
 			}
 #endif

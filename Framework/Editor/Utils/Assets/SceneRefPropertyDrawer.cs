@@ -16,18 +16,23 @@ namespace Framework
 
 					Rect filePosition = new Rect(position.x, position.y, position.width, EditorGUIUtility.singleLineHeight);
 
-					SerializedProperty fileProp = property.FindPropertyRelative("_scenePath");
-
-					SceneAsset sceneAsset = null;
-
-					if (!string.IsNullOrEmpty(fileProp.stringValue))
-						sceneAsset = AssetDatabase.LoadAssetAtPath(fileProp.stringValue, typeof(SceneAsset)) as SceneAsset;
+					SerializedProperty assetProp = property.FindPropertyRelative("_sceneAsset");
+					SerializedProperty pathProp = property.FindPropertyRelative("_scenePath");
 
 					EditorGUI.BeginChangeCheck();
-					sceneAsset = EditorGUI.ObjectField(filePosition, label, sceneAsset, typeof(SceneAsset), false) as SceneAsset;
+					Object sceneAsset = EditorGUI.ObjectField(filePosition, label, assetProp.objectReferenceValue, typeof(SceneAsset), false);
+		
 					if (EditorGUI.EndChangeCheck())
 					{
-						fileProp.stringValue = AssetDatabase.GetAssetPath(sceneAsset);
+						assetProp.objectReferenceValue = sceneAsset;
+					}
+
+					//Check path has changed (scene asset has moved)
+					string scenePath = AssetDatabase.GetAssetPath(assetProp.objectReferenceValue);
+
+					if (pathProp.stringValue != scenePath)
+					{
+						pathProp.stringValue = scenePath;
 					}
 
 					EditorGUI.EndProperty();
