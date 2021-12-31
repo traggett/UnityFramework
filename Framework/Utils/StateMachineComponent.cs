@@ -4,132 +4,135 @@ using UnityEngine;
 
 namespace Framework
 {
-	public class StateMachineComponent : MonoBehaviour
+	namespace Utils
 	{
-		#region Private Data
-		private enum State
+		public class StateMachineComponent : MonoBehaviour
 		{
-			NotRunning,
-			Running,
-			Paused,
-		}
-		private State _state = State.NotRunning;
-		private IEnumerator _current;
-		private IEnumerator _next;
-		private Coroutine _process;
-		#endregion
-
-		#region Unity Messages
-		protected virtual void OnDisable()
-		{
-			Stop();
-		}
-		#endregion
-
-		#region Public Interface
-		public void GoToState(IEnumerator state)
-		{
-			_current = state;
-			_next = null;
-
-			if (_state == State.NotRunning)
+			#region Private Data
+			private enum State
 			{
-				_process = StartCoroutine(Run());
+				NotRunning,
+				Running,
+				Paused,
 			}
-		}
+			private State _state = State.NotRunning;
+			private IEnumerator _current;
+			private IEnumerator _next;
+			private Coroutine _process;
+			#endregion
 
-		public void SetNextState(IEnumerator state)
-		{
-			if (_state == State.NotRunning)
+			#region Unity Messages
+			protected virtual void OnDisable()
+			{
+				Stop();
+			}
+			#endregion
+
+			#region Public Interface
+			public void GoToState(IEnumerator state)
 			{
 				_current = state;
-				StartCoroutine(Run());
-			}
-			else if (_state == State.Running)
-			{
-				_next = state;
-			}
-		}
+				_next = null;
 
-		public void Stop()
-		{
-			if (_process != null)
-			{
-				StopCoroutine(_process);
-				_process = null;
-			}
-
-			_current = null;
-			_next = null;
-			_state = State.NotRunning;
-		}
-
-		public void Pause()
-		{
-			if (_state != State.Running)
-			{
-				throw new System.InvalidOperationException("Unable to pause coroutine in state: " + _state);
-			}
-
-			_state = State.Paused;
-		}
-
-		public void Resume()
-		{
-			if (_state != State.Paused)
-			{
-				throw new System.InvalidOperationException("Unable to resume coroutine in state: " + _state);
-			}
-
-			_state = State.Running;
-		}
-
-		public bool IsRunning()
-		{
-			return _state == State.Running;
-		}
-		#endregion
-
-		protected IEnumerator GetNext()
-		{
-			return _next;
-		}
-
-		#region Private Functions
-		private IEnumerator Run()
-		{
-			if (_state != State.NotRunning)
-			{
-				throw new System.InvalidOperationException("Unable to start coroutine in state: " + _state);
-			}
-
-			_state = State.Running;
-
-			while (true)
-			{
-				while (_current != null && _current.MoveNext())
+				if (_state == State.NotRunning)
 				{
-					yield return _current.Current;
+					_process = StartCoroutine(Run());
+				}
+			}
 
-					while (_state == State.Paused)
+			public void SetNextState(IEnumerator state)
+			{
+				if (_state == State.NotRunning)
+				{
+					_current = state;
+					StartCoroutine(Run());
+				}
+				else if (_state == State.Running)
+				{
+					_next = state;
+				}
+			}
+
+			public void Stop()
+			{
+				if (_process != null)
+				{
+					StopCoroutine(_process);
+					_process = null;
+				}
+
+				_current = null;
+				_next = null;
+				_state = State.NotRunning;
+			}
+
+			public void Pause()
+			{
+				if (_state != State.Running)
+				{
+					throw new System.InvalidOperationException("Unable to pause coroutine in state: " + _state);
+				}
+
+				_state = State.Paused;
+			}
+
+			public void Resume()
+			{
+				if (_state != State.Paused)
+				{
+					throw new System.InvalidOperationException("Unable to resume coroutine in state: " + _state);
+				}
+
+				_state = State.Running;
+			}
+
+			public bool IsRunning()
+			{
+				return _state == State.Running;
+			}
+			#endregion
+
+			protected IEnumerator GetNext()
+			{
+				return _next;
+			}
+
+			#region Private Functions
+			private IEnumerator Run()
+			{
+				if (_state != State.NotRunning)
+				{
+					throw new System.InvalidOperationException("Unable to start coroutine in state: " + _state);
+				}
+
+				_state = State.Running;
+
+				while (true)
+				{
+					while (_current != null && _current.MoveNext())
 					{
-						yield return null;
+						yield return _current.Current;
+
+						while (_state == State.Paused)
+						{
+							yield return null;
+						}
+					}
+
+					if (_next != null)
+					{
+						_current = _next;
+						_next = null;
+					}
+					else
+					{
+						break;
 					}
 				}
 
-				if (_next != null)
-				{
-					_current = _next;
-					_next = null;
-				}
-				else
-				{
-					break;
-				}
+				_state = State.NotRunning;
 			}
-				
-			_state = State.NotRunning;
+			#endregion
 		}
-		#endregion
 	}
 }
