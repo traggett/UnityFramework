@@ -70,6 +70,7 @@ namespace Framework
 			private Target _offsetMinTarget;
 			private Target _offsetMaxTarget;
 			private Target _sizeDeltaTarget;
+			private Target _scaleTarget;
 			private RectTransform _rectTransform;
 			#endregion
 
@@ -131,6 +132,21 @@ namespace Framework
 				{
 					_sizeDeltaTarget.Clear();
 					RectTransform.sizeDelta = sizeDelta;
+				}
+			}
+
+			public void SetScale(Vector2 scale, float time = -1f, InterpolationType interpolationType = InterpolationType.InOutCubic)
+			{
+				Vector2 currentScale = RectTransform.localScale;
+
+				if (time > 0f)
+				{
+					_scaleTarget.SetTarget(scale, time, currentScale, _targetTolerance, interpolationType);
+				}
+				else
+				{
+					_scaleTarget.Clear();
+					RectTransform.localScale = new Vector3(scale.x, scale.y, RectTransform.localScale.z);
 				}
 			}
 
@@ -200,6 +216,12 @@ namespace Framework
 				if (_sizeDeltaTarget.IsLerping())
 				{
 					rectTransform.sizeDelta = _sizeDeltaTarget.Update(deltaTime);
+				}
+
+				if (_scaleTarget.IsLerping())
+				{
+					Vector2 scale = _scaleTarget.Update(deltaTime);
+					rectTransform.localScale = new Vector3(scale.x, scale.y, rectTransform.localScale.z);
 				}
 			}
 			#endregion

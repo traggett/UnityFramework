@@ -126,6 +126,7 @@ namespace Framework
 					}
 					else
 					{
+						_current = null;
 						break;
 					}
 				}
