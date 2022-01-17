@@ -1,5 +1,3 @@
-#if DEBUG
-
 using UnityEngine;
 
 namespace Framework
@@ -114,5 +112,3 @@ namespace Framework
 		}
 	}
 }
-
-#endif
