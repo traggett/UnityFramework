@@ -26,7 +26,7 @@ namespace Framework
 			{
 				if (playableDirector != null && playableDirector.playableGraph.IsValid())
 				{
-					List<IPlayableBehaviourGizmoDrawer> debugDrawers = TimelineUtils.GetPlayableBehaviours<IPlayableBehaviourGizmoDrawer>(playableDirector.playableGraph);
+					List<IPlayableBehaviourGizmoDrawer> debugDrawers = PlayableUtils.GetPlayableBehaviours<IPlayableBehaviourGizmoDrawer>(playableDirector.playableGraph);
 
 					foreach (IPlayableBehaviourGizmoDrawer debugDrawer in debugDrawers)
 					{

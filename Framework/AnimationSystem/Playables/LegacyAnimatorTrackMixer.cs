@@ -68,7 +68,7 @@ namespace Framework
 				{
 					float inputWeight = playable.GetInputWeight(i);
 
-					if (inputWeight > 0f && TimelineUtils.IsScriptPlayable(playable.GetInput(i), out LegacyAnimatorPlayableBehaviour inputBehaviour) && inputBehaviour._animation != null)
+					if (inputWeight > 0f && PlayableUtils.IsScriptPlayable(playable.GetInput(i), out LegacyAnimatorPlayableBehaviour inputBehaviour) && inputBehaviour._animation != null)
 					{
 						TimelineClip clip = inputBehaviour._clipAsset.GetTimelineClip();
 
