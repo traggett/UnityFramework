@@ -30,28 +30,26 @@ namespace Framework
 				return false;
 			}
 
-			public static T GetFirstPlayableBehaviour<T>(PlayableGraph graph) where T : class
+			public static bool FindPlayableOfType<T>(Playable root, out Playable playable)
 			{
-				int rootCount = graph.GetRootPlayableCount();
-
-				for (int i = 0; i < rootCount; i++)
+				if (IsPlayableOfType(root, typeof(T)))
 				{
-					Playable root = graph.GetRootPlayable(i);
+					playable = root;
+					return true;
+				}
 
-					int inputCount = root.GetInputCount(); ;
+				for (int i = 0; i < root.GetInputCount(); i++)
+				{
+					Playable nextRoot = root.GetInput(i);
 
-					for (int j = 0; j < inputCount; j++)
+					if (FindPlayableOfType<T>(nextRoot, out playable))
 					{
-						T playable = GetFirstPlayableBehaviourFromNode<T>(root.GetInput(j));
-
-						if (playable != null)
-						{
-							return playable;
-						}
+						return true;
 					}
 				}
 
-				return null;
+				playable = default;
+				return false;
 			}
 
 			//Get all playable behaviours in a playable graph of type T, or implementing interface of type T
@@ -135,31 +133,6 @@ namespace Framework
 						GetPlayableBehaviours(node, ref playables);
 					}
 				}
-			}
-
-			private static T GetFirstPlayableBehaviourFromNode<T>(Playable root) where T : class
-			{
-				int inputCount = root.GetInputCount();
-
-				for (int i = 0; i < inputCount; i++)
-				{
-					Playable node = root.GetInput(i);
-
-					if (node.IsValid())
-					{
-						if (IsPlayableOfType(node, typeof(T)))
-						{
-							T playable = GetPlayableBehaviour(node, typeof(T)) as T;
-
-							if (playable != null)
-							{
-								return playable;
-							}
-						}
-					}
-				}
-
-				return null;
 			}
 		}
 	}
