@@ -31,21 +31,17 @@ namespace Framework
 			#region Public Interface
 			public void GoToState(IEnumerator state)
 			{
-				_current = state;
-				_next = null;
+				Stop();
 
-				if (_state == State.NotRunning)
-				{
-					_process = StartCoroutine(Run());
-				}
+				_current = state;
+				_process = StartCoroutine(Run());
 			}
 
 			public void SetNextState(IEnumerator state)
 			{
 				if (_state == State.NotRunning)
 				{
-					_current = state;
-					StartCoroutine(Run());
+					GoToState(state);
 				}
 				else if (_state == State.Running)
 				{
