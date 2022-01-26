@@ -105,7 +105,6 @@ namespace Framework
 
 						if (_forceExit)
 						{
-							_forceExit = false;
 							break;
 						}
 
@@ -114,6 +113,8 @@ namespace Framework
 							yield return null;
 						}
 					}
+
+					_forceExit = false;
 
 					if (_next != null)
 					{
