@@ -16,9 +16,10 @@ namespace Framework
 				Paused,
 			}
 			private State _state = State.NotRunning;
+			private Coroutine _process;
 			private IEnumerator _current;
 			private IEnumerator _next;
-			private Coroutine _process;
+			private bool _forceExit;
 			#endregion
 
 			#region Unity Messages
@@ -31,10 +32,16 @@ namespace Framework
 			#region Public Interface
 			public void GoToState(IEnumerator state)
 			{
-				Stop();
-
-				_current = state;
-				_process = StartCoroutine(Run());
+				if (_state == State.NotRunning)
+				{
+					_current = state;
+					_process = StartCoroutine(Run());
+				}
+				else
+				{
+					_next = state;
+					_forceExit = true;
+				}
 			}
 
 			public void SetNextState(IEnumerator state)
@@ -46,6 +53,7 @@ namespace Framework
 				else if (_state == State.Running)
 				{
 					_next = state;
+					_forceExit = false;
 				}
 			}
 
@@ -59,6 +67,7 @@ namespace Framework
 
 				_current = null;
 				_next = null;
+				_forceExit = false;
 				_state = State.NotRunning;
 			}
 
@@ -93,6 +102,12 @@ namespace Framework
 					while (_current != null && _current.MoveNext())
 					{
 						yield return _current.Current;
+
+						if (_forceExit)
+						{
+							_forceExit = false;
+							break;
+						}
 
 						while (_state == State.Paused)
 						{
