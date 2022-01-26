@@ -64,21 +64,11 @@ namespace Framework
 
 			public void Pause()
 			{
-				if (_state != State.Running)
-				{
-					throw new System.InvalidOperationException("Unable to pause coroutine in state: " + _state);
-				}
-
 				_state = State.Paused;
 			}
 
 			public void Resume()
 			{
-				if (_state != State.Paused)
-				{
-					throw new System.InvalidOperationException("Unable to resume coroutine in state: " + _state);
-				}
-
 				_state = State.Running;
 			}
 
@@ -96,11 +86,6 @@ namespace Framework
 			#region Private Functions
 			private IEnumerator Run()
 			{
-				if (_state != State.NotRunning)
-				{
-					throw new System.InvalidOperationException("Unable to start coroutine in state: " + _state);
-				}
-
 				_state = State.Running;
 
 				while (true)
