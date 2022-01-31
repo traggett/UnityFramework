@@ -71,7 +71,7 @@ namespace Framework
 				{
 					_fadeSpeed = -1f / fadeTime;
 				}
-				else
+				else if (_playableGraph.IsValid())
 				{
 					_playableGraph.Stop();
 
