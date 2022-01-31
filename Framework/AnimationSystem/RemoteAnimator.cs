@@ -10,47 +10,75 @@ namespace Framework
 		public class RemoteAnimator : MonoBehaviour
 		{
 			#region Public Data
-			[Range(0f, 1f)]
-			public float _weight;
+			public Animator Animator
+			{
+				get
+				{
+					if (_animator == null)
+					{
+						_animator = GetComponent<Animator>();
+					}
+
+					return _animator;
+				}
+			}
+
+			public float Weight
+			{
+				get
+				{
+					return _weight;
+				}
+				set
+				{
+					_weight = value;
+					_fadeSpeed = 0f;
+				}
+			}
 			#endregion
 
 			#region Private Data
 			private Animator _animator;
 			private PlayableGraph _playableGraph;
 			private AnimationPlayableOutput _animationPlayableOutput;
+			private float _weight;
+			private float _fadeSpeed;
 			#endregion
 
 			#region Public Inteface
-			public void Play(Animator target, float weight = 1f)
+			public void Play(Animator target, float fadeTime = -1f)
 			{
 				Stop();
-
-				if (_animator == null)
-				{
-					_animator = GetComponent<Animator>();
-				}
 
 				_playableGraph = PlayableGraph.Create(this.name);
 
 				_animationPlayableOutput = AnimationPlayableOutput.Create(_playableGraph, "RemoteAnimator", target);
 
-				AnimatorControllerPlayable animatorControllerPlayable = AnimatorControllerPlayable.Create(_playableGraph, _animator.runtimeAnimatorController);
+				AnimatorControllerPlayable animatorControllerPlayable = AnimatorControllerPlayable.Create(_playableGraph, Animator.runtimeAnimatorController);
 				_animationPlayableOutput.SetSourcePlayable(animatorControllerPlayable);
 
-				_weight = weight;
+				_weight = fadeTime > 0f ? 0f : 1f;
+				_fadeSpeed = fadeTime > 0f ? 1f / fadeTime : 0f;
 				_animationPlayableOutput.SetWeight(_weight);
 
 				_playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
 				_playableGraph.Play();
 			}
 
-			public void Stop()
+			public void Stop(float fadeTime = -1f)
 			{
-				_playableGraph.Stop();
+				if (fadeTime > 0f)
+				{
+					_fadeSpeed = -1f / fadeTime;
+				}
+				else
+				{
+					_playableGraph.Stop();
 
-				_animationPlayableOutput.SetTarget(null);
+					_animationPlayableOutput.SetTarget(null);
 
-				_playableGraph.Destroy();
+					_playableGraph.Destroy();
+				}			
 			}
 			#endregion
 
@@ -59,7 +87,26 @@ namespace Framework
 			{
 				if (_playableGraph.IsValid())
 				{
-					_animationPlayableOutput.SetWeight(_weight);
+					if (_fadeSpeed > 0f && _weight < 1f)
+					{
+						_weight += _fadeSpeed * Time.deltaTime;
+						_weight = Mathf.Clamp01(_weight);
+
+						_animationPlayableOutput.SetWeight(_weight);
+					}
+					else if (_fadeSpeed < 0f && _weight > 0f)
+					{
+						_weight += _fadeSpeed * Time.deltaTime;
+						
+						if (_weight <= 0f)
+						{
+							Stop();
+						}
+						else
+						{
+							_animationPlayableOutput.SetWeight(_weight);
+						}
+					}
 				}
 			}
 			#endregion
