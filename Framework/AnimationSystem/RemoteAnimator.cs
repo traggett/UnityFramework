@@ -23,6 +23,14 @@ namespace Framework
 				}
 			}
 
+			public AnimatorControllerPlayable AnimatorController
+			{
+				get
+				{
+					return _animatorControllerPlayable;
+				}
+			}
+
 			public float Weight
 			{
 				get
@@ -41,6 +49,7 @@ namespace Framework
 			private Animator _animator;
 			private PlayableGraph _playableGraph;
 			private AnimationPlayableOutput _animationPlayableOutput;
+			private AnimatorControllerPlayable _animatorControllerPlayable;
 			private float _weight;
 			private float _fadeSpeed;
 			#endregion
@@ -54,8 +63,8 @@ namespace Framework
 
 				_animationPlayableOutput = AnimationPlayableOutput.Create(_playableGraph, "RemoteAnimator", target);
 
-				AnimatorControllerPlayable animatorControllerPlayable = AnimatorControllerPlayable.Create(_playableGraph, Animator.runtimeAnimatorController);
-				_animationPlayableOutput.SetSourcePlayable(animatorControllerPlayable);
+				_animatorControllerPlayable = AnimatorControllerPlayable.Create(_playableGraph, Animator.runtimeAnimatorController);
+				_animationPlayableOutput.SetSourcePlayable(_animatorControllerPlayable);
 
 				_weight = fadeTime > 0f ? 0f : 1f;
 				_fadeSpeed = fadeTime > 0f ? 1f / fadeTime : 0f;
@@ -76,6 +85,9 @@ namespace Framework
 					_playableGraph.Stop();
 
 					_animationPlayableOutput.SetTarget(null);
+					_animationPlayableOutput = AnimationPlayableOutput.Null;
+
+					_animatorControllerPlayable = AnimatorControllerPlayable.Null;
 
 					_playableGraph.Destroy();
 				}			
@@ -83,6 +95,11 @@ namespace Framework
 			#endregion
 
 			#region Unity Messages
+			private void OnDisable()
+			{
+				Stop();
+			}
+
 			private void Update()
 			{
 				if (_playableGraph.IsValid())
