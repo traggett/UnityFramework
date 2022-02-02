@@ -14,6 +14,8 @@ namespace Framework
 			public float _showTime;
 			public float _hideTime;
 
+			public bool _unscaledTime;
+
 			public Action _onShown;
 			public Action _onHidden;
 
@@ -99,7 +101,7 @@ namespace Framework
 
 			protected virtual void Update()
 			{
-				UpdateAnimations(Time.deltaTime);
+				UpdateAnimations(_unscaledTime ? Time.unscaledTime : Time.deltaTime);
 			}
 			#endregion
 
