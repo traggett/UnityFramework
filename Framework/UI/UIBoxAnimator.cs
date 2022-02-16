@@ -5,10 +5,11 @@ namespace Framework
 {
 	using Maths;
 	using Utils;
+	using AnimationSystem;
 
 	namespace UI
 	{
-		public class UIBoxAnimator : UIAnimator
+		public class UIBoxAnimator : HidableComponent
 		{
 			#region Public Data
 			public RectTransform _rectTransform;
@@ -32,7 +33,7 @@ namespace Framework
 			private Vector2 _resizeFromSize;
 			#endregion
 
-			#region UIAnimator
+			#region HidableComponent
 			protected override void OnStartHideAnimation()
 			{
 				if (_resizeLerp > 0f)

@@ -5,10 +5,11 @@ namespace Framework
 {
 	using Maths;
 	using Utils;
+	using AnimationSystem;
 
 	namespace UI
 	{
-		public class IconAnimator : UIAnimator
+		public class IconAnimator : HidableComponent
 		{
 			#region Public Data
 			public RectTransform _rectTransform;
@@ -19,7 +20,7 @@ namespace Framework
 			public AnimationCurve _alphaCurve;
 			#endregion
 
-			#region UIAnimator
+			#region HidableComponent
 			protected override void OnUpdateAnimations(float showLerp, bool showing)
 			{
 				_icon.color = ColorUtils.SetAlpha(_icon.color, _alphaCurve.Evaluate(showLerp));

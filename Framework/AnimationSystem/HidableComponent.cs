@@ -3,9 +3,9 @@ using UnityEngine;
 
 namespace Framework
 {
-	namespace UI
+	namespace AnimationSystem
 	{
-		public abstract class UIAnimator : MonoBehaviour
+		public abstract class HidableComponent : MonoBehaviour
 		{
 			#region Public Data
 			public bool _showOnEnable;
