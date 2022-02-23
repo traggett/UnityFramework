@@ -167,34 +167,37 @@ namespace Framework
 				StopLayerChannel(layerGroup._primaryLayer);
 				layerGroup._primaryLayer._animation = StartAnimationInLayer(layerGroup._primaryLayer._layer, animName, wrapMode);
 
-				//if blending start with weight of zero
-				if (blendTime > 0.0f)
+				if (layerGroup._primaryLayer._animation != null)
 				{
-					layerGroup._state = LayerGroup.State.BlendingIn;
-					layerGroup._lerpT = 0.0f;
-					layerGroup._targetWeight = weight;
-					layerGroup._lerpSpeed = 1.0f / blendTime;
-					layerGroup._lerpEase = easeType;
-					layerGroup._playMode = playMode;
-
-					if (layerGroup._primaryLayer._animation != null)
-						layerGroup._primaryLayer._animation.weight = 0.0f;
-				}
-				else
-				{
-					layerGroup._state = LayerGroup.State.Playing;
-
-					if (layerGroup._primaryLayer._animation != null)
-						layerGroup._primaryLayer._animation.weight = weight;
-
-						
-					//If mode is stop all, stop all other layers
-					if (playMode == PlayMode.StopAll)
+					//if blending start with weight of zero
+					if (blendTime > 0.0f)
 					{
-						foreach (LayerGroup group in _layers)
+						layerGroup._state = LayerGroup.State.BlendingIn;
+						layerGroup._lerpT = 0.0f;
+						layerGroup._targetWeight = weight;
+						layerGroup._lerpSpeed = 1.0f / blendTime;
+						layerGroup._lerpEase = easeType;
+						layerGroup._playMode = playMode;
+
+						if (layerGroup._primaryLayer._animation != null)
+							layerGroup._primaryLayer._animation.weight = 0.0f;
+					}
+					else
+					{
+						layerGroup._state = LayerGroup.State.Playing;
+
+						if (layerGroup._primaryLayer._animation != null)
+							layerGroup._primaryLayer._animation.weight = weight;
+
+
+						//If mode is stop all, stop all other layers
+						if (playMode == PlayMode.StopAll)
 						{
-							if (group != layerGroup)
-								StopLayer(group);
+							foreach (LayerGroup group in _layers)
+							{
+								if (group != layerGroup)
+									StopLayer(group);
+							}
 						}
 					}
 				}

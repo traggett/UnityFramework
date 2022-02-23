@@ -101,7 +101,7 @@ namespace Framework
 
 			protected virtual void Update()
 			{
-				UpdateAnimations(_unscaledTime ? Time.unscaledTime : Time.deltaTime);
+				UpdateAnimations(_unscaledTime ? Time.unscaledDeltaTime : Time.deltaTime);
 			}
 			#endregion
 
@@ -176,7 +176,7 @@ namespace Framework
 				{
 					if (_showLerp > 0f)
 					{
-						_showLerp -= Time.deltaTime * _showLerpSpeed;
+						_showLerp -= deltaTime * _showLerpSpeed;
 
 						if (_showLerp <= 0f)
 						{
