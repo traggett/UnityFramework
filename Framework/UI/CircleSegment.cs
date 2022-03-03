@@ -7,21 +7,55 @@ namespace Framework
     {
         public class CircleSegment : MaskableGraphic
         {
+			#region Public Data
 			public int _segments = 12;
 
-			[Range(-360f, 360f)]
-			public float _fromAngle = 90f;
+			public float FromAngle
+			{
+				get
+				{
+					return _fromAngle;
+				}
+				set
+				{
+					_fromAngle = value;
+					SetVerticesDirty();
+				}
+			}
 
-			[Range(-360f, 360f)]
-			public float _toAngle = 180f;
+			public float ToAngle
+			{
+				get
+				{
+					return _toAngle;
+				}
+				set
+				{
+					_toAngle = value;
+					SetVerticesDirty();
+				}
+			}
+			#endregion
+
+			#region Private Data
+			[SerializeField, Range(-360f, 360f)]
+			private float _fromAngle = 90f;
+
+			[SerializeField, Range(-360f, 360f)]
+			private float _toAngle = 180f;
+			#endregion
+
+			#region Unity Messages
 
 			protected override void OnRectTransformDimensionsChange()
             {
                 base.OnRectTransformDimensionsChange();
                 SetVerticesDirty();
             }
+			#endregion
 
-            protected override void OnPopulateMesh(VertexHelper vh)
+			#region MaskableGraphic
+			protected override void OnPopulateMesh(VertexHelper vh)
             {
                 vh.Clear();
 
@@ -57,7 +91,9 @@ namespace Framework
 					}
 				}
             }
+			#endregion
 
+			#region Private Functions
 			private void CreateSegment(VertexHelper vertexHelper, Vector2 center, float fromAngle, float toAngle, float radius, float yScale)
 			{
 				var i = vertexHelper.currentVertCount;
@@ -83,6 +119,7 @@ namespace Framework
 				else
 					vertexHelper.AddTriangle(i + 0, i + 1, i + 2);
 			}
+			#endregion
 		}
 	}
 }
