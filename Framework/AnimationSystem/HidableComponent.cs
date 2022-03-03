@@ -47,6 +47,7 @@ namespace Framework
 							}
 							else
 							{
+								OnStartShowAnimation();
 								OnShown();
 							}
 						}
