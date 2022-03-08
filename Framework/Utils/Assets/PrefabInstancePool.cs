@@ -8,6 +8,14 @@ namespace Framework
 	{
 		public class PrefabInstancePool : MonoBehaviour
 		{
+			#region Helper Component
+			private class PooledPrefab : MonoBehaviour
+			{
+				public PrefabInstancePool _parentPool;
+				public bool _isFree;
+			}
+			#endregion
+
 			#region Public Data
 			public GameObject _prefab;
 			public int _initialPoolSize;
@@ -117,11 +125,51 @@ namespace Framework
 						_toDestroy.Add(index);
 						gameObject.SetActive(false);
 					}
+
+					return true;
+				}
+
+				return false;
+			}
+
+			public bool Destroy(Component component, bool instant = true)
+			{
+				int index = GetPrefabIndex(component.gameObject);
+				if (index != -1)
+				{
+					if (instant)
+					{
+						Destroy(index);
+					}
+					else
+					{
+						_toDestroy.Add(index);
+						gameObject.SetActive(false);
+					}
 					
 					return true;
 				}
 
 				return false;
+			}
+
+			public void DestroyAll(bool instant = true)
+			{
+				if (_instances != null)
+				{
+					for (int i = 0; i < _instances.Length; i++)
+					{
+						if (instant)
+						{
+							Destroy(i);
+						}
+						else
+						{
+							_toDestroy.Add(i);
+							_instances[i].gameObject.SetActive(false);
+						}
+					}
+				}
 			}
 
 			public static void InitAllPrefabInstancePools()
@@ -139,24 +187,28 @@ namespace Framework
 				}
 			}
 
-			public static void DestroyChildPrefabs(Transform parent, bool instant = true)
+			public static bool DestroyPrefab(Component component, bool instant = true)
 			{
-				List<PooledPrefab> children = new List<PooledPrefab>();
+				PooledPrefab pooledPrefab = component.GetComponent<PooledPrefab>();
 
-				for (int i = 0; i < parent.childCount; i++)
+				if (pooledPrefab != null)
 				{
-					PooledPrefab prefab = parent.GetChild(i).GetComponent<PooledPrefab>();
-
-					if (prefab != null)
-					{
-						children.Add(prefab);
-					}
+					return pooledPrefab._parentPool.Destroy(pooledPrefab.gameObject, instant);
 				}
 
-				foreach (PooledPrefab prefab in children)
+				return false;
+			}
+
+			public static bool DestroyPrefab(GameObject gameObject, bool instant = true)
+			{
+				PooledPrefab pooledPrefab = gameObject.GetComponent<PooledPrefab>();
+
+				if (pooledPrefab != null)
 				{
-					prefab._parentPool.Destroy(prefab.gameObject, instant);
+					return pooledPrefab._parentPool.Destroy(gameObject, instant);
 				}
+
+				return false;
 			}
 			#endregion
 
@@ -187,6 +239,8 @@ namespace Framework
 				PooledPrefab prefab = gameObject.AddComponent<PooledPrefab>();
 				prefab._parentPool = this;
 				prefab._isFree = true;
+				prefab.hideFlags = hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable;
+
 				gameObject.SetActive(false);
 				return prefab;
 			}
