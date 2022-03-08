@@ -8,13 +8,18 @@ namespace Framework
 	{
 		public class PrefabInstancePool : MonoBehaviour
 		{
+			#region Public Data
 			public GameObject _prefab;
 			public int _initialPoolSize;
 			public int _growAmount;
+			#endregion
 
+			#region Private Data
 			private PooledPrefab[] _instances;
 			private List<int> _toDestroy = new List<int>();
+			#endregion
 
+			#region Unity Messages
 			private void Update()
 			{
 				if (_instances != null)
@@ -27,8 +32,22 @@ namespace Framework
 					_toDestroy.Clear();
 				}
 			}
+			#endregion
 
-			public GameObject Instantiate(Transform parent = null)
+			#region Public Interface
+			public T Instantiate<T>(Transform parent = null, bool resetTransform = true) where T : Component
+			{
+				GameObject gameObject = Instantiate(parent, resetTransform);
+
+				if (gameObject != null)
+				{
+					return gameObject.GetComponent<T>();
+				}
+
+				return null;
+			}
+
+			public GameObject Instantiate(Transform parent = null, bool resetTransform = true)
 			{
 				Init();
 
@@ -60,19 +79,22 @@ namespace Framework
 
 				if (parent != null && parent != newInstance.transform.parent)
 				{
-					newInstance.transform.localPosition = _prefab.transform.localPosition;
-					newInstance.transform.localRotation = _prefab.transform.localRotation;
-					newInstance.transform.localScale = _prefab.transform.localScale;
-
-					if (newInstance.transform is RectTransform rectTransform && _prefab.transform is RectTransform prefabRectTransform)
+					if (resetTransform)
 					{
-						rectTransform.anchoredPosition = prefabRectTransform.anchoredPosition;
-						rectTransform.anchorMin = prefabRectTransform.anchorMin;
-						rectTransform.anchorMax = prefabRectTransform.anchorMax;
-						rectTransform.sizeDelta = prefabRectTransform.sizeDelta;
-						rectTransform.pivot = prefabRectTransform.pivot;
-					}
+						newInstance.transform.localPosition = _prefab.transform.localPosition;
+						newInstance.transform.localRotation = _prefab.transform.localRotation;
+						newInstance.transform.localScale = _prefab.transform.localScale;
 
+						if (newInstance.transform is RectTransform rectTransform && _prefab.transform is RectTransform prefabRectTransform)
+						{
+							rectTransform.anchoredPosition = prefabRectTransform.anchoredPosition;
+							rectTransform.anchorMin = prefabRectTransform.anchorMin;
+							rectTransform.anchorMax = prefabRectTransform.anchorMax;
+							rectTransform.sizeDelta = prefabRectTransform.sizeDelta;
+							rectTransform.pivot = prefabRectTransform.pivot;
+						}
+					}
+					
 					newInstance.transform.SetParent(parent, false);
 				}
 
@@ -100,19 +122,6 @@ namespace Framework
 				}
 
 				return false;
-			}
-
-			private void Destroy(int index)
-			{
-				_instances[index]._isFree = true;
-
-				GameObject gameObject = _instances[index].gameObject;
-				gameObject.SetActive(false);
-
-				if (gameObject.transform.parent != this.transform)
-				{
-					gameObject.transform.SetParent(this.transform, false);
-				}
 			}
 
 			public static void InitAllPrefabInstancePools()
@@ -149,7 +158,9 @@ namespace Framework
 					prefab._parentPool.Destroy(prefab.gameObject, instant);
 				}
 			}
+			#endregion
 
+			#region Private Functions
 			private void Init()
 			{
 				if (_instances == null)
@@ -192,6 +203,20 @@ namespace Framework
 
 				return -1;
 			}
+
+			private void Destroy(int index)
+			{
+				_instances[index]._isFree = true;
+
+				GameObject gameObject = _instances[index].gameObject;
+				gameObject.SetActive(false);
+
+				if (gameObject.transform.parent != this.transform)
+				{
+					gameObject.transform.SetParent(this.transform, false);
+				}
+			}
+			#endregion
 		}
 	}
 }
