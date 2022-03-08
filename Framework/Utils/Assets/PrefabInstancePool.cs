@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,6 +9,12 @@ namespace Framework
 	{
 		public class PrefabInstancePool : MonoBehaviour
 		{
+			#region Public Data
+			public GameObject _prefab;
+			public int _initialPoolSize;
+			public int _growAmount;
+			#endregion
+
 			#region Helper Component
 			private class PooledPrefab : MonoBehaviour
 			{
@@ -15,12 +22,6 @@ namespace Framework
 				public int _index;
 				public bool _isFree;
 			}
-			#endregion
-
-			#region Public Data
-			public GameObject _prefab;
-			public int _initialPoolSize;
-			public int _growAmount;
 			#endregion
 
 			#region Private Data
@@ -58,6 +59,9 @@ namespace Framework
 					}
 					else
 					{
+#if DEBUG
+						UnityEngine.Debug.LogError("PrefabInstancePool " + GameObjectUtils.GetGameObjectPath(this.gameObject) + " prefab has no component of type " + typeof(T).Name);
+#endif
 						Destroy(gameObject);
 					}
 				}
@@ -83,7 +87,7 @@ namespace Framework
 
 				if (newInstance == null)
 				{
-					PooledPrefab[] newItems = new PooledPrefab[Mathf.Max(1, _growAmount)];
+					PooledPrefab[] newItems = new PooledPrefab[Math.Max(1, _growAmount)];
 					for (int i = 0; i < newItems.Length; i++)
 					{
 						newItems[i] = CreatePrefab(_instances.Length + i);
@@ -111,7 +115,7 @@ namespace Framework
 							rectTransform.pivot = prefabRectTransform.pivot;
 						}
 					}
-					
+
 					newInstance.transform.SetParent(parent, false);
 				}
 
@@ -208,7 +212,7 @@ namespace Framework
 			{
 				if (_instances == null)
 				{
-					_instances = new PooledPrefab[_initialPoolSize];
+					_instances = new PooledPrefab[Math.Max(_initialPoolSize, 0)];
 
 					for (int i = 0; i < _instances.Length; i++)
 					{
@@ -224,7 +228,7 @@ namespace Framework
 				{
 					UnityEngine.Debug.LogError("PrefabInstancePool " + GameObjectUtils.GetGameObjectPath(this.gameObject) + " is missing it's prefab!");
 					return null;
-				}					
+				}
 #endif
 				GameObject gameObject = Instantiate(_prefab, this.transform);
 				PooledPrefab prefab = gameObject.AddComponent<PooledPrefab>();
