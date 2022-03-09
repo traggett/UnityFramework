@@ -114,7 +114,7 @@ namespace Framework
 							}
 							else
 							{
-								lines[i] = _linePrefabPool.Instantiate(_textMesh.rectTransform).GetComponent<Image>();
+								lines[i] = _linePrefabPool.Instantiate<Image>(_textMesh.rectTransform);
 								lines[i].rectTransform.pivot = new Vector2(0f, 0.5f);
 								lines[i].rectTransform.anchorMin = new Vector2(0f, 0f);
 								lines[i].rectTransform.anchorMax = new Vector2(0f, 0f);

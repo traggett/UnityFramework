@@ -235,7 +235,7 @@ namespace Framework
 				prefab._parentPool = this;
 				prefab._index = index;
 				prefab._isFree = true;
-				prefab.hideFlags = hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable;
+				prefab.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable;
 
 				gameObject.SetActive(false);
 				return prefab;
