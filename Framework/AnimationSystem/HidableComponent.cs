@@ -97,7 +97,7 @@ namespace Framework
 
 			protected virtual void OnDisable()
 			{
-				OnHidden();
+				HideInstant();
 			}
 
 			protected virtual void Update()
@@ -109,13 +109,19 @@ namespace Framework
 			#region Public Interface
 			public void ShowInstant()
 			{
-				this.gameObject.SetActive(true);
-				OnShown();
+				if (!_shouldBeShowing || _showLerp < 1f)
+				{
+					this.gameObject.SetActive(true);
+					OnShown();
+				}
 			}
 
 			public void HideInstant()
 			{
-				OnHidden();
+				if (_shouldBeShowing || _showLerp > 0f)
+				{
+					OnHidden();
+				}
 			}
 
 			public bool IsFullyShowing()
