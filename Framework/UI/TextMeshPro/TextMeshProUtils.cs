@@ -10,7 +10,7 @@ namespace Framework
 		{
 			public static class TextMeshProUtils
 			{
-				public static Vector2 GetTextMeshProSize(TMP_Text textMesh)
+				public static Vector2 GetTextMeshProSize(TMP_Text textMesh, bool onlyVisibleCharacters = true)
 				{
 					//Make sure Text Mesh has had Awake called
 					ForceAwaken(textMesh);
@@ -18,17 +18,17 @@ namespace Framework
 					textMesh.ComputeMarginSize();
 					textMesh.ForceMeshUpdate(true, false);
 
-					return textMesh.GetRenderedValues(true);
+					return textMesh.GetRenderedValues(onlyVisibleCharacters);
 				}
 
-				public static float GetTextMeshProWidth(TMP_Text textMesh)
+				public static float GetTextMeshProWidth(TMP_Text textMesh, bool onlyVisibleCharacters = true)
 				{
-					return GetTextMeshProSize(textMesh).x;
+					return GetTextMeshProSize(textMesh, onlyVisibleCharacters).x;
 				}
 
-				public static float GetTextMeshProHeight(TMP_Text textMesh)
+				public static float GetTextMeshProHeight(TMP_Text textMesh, bool onlyVisibleCharacters = true)
 				{
-					return GetTextMeshProSize(textMesh).y;
+					return GetTextMeshProSize(textMesh, onlyVisibleCharacters).y;
 				}
 
 				public static bool IsAwake(TMP_Text textMesh)
@@ -48,11 +48,14 @@ namespace Framework
 					}
 
 					//Need to also cache canvas - might be inactive
-					if (textMesh.canvas == null)
+					if (textMesh is TextMeshProUGUI)
 					{
-						Canvas canvas = textMesh.GetComponentInParent<Canvas>(true);
-						FieldInfo canvasField = typeof(UnityEngine.UI.Graphic).GetField("m_Canvas", BindingFlags.NonPublic | BindingFlags.Instance);
-						canvasField.SetValue(textMesh, canvas);
+						if (textMesh.canvas == null)
+						{
+							Canvas canvas = textMesh.GetComponentInParent<Canvas>(true);
+							FieldInfo canvasField = typeof(UnityEngine.UI.Graphic).GetField("m_Canvas", BindingFlags.NonPublic | BindingFlags.Instance);
+							canvasField.SetValue(textMesh, canvas);
+						}
 					}
 				}
 

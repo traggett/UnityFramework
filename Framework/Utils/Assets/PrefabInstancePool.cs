@@ -94,6 +94,11 @@ namespace Framework
 					}
 					ArrayUtils.Concat(ref _instances, newItems);
 
+					for (int i = 0; i < newItems.Length; i++)
+					{
+						newItems[i].gameObject.SetActive(false);
+					}
+
 					newInstance = newItems[0].gameObject;
 					newItems[0]._isFree = false;
 				}
@@ -217,6 +222,7 @@ namespace Framework
 					for (int i = 0; i < _instances.Length; i++)
 					{
 						_instances[i] = CreatePrefab(i);
+						_instances[i].gameObject.SetActive(false);
 					}
 				}
 			}
@@ -237,7 +243,6 @@ namespace Framework
 				prefab._isFree = true;
 				prefab.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable;
 
-				gameObject.SetActive(false);
 				return prefab;
 			}
 

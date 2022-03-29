@@ -85,6 +85,11 @@ namespace Framework
 				return (value - _min) / (_max - _min);
 			}
 
+			public float Clamp(float value)
+			{
+				return Mathf.Clamp(value, _min, _max);
+			}
+
 			public float GetClampedT(float value)
 			{
 				return Mathf.Clamp01(GetT(value));
