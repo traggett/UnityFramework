@@ -472,7 +472,7 @@ namespace Framework
 							GUILayout.Label(GUIContent.none, GUILayout.Height(_contentStart));
 
 							//Then render viewable range
-							for (int i = _viewStartIndex; i < _viewEndIndex; i++)
+							for (int i = _viewStartIndex; i < _viewEndIndex && i < _keys.Length; i++)
 							{
 								bool selected = IsSelected(_keys[i]);
 

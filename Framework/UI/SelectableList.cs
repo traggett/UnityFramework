@@ -41,12 +41,6 @@ namespace Framework
 				if (_itemsList != null)
 					_itemsList.Update(_items, Time.deltaTime);
 			}
-
-			private void OnDisable()
-			{
-				if (_itemsList != null)
-					_itemsList.Clear();
-			}
 			#endregion
 
 			#region Public Interface
