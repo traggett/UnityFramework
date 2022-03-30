@@ -62,6 +62,12 @@ namespace Framework
 				this.gameObject.SetActive(true);
 			}
 
+			public void Hide()
+			{
+				if (_itemsList != null)
+					_itemsList.Clear();
+			}
+
 			public void SetSelected(T[] selected)
 			{
 				if (_itemsList != null)
