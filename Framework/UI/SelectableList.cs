@@ -66,6 +66,10 @@ namespace Framework
 			{
 				if (_itemsList != null)
 					_itemsList.Clear();
+
+				_items = null;
+
+				this.gameObject.SetActive(false);
 			}
 
 			public void SetSelected(T[] selected)
