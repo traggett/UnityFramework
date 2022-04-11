@@ -137,29 +137,40 @@ namespace Framework
 						property.intValue = EditorGUILayout.MaskField(new GUIContent(property.displayName), property.intValue, property.enumDisplayNames, options);
 				}
 
-				public static bool DrawSerialisedObjectProperties(SerializedObject obj, Rect rect)
+				public static bool DrawSerialisedObjectProperties(SerializedObject obj, Rect rect, bool includeChildren = true)
 				{
-					EditorGUI.BeginChangeCheck();
+					bool dirty = false;
+
 					obj.UpdateIfRequiredOrScript();
 
 					SerializedProperty iterator = obj.GetIterator();
 					bool enterChildren = true;
+
 					while (iterator.NextVisible(enterChildren))
 					{
 						if (iterator.propertyPath != "m_Script")
 						{
-							rect.height = EditorGUI.GetPropertyHeight(iterator);
-							EditorGUI.PropertyField(rect, iterator, true);
+							rect.height = EditorGUI.GetPropertyHeight(iterator, includeChildren);
+
+							EditorGUI.BeginChangeCheck();
+							EditorGUI.PropertyField(rect, iterator, includeChildren);
+							
+							if (EditorGUI.EndChangeCheck())
+							{
+								dirty = true;
+							}
+
 							rect.y += rect.height;
 						}
-						enterChildren = false;
+
+						enterChildren = !includeChildren;
 					}
 					obj.ApplyModifiedProperties();
 
-					return EditorGUI.EndChangeCheck();
+					return dirty;
 				}
 
-				public static float GetSerialisedObjectPropertiesHeight(SerializedObject obj)
+				public static float GetSerialisedObjectPropertiesHeight(SerializedObject obj, bool includeChildren = true)
 				{
 					float height = 0f;
 
@@ -167,13 +178,15 @@ namespace Framework
 
 					SerializedProperty iterator = obj.GetIterator();
 					bool enterChildren = true;
+
 					while (iterator.NextVisible(enterChildren))
 					{
 						if (iterator.propertyPath != "m_Script")
 						{
-							height += EditorGUI.GetPropertyHeight(iterator);
+							height += EditorGUI.GetPropertyHeight(iterator, includeChildren);
 						}
-						enterChildren = false;
+
+						enterChildren = !includeChildren;
 					}
 
 					return height;
