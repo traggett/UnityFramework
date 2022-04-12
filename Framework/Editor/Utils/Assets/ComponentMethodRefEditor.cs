@@ -115,7 +115,7 @@ namespace Framework
 					//Only allow parameterless methods with return type of T?
 					List<string> methodNames = new List<string>();
 
-					MethodInfo[] methods = component.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance);
+					MethodInfo[] methods = component.GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
 					foreach (MethodInfo method in methods)
 					{
