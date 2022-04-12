@@ -96,6 +96,7 @@ namespace Framework
 
 					GUIContent stateId = new GUIContent(GetEditableObject().GetStateIdLabel());
 					float labelHeight = labelStyle.CalcSize(stateId).y;
+					borderSize = Mathf.Min(borderSize, kMaxBorderSize);
 					float borderOffset = kMaxBorderSize - borderSize;
 
 					Rect mainBoxRect = new Rect(renderedRect.x + kMaxBorderSize, renderedRect.y + kMaxBorderSize, renderedRect.width - style._shadowSize - (kMaxBorderSize * 2.0f), renderedRect.height - style._shadowSize - (kMaxBorderSize * 2.0f));
@@ -203,7 +204,7 @@ namespace Framework
 
 				public virtual float GetBorderSize(bool selected)
 				{
-					return selected ? 2.0f : 1.0f;
+					return 2f;
 				}
 
 				public virtual bool IsCentred()
