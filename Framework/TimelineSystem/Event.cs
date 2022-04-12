@@ -1,6 +1,6 @@
 using System;
-
 using UnityEngine;
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -12,21 +12,26 @@ namespace Framework
 		public abstract class Event : IComparable<Event>
 		{
 			#region Public Data
-			[HideInInspector]
-			public float _time = 0.0f;
+			[SerializeField, HideInInspector]
+			private float _time = 0.0f;
+
+			public float Time
+			{
+				get
+				{
+					return _time;
+				}
+
+#if UNITY_EDITOR
+				set
+				{
+					_time = value;
+				}
+#endif
+			}
 			#endregion
 
 			#region Public Interface
-			public float GetTime()
-			{
-				return _time;
-			}
-
-			public void SetTime(float time)
-			{
-				_time = time;
-			}
-
 #if UNITY_EDITOR
 			public static float RenderTimeField(GUIContent label, float time, out bool dataChanged)
 			{
@@ -71,7 +76,13 @@ namespace Framework
 #endif
 			#endregion
 
-			#region Virtual Interface		
+			#region Virtual Interface
+			public abstract void Trigger();
+			
+			public virtual void Update(float eventTime) { }
+			
+			public virtual void End() { }
+
 			public virtual float GetDuration()
 			{
 				return 0.0f;
@@ -99,7 +110,7 @@ namespace Framework
 				if (evnt == this)
 					return 0;
 
-				int compare = GetTime().CompareTo(evnt.GetTime());
+				int compare = Time.CompareTo(evnt.Time);
 
 				//If time is the same then compare by type
 				if (compare == 0)

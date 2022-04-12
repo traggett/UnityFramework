@@ -5,8 +5,7 @@ namespace Framework
 {
 	using Utils;
 	using Serialization;
-	using TimelineStateMachineSystem;
-
+	
 	namespace StateMachineSystem
 	{
 		namespace Editor
@@ -83,7 +82,7 @@ namespace Framework
 						style._linkInactiveColor = new Color(190f / 255f, 190f / 255f, 190f / 255f);
 
 						_stateMachineEditor = StateMachineEditor.CreateInstance<StateMachineEditor>();
-						_stateMachineEditor.Init(kWindowTitle, this, kWindowTag, SystemUtils.GetAllSubTypes(typeof(ITimelineStateEvent)), style);
+						_stateMachineEditor.Init(kWindowTitle, this, kWindowTag, SystemUtils.GetAllSubTypes(typeof(Event)), style);
 					}
 				}
 

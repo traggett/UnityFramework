@@ -9,14 +9,15 @@ namespace Framework
 	using Serialization;
 	using TimelineSystem;
 	using TimelineSystem.Editor;
-	using TimelineStateMachineSystem;
-	using TimelineStateMachineSystem.Editor;
 	using Utils;
 	using Utils.Editor;
 	using Editor;
-
+	
 	namespace StateMachineSystem
 	{
+		using Timelines;
+		using Timelines.Editor;
+
 		namespace Editor
 		{
 			public sealed class StateMachineEditor : SerializedObjectGridBasedEditor<State>, TimelineEditor.IEditor
@@ -275,11 +276,12 @@ namespace Framework
 				}
 
 				protected override void RenderObjectsOnGrid()
-				{				
-					_style._stateTextStyle.fontSize = Mathf.RoundToInt(_style._stateTextStyleFontSize * _currentZoom);
+				{
+					_style._stateLabelStyle.fontSize = Mathf.RoundToInt(_style._stateLabelFontSize * _currentZoom);
+					_style._stateTextStyle.fontSize = Mathf.RoundToInt(_style._stateTextFontSize * _currentZoom);
 					_style._externalStateTextStyle.fontSize = Mathf.RoundToInt(_style._externalStateTextStyleFontSize * _currentZoom);
-					_style._linkTextStyle.fontSize = Mathf.RoundToInt(_style._linkTextStyleFontSize * _currentZoom);
-					_style._noteTextStyle.fontSize = Mathf.RoundToInt(_style._noteTextStyleFontSize * _currentZoom);
+					_style._linkTextStyle.fontSize = Mathf.RoundToInt(_style._linkTextFontSize * _currentZoom);
+					_style._noteTextStyle.fontSize = Mathf.RoundToInt(_style._noteFontSize * _currentZoom);
 
 					SetupExternalState();
 

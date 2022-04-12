@@ -36,11 +36,12 @@ namespace Framework
 				public float _shadowSize;
 
 				public float _stateCornerRadius;
-				
-				public int _stateTextStyleFontSize;
+
+				public int _stateLabelFontSize;
+				public int _stateTextFontSize;
 				public int _externalStateTextStyleFontSize;
-				public int _linkTextStyleFontSize;
-				public int _noteTextStyleFontSize;
+				public int _linkTextFontSize;
+				public int _noteFontSize;
 
 				public StateMachineEditorStyle()
 				{
@@ -87,11 +88,12 @@ namespace Framework
 					_shadowSize = 4.0f;
 
 					_stateCornerRadius = 10f;
-					
-					_stateTextStyleFontSize = _stateTextStyle.fontSize;
+
+					_stateLabelFontSize = _stateLabelStyle.fontSize;
+					_stateTextFontSize = _stateTextStyle.fontSize;
 					_externalStateTextStyleFontSize = _externalStateTextStyle.fontSize;
-					_linkTextStyleFontSize = _linkTextStyle.fontSize;
-					_noteTextStyleFontSize = _noteTextStyle.fontSize;
+					_linkTextFontSize = _linkTextStyle.fontSize;
+					_noteFontSize = _noteTextStyle.fontSize;
 				}
 			}
 		}

@@ -71,41 +71,6 @@ namespace Framework
 					EditorGUILayout.Separator();
 					EditorGUILayout.Separator();
 
-					#region Render Background Logic Threads
-					EditorGUILayout.LabelField("Background Logic:", EditorStyles.boldLabel);
-					EditorGUILayout.Separator();
-
-					if (conditionalState._backgroundLogic != null)
-					{
-						for (int i = 0; i < conditionalState._backgroundLogic.Length; i++)
-						{
-							ConditionalStateBackgroundLogic backgroundLogic = conditionalState._backgroundLogic[i];
-
-							GUI.backgroundColor = _titleLabelColor;
-							EditorGUILayout.LabelField(backgroundLogic.GetDescription(), EditorUtils.InspectorSubHeaderStyle, GUILayout.Height(24.0f));
-							GUI.backgroundColor = orig;
-
-							//Draw backgroundLogic properties
-							{
-								int origIndent = EditorGUI.indentLevel;
-								EditorGUI.indentLevel++;
-
-								backgroundLogic = SerializationEditorGUILayout.ObjectField(backgroundLogic, "", ref dataChanged);
-
-								EditorGUI.indentLevel = origIndent;
-							}
-
-							if (DrawEditBackgroundLogicButtons(i))
-							{
-								dataChanged = true;
-								break;
-							}
-						}
-					}		
-
-					dataChanged |= DrawAddBackgroundLogicButton();
-					#endregion
-
 					return dataChanged;
 				}
 				#endregion
@@ -142,61 +107,6 @@ namespace Framework
 					EditorGUILayout.Separator();
 
 					return changedArray;
-				}
-
-				private bool DrawEditBackgroundLogicButtons(int index)
-				{
-					ConditionalState conditionalState = (ConditionalState)GetEditableObject();
-					bool changedArray = false;
-
-					EditorGUILayout.BeginHorizontal(GUILayout.Width(20.0f));
-					{
-						if (GUILayout.Button("Remove"))
-						{
-							ArrayUtils.RemoveAt(ref conditionalState._backgroundLogic, index);
-							changedArray = true;
-						}
-					}
-					EditorGUILayout.EndHorizontal();
-
-					EditorGUILayout.Separator();
-
-					return changedArray;
-				}
-
-				private bool DrawAddBackgroundLogicButton()
-				{
-					int index = 0;
-
-					Type[] logicTypes = SystemUtils.GetAllSubTypes(typeof(ConditionalStateBackgroundLogic));
-
-					string[] logicTypeNames = new string[logicTypes.Length + 1];
-					logicTypeNames[index++] = "(Add State Background Logic)";
-
-					foreach (Type type in logicTypes)
-					{
-						logicTypeNames[index] = type.Name;
-						index++;
-					}
-
-					int newIndex = EditorGUILayout.Popup(string.Empty, 0, logicTypeNames);
-
-					if (0 != newIndex)
-					{
-						Type branchType = logicTypes[newIndex - 1];
-
-						ConditionalStateBackgroundLogic newBackgroundLogic = Activator.CreateInstance(branchType) as ConditionalStateBackgroundLogic;
-						ConditionalState conditionalState = (ConditionalState)GetEditableObject();
-
-						ArrayUtils.Add(ref conditionalState._backgroundLogic, newBackgroundLogic);
-
-						StateMachineEditor editor = (StateMachineEditor)GetEditor();
-						editor.OnAddedNewObjectToTimeline(newBackgroundLogic);
-
-						return true;
-					}
-
-					return false;
 				}
 
 				private bool DrawAddConditionButton()

@@ -32,7 +32,7 @@ namespace Framework
 				#region Public Interface
 				public float GetTime()
 				{
-					return GetEditableObject().GetTime();
+					return GetEditableObject().Time;
 				}
 
 				public float GetDuration()
@@ -47,7 +47,7 @@ namespace Framework
 
 				public void SetTime(float time)
 				{
-					GetEditableObject().SetTime(time);
+					GetEditableObject().Time = time;
 					MarkAsDirty(true);
 				}
 
@@ -207,19 +207,19 @@ namespace Framework
 					{
 						case TimelineScrollArea.eTimeFormat.Default:
 							{
-								time = Event.RenderTimeField(label, GetEditableObject()._time, out dataChanged);
+								time = Event.RenderTimeField(label, GetEditableObject().Time, out dataChanged);
 							}
 							break;
 						case TimelineScrollArea.eTimeFormat.DaysHoursMins:
 							{
-								time = Event.RenderDaysHoursMinsField(label, GetEditableObject()._time, out dataChanged);
+								time = Event.RenderDaysHoursMinsField(label, GetEditableObject().Time, out dataChanged);
 							}
 							break;
 					}
 
 					if (dataChanged)
 					{
-						GetEditableObject()._time = time;
+						GetEditableObject().Time = time;
 						GetTimelineEditor().SetEventTime(this, time);
 						return true;
 					}
