@@ -320,7 +320,7 @@ namespace Framework
 						bool selected = (_dragMode != eDragType.Custom && _selectedObjects.Contains(state)) || dragHighlightState == state;
 						float borderSize = state.GetBorderSize(selected);
 
-						Color borderColor = selected ? _style._stateBackgroundSelected : _style._stateBackground;
+						Color borderColor = selected ? _style._stateBorderSelectedColor : _style._stateBorderColor;
 #if DEBUG
 						if (_debugging && _playModeHighlightedState != null && state.GetStateId() == _playModeHighlightedState._stateId)
 						{
@@ -828,7 +828,7 @@ namespace Framework
 					{
 						externalState.CalcBounds(_style);
 						bool selected = _selectedObjects.Contains(externalState);
-						Color borderColor = selected ? _style._stateBackgroundSelected : _style._stateBackground;
+						Color borderColor = selected ? _style._stateBorderSelectedColor : _style._stateBorderColor;
 						Rect renderedRect = GetScreenRect(externalState.GetBounds());
 						externalState.Render(renderedRect, borderColor, _style._externalStateColor, _style, selected ? 2.0f : 1.0f);
 						externalState.ExternalHasRendered = true;
@@ -925,7 +925,7 @@ namespace Framework
 						Handles.DrawSolidDisc(position3d, -Vector3.forward, linkRadius + 2.0f);
 					}
 
-					Handles.color = Color.Lerp(_style._stateBackground, Color.clear, 0.25f);
+					Handles.color = Color.Lerp(_style._stateBorderColor, Color.clear, 0.25f);
 					Handles.DrawSolidDisc(position3d, -Vector3.forward, linkRadius + 1.5f);
 					
 					Handles.color = color;

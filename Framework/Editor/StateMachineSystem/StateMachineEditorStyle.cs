@@ -22,8 +22,8 @@ namespace Framework
 				public Color _linkColor;
 				public Color _linkInactiveColor;
 				public Color _linkDescriptionColor;
-				public Color _stateBackground;
-				public Color _stateBackgroundSelected;
+				public Color _stateBorderColor;
+				public Color _stateBorderSelectedColor;
 				public Color _defaultStateColor;
 				public Color _branchingStateColor;
 				public Color _externalStateColor;
@@ -55,45 +55,46 @@ namespace Framework
 					_stateLabelStyle = new GUIStyle(EditorUtils.TextStyle);
 					_stateLabelStyle.fontStyle = FontStyle.Italic;
 					_stateLabelStyle.padding = new RectOffset(8, 8, 1, 1);
+					_stateLabelFontSize = _stateLabelStyle.fontSize;
 
 					_stateTextStyle = new GUIStyle(EditorUtils.TextStyle);
 					_stateTextStyle.fontStyle = FontStyle.Bold;
 					_stateTextStyle.padding = new RectOffset(8, 8, 1, 1);
+					_stateTextFontSize = _stateTextStyle.fontSize;
 
 					_externalStateTextStyle = new GUIStyle(EditorUtils.TextWhiteStyle);
 					_externalStateTextStyle.fontStyle = FontStyle.Bold;
+					_externalStateTextStyleFontSize = _externalStateTextStyle.fontSize;
 
 					_linkTextStyle = new GUIStyle(EditorUtils.TextStyleSmall);
 					_linkTextStyle.fontSize = 10;
 					_linkTextStyle.padding = new RectOffset(8, 8, 3, 3);
+					_linkTextFontSize = _linkTextStyle.fontSize;
 
 					_noteTextStyle = new GUIStyle(EditorUtils.TextStyle);
 					_noteTextStyle.fontStyle = FontStyle.Italic;
 					_noteTextStyle.padding = new RectOffset(2, 0, 2, 8);
+					_noteFontSize = _noteTextStyle.fontSize;
 
-					_defaultStateColor = Color.grey;
-					_linkColor = Color.red;
-					_linkInactiveColor = new Color(0.7f, 0.0f, 0.0f, 1.0f);
-					_linkDescriptionColor = new Color(0.75f, 0.75f, 0.75f, 1.0f);
-					_stateBackground = new Color(1.0f, 1.0f, 1.0f, 0.5f);
-					_stateBackgroundSelected = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+					_defaultStateColor = new Color(61f / 255f, 154f / 255f, 92f / 255f);
 					_externalStateColor = new Color(1.0f, 0.73f, 0.0f, 1.0f);
 					_branchingStateColor = new Color(102 / 255f, 129 / 255f, 116 / 255f);
 					_noteColor = new Color(224 / 255f, 223 / 255f, 188 / 255f);
 					_debugCurrentStateColor = new Color(1.0f, 0.7f, 0.18f);
 					_coroutineStateColor = new Color(156 / 255f, 68 / 255f, 68 / 255f);
 					_playableGraphStateColor = new Color(245 / 255f, 212 / 255f, 179 / 255f);
-					
+
+					_stateBorderColor = new Color(1.0f, 1.0f, 1.0f, 0.5f);
+					_stateBorderSelectedColor = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+
+					_linkColor = Color.white;
+					_linkInactiveColor = new Color(190f / 255f, 190f / 255f, 190f / 255f);
+					_linkDescriptionColor = new Color(0.75f, 0.75f, 0.75f, 1.0f);
+
 					_shadowColor = new Color(0.0f, 0.0f, 0.0f, 0.6f);
 					_shadowSize = 4.0f;
 
 					_stateCornerRadius = 10f;
-
-					_stateLabelFontSize = _stateLabelStyle.fontSize;
-					_stateTextFontSize = _stateTextStyle.fontSize;
-					_externalStateTextStyleFontSize = _externalStateTextStyle.fontSize;
-					_linkTextFontSize = _linkTextStyle.fontSize;
-					_noteFontSize = _noteTextStyle.fontSize;
 				}
 			}
 		}

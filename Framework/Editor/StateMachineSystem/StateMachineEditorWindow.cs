@@ -77,9 +77,6 @@ namespace Framework
 					if (_stateMachineEditor == null || _stateMachineEditor.GetEditorWindow() == null)
 					{
 						StateMachineEditorStyle style = new StateMachineEditorStyle();
-						style._defaultStateColor = new Color(61f / 255f, 154f / 255f, 92f / 255f);
-						style._linkColor = Color.white;
-						style._linkInactiveColor = new Color(190f / 255f, 190f / 255f, 190f / 255f);
 
 						_stateMachineEditor = StateMachineEditor.CreateInstance<StateMachineEditor>();
 						_stateMachineEditor.Init(kWindowTitle, this, kWindowTag, SystemUtils.GetAllSubTypes(typeof(Event)), style);
