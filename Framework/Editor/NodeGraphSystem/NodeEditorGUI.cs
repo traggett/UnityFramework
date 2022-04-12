@@ -167,10 +167,7 @@ namespace Framework
 
 				public void Render(Rect renderedRect, bool selected, GUIStyle titleStyle, GUIStyle textStyle, float scale, NodeEditorField highlightedField, NodeEditorField draggingFromField)
 				{
-					Color origBackgroundColor = GUI.backgroundColor;
-					GUI.backgroundColor = Color.clear;
-
-					GUI.BeginGroup(renderedRect, EditorUtils.ColoredRoundedBoxStyle);
+					GUI.BeginGroup(renderedRect);
 					{
 						Rect mainBox = new Rect(0.0f, 0.0f, renderedRect.width - kShadowSize, renderedRect.height - kShadowSize);
 
@@ -180,10 +177,12 @@ namespace Framework
 						//Draw white background
 						EditorUtils.DrawColoredRoundedBox(mainBox, selected ? kBorderColorHighlighted : kBorderColor);
 
-						//Draw label
+						//Draw main background
 						Rect labelRect = new Rect(mainBox.x + 1.0f, mainBox.y + 1.0f, mainBox.width - 2.0f, kLineHeight * 2.0f * scale);
-						GUI.backgroundColor = GetEditableObject().GetEditorColor();
-						GUI.BeginGroup(labelRect, EditorUtils.ColoredRoundedBoxStyle);
+						EditorUtils.DrawColoredRoundedBox(labelRect, GetEditableObject().GetEditorColor());
+
+						//Draw label			
+						GUI.BeginGroup(labelRect);
 						{
 							float h, s, v;
 							Color.RGBToHSV(GetEditableObject().GetEditorColor(), out h, out s, out v);
@@ -210,7 +209,7 @@ namespace Framework
 							fieldBox.x = labelRect.x + _inputFieldWidth + 1.0f;
 
 							GUI.backgroundColor = kFieldColor;
-							GUI.BeginGroup(fieldBox, EditorUtils.ColoredRoundedBoxStyle);
+							GUI.BeginGroup(fieldBox);
 							{
 								GUI.backgroundColor = Color.clear;
 								string text = "Output";
@@ -226,20 +225,26 @@ namespace Framework
 						{
 							fieldBox.width = _inputFieldWidth;
 							fieldBox.x = labelRect.x;
+
 							foreach (NodeEditorField inputField in _inputNodeFields)
 							{
-								if (inputField == highlightedField)
-									GUI.backgroundColor = kFieldColorHighlighted;
-								else if (draggingFromField != null && !draggingFromField._type.IsAssignableFrom(inputField._type))
-									GUI.backgroundColor = kFieldColorDisabled;
-								else
-									GUI.backgroundColor = kFieldColor;
+								GUIContent fieldContent = new GUIContent(inputField._name);
+								Color inputColor;
 
-								GUI.BeginGroup(fieldBox, EditorUtils.ColoredRoundedBoxStyle);
+								if (inputField == highlightedField)
+									inputColor = kFieldColorHighlighted;
+								else if (draggingFromField != null && !draggingFromField._type.IsAssignableFrom(inputField._type))
+									inputColor = kFieldColorDisabled;
+								else
+									inputColor = kFieldColor;
+
+								//Draw white background
+								EditorUtils.DrawColoredRoundedBox(fieldBox, inputColor);
+
+								GUI.BeginGroup(fieldBox);
 								{
-									GUI.backgroundColor = Color.clear;
 									textStyle.alignment = TextAnchor.MiddleLeft;
-									GUI.Label(new Rect(kFieldIconPadding * scale, 0, _inputFieldWidth - (kFieldIconPadding * scale), fieldBox.height), inputField._name, textStyle);
+									GUI.Label(new Rect(kFieldIconPadding * scale, 0, _inputFieldWidth - (kFieldIconPadding * scale), fieldBox.height), fieldContent, textStyle);
 								}
 								GUI.EndGroup();
 
@@ -250,8 +255,6 @@ namespace Framework
 						}
 					}
 					GUI.EndGroup();
-
-					GUI.backgroundColor = origBackgroundColor;
 				}
 
 				public void CalcBounds(GUIStyle titleStyle, GUIStyle textStyle, float scale)

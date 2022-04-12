@@ -16,49 +16,6 @@ namespace Framework
 			{
 				public static double kDoubleClickTime = 0.5d;
 
-				private static GUIStyle _coloredRoundedBoxStyle = null;
-				public static GUIStyle ColoredRoundedBoxStyle
-				{
-					get
-					{
-						if (_coloredRoundedBoxStyle == null)
-						{
-							_coloredRoundedBoxStyle = new GUIStyle(GUI.skin.GetStyle("Box"));
-							_coloredRoundedBoxStyle.alignment = TextAnchor.MiddleCenter;
-							_coloredRoundedBoxStyle.fontSize = 0;
-							_coloredRoundedBoxStyle.padding = new RectOffset(0, 0, 0, 0);
-							_coloredRoundedBoxStyle.margin = new RectOffset(0, 0, 0, 0);
-							_coloredRoundedBoxStyle.overflow = new RectOffset(0, 0, 0, 0);
-							_coloredRoundedBoxStyle.border = new RectOffset(8, 8, 8, 8);
-							_coloredRoundedBoxStyle.richText = false;
-							_coloredRoundedBoxStyle.normal.background = RoundRectTexture;
-							_coloredRoundedBoxStyle.onFocused = _coloredRoundedBoxStyle.normal;
-							_coloredRoundedBoxStyle.onHover = _coloredRoundedBoxStyle.normal;
-							_coloredRoundedBoxStyle.onActive = _coloredRoundedBoxStyle.normal;
-							_coloredRoundedBoxStyle.onNormal = _coloredRoundedBoxStyle.normal;
-						}
-
-						return _coloredRoundedBoxStyle;
-					}
-				}
-
-				private static GUIStyle _coloredHalfRoundedBoxStyle = null;
-				public static GUIStyle ColoredHalfRoundedBoxStyle
-				{
-					get
-					{
-						if (_coloredHalfRoundedBoxStyle == null)
-						{
-							_coloredHalfRoundedBoxStyle = new GUIStyle(ColoredRoundedBoxStyle);
-							_coloredHalfRoundedBoxStyle.border = new RectOffset(0, 8, 8, 8);
-							_coloredHalfRoundedBoxStyle.normal.background = RoundHalfRectTexture;
-						}
-
-						return _coloredHalfRoundedBoxStyle;
-					}
-				}
-
-
 				private static GUIStyle _toggleButton = null;
 				public static GUIStyle ToggleButtonStyle
 				{
@@ -95,16 +52,20 @@ namespace Framework
 					{
 						if (_textStyle == null)
 						{
-							_textStyle = new GUIStyle(GUI.skin.GetStyle("TextArea"));
+							_textStyle = new GUIStyle();
 							_textStyle.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
 							_textStyle.fontSize = 11;
 							_textStyle.fontStyle = FontStyle.Normal;
 							_textStyle.alignment = TextAnchor.UpperLeft;
 							_textStyle.padding = new RectOffset(4, 4, 4, 4);
+							_textStyle.border = new RectOffset();
 							_textStyle.richText = true;
 							_textStyle.stretchWidth = true;
 							_textStyle.stretchHeight = false;
 							_textStyle.normal.background = null;
+							_textStyle.normal.scaledBackgrounds = null;
+							_textStyle.focused.background = null;
+							_textStyle.focused.scaledBackgrounds = null;
 						}
 
 						return _textStyle;
@@ -136,7 +97,6 @@ namespace Framework
 							_textStyleSmall = new GUIStyle(TextStyle);
 							_textStyleSmall.fontSize = 9;
 							_textStyleSmall.fontStyle = FontStyle.Italic;
-							_textStyleSmall.normal.background = OnePixelTexture;
 						}
 
 						return _textStyleSmall;
@@ -229,20 +189,6 @@ namespace Framework
 					}
 				}
 
-				private static Texture2D _roundRectTexture = null;
-				public static Texture2D RoundRectTexture
-				{
-					get
-					{
-						if (_roundRectTexture == null)
-						{
-							_roundRectTexture = Resources.Load<Texture2D>("RoundRect");
-						}
-
-						return _roundRectTexture;
-					}
-				}
-
 				private static Texture2D _roundHalfRectTexture = null;
 				public static Texture2D RoundHalfRectTexture
 				{
@@ -280,20 +226,14 @@ namespace Framework
 					GUI.Label(rect, GUIContent.none, SelectionRectStyle);
 				}
 
-				public static void DrawColoredRoundedBox(Rect box, Color color)
+				public static void DrawColoredRoundedBox(Rect box, Color color, float cornerRadius = 8f)
 				{
-					Color origColor = GUI.backgroundColor;
-					GUI.backgroundColor = color;
-					GUI.Label(box, GUIContent.none, ColoredRoundedBoxStyle);
-					GUI.backgroundColor = origColor;
+					GUI.DrawTexture(box, OnePixelTexture, ScaleMode.StretchToFill, true, 1f, color, 0f, cornerRadius);
 				}
 
 				public static void DrawColoredHalfRoundedBox(Rect box, Color color)
 				{
-					Color origColor = GUI.backgroundColor;
-					GUI.backgroundColor = color;
-					GUI.Label(box, GUIContent.none, ColoredHalfRoundedBoxStyle);
-					GUI.backgroundColor = origColor;
+					GUI.DrawTexture(box, RoundHalfRectTexture, ScaleMode.StretchToFill, true, 1f, color, 0f, 0f);
 				}
 
 				public static void DrawSimpleInspectorHeader(string title)

@@ -17,7 +17,7 @@ namespace Framework
 			public sealed class NodeGraphEditor : SerializedObjectGridBasedEditor<Node>
 			{
 				#region Private Data
-				private static readonly float kTopBorder = 53.0f;
+				private static readonly float kTopBorder = 63.0f;
 				private static readonly Color kLinkLineColor = Color.white;
 				private static readonly Color kUnusableLinkIconColor = new Color(0.75f, 0.75f, 0.75f, 1.0f);
 				private static readonly Color kOutputLinkIconColor = Color.red;
@@ -748,10 +748,9 @@ namespace Framework
 							Handles.DrawSolidDisc(new Vector3(staticFieldPos.x + kLinkIconWidth * 0.25f, staticFieldPos.y + kLinkIconWidth * 0.5f * scale, 0.0f), -Vector3.forward, kLinkIconWidth * 0.5f * scale);
 							Handles.EndGUI();
 
-							Color origBackgroundColor = GUI.backgroundColor;
-							GUI.backgroundColor = color;
+							EditorUtils.DrawColoredRoundedBox(staticFieldPos, color);
 
-							GUI.BeginGroup(staticFieldPos, EditorUtils.ColoredRoundedBoxStyle);
+							GUI.BeginGroup(staticFieldPos);
 							{
 								GUI.Label(new Rect(0, 0, staticFieldPos.width, staticFieldPos.height), labelContent, _nodeBoldTextStyle);
 							}
