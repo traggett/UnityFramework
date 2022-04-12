@@ -11,8 +11,7 @@ namespace Framework
 		public class ConditionalState : State
 		{
 			public ConditionalStateBranch[] _branches;
-			public ConditionalStateBackgroundLogic[] _backgroundLogic;
-
+			
 			public override IEnumerator PerformState(StateMachineComponent stateMachine)
 			{
 				if (_branches != null)
@@ -22,20 +21,10 @@ namespace Framework
 						branch.OnBranchingStarted(stateMachine);
 					}
 
-					foreach (ConditionalStateBackgroundLogic branch in _backgroundLogic)
-					{
-						branch.OnLogicStarted(stateMachine);
-					}
-
 					bool branchTaken = false;
 
 					while (!branchTaken)
 					{
-						foreach (ConditionalStateBackgroundLogic branch in _backgroundLogic)
-						{
-							branch.UpdateLogic(stateMachine);
-						}
-
 						foreach (ConditionalStateBranch branch in _branches)
 						{
 							if (branch.ShouldBranch(stateMachine))
@@ -52,11 +41,6 @@ namespace Framework
 						}
 
 						yield return null;
-					}
-
-					foreach (ConditionalStateBackgroundLogic branch in _backgroundLogic)
-					{
-						branch.OnLogicFinished(stateMachine);
 					}
 
 					foreach (ConditionalStateBranch branch in _branches)
@@ -102,16 +86,6 @@ namespace Framework
 						firstBranch = false;
 					}
 				}			
-
-				if (_backgroundLogic != null && _backgroundLogic.Length > 0)
-				{
-					label += "\n\nDuring State:";
-					
-					foreach (ConditionalStateBackgroundLogic backgroundLogic in _backgroundLogic)
-					{
-						label += "\n" + backgroundLogic.GetDescription();
-					}
-				}
 
 				return label;
 			}

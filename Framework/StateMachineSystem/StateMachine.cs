@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 
 using UnityEngine;
 #if UNITY_EDITOR
@@ -24,11 +23,6 @@ namespace Framework
 #if UNITY_EDITOR
 			public StateMachineNote[] _editorNotes = new StateMachineNote[0];
 #endif
-			#endregion
-
-			#region Prviate Data
-			private static List<IStateMachineMsg> _messages = new List<IStateMachineMsg>();
-			private static List<IStateMachineMsg> _messagesToAdd = new List<IStateMachineMsg>();
 			#endregion
 
 			#region ISerializationCallbackReceiver
@@ -114,28 +108,6 @@ namespace Framework
 				}
 
 				return null;
-			}
-
-			public static void TriggerMessage(IStateMachineMsg msg)
-			{
-				_messagesToAdd.Add(msg);
-			}
-
-			public static List<IStateMachineMsg> GetMessages()
-			{
-				return _messages;
-			}
-
-			public static void UseMessage(IStateMachineMsg msg)
-			{
-				_messages.Remove(msg);
-			}
-
-			public static void ClearMessages()
-			{
-				_messages.Clear();
-				_messages.AddRange(_messagesToAdd);
-				_messagesToAdd.Clear();
 			}
 
 			public void FixUpStates(object obj)
