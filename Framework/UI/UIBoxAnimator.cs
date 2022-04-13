@@ -4,8 +4,8 @@ using UnityEngine.UI;
 namespace Framework
 {
 	using Maths;
-	using Utils;
-	using AnimationSystem;
+	using Graphics;
+	using Animations;
 
 	namespace UI
 	{

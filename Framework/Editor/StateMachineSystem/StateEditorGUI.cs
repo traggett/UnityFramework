@@ -60,7 +60,12 @@ namespace Framework
 					dataChanged |= RenderStateDescriptionField();
 					dataChanged |= RenderStateColorField();
 
-					return EditorGUI.EndChangeCheck();
+					//Render default properties
+					UnityEditor.Editor editor = UnityEditor.Editor.CreateEditor(GetEditableObject());
+
+					dataChanged |= editor.DrawDefaultInspector();
+
+					return dataChanged;
 				}
 				#endregion
 

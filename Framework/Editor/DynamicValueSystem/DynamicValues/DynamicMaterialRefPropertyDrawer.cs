@@ -3,8 +3,8 @@ using UnityEditor;
 
 namespace Framework
 {
-	using Utils.Editor;
-
+	using Graphics.Editor;
+	
 	namespace DynamicValueSystem
 	{
 		namespace Editor

@@ -3,7 +3,7 @@ using System;
 namespace Framework
 {
 	using UnityEngine;
-	using Utils;
+	using Graphics;
 
 	namespace DynamicValueSystem
 	{

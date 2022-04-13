@@ -5,12 +5,10 @@ using System.Collections;
 
 namespace Framework
 {
-	using Utils;
-
 	namespace StateMachineSystem
 	{
 		[Serializable]
-		public abstract class State
+		public abstract class State : UnityEngine.Object
 		{
 			#region Public Data
 			[HideInInspector]	
@@ -39,7 +37,7 @@ namespace Framework
 #if UNITY_EDITOR
 			public virtual string GetEditorLabel()
 			{
-				return "State" + _stateId.ToString("00");
+				return "State" + _stateId.ToString("00") + " (" + GetType().Name + ")";
 			}
 
 			public virtual string GetEditorDescription() 
