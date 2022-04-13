@@ -5,6 +5,7 @@ using System.Collections;
 
 namespace Framework
 {
+	using UnityEngine;
 	using Utils;
 
 	namespace StateMachineSystem
@@ -17,9 +18,14 @@ namespace Framework
 				throw new NotImplementedException();
 			}
 
-			public override string GetStateIdLabel()
+			public override string GetEditorLabel()
 			{
 				return "Note";
+			}
+
+			public override Color GetEditorColor()
+			{
+				return new Color(224 / 255f, 223 / 255f, 188 / 255f);
 			}
 		}
 	}

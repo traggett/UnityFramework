@@ -1,7 +1,5 @@
 #if UNITY_EDITOR
 
-using System;
-
 namespace Framework
 {
 	using Serialization;
@@ -10,16 +8,9 @@ namespace Framework
 	{
 		public struct StateMachineEditorLink
 		{
-			private object _object;
-			private SerializedObjectMemberInfo _memberInfo;
-			private string _description;
-
-			public StateMachineEditorLink(object obj, string propertyName, string description)
-			{
-				_object = obj;
-				SerializedObjectMemberInfo.FindSerializedField(obj.GetType(), propertyName, out _memberInfo);
-				_description = description;
-			}
+			public object _object;
+			public SerializedObjectMemberInfo _memberInfo;
+			public string _description;
 
 			public StateRef GetStateRef()
 			{
@@ -32,11 +23,6 @@ namespace Framework
 			public void SetStateRef(StateRef value)
 			{
 				_memberInfo.SetValue(_object, value);
-			}
-
-			public string GetDescription()
-			{
-				return _description;
 			}
 		}
 	}

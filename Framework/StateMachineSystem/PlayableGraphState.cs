@@ -4,6 +4,7 @@ using UnityEngine.Playables;
 
 namespace Framework
 {
+	using UnityEngine;
 	using Utils;
 
 	namespace StateMachineSystem
@@ -11,9 +12,31 @@ namespace Framework
 		[Serializable]
 		public class PlayableGraphState : State
 		{
+			#region Public Data	
 			public ComponentRef<PlayableDirector> _director;
 			public AssetRef<PlayableAsset> _playableAsset;
+
+			[StateLink("And then")]
 			public StateRef _goToState;
+			#endregion
+
+			#region State
+#if UNITY_EDITOR
+			public override string GetEditorLabel()
+			{
+				return "PlayableGraph (State" + _stateId.ToString("00") + ")";
+			}
+
+			public override string GetEditorDescription()
+			{
+				return "Run " + _playableAsset + " on " + _director;
+			}
+
+			public override Color GetEditorColor()
+			{
+				return new Color(102 / 255f, 129 / 255f, 116 / 255f);
+			}
+#endif
 
 			public override IEnumerator PerformState(StateMachineComponent stateMachine)
 			{
@@ -32,26 +55,7 @@ namespace Framework
 
 				stateMachine.GoToState(StateMachine.Run(stateMachine, _goToState));
 			}
-
-#if UNITY_EDITOR
-			public override StateMachineEditorLink[] GetEditorLinks()
-			{
-				StateMachineEditorLink[] links = new StateMachineEditorLink[1];
-				links[0] = new StateMachineEditorLink(this, "goToState", "Playable Graph Finished");
-				return links;
-			}
-
-			public override string GetAutoDescription()
-			{
-				string label = "Run " + _playableAsset + " on " + _director;
-				return label;
-			}
-
-			public override string GetStateIdLabel()
-			{
-				return "PlayableGraph (State" + _stateId.ToString("00") + ")";
-			}
-#endif
+			#endregion
 		}
 	}
 }

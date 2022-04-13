@@ -3,7 +3,6 @@ using UnityEditor;
 
 namespace Framework
 {
-	using Utils;
 	using Serialization;
 	
 	namespace StateMachineSystem
@@ -43,7 +42,7 @@ namespace Framework
 				{
 					TextAsset asset = Selection.activeObject as TextAsset;
 
-					if (asset != null && !asset.name.StartsWith("TextConv"))
+					if (asset != null)
 					{
 						return Serializer.DoesAssetContainObject<StateMachine>(asset);
 					}
@@ -79,7 +78,7 @@ namespace Framework
 						StateMachineEditorStyle style = new StateMachineEditorStyle();
 
 						_stateMachineEditor = StateMachineEditor.CreateInstance<StateMachineEditor>();
-						_stateMachineEditor.Init(kWindowTitle, this, kWindowTag, SystemUtils.GetAllSubTypes(typeof(Event)), style);
+						_stateMachineEditor.Init(kWindowTitle, this, kWindowTag, style);
 					}
 				}
 

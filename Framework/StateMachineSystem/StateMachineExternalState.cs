@@ -20,13 +20,13 @@ namespace Framework
 				throw new NotImplementedException();
 			}
 
-			public override string GetAutoDescription()
+			public override string GetEditorDescription()
 			{
 				StateRef stateRef = _externalStateRef.GetStateRef();
 				return (stateRef.GetExternalFile()._editorAsset != null ? stateRef.GetExternalFile()._editorAsset.name : null);
 			}
 
-			public override string GetStateIdLabel()
+			public override string GetEditorLabel()
 			{
 				return "External State";
 			}

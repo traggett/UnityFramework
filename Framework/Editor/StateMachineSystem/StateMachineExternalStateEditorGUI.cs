@@ -72,11 +72,6 @@ namespace Framework
 					StateMachineEditor editor = (StateMachineEditor)GetEditor();
 					editor.LoadExternalState(this);
 				}
-
-				public override Color GetColor(StateMachineEditorStyle style)
-				{
-					return style._externalStateColor;
-				}
 			}
 		}
 	}

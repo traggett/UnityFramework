@@ -37,18 +37,19 @@ namespace Framework
 			public abstract IEnumerator PerformState(StateMachineComponent stateMachine);
 
 #if UNITY_EDITOR
-			public virtual StateMachineEditorLink[] GetEditorLinks() { return null; }
-			public string GetDescription()
-			{
-				if (_editorAutoDescription)
-					return GetAutoDescription();
-
-				return _editorDescription;
-			}
-			public virtual string GetAutoDescription() { return _editorDescription; }
-			public virtual string GetStateIdLabel()
+			public virtual string GetEditorLabel()
 			{
 				return "State" + _stateId.ToString("00");
+			}
+
+			public virtual string GetEditorDescription() 
+			{
+				return GetType().Name;
+			}
+
+			public virtual Color GetEditorColor()
+			{
+				return new Color(61f / 255f, 154f / 255f, 92f / 255f);
 			}
 #endif
 			#endregion

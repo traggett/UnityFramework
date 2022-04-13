@@ -34,14 +34,6 @@ namespace Framework
 					return dataChanged;
 				}
 
-				public override Color GetColor(StateMachineEditorStyle style)
-				{
-					if (GetEditableObject()._editorAutoColor)
-						return style._noteColor;
-					else
-						return GetEditableObject()._editorColor;
-				}
-
 				public override float GetBorderSize(bool selected)
 				{
 					return selected ? 1.0f : 0.0f;

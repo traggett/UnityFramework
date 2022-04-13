@@ -22,15 +22,10 @@ namespace Framework
 				public Color _linkColor;
 				public Color _linkInactiveColor;
 				public Color _linkDescriptionColor;
+
 				public Color _stateBorderColor;
 				public Color _stateBorderSelectedColor;
-				public Color _defaultStateColor;
-				public Color _branchingStateColor;
-				public Color _externalStateColor;
-				public Color _coroutineStateColor;
-				public Color _playableGraphStateColor;
-				public Color _noteColor;
-				public Color _debugCurrentStateColor;
+				public Color _stateBorderColorDebug;
 
 				public Color _shadowColor;
 				public float _shadowSize;
@@ -42,6 +37,11 @@ namespace Framework
 				public int _externalStateTextStyleFontSize;
 				public int _linkTextFontSize;
 				public int _noteFontSize;
+
+				public float _lineLineWidth;
+				public float _linkArrowHeight;
+				public float _linkArrowWidth;
+				public float _linkIconWidth;
 
 				public StateMachineEditorStyle()
 				{
@@ -76,16 +76,9 @@ namespace Framework
 					_noteTextStyle.padding = new RectOffset(2, 0, 2, 8);
 					_noteFontSize = _noteTextStyle.fontSize;
 
-					_defaultStateColor = new Color(61f / 255f, 154f / 255f, 92f / 255f);
-					_externalStateColor = new Color(1.0f, 0.73f, 0.0f, 1.0f);
-					_branchingStateColor = new Color(102 / 255f, 129 / 255f, 116 / 255f);
-					_noteColor = new Color(224 / 255f, 223 / 255f, 188 / 255f);
-					_debugCurrentStateColor = new Color(1.0f, 0.7f, 0.18f);
-					_coroutineStateColor = new Color(156 / 255f, 68 / 255f, 68 / 255f);
-					_playableGraphStateColor = new Color(245 / 255f, 212 / 255f, 179 / 255f);
-
 					_stateBorderColor = new Color(1.0f, 1.0f, 1.0f, 0.5f);
 					_stateBorderSelectedColor = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+					_stateBorderColorDebug = new Color(1.0f, 0.7f, 0.18f);
 
 					_linkColor = Color.white;
 					_linkInactiveColor = new Color(190f / 255f, 190f / 255f, 190f / 255f);
@@ -95,6 +88,11 @@ namespace Framework
 					_shadowSize = 4.0f;
 
 					_stateCornerRadius = 10f;
+
+					_lineLineWidth = 3.0f;
+					_linkArrowHeight = 8.0f;
+					_linkArrowWidth = 5.0f;
+					_linkIconWidth = 9.5f;
 				}
 			}
 		}

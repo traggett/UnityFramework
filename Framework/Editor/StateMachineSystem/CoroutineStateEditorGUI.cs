@@ -32,11 +32,6 @@ namespace Framework
 
 					return dataChanged;
 				}
-
-				public override Color GetColor(StateMachineEditorStyle style)
-				{
-					return style._coroutineStateColor;
-				}
 			}
 		}
 	}

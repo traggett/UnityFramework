@@ -16,9 +16,6 @@ namespace Framework
 		{
 			public class StateEditorGUI : SerializedObjectEditorGUI<State>
 			{
-				//need to store state links?
-				//
-
 				#region Private Data
 				private static Dictionary<Type, Type> _editorGUIConstructorMap = null;
 				protected static readonly Color _titleLabelColor = new Color(0.8f, 0.8f, 0.8f, 1.0f);
@@ -75,13 +72,18 @@ namespace Framework
 
 				public string GetStateDescription()
 				{
-					return GetEditableObject().GetDescription();
+					if (GetEditableObject()._editorAutoDescription)
+						return StringUtils.GetFirstLine(GetEditableObject().GetEditorDescription());
+
+					return StringUtils.GetFirstLine(GetEditableObject()._editorDescription);
 				}
 
-				public void Render(Rect renderedRect, Color borderColor, Color stateColor, StateMachineEditorStyle style, float borderSize)
+				public void Render(Rect renderedRect, StateMachineEditorStyle style, Color borderColor, float borderSize)
 				{
 					GUIStyle labelStyle = style._stateLabelStyle;
 					GUIStyle contentStyle = GetTextStyle(style);
+
+					Color stateColor = GetEditableObject().GetEditorColor();
 
 					//Update text colors to contrast state color
 					{
@@ -94,7 +96,7 @@ namespace Framework
 						contentStyle.hover.textColor = textColor;
 					}
 
-					GUIContent stateId = new GUIContent(GetEditableObject().GetStateIdLabel());
+					GUIContent stateId = new GUIContent(GetEditableObject().GetEditorLabel());
 					float labelHeight = labelStyle.CalcSize(stateId).y;
 					borderSize = Mathf.Min(borderSize, kMaxBorderSize);
 					float borderOffset = kMaxBorderSize - borderSize;
@@ -125,7 +127,7 @@ namespace Framework
 
 				public void CalcBounds(StateMachineEditorStyle style)
 				{
-					GUIContent stateId = new GUIContent(GetEditableObject().GetStateIdLabel());
+					GUIContent stateId = new GUIContent(GetEditableObject().GetEditorLabel());
 
 					GUIStyle stateLabelStyle = style._stateLabelStyle;
 					GUIStyle labelStyle = GetTextStyle(style);
@@ -187,14 +189,6 @@ namespace Framework
 				public virtual void OnDoubleClick()
 				{
 					
-				}
-
-				public virtual Color GetColor(StateMachineEditorStyle style)
-				{
-					if (GetEditableObject()._editorAutoColor)
-						return style._defaultStateColor;
-					else
-						return GetEditableObject()._editorColor;
 				}
 
 				public virtual GUIStyle GetTextStyle(StateMachineEditorStyle style)

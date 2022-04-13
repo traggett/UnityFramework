@@ -127,6 +127,7 @@ namespace Framework
 				try
 				{
 					object[] customAttributes = memberInfo.GetCustomAttributes(typeof(T), false);
+					
 					if (customAttributes.Length == 1 && customAttributes[0] is T)
 					{
 						attribute = (T)customAttributes[0];
@@ -140,29 +141,27 @@ namespace Framework
 				return attribute;
 			}
 
-			public static T GetAttribute<T>(Type type) where T : Attribute
+			public static T[] GetAttributes<T>(MemberInfo memberInfo) where T : Attribute
 			{
+				T[] attributes;
+
 				try
 				{
-					Attribute[] attributes = Attribute.GetCustomAttributes(type);
+					object[] customAttributes = memberInfo.GetCustomAttributes(typeof(T), false);
 
-					// Displaying output.  
-					foreach (Attribute attr in attributes)
+					attributes = new T[customAttributes.Length];
+
+					for (int i = 0; i < customAttributes.Length; i++)
 					{
-						T attribute = attr as T;
-
-						if (attribute != null)
-						{
-							return attribute;
-						}
+						attributes[i] = (T)customAttributes[i];
 					}
-
-					return null;
 				}
 				catch
 				{
 					return null;
 				}
+
+				return attributes;
 			}
 
 			public static T GetStaticMethodAsDelegate<T>(Type type, string name) where T : class

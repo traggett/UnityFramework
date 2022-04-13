@@ -184,7 +184,7 @@ namespace Framework
 				{
 					if (_parentStateMachine != null && GetState() != null)
 					{
-						_editorStateName = StringUtils.GetFirstLine(_state.GetDescription());
+						_editorStateName = GetDescription(_state);
 					}
 				}
 				else
@@ -198,12 +198,20 @@ namespace Framework
 						{
 							if (state._stateId == _stateId)
 							{
-								_editorStateName = _file._editorAsset.name + ":" + StringUtils.GetFirstLine(state.GetDescription());
+								_editorStateName = _file._editorAsset.name + ":" + GetDescription(_state);
 								break;
 							}
 						}
 					}
 				}
+			}
+
+			public string GetDescription(State state)
+			{
+				if (state._editorAutoDescription)
+					return StringUtils.GetFirstLine(state.GetEditorDescription());
+
+				return StringUtils.GetFirstLine(state._editorDescription);
 			}
 #endif
 			#endregion

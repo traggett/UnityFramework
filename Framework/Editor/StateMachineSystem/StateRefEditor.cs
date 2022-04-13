@@ -114,7 +114,14 @@ namespace Framework
 
 						for (int i = 0; i < states.Length; i++)
 						{
-							stateNames[i + 1] = states[i].GetStateIdLabel() + " " + StringUtils.RemoveRichText(StringUtils.GetFirstLine(states[i].GetDescription()));
+							string description;
+
+							if (states[i]._editorAutoDescription)
+								description = StringUtils.RemoveRichText(StringUtils.GetFirstLine(states[i].GetEditorDescription()));
+							else
+								description = StringUtils.RemoveRichText(StringUtils.GetFirstLine(states[i]._editorDescription));
+
+							stateNames[i + 1] = states[i].GetEditorLabel() + " " + description;
 
 							if (states[i]._stateId == stateId)
 							{

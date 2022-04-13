@@ -17,7 +17,6 @@ namespace Framework
 			public sealed class NodeGraphEditor : SerializedObjectGridBasedEditor<Node>
 			{
 				#region Private Data
-				private static readonly float kTopBorder = 63.0f;
 				private static readonly Color kLinkLineColor = Color.white;
 				private static readonly Color kUnusableLinkIconColor = new Color(0.75f, 0.75f, 0.75f, 1.0f);
 				private static readonly Color kOutputLinkIconColor = Color.red;
@@ -134,7 +133,10 @@ namespace Framework
 					EditorGUILayout.BeginVertical();
 					{
 						RenderTitleBar(windowSize);
-						Rect area = new Rect(0.0f, kTopBorder, windowSize.x, windowSize.y - kTopBorder);
+
+						float toolBarHeight = EditorStyles.toolbar.fixedHeight * 3f;
+						Rect area = new Rect(0.0f, toolBarHeight, windowSize.x, windowSize.y - toolBarHeight);
+						
 						RenderGridView(area);
 					}
 					EditorGUILayout.EndVertical();

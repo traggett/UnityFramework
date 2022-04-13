@@ -7,54 +7,30 @@ using UnityEditor;
 namespace Framework
 {
 	using Serialization;
-	using TimelineSystem;
-	using TimelineSystem.Editor;
+	using System.Reflection;
 	using Utils;
 	using Utils.Editor;
-	using Editor;
 	
 	namespace StateMachineSystem
 	{
-		using Timelines;
-		using Timelines.Editor;
-
 		namespace Editor
 		{
-			public sealed class StateMachineEditor : SerializedObjectGridBasedEditor<State>, TimelineEditor.IEditor
+			public sealed class StateMachineEditor : SerializedObjectGridBasedEditor<State>
 			{
 				#region Private Data
-				private static readonly float kTopBorder = 63.0f;
 				private static readonly float kDoubleClickTime = 0.32f;
-				private static readonly float kLineWidth = 3.0f;
-				private static readonly float kArrowHeight = 8.0f;
-				private static readonly float kArrowWidth = 5.0f;
-				private static readonly float kLinkIconWidth = 9.5f;
 
 				private string _title;
 				private string _editorPrefsTag;
 				private StateMachineEditorStyle _style;
 				private StateMachineEditorPrefs _editorPrefs;
 				
-				private Type[] _allowedEvents;
-				
-				private enum eMode
-				{
-					ViewingStateMachine,
-					ViewingTimelineState
-				}
 				private string _currentFileName;
-				private eMode _currentMode;			
 
-				
+				private Type[] _stateTypes;
+		
 				private StateEditorGUI _lastClickedState;
 				private double _lastClickTime;
-
-				private bool _requestSwitchViews;
-				private int _requestSwitchViewsStateId;
-
-				private TimeLineStateEditorGUI _editedTimelineState;
-				private TimelineEditor _timelineEditor;
-				private TimelineScrollArea.eTimeFormat _timelineEditorTimeFormat;
 
 				private StateEditorGUI _draggingState;
 				private StateMachineEditorLink _draggingStateLink;
@@ -66,16 +42,12 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public void Init(	string title, IEditorWindow editorWindow, string editorPrefsTag,
-									Type[] allowedTypes, StateMachineEditorStyle style,
-									TimelineScrollArea.eTimeFormat timeFormat = TimelineScrollArea.eTimeFormat.Default)
+				public void Init(string title, IEditorWindow editorWindow, string editorPrefsTag, StateMachineEditorStyle style)
 				{
 					_title = title;
 					_editorPrefsTag = editorPrefsTag;
-					_allowedEvents = allowedTypes;
 					_style = style;
-					_timelineEditorTimeFormat = timeFormat;
-
+					
 					string editorPrefsText = ProjectEditorPrefs.GetString(_editorPrefsTag, "");
 					try
 					{
@@ -101,11 +73,6 @@ namespace Framework
 						UpdateInPlayMode();
 					}
 #endif
-
-					if (_timelineEditor.NeedsRepaint())
-					{
-						SetNeedsRepaint();
-					}
 				}
 
 				public void Render(Vector2 windowSize)
@@ -116,28 +83,14 @@ namespace Framework
 					{
 						RenderToolBar(windowSize);
 
-						switch (_currentMode)
-						{
-							case eMode.ViewingStateMachine:
-								{
-									Rect area = new Rect(0.0f, kTopBorder, windowSize.x, windowSize.y - kTopBorder);
-									RenderGridView(area);
-									needsRepaint = NeedsRepaint();
-								}
-								break;
-							case eMode.ViewingTimelineState:
-								{
-									Rect position = new Rect(0.0f, kTopBorder, windowSize.x, windowSize.y - kTopBorder);
-									needsRepaint = _timelineEditor.NeedsRepaint();
-									_timelineEditor.Render(position, _style._stateTextStyle);
-									needsRepaint |= _timelineEditor.NeedsRepaint();
-								}
-								break;
-						}
+						float toolBarHeight = EditorStyles.toolbar.fixedHeight * 3f;
+						Rect area = new Rect(0.0f, toolBarHeight, windowSize.x, windowSize.y - toolBarHeight);
+
+						RenderGridView(area);
+
+						needsRepaint = NeedsRepaint();
 					}
 					EditorGUILayout.EndVertical();
-
-					SwitchViewsIfNeeded();
 
 					if (needsRepaint)
 						GetEditorWindow().DoRepaint();
@@ -145,7 +98,7 @@ namespace Framework
 
 				public void OnQuit()
 				{
-					if (HasChanges() || _timelineEditor.HasChanges())
+					if (HasChanges())
 					{
 						if (EditorUtility.DisplayDialog("State Machine Has Been Modified", "Do you want to save the changes you made to the state machine:\n\n" + AssetUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
 						{
@@ -166,12 +119,6 @@ namespace Framework
 				{
 					if (!string.IsNullOrEmpty(_currentFileName))
 					{
-						//If we're in state view first need to apply state changes to state machine view
-						if (_currentMode == eMode.ViewingTimelineState)
-						{
-							((TimelineState)_editedTimelineState.GetEditableObject())._timeline = _timelineEditor.ConvertToTimeline();
-						}
-
 						//Update state machine name to reflect filename
 						StateMachine stateMachine = ConvertToStateMachine();	
 
@@ -179,8 +126,7 @@ namespace Framework
 						Serializer.ToFile(stateMachine, _currentFileName);
 						
 						ClearDirtyFlag();
-						_timelineEditor.ClearDirtyFlag();
-
+						
 						GetEditorWindow().DoRepaint();
 					}
 					else
@@ -209,22 +155,7 @@ namespace Framework
 
 					StateMachine stateMachine = new StateMachine();
 					SetStateMachine(stateMachine);
-					_timelineEditor.SetTimeline(null);
-					SwitchToStatemachineView();
-
 					GetEditorWindow().DoRepaint();
-				}
-						
-				public void SwitchToStatemachineView()
-				{
-					_requestSwitchViews = true;
-					_requestSwitchViewsStateId = -1;
-				}
-				
-				public void ShowStateDetails(int stateId)
-				{
-					_requestSwitchViews = true;
-					_requestSwitchViewsStateId = stateId;
 				}
 				
 				public void LoadExternalState(StateMachineExternalStateEditorGUI state)
@@ -243,30 +174,6 @@ namespace Framework
 					return _debugging;
 				}
 #endif
-				#endregion
-
-				#region TimelineEditorView.IEditor
-				public void DoRepaint()
-				{
-					GetEditorWindow().DoRepaint();
-				}
-
-				public void OnSelectObject(ScriptableObject obj)
-				{
-					GetEditorWindow().OnSelectObject(obj);
-				}
-
-				public void OnDeselectObject(ScriptableObject obj)
-				{
-					GetEditorWindow().OnDeselectObject(obj);
-				}
-
-				public void OnAddedNewObjectToTimeline(object obj)
-				{
-					//Create a temporary stateMachine and fixUp any StateRefs etc using it
-					StateMachine stateMachine = ConvertToStateMachine();
-					stateMachine.FixUpStates(obj);
-				}
 				#endregion
 
 				#region EditableObjectGridEditor
@@ -301,7 +208,7 @@ namespace Framework
 					//Check dragging a state link onto a state
 					if (_dragMode == eDragType.Custom)
 					{
-						Vector2 gridPos = GetEditorPosition(UnityEngine.Event.current.mousePosition);
+						Vector2 gridPos = GetEditorPosition(Event.current.mousePosition);
 
 						//Check mouse is over a state
 						foreach (StateEditorGUI editorGUI in _editableObjects)
@@ -324,14 +231,12 @@ namespace Framework
 #if DEBUG
 						if (_debugging && _playModeHighlightedState != null && state.GetStateId() == _playModeHighlightedState._stateId)
 						{
-							borderColor = _style._debugCurrentStateColor;
+							borderColor = _style._stateBorderColorDebug;
 							borderSize = 2.0f;
 						}
 #endif
 						Rect renderedRect = GetScreenRect(state.GetBounds());
-
-						Color stateColor = state.GetColor(_style);
-						state.Render(renderedRect, borderColor, stateColor, _style, borderSize);
+						state.Render(renderedRect, _style, borderColor, borderSize);
 
 						RenderLinksForState(state);
 					}
@@ -340,7 +245,7 @@ namespace Framework
 					if (_dragMode == eDragType.Custom)
 					{
 						Vector3 startPos = GetLinkStartPosition(_draggingState, _draggingStateLinkIndex);
-						Vector3 endPos = UnityEngine.Event.current.mousePosition + new Vector2(0,-5);
+						Vector3 endPos = Event.current.mousePosition + new Vector2(0,-5);
 
 						RenderLinkLine(startPos, endPos, _style._linkColor);
 					}
@@ -396,19 +301,19 @@ namespace Framework
 					editorGUI.GetEditableObject()._editorPosition = position;
 				}
 
-				protected override void OnLeftMouseDown(UnityEngine.Event inputEvent)
+				protected override void OnLeftMouseDown(Event inputEvent)
 				{
 					//Dragging state links
 					for (int i = 0; i < _editableObjects.Count; i++)
 					{
 						StateEditorGUI state = (StateEditorGUI)_editableObjects[i];
 
-						StateMachineEditorLink[] links = state.GetEditableObject().GetEditorLinks();
+						StateMachineEditorLink[] links = GetStateLinks(state.GetEditableObject());
 
 						if (links != null)
 						{
 							float scale = 1.0f;
-							float linkRadius = Mathf.Round(kLinkIconWidth * 0.5f * scale) + 2.0f;
+							float linkRadius = Mathf.Round(_style._linkIconWidth * 0.5f * scale) + 2.0f;
 
 							for (int j=0; j<links.Length; j++)
 							{
@@ -440,7 +345,7 @@ namespace Framework
 					{
 						if (_lastClickedState == clickedOnState && (EditorApplication.timeSinceStartup - _lastClickTime) < kDoubleClickTime)
 						{
-							OnDoubleClickState(clickedOnState as StateEditorGUI);
+							OnDoubleClickState(clickedOnState);
 						}
 
 						_lastClickedState = clickedOnState;
@@ -448,7 +353,7 @@ namespace Framework
 					}
 				}
 
-				protected override void OnDragging(UnityEngine.Event inputEvent)
+				protected override void OnDragging(Event inputEvent)
 				{
 					if (_dragMode == eDragType.Custom)
 					{
@@ -460,13 +365,13 @@ namespace Framework
 					}
 				}
 
-				protected override void OnStopDragging(UnityEngine.Event inputEvent, bool cancelled)
+				protected override void OnStopDragging(Event inputEvent, bool cancelled)
 				{
 					if (_dragMode == eDragType.Custom)
 					{
 						if (!cancelled)
 						{
-							Vector2 gridPos = GetEditorPosition(UnityEngine.Event.current.mousePosition);
+							Vector2 gridPos = GetEditorPosition(Event.current.mousePosition);
 
 							StateEditorGUI draggedOnToState = null;
 
@@ -507,11 +412,29 @@ namespace Framework
 
 				protected override void AddContextMenu(GenericMenu menu)
 				{
-					menu.AddItem(new GUIContent("Add New Timeline State"), false, AddNewStateMenuCallback, typeof(TimelineState));
-					menu.AddItem(new GUIContent("Add New Conditional State"), false, AddNewStateMenuCallback, typeof(ConditionalState));
-					menu.AddItem(new GUIContent("Add New Coroutine State"), false, AddNewStateMenuCallback, typeof(CoroutineState));
-					menu.AddItem(new GUIContent("Add New Playable Graph State"), false, AddNewStateMenuCallback, typeof(PlayableGraphState));
+					if (_stateTypes == null)
+					{
+						List<Type> stateTypes = new List<Type>(SystemUtils.GetAllSubTypes(typeof(State)));
+
+						stateTypes.Remove(typeof(CoroutineState));
+						stateTypes.Remove(typeof(PlayableGraphState));
+						stateTypes.Remove(typeof(StateMachineNote));
+						stateTypes.Remove(typeof(StateMachineExternalState));
+
+
+						_stateTypes = stateTypes.ToArray();
+					}
+
 					menu.AddItem(new GUIContent("Add Note"), false, AddNewStateMenuCallback, typeof(StateMachineNote));
+					menu.AddItem(new GUIContent("Add Coroutine State"), false, AddNewStateMenuCallback, typeof(CoroutineState));
+					menu.AddItem(new GUIContent("Add Playable Graph State"), false, AddNewStateMenuCallback, typeof(PlayableGraphState));
+
+					menu.AddSeparator(null);
+
+					for (int i=0; i<_stateTypes.Length; i++)
+					{
+						menu.AddItem(new GUIContent("Add " + _stateTypes[i].Name), false, AddNewStateMenuCallback, _stateTypes[i]);
+					}
 				}
 				#endregion
 
@@ -545,11 +468,6 @@ namespace Framework
 
 				private void CreateViews()
 				{
-					_timelineEditor = TimelineEditor.CreateInstance<TimelineEditor>();
-					_timelineEditor.Init(this, _timelineEditorTimeFormat);
-					_timelineEditor.SetEventTypes(_allowedEvents);
-
-					_currentMode = eMode.ViewingStateMachine;
 					_currentFileName = string.Empty;
 
 					_currentZoom = _editorPrefs._zoom;
@@ -590,16 +508,6 @@ namespace Framework
 						}
 
 						SetStateMachine(stateMachine);
-						_timelineEditor.SetTimeline(null);
-						
-						if (_editorPrefs._stateId != -1)
-						{
-							ShowStateDetails(_editorPrefs._stateId);
-						}
-						else
-						{
-							SwitchToStatemachineView();
-						}
 					}
 					else
 					{
@@ -613,7 +521,7 @@ namespace Framework
 
 				private bool ShowOnLoadSaveChangesDialog()
 				{
-					if (HasChanges() || _timelineEditor.HasChanges())
+					if (HasChanges())
 					{
 						int option = EditorUtility.DisplayDialogComplex("State Machine Has Been Modified", "Do you want to save the changes you made to the state machine:\n\n" + AssetUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save", "Cancel");
 
@@ -640,7 +548,7 @@ namespace Framework
 						{
 							string titleText = _title + " - <b>" + System.IO.Path.GetFileName(_currentFileName);
 
-							if (HasChanges() || _timelineEditor.HasChanges())
+							if (HasChanges())
 								titleText += "*";
 
 							titleText += "</b>";
@@ -708,47 +616,28 @@ namespace Framework
 
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							if (_currentMode == eMode.ViewingTimelineState)
+							GUILayout.Button("Zoom", EditorStyles.toolbarButton);
+
+							float zoom = EditorGUILayout.Slider(_currentZoom, 0.5f, 1.5f);
+
+							if (GUILayout.Button("Reset Zoom", EditorStyles.toolbarButton))
 							{
-								if (GUILayout.Button("Back", EditorStyles.toolbarButton))
-								{
-									SwitchToStatemachineView();
-								}
-								else
-								{
-									EditorGUILayout.Space();
-
-									string stateText = "state" + ((int)(_editedTimelineState.GetStateId())).ToString("000") + " - <b>" + StringUtils.GetFirstLine(_editedTimelineState.GetStateDescription()) + "</b>";
-									GUILayout.Toggle(true, stateText, _style._toolbarStyle);
-
-									GUILayout.FlexibleSpace();
-								}
+								zoom = 1.0f;
 							}
-							else
+
+							if (_currentZoom != zoom)
 							{
-								GUILayout.Button("Zoom", EditorStyles.toolbarButton);
+								_currentZoom = zoom;
 
-								float zoom = EditorGUILayout.Slider(_currentZoom, 0.5f, 1.5f);
-
-								if (GUILayout.Button("Reset Zoom", EditorStyles.toolbarButton))
-								{
-									zoom = 1.0f;
-								}
-
-								if (_currentZoom != zoom)
-								{
-									_currentZoom = zoom;
-
-									_editorPrefs._zoom = _currentZoom;
-									SaveEditorPrefs();
-								}
-
-								if (GUILayout.Button("Center", EditorStyles.toolbarButton))
-								{
-									CenterCamera();
-								}
-								GUILayout.FlexibleSpace();
+								_editorPrefs._zoom = _currentZoom;
+								SaveEditorPrefs();
 							}
+
+							if (GUILayout.Button("Center", EditorStyles.toolbarButton))
+							{
+								CenterCamera();
+							}
+							GUILayout.FlexibleSpace();
 						}
 
 						EditorGUILayout.EndHorizontal();
@@ -775,8 +664,6 @@ namespace Framework
 					}
 
 					CenterCamera();
-
-					SetViewToStatemachine();
 				}
 
 				private StateEditorGUI GetStateGUI(int stateId)
@@ -830,16 +717,16 @@ namespace Framework
 						bool selected = _selectedObjects.Contains(externalState);
 						Color borderColor = selected ? _style._stateBorderSelectedColor : _style._stateBorderColor;
 						Rect renderedRect = GetScreenRect(externalState.GetBounds());
-						externalState.Render(renderedRect, borderColor, _style._externalStateColor, _style, selected ? 2.0f : 1.0f);
+						externalState.Render(renderedRect, _style, borderColor, selected ? 2.0f : 1.0f);
 						externalState.ExternalHasRendered = true;
 					}
 
-					RenderLink(link.GetDescription(), fromState, externalState, linkIndex);
+					RenderLink(link._description, fromState, externalState, linkIndex);
 				}
 
 				private Vector3 GetLinkStartPosition(StateEditorGUI state, int linkIndex = 0)
 				{
-					float fraction = 1.0f / (state.GetEditableObject().GetEditorLinks().Length + 1.0f);
+					float fraction = 1.0f / (GetStateLinks(state.GetEditableObject()).Length + 1.0f);
 					float edgeFraction = fraction * (1 + linkIndex);
 
 					Rect stateRect = GetScreenRect(state.GetBounds());
@@ -849,7 +736,7 @@ namespace Framework
 				private Vector3 GetLinkEndPosition(StateEditorGUI state, int linkIndex = 0)
 				{
 					Rect stateRect = GetScreenRect(state.GetBounds());
-					return new Vector3(Mathf.Round(stateRect.x + stateRect.width / 2.0f) + 0.5f, Mathf.Round(stateRect.y - kArrowHeight - 1.0f) + 0.5f, 0);
+					return new Vector3(Mathf.Round(stateRect.x + stateRect.width / 2.0f) + 0.5f, Mathf.Round(stateRect.y - _style._linkArrowHeight - 1.0f) + 0.5f, 0);
 				}
 
 				private static readonly float kLineTangent = 50.0f;
@@ -869,15 +756,15 @@ namespace Framework
 					Vector3 endTangent = endPos - Vector3.up * tangent;
 					Handles.BeginGUI();
 					Handles.color = color;
-					Handles.DrawBezier(startPos, endPos, startTangent, endTangent, color, EditorUtils.BezierAATexture, kLineWidth);
-					Handles.DrawAAConvexPolygon(new Vector3[] { new Vector3(endPos.x, endPos.y + kArrowHeight, 0.0f), new Vector3(endPos.x + kArrowWidth, endPos.y, 0.0f), new Vector3(endPos.x - kArrowWidth, endPos.y, 0.0f) });
+					Handles.DrawBezier(startPos, endPos, startTangent, endTangent, color, EditorUtils.BezierAATexture, _style._lineLineWidth);
+					Handles.DrawAAConvexPolygon(new Vector3[] { new Vector3(endPos.x, endPos.y + _style._linkArrowHeight, 0.0f), new Vector3(endPos.x + _style._linkArrowWidth, endPos.y, 0.0f), new Vector3(endPos.x - _style._linkArrowWidth, endPos.y, 0.0f) });
 					Handles.EndGUI();
 				}
 
 				private void RenderLink(string description, StateEditorGUI fromState, StateEditorGUI toState, int linkIndex)
 				{
 					Vector3 startPos = GetLinkStartPosition(fromState, linkIndex);
-					RenderLinkIcon(startPos, fromState.GetColor(_style));
+					RenderLinkIcon(startPos, fromState.GetEditableObject().GetEditorColor());
 
 					if (toState != null)
 					{
@@ -906,7 +793,7 @@ namespace Framework
 					Vector3 position3d = new Vector3(position.x, position.y, 0.0f);
 
 					float scale = 1.0f;
-					float linkRadius = Mathf.Round(kLinkIconWidth * 0.5f * scale);
+					float linkRadius = Mathf.Round(_style._linkIconWidth * 0.5f * scale);
 
 					bool highlighted = false;
 
@@ -938,7 +825,7 @@ namespace Framework
 
 				private void RenderLinksForState(StateEditorGUI state)
 				{
-					StateMachineEditorLink[] links = state.GetEditableObject().GetEditorLinks();
+					StateMachineEditorLink[] links = GetStateLinks(state.GetEditableObject());
 
 					if (links != null)
 					{
@@ -949,7 +836,7 @@ namespace Framework
 							if (stateRef.IsInternal())
 							{
 								StateEditorGUI toState = FindStateForLink(stateRef);
-								RenderLink(links[j].GetDescription(), state, toState, j);
+								RenderLink(links[j]._description, state, toState, j);
 							}
 							else
 							{
@@ -1027,63 +914,31 @@ namespace Framework
 					CreateAndAddNewObject((Type)type);
 				}
 
-				private void SwitchViewsIfNeeded()
+				private StateMachineEditorLink[] GetStateLinks(State state)
 				{
-					if (_requestSwitchViews)
-					{
-						if (_requestSwitchViewsStateId != -1)
-						{
-							StateEditorGUI state = GetStateGUI(_requestSwitchViewsStateId);
+					//Loop over member infos in state finding attrbute
+					FieldInfo[] feilds = state.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+					List<StateMachineEditorLink> links = new List<StateMachineEditorLink>();
 
-							if (state != null)
+					for (int i = 0; i < feilds.Length; i++)
+					{
+						StateLinkAttribute attribute = SystemUtils.GetAttribute<StateLinkAttribute>(feilds[i]);
+
+						if (attribute != null)
+						{
+							StateMachineEditorLink link = new StateMachineEditorLink
 							{
-								if (state is TimeLineStateEditorGUI)
-								{
-									TimelineState timelineState = (TimelineState)state.GetEditableObject();
+								_object = state,
+								_memberInfo = new SerializedObjectMemberInfo(feilds[i]),
+								_description = attribute._editorName
+							};
 
-									_currentMode = eMode.ViewingTimelineState;
-									_editedTimelineState = (TimeLineStateEditorGUI)state;
-									_timelineEditor.SetTimeline(timelineState._timeline);
-
-									_editorPrefs._stateId = _requestSwitchViewsStateId;
-									SaveEditorPrefs();
-
-									foreach (StateEditorGUI stateView in _selectedObjects)
-									{
-										GetEditorWindow().OnDeselectObject(stateView);
-									}
-								}
-								else
-								{
-									SetViewToStatemachine();
-									_selectedObjects.Clear();
-									_selectedObjects.Add(state);
-									Selection.activeObject = state;
-								}
-							}
+							links.Add(link);
 						}
-						else
-						{
-							SetViewToStatemachine();
-						}
-
-						_requestSwitchViews = false;
-					}
-				}
-
-				private void SetViewToStatemachine()
-				{
-					if (_editedTimelineState != null)
-					{
-						((TimelineState)_editedTimelineState.GetEditableObject())._timeline = _timelineEditor.ConvertToTimeline();
-						_timelineEditor.SetTimeline(new Timeline());
-						_editedTimelineState = null;
 					}
 
-					_editorPrefs._stateId = -1;
-					SaveEditorPrefs();
 
-					_currentMode = eMode.ViewingStateMachine;
+					return links.ToArray();
 				}
 
 #if DEBUG
@@ -1104,39 +959,15 @@ namespace Framework
 							{
 								_currentFileName = stateInfo._fileName;
 								SetStateMachine(stateInfo._stateMachine);
-								_timelineEditor.SetTimeline(null);
 							}
 
-							switch (_currentMode)
-							{
-								case eMode.ViewingStateMachine:
-									{
-										if (_playModeHighlightedState != stateInfo._state)
-											GetEditorWindow().DoRepaint();
+							if (_playModeHighlightedState != stateInfo._state)
+								GetEditorWindow().DoRepaint();
 
-										_playModeHighlightedState = stateInfo._state;
+							_playModeHighlightedState = stateInfo._state;
 
-										if (_editorPrefs._debugLockFocus)
-											CenterCameraOn(GetStateGUI(_playModeHighlightedState._stateId));
-									}
-									break;
-								case eMode.ViewingTimelineState:
-									{
-										if (stateInfo._state._stateId != _editedTimelineState.GetStateId())
-										{
-											_editedTimelineState = GetStateGUI(stateInfo._state._stateId) as TimeLineStateEditorGUI;
-
-											if (_editedTimelineState != null)
-											{
-												_timelineEditor.SetTimeline(((TimelineState)stateInfo._state)._timeline);
-											}
-										}
-
-										_timelineEditor.SetPlayModeCursorTime(stateInfo._time);
-										GetEditorWindow().DoRepaint();
-									}
-									break;
-							}
+							if (_editorPrefs._debugLockFocus)
+								CenterCameraOn(GetStateGUI(_playModeHighlightedState._stateId));
 						}
 					}
 				}
