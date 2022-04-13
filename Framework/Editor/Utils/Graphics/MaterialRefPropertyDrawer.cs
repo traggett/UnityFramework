@@ -8,7 +8,7 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			[CustomPropertyDrawer(typeof(MaterialRefProperty))]
+			[CustomPropertyDrawer(typeof(MaterialRef))]
 			public class MaterialRefPropertyDrawer : PropertyDrawer
 			{
 				private enum eEdtiorType

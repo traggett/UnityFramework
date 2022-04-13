@@ -8,7 +8,7 @@ namespace Framework
 	namespace DynamicValueSystem
 	{
 		[Serializable]
-		public class DynamicMaterialRef : DynamicValue<MaterialRefProperty>
+		public class DynamicMaterialRef : DynamicValue<MaterialRef>
 		{
 			public Material GetMaterial()
 			{
@@ -19,7 +19,7 @@ namespace Framework
 			{
 				DynamicMaterialRef dynamicMaterial = new DynamicMaterialRef
 				{
-					_value = new MaterialRefProperty(material)
+					_value = new MaterialRef(material)
 				};
 
 				return dynamicMaterial;
@@ -31,7 +31,7 @@ namespace Framework
 
 				if (renderer != null)
 				{
-					dynamicMaterial._value = new MaterialRefProperty(renderer.materials[materialIndex], materialIndex, renderer);
+					dynamicMaterial._value = new MaterialRef(renderer.materials[materialIndex], materialIndex, renderer);
 				}
 
 				return dynamicMaterial;

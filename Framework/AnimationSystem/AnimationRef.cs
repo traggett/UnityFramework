@@ -4,7 +4,6 @@ using System;
 using UnityEditor;
 #endif
 
-
 namespace Framework
 {
 	using Utils;
@@ -16,7 +15,7 @@ namespace Framework
 		public sealed class AnimationRef : ICustomEditorInspector
 		{
 			#region Public Data		
-			public ComponentRef<IAnimator> _animator;
+			public ComponentRef<Animation> _animation;
 			public string _animationId = string.Empty;
 			#endregion
 
@@ -26,12 +25,12 @@ namespace Framework
 
 			public static implicit operator string(AnimationRef property)
 			{
-				return property._animator + ":" + property._animationId;
+				return property._animation + ":" + property._animationId;
 			}
 
-			public IAnimator GetAnimator()
+			public Animation GetAnimator()
 			{
-				return _animator.GetComponent();
+				return _animation.GetComponent();
 			}
 
 			#region ICustomEditable
@@ -52,22 +51,26 @@ namespace Framework
 					int origIndent = EditorGUI.indentLevel;
 					EditorGUI.indentLevel++;
 					
-					_animator = SerializationEditorGUILayout.ObjectField(_animator, new GUIContent("Animator"), ref dataChanged);
+					_animation = SerializationEditorGUILayout.ObjectField(_animation, new GUIContent("Animator"), ref dataChanged);
 
-					IAnimator animator = _animator.GetComponent();
+					Animation animator = _animation.GetComponent();
 
 					if (animator != null)
 					{
-						string[] animationNames = animator.GetAnimationNames();
 						int currentIndex = -1;
+						int i = 0;
+						string[] animationNames = new string[animator.GetClipCount()];
 
-						for (int i=0; i< animationNames.Length; i++)
+						foreach (AnimationClip clip in animator)
 						{
-							if (animationNames[i] == _animationId)
+							animationNames[i] = clip.name;
+
+							if (clip.name == _animationId)
 							{
 								currentIndex = i;
-								break;
 							}
+
+							i++;
 						}
 
 						int index = EditorGUILayout.Popup("Animation", currentIndex == -1 ? 0 : currentIndex, animationNames);

@@ -114,11 +114,6 @@ namespace Framework
 				Play(0, animName, blendTime, easeType, playMode);
 			}
 
-			public void PlayQueued(string animName, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, PlayMode playMode = PlayMode.StopSameLayer)
-			{
-				Play(0, animName, blendTime, easeType, playMode, queued:true);
-			}
-
 			public void Play(int layer, string animName, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, PlayMode playMode = PlayMode.StopSameLayer, WrapMode wrapMode = WrapMode.Default, float weight = 1.0f, bool queued = false)
 			{
 				LayerGroup layerGroup = GetLayerGroup(layer);
@@ -201,6 +196,16 @@ namespace Framework
 						}
 					}
 				}
+			}
+
+			public void PlayQueued(string animName, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, PlayMode playMode = PlayMode.StopSameLayer)
+			{
+				PlayQueued(0, animName, blendTime, easeType, playMode);
+			}
+
+			public void PlayQueued(int layer, string animName, float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, PlayMode playMode = PlayMode.StopSameLayer)
+			{
+				Play(layer, animName, blendTime, easeType, playMode, queued: true);
 			}
 
 			public void Stop(float blendTime = 0.0f, InterpolationType easeType = InterpolationType.InOutSine, PlayMode playMode = PlayMode.StopSameLayer)

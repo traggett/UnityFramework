@@ -11,7 +11,7 @@ namespace Framework
 			public Shader _vertexBakingShader;
 			public Shader _vertexBakingReplacementShader;
 			public LayerProperty _vertexBakingLayer;
-			public MaterialRefProperty[] _targetMaterials;
+			public MaterialRef[] _targetMaterials;
 			#endregion
 
 			#region Protected Data
