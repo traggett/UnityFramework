@@ -109,7 +109,7 @@ namespace Framework
 				for (int i = 0; i < _nodeUpdateList.Length; i++)
 				{
 					_nodeUpdateList[i].SetFirstUpdate(true);
-					_nodeUpdateList[i].Update(_time, 0.0f);
+					_nodeUpdateList[i].UpdateNode(_time, 0.0f);
 					_nodeUpdateList[i].SetFirstUpdate(false);
 				}
 			}
@@ -120,7 +120,7 @@ namespace Framework
 
 				for (int i=0; i<_nodeUpdateList.Length; i++)
 				{
-					_nodeUpdateList[i].Update(_time, deltaTime);
+					_nodeUpdateList[i].UpdateNode(_time, deltaTime);
 				}
 			}
 			#endregion

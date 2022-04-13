@@ -23,7 +23,7 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Update(float time, float deltaTime)
+			public override void UpdateNode(float time, float deltaTime)
 			{
 				FloatRange range = _range;
 				float lerp = MathUtils.Interpolate(_easeType, 0.0f, 1.0f, _input);

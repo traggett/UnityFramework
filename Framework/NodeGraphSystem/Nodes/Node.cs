@@ -8,7 +8,7 @@ namespace Framework
 	
 	namespace NodeGraphSystem
 	{
-		public abstract class Node
+		public abstract class Node : ScriptableObject
 		{
 			#region Public Data
 			[HideInInspector]
@@ -28,7 +28,7 @@ namespace Framework
 				_firstUpdate = firstUpdate;
 			}
 
-			public virtual void Update(float time, float deltaTime) { }
+			public virtual void UpdateNode(float time, float deltaTime) { }
 
 			protected bool IsFirstUpdate()
 			{

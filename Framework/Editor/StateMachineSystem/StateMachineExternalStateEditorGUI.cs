@@ -50,28 +50,12 @@ namespace Framework
 					return ExternalStateRef.GetStateRef()._editorExternalLinkPosition;
 				}
 
-				public override bool RenderObjectProperties(GUIContent label)
-				{
-					EditorGUI.BeginChangeCheck();
-					
-					GUILayout.Label("External State Link: " + ExternalStateRef, EditorStyles.centeredGreyMiniLabel);
-
-					EditorGUILayout.Separator();
-
-					if (GUILayout.Button("Open State machine"))
-					{
-						StateMachineEditor timelineStateMachineEditor = (StateMachineEditor)GetEditor();
-						timelineStateMachineEditor.LoadExternalState(this);
-					}
-
-					return EditorGUI.EndChangeCheck();
-				}
-
 				public override void OnDoubleClick()
 				{
 					StateMachineEditor editor = (StateMachineEditor)GetEditor();
 					editor.LoadExternalState(this);
 				}
+
 			}
 		}
 	}

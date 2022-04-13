@@ -22,7 +22,7 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Update(float time, float deltaTime)
+			public override void UpdateNode(float time, float deltaTime)
 			{
 				Transform target = _transform;
 

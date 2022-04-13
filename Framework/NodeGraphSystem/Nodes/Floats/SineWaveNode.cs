@@ -21,7 +21,7 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Update(float time, float deltaTime)
+			public override void UpdateNode(float time, float deltaTime)
 			{
 				float wave = (time + _offset) * _frequency * 2.0f;
 				_value = (Mathf.Sin(wave) + 1.0f) * 0.5f;

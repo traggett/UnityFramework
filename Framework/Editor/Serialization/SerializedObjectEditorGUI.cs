@@ -7,7 +7,7 @@ namespace Framework
 {
 	namespace Serialization
 	{
-		public abstract class SerializedObjectEditorGUI<T> : ScriptableObject, ICustomEditorInspector, IComparable where T : class
+		public abstract class SerializedObjectEditorGUI<T> : ScriptableObject, IComparable where T : ScriptableObject
 		{
 			#region Private Data
 			private bool _dirty;
@@ -85,23 +85,9 @@ namespace Framework
 				_undoObjectSerialized = Serializer.ToString(_editableObject);
 			}
 
-			public void RenderProperties()
+			public void SetUndoState(string data)
 			{
-				if (_editableObject == null)
-					throw new Exception();
-
-				//If store an undo command on a temp string representing event, then on undo performed callback recreate event from string.
-				string undoObjectSerialized = Serializer.ToString(_editableObject);
-				
-				if (RenderObjectProperties(GUIContent.none))
-				{
-					_undoObjectSerialized = undoObjectSerialized;
-					Undo.RegisterCompleteObjectUndo(this, GetEditableObject().GetType().Name + " changed");
-					SaveUndoStatePostChanges();
-
-					GetEditor().SetNeedsRepaint();
-					MarkAsDirty(true);
-				}
+				_undoObjectSerialized = data;
 			}
 			#endregion
 
@@ -113,15 +99,6 @@ namespace Framework
 			public abstract void SetPosition(Vector2 position);
 
 			protected abstract void OnSetObject();
-			#endregion
-
-			#region ICustomEditable
-			public virtual bool RenderObjectProperties(GUIContent label)
-			{
-				bool dataChanged = false;
-				_editableObject = SerializationEditorGUILayout.ObjectField(_editableObject, label, ref dataChanged);
-				return dataChanged;
-			}
 			#endregion
 
 			#region IComparable

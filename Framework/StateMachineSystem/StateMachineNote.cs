@@ -6,13 +6,14 @@ using System.Collections;
 namespace Framework
 {
 	using UnityEngine;
-	using Utils;
-
+	
 	namespace StateMachineSystem
 	{
 		[Serializable]
 		public class StateMachineNote : State
 		{
+			public string _text;
+
 			public override IEnumerator PerformState(StateMachineComponent stateMachine)
 			{
 				throw new NotImplementedException();
@@ -21,6 +22,11 @@ namespace Framework
 			public override string GetEditorLabel()
 			{
 				return "Note";
+			}
+
+			public override string GetEditorDescription()
+			{
+				return _text;
 			}
 
 			public override Color GetEditorColor()

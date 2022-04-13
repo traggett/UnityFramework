@@ -112,18 +112,6 @@ namespace Framework
 				{
 					Repaint();
 				}
-
-				public void OnSelectObject(ScriptableObject obj)
-				{
-					Selection.activeObject = obj;
-					GUIUtility.keyboardControl = 0;
-				}
-
-				public void OnDeselectObject(ScriptableObject obj)
-				{
-					if (Selection.activeObject == obj)
-						Selection.activeObject = null;
-				}
 				#endregion
 			}
 		}

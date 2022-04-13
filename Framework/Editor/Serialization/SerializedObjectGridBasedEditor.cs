@@ -4,7 +4,7 @@ namespace Framework
 {
 	namespace Serialization
 	{
-		public abstract class SerializedObjectGridBasedEditor<T> : SerializedObjectEditor<T> where T : class
+		public abstract class SerializedObjectGridBasedEditor<T> : SerializedObjectEditor<T> where T : ScriptableObject
 		{
 			#region Protected Data
 			protected float _currentZoom = 1.0f;

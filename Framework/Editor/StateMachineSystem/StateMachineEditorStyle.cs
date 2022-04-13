@@ -76,7 +76,7 @@ namespace Framework
 					_noteTextStyle.padding = new RectOffset(2, 0, 2, 8);
 					_noteFontSize = _noteTextStyle.fontSize;
 
-					_stateBorderColor = new Color(1.0f, 1.0f, 1.0f, 0.5f);
+					_stateBorderColor = new Color(0.66f, 0.66f, 0.66f, 1.0f);
 					_stateBorderSelectedColor = new Color(1.0f, 1.0f, 1.0f, 1.0f);
 					_stateBorderColorDebug = new Color(1.0f, 0.7f, 0.18f);
 

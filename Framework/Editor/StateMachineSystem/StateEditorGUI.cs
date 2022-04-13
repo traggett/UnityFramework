@@ -52,23 +52,6 @@ namespace Framework
 				}
 				#endregion
 
-				#region ICustomEditable
-				public override bool RenderObjectProperties(GUIContent label)
-				{
-					bool dataChanged = false;
-
-					dataChanged |= RenderStateDescriptionField();
-					dataChanged |= RenderStateColorField();
-
-					//Render default properties
-					UnityEditor.Editor editor = UnityEditor.Editor.CreateEditor(GetEditableObject());
-
-					dataChanged |= editor.DrawDefaultInspector();
-
-					return dataChanged;
-				}
-				#endregion
-
 				#region Public Interface
 				public virtual int GetStateId()
 				{
@@ -199,11 +182,6 @@ namespace Framework
 				public virtual GUIStyle GetTextStyle(StateMachineEditorStyle style)
 				{
 					return style._stateTextStyle;
-				}
-
-				public virtual float GetBorderSize(bool selected)
-				{
-					return 2f;
 				}
 
 				public virtual bool IsCentred()

@@ -19,7 +19,7 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Update(float time, float deltaTime)
+			public override void UpdateNode(float time, float deltaTime)
 			{
 				TextMesh textMesh = _textMesh;
 				Color value = _value;

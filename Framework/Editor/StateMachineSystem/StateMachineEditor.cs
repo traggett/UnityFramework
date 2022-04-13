@@ -225,7 +225,12 @@ namespace Framework
 					foreach (StateEditorGUI state in toRender)
 					{					
 						bool selected = (_dragMode != eDragType.Custom && _selectedObjects.Contains(state)) || dragHighlightState == state;
-						float borderSize = state.GetBorderSize(selected);
+						float borderSize = 2f;
+
+						if (state.GetEditableObject() is StateMachineNote)
+						{
+							borderSize = selected ? 1f : 0f;
+						}
 
 						Color borderColor = selected ? _style._stateBorderSelectedColor : _style._stateBorderColor;
 #if DEBUG
@@ -238,7 +243,7 @@ namespace Framework
 						Rect renderedRect = GetScreenRect(state.GetBounds());
 						state.Render(renderedRect, _style, borderColor, borderSize);
 
-						RenderLinksForState(state);
+						RenderLinksForState(state, selected);
 					}
 
 					//Render dragging link
@@ -679,7 +684,7 @@ namespace Framework
 					return null;
 				}
 				
-				private void RenderExternalLink(StateMachineEditorLink link, StateEditorGUI fromState, int linkIndex)
+				private void RenderExternalLink(StateMachineEditorLink link, StateEditorGUI fromState, int linkIndex, bool selected)
 				{
 					StateMachineExternalStateEditorGUI externalState = null;
 
@@ -714,14 +719,13 @@ namespace Framework
 					if (!externalState.ExternalHasRendered)
 					{
 						externalState.CalcBounds(_style);
-						bool selected = _selectedObjects.Contains(externalState);
 						Color borderColor = selected ? _style._stateBorderSelectedColor : _style._stateBorderColor;
 						Rect renderedRect = GetScreenRect(externalState.GetBounds());
 						externalState.Render(renderedRect, _style, borderColor, selected ? 2.0f : 1.0f);
 						externalState.ExternalHasRendered = true;
 					}
 
-					RenderLink(link._description, fromState, externalState, linkIndex);
+					RenderLink(link._description, fromState, externalState, linkIndex, selected);
 				}
 
 				private Vector3 GetLinkStartPosition(StateEditorGUI state, int linkIndex = 0)
@@ -761,10 +765,10 @@ namespace Framework
 					Handles.EndGUI();
 				}
 
-				private void RenderLink(string description, StateEditorGUI fromState, StateEditorGUI toState, int linkIndex)
+				private void RenderLink(string description, StateEditorGUI fromState, StateEditorGUI toState, int linkIndex, bool selected)
 				{
 					Vector3 startPos = GetLinkStartPosition(fromState, linkIndex);
-					RenderLinkIcon(startPos, fromState.GetEditableObject().GetEditorColor());
+					RenderLinkIcon(fromState, startPos, fromState.GetEditableObject().GetEditorColor(), selected);
 
 					if (toState != null)
 					{
@@ -788,10 +792,13 @@ namespace Framework
 					}
 				}
 
-				private void RenderLinkIcon(Vector2 position, Color color)
+				private void Draw2DCircle(Vector2 position, float radius, Color color)
 				{
-					Vector3 position3d = new Vector3(position.x, position.y, 0.0f);
+					EditorUtils.DrawColoredRoundedBox(new Rect(position.x - radius, position.y - radius, radius + radius, radius + radius), color, radius);
+				}
 
+				private void RenderLinkIcon(StateEditorGUI state, Vector2 position, Color color, bool selected)
+				{
 					float scale = 1.0f;
 					float linkRadius = Mathf.Round(_style._linkIconWidth * 0.5f * scale);
 
@@ -799,31 +806,33 @@ namespace Framework
 
 					if (_dragMode == eDragType.NotDragging)
 					{
-						Vector2 toField = UnityEngine.Event.current.mousePosition - position;
+						Vector2 toField = Event.current.mousePosition - position;
 						highlighted = toField.magnitude < linkRadius + 2.0f;
 						SetNeedsRepaint();
 					}
 
-					Handles.BeginGUI();
-
+					//Border
 					if (highlighted)
 					{
-						Handles.color = Color.green;
-						Handles.DrawSolidDisc(position3d, -Vector3.forward, linkRadius + 2.0f);
+						Draw2DCircle(position, linkRadius + 2f, Color.green);
+					}
+					else if (selected)
+					{
+						Draw2DCircle(position, linkRadius + 2f, _style._stateBorderSelectedColor);
+					}
+					else
+					{
+						Draw2DCircle(position, linkRadius + 2f, _style._stateBorderColor);
 					}
 
-					Handles.color = Color.Lerp(_style._stateBorderColor, Color.clear, 0.25f);
-					Handles.DrawSolidDisc(position3d, -Vector3.forward, linkRadius + 1.5f);
-					
-					Handles.color = color;
-					Handles.DrawSolidDisc(position3d, -Vector3.forward, linkRadius);
-					Handles.color = Color.Lerp(color, Color.black, 0.5f);
-					Handles.DrawSolidDisc(position3d, -Vector3.forward, linkRadius - 2.0f);
+					//Main
+					Draw2DCircle(position, linkRadius, color);
 
-					Handles.EndGUI();
-					}
+					//Hole
+					Draw2DCircle(position, linkRadius - 2.0f, Color.Lerp(color, Color.black, 0.5f));
+				}
 
-				private void RenderLinksForState(StateEditorGUI state)
+				private void RenderLinksForState(StateEditorGUI state, bool selected)
 				{
 					StateMachineEditorLink[] links = GetStateLinks(state.GetEditableObject());
 
@@ -836,11 +845,11 @@ namespace Framework
 							if (stateRef.IsInternal())
 							{
 								StateEditorGUI toState = FindStateForLink(stateRef);
-								RenderLink(links[j]._description, state, toState, j);
+								RenderLink(links[j]._description, state, toState, j, selected);
 							}
 							else
 							{
-								RenderExternalLink(links[j], state, j);
+								RenderExternalLink(links[j], state, j, selected);
 							}
 						}
 					}				
@@ -926,14 +935,21 @@ namespace Framework
 
 						if (attribute != null)
 						{
-							StateMachineEditorLink link = new StateMachineEditorLink
+							if (feilds[i].FieldType.IsArray)
 							{
-								_object = state,
-								_memberInfo = new SerializedObjectMemberInfo(feilds[i]),
-								_description = attribute._editorName
-							};
 
-							links.Add(link);
+							}
+							else
+							{
+								StateMachineEditorLink link = new StateMachineEditorLink
+								{
+									_object = state,
+									_memberInfo = new SerializedObjectMemberInfo(feilds[i]),
+									_description = attribute._editorName
+								};
+
+								links.Add(link);
+							}
 						}
 					}
 

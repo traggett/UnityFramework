@@ -8,7 +8,7 @@ namespace Framework
 	namespace StateMachineSystem
 	{
 		[Serializable]
-		public abstract class State : UnityEngine.Object
+		public abstract class State : ScriptableObject
 		{
 			#region Public Data
 			[HideInInspector]	

@@ -1,53 +1,46 @@
 using UnityEditor;
+using UnityEngine;
 
 namespace Framework
 {
-	using Utils.Editor;
-	using Utils;
-
 	namespace Serialization
 	{
-		public abstract class SerializedObjectEditorGUIInspector<T> : UnityEditor.Editor where T : class
+		public abstract class SerializedObjectEditorGUIInspector<T> : UnityEditor.Editor where T : ScriptableObject
 		{
+			private UnityEditor.Editor _editor;
+
 			protected override void OnHeaderGUI()
 			{
-				SerializedObjectEditorGUI<T> editorGUI = (SerializedObjectEditorGUI<T>)target;
+				CacheEditor();
 
-				if (editorGUI != null && editorGUI.IsValid())
-				{
-					EditorUtils.DrawSimpleInspectorHeader(StringUtils.FromCamelCase(editorGUI.GetEditableObject().GetType().Name));
-				}
-				else
-				{
-					Selection.activeObject = null;
-				}
+				_editor.DrawHeader();
 			}
 
 			public override void OnInspectorGUI()
 			{
-				SerializedObjectEditorGUI<T> editorGUI = (SerializedObjectEditorGUI<T>)target;
+				CacheEditor();
 
-				if (editorGUI != null && editorGUI.IsValid())
+				EditorGUI.BeginChangeCheck();
+
+				_editor.DrawDefaultInspector();
+
+				if (EditorGUI.EndChangeCheck())
 				{
-					EditorGUILayout.Separator();
-					EditorGUILayout.Separator();
-
-					EditorGUILayout.BeginVertical(EditorStyles.inspectorFullWidthMargins);
-
-					editorGUI.RenderProperties();
-
-					if (editorGUI.GetEditor().NeedsRepaint())
-					{
-						editorGUI.GetEditor().GetEditorWindow().DoRepaint();
-					}
-
-					EditorGUILayout.EndVertical();
-				}
-				else
-				{
-					Selection.activeObject = null;
+					SerializedObjectEditorGUI<T> editorGUI = (SerializedObjectEditorGUI<T>)target;
+					editorGUI.GetEditor().MarkAsDirty();
+					editorGUI.GetEditor().SetNeedsRepaint();
 				}
 			}
+
+			private void CacheEditor()
+			{
+				if (_editor == null)
+				{
+					SerializedObjectEditorGUI<T> editorGUI = (SerializedObjectEditorGUI<T>)target;
+					_editor = UnityEditor.Editor.CreateEditor(editorGUI.GetEditableObject());
+				}
+			}
+
 		}
 	}
 }

@@ -27,7 +27,7 @@ namespace Framework
 			#endregion
 
 			#region Node
-			public override void Update(float time, float deltaTime)
+			public override void UpdateNode(float time, float deltaTime)
 			{
 				float speed = _speed.GetValue();
 				_xSpeed = speed * (1.0f + _xySpeedVariance);

@@ -10,13 +10,11 @@ namespace Framework
 	
 	namespace Serialization
 	{
-		public abstract class SerializedObjectEditor<T> : ScriptableObject where T : class
+		public abstract class SerializedObjectEditor<T> : ScriptableObject where T : ScriptableObject
 		{
 			public interface IEditorWindow
 			{
 				void DoRepaint();
-				void OnSelectObject(ScriptableObject obj);
-				void OnDeselectObject(ScriptableObject obj);
 			}
 
 			#region Protected Data
@@ -84,6 +82,12 @@ namespace Framework
 				return _needsRepaint;
 			}
 
+			public void MarkAsDirty()
+			{
+				_isDirty = true;
+				EditorUtility.SetDirty(this);
+			}
+
 			public bool HasChanges()
 			{
 				if (_isDirty)
@@ -130,7 +134,9 @@ namespace Framework
 				foreach (SerializedObjectEditorGUI<T> editorGUI in _editableObjects)
 				{
 					Undo.ClearUndo(editorGUI);
-					GetEditorWindow().OnDeselectObject(editorGUI);
+
+					if (Selection.activeObject == editorGUI)
+						Selection.activeObject = null;
 				}
 
 				_editableObjects.Clear();
@@ -162,16 +168,12 @@ namespace Framework
 
 			protected void RemoveObject(SerializedObjectEditorGUI<T> editorGUI)
 			{
-				GetEditorWindow().OnDeselectObject(editorGUI);
+				if (Selection.activeObject == editorGUI)
+					Selection.activeObject = null;
+
 				_editableObjects.Remove(editorGUI);
 				_selectedObjects.Remove(editorGUI);
 				UpdateCachedObjectList();
-			}
-
-			protected void MarkAsDirty()
-			{
-				_isDirty = true;
-				EditorUtility.SetDirty(this);
 			}
 
 			protected void SortObjects()
@@ -241,7 +243,15 @@ namespace Framework
 
 				//Dragging
 				{
-					GetEditorWindow().OnSelectObject(clickedOnObject);
+					if (clickedOnObject != null)
+					{
+						Selection.activeObject = clickedOnObject;
+						GUIUtility.keyboardControl = 0;
+					}
+					else
+					{
+						Selection.activeObject = null;
+					}
 
 					_draggedObject = clickedOnObject;
 					_dragMode = eDragType.LeftClick;
@@ -599,10 +609,13 @@ namespace Framework
 			protected void CreateAndAddNewObject(Type type)
 			{
 				Undo.RegisterCompleteObjectUndo(this, "Create Object");
-				T newObject = Activator.CreateInstance(type) as T;
+				T newObject = ScriptableObject.CreateInstance(type) as T;
 				SerializedObjectEditorGUI<T> editorGUI = AddNewObject(newObject);
 				OnCreatedNewObject(newObject);
-				GetEditorWindow().OnSelectObject(editorGUI);
+				
+				Selection.activeObject = editorGUI;
+				GUIUtility.keyboardControl = 0;
+
 				_selectedObjects.Clear();
 				_selectedObjects.Add(editorGUI);
 				SetObjectPosition(editorGUI, _dragPos);
