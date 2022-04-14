@@ -101,7 +101,7 @@ namespace Framework
 					if (!serializedFields[i].HideInEditor())
 					{
 						//Create GUIContent for label and optional tooltip
-						string fieldName = StringUtils.FromCamelCase(serializedFields[i].GetID());
+						string fieldName = StringUtils.FromCamelCase(serializedFields[i].GetName());
 						TooltipAttribute fieldToolTipAtt = SystemUtils.GetAttribute<TooltipAttribute>(serializedFields[i]);
 						GUIContent labelContent = fieldToolTipAtt != null ? new GUIContent(fieldName, fieldToolTipAtt.tooltip) : new GUIContent(fieldName);
 

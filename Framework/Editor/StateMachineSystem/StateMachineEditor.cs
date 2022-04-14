@@ -926,25 +926,39 @@ namespace Framework
 				private StateMachineEditorLink[] GetStateLinks(State state)
 				{
 					//Loop over member infos in state finding attrbute
-					FieldInfo[] feilds = state.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+					FieldInfo[] fields = state.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
 					List<StateMachineEditorLink> links = new List<StateMachineEditorLink>();
 
-					for (int i = 0; i < feilds.Length; i++)
+					for (int i = 0; i < fields.Length; i++)
 					{
-						StateLinkAttribute attribute = SystemUtils.GetAttribute<StateLinkAttribute>(feilds[i]);
+						StateLinkAttribute attribute = SystemUtils.GetAttribute<StateLinkAttribute>(fields[i]);
 
 						if (attribute != null)
 						{
-							if (feilds[i].FieldType.IsArray)
+							if (fields[i].FieldType.IsArray)
 							{
+								Array array = fields[i].GetValue(state) as Array;
 
+								for (int j = 0; j < array.Length; j++)
+								{
+									StateMachineEditorLink link = new StateMachineEditorLink
+									{
+										_object = state,
+										_fieldInfo = fields[i],
+										_arrayIndex = j,
+										_description = attribute._editorName
+									};
+
+									links.Add(link);
+								}
 							}
 							else
 							{
 								StateMachineEditorLink link = new StateMachineEditorLink
 								{
 									_object = state,
-									_memberInfo = new SerializedObjectMemberInfo(feilds[i]),
+									_fieldInfo = fields[i],
+									_arrayIndex = -1,
 									_description = attribute._editorName
 								};
 
@@ -952,7 +966,6 @@ namespace Framework
 							}
 						}
 					}
-
 
 					return links.ToArray();
 				}

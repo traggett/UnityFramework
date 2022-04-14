@@ -122,7 +122,7 @@ namespace Framework
 							foreach (SerializedObjectMemberInfo serializedField in serializedFields)
 							{
 								//First try and find xml node with an id attribute matching our attribute id
-								XmlNode fieldNode = XmlUtils.FindChildWithAttributeValue(node, kXmlFieldIdAttributeTag, serializedField.GetID());
+								XmlNode fieldNode = XmlUtils.FindChildWithAttributeValue(node, kXmlFieldIdAttributeTag, serializedField.GetName());
 
 								object fieldObj = serializedField.GetValue(obj);
 								Type fieldObjType = serializedField.GetFieldType();
@@ -334,7 +334,7 @@ namespace Framework
 											if (fieldXmlNode != null)
 											{
 												AddRuntimeTypeInfoIfNecessary(xmlField.GetFieldType(), fieldObj.GetType(), fieldXmlNode, xmlDoc);
-												XmlUtils.AddAttribute(xmlDoc, fieldXmlNode, kXmlFieldIdAttributeTag, xmlField.GetID());
+												XmlUtils.AddAttribute(xmlDoc, fieldXmlNode, kXmlFieldIdAttributeTag, xmlField.GetName());
 												XmlUtils.SafeAppendChild(node, fieldXmlNode);
 											}
 										}

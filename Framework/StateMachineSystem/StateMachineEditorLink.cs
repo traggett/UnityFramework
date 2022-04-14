@@ -3,26 +3,42 @@
 namespace Framework
 {
 	using Serialization;
-	
+	using System.Reflection;
+
 	namespace StateMachineSystem
 	{
 		public struct StateMachineEditorLink
 		{
 			public object _object;
-			public SerializedObjectMemberInfo _memberInfo;
+			public FieldInfo _fieldInfo;
+			public int _arrayIndex;
 			public string _description;
 
 			public StateRef GetStateRef()
 			{
-				if (_object != null)
-					return (StateRef)_memberInfo.GetValue(_object);
-
-				return new StateRef();
+				if (_arrayIndex == -1)
+				{
+					return (StateRef)_fieldInfo.GetValue(_object);
+				}
+				else
+				{
+					StateRef[] stateRefs = (StateRef[])_fieldInfo.GetValue(_object);
+					return stateRefs[_arrayIndex];
+				}
 			}
 
 			public void SetStateRef(StateRef value)
 			{
-				_memberInfo.SetValue(_object, value);
+				if (_arrayIndex == -1)
+				{
+					_fieldInfo.SetValue(_object, value);
+				}
+				else
+				{
+					StateRef[] stateRefs = (StateRef[])_fieldInfo.GetValue(_object);
+					stateRefs[_arrayIndex] = value;
+					_fieldInfo.SetValue(_object, stateRefs);
+				}
 			}
 		}
 	}

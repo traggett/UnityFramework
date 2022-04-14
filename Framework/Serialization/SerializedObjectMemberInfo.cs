@@ -14,7 +14,6 @@ namespace Framework
 		{
 			#region Private Data
 			private readonly MemberInfo _memberInfo;
-			private readonly string _id;
 			private readonly bool _hideInEditor;
 			#endregion
 
@@ -22,14 +21,12 @@ namespace Framework
 			public SerializedObjectMemberInfo(FieldInfo fieldInfo, bool hideInEditor = false)
 			{
 				_memberInfo = fieldInfo;
-				_id = GetId(fieldInfo);
 				_hideInEditor = hideInEditor;
 			}
 
 			public SerializedObjectMemberInfo(PropertyInfo propertyInfo, bool hideInEditor = false)
 			{
 				_memberInfo = null;
-				_id = GetId(propertyInfo);
 				_hideInEditor = hideInEditor;
 			}
 
@@ -38,9 +35,9 @@ namespace Framework
 				return field._memberInfo;
 			}
 
-			public string GetID()
+			public string GetName()
 			{
-				return _id;
+				return _memberInfo.Name.TrimStart('_');
 			}
 
 			public bool HideInEditor()
@@ -134,7 +131,7 @@ namespace Framework
 				SerializedObjectMemberInfo[] serializedFields = GetSerializedFields(objType);
 				foreach (SerializedObjectMemberInfo serializedField in serializedFields)
 				{
-					if (serializedField.GetID() == id)
+					if (serializedField.GetName() == id)
 					{
 						field = serializedField;
 						return true;
@@ -185,14 +182,6 @@ namespace Framework
 				}
 
 				return null;
-			}
-			#endregion
-
-			#region Private Functions
-			private static string GetId(MemberInfo info)
-			{
-				string id = info.Name;
-				return id.TrimStart('_');
 			}
 			#endregion
 		}
