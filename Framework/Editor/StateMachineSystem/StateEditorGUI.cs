@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
 namespace Framework
 {
@@ -27,7 +26,7 @@ namespace Framework
 				
 				
 				private bool _labelFoldout = true;
-				private Rect _rect = new Rect();
+				protected Rect _rect = new Rect();
 				#endregion
 
 				#region SerializedObjectEditorGUI
@@ -53,7 +52,7 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public virtual int GetStateId()
+				public int GetStateId()
 				{
 					return GetEditableObject()._stateId;
 				}
@@ -64,81 +63,6 @@ namespace Framework
 						return StringUtils.GetFirstLine(GetEditableObject().GetEditorDescription());
 
 					return StringUtils.GetFirstLine(GetEditableObject()._editorDescription);
-				}
-
-				public void Render(Rect renderedRect, StateMachineEditorStyle style, Color borderColor, float borderSize)
-				{
-					GUIStyle labelStyle = style._stateLabelStyle;
-					GUIStyle contentStyle = GetTextStyle(style);
-
-					Color stateColor = GetEditableObject().GetEditorColor();
-
-					//Update text colors to contrast state color
-					{
-						Color.RGBToHSV(stateColor, out _, out _, out float v);
-						Color textColor = v > 0.66f ? Color.black : Color.white;
-						labelStyle.normal.textColor = textColor;
-						contentStyle.normal.textColor = textColor;
-						contentStyle.active.textColor = textColor;
-						contentStyle.focused.textColor = textColor;
-						contentStyle.hover.textColor = textColor;
-					}
-
-					GUIContent stateId = new GUIContent(GetEditableObject().GetEditorLabel());
-					float labelHeight = labelStyle.CalcSize(stateId).y;
-					borderSize = Mathf.Min(borderSize, kMaxBorderSize);
-					float borderOffset = kMaxBorderSize - borderSize;
-
-					Rect mainBoxRect = new Rect(renderedRect.x + kMaxBorderSize, renderedRect.y + kMaxBorderSize, renderedRect.width - style._shadowSize - (kMaxBorderSize * 2.0f), renderedRect.height - style._shadowSize - (kMaxBorderSize * 2.0f));
-
-					//Draw shadow
-					Rect shadowRect = new Rect(mainBoxRect.x + borderOffset + style._shadowSize, mainBoxRect.y + borderOffset + style._shadowSize, mainBoxRect.width + borderSize * 2f, mainBoxRect.height + borderSize * 2f);
-					EditorUtils.DrawColoredRoundedBox(shadowRect, style._shadowColor, style._stateCornerRadius + borderSize);
-
-					//Draw border
-					Rect borderRect = new Rect(renderedRect.x + borderOffset, renderedRect.y + borderOffset, mainBoxRect.width + borderSize * 2f, mainBoxRect.height + borderSize * 2f);
-					EditorUtils.DrawColoredRoundedBox(borderRect, borderColor, style._stateCornerRadius + borderSize);
-
-					//Draw main box
-					EditorUtils.DrawColoredRoundedBox(mainBoxRect, stateColor, style._stateCornerRadius);
-
-					//Draw line seperating label and content	
-					Rect seperatorRect = new Rect(mainBoxRect.x, mainBoxRect.y + labelHeight + kStateSeperationSize * 0.5f, mainBoxRect.width, 1);
-					EditorUtils.DrawColoredRoundedBox(seperatorRect, borderColor, 0f);
-
-					//Draw label
-					GUI.Label(new Rect(mainBoxRect.x, mainBoxRect.y, mainBoxRect.width, labelHeight), stateId, labelStyle);
-
-					//Draw content
-					GUI.Label(new Rect(mainBoxRect.x, mainBoxRect.y + labelHeight + kStateSeperationSize, mainBoxRect.width, mainBoxRect.height - (labelHeight + kStateSeperationSize)), GetStateDescription(), contentStyle);
-				}
-
-				public void CalcBounds(StateMachineEditorStyle style)
-				{
-					GUIContent stateId = new GUIContent(GetEditableObject().GetEditorLabel());
-
-					GUIStyle stateLabelStyle = style._stateLabelStyle;
-					GUIStyle labelStyle = GetTextStyle(style);
-
-					Vector2 stateIdDimensions = stateLabelStyle.CalcSize(stateId);
-					Vector2 labelDimensions = GetLabelSize(labelStyle);
-
-					float areaWidth = Mathf.Max(stateIdDimensions.x, labelDimensions.x) + kLabelPadding + style._shadowSize + (kMaxBorderSize * 2.0f);
-					float areaHeight = stateIdDimensions.y + kStateSeperationSize + labelDimensions.y + kLabelBottom + style._shadowSize + (kMaxBorderSize * 2.0f);
-
-					_rect.position = GetPosition();
-
-					_rect.width = areaWidth;
-					_rect.height = areaHeight;
-
-					if (IsCentred())
-					{
-						_rect.x -= areaWidth * 0.5f;
-						_rect.y -= areaHeight * 0.5f;
-					}		
-
-					_rect.x = Mathf.Round(_rect.position.x);
-					_rect.y = Mathf.Round(_rect.position.y);
 				}
 
 				public static StateEditorGUI CreateStateEditorGUI(StateMachineEditor editor, State state)
@@ -174,24 +98,86 @@ namespace Framework
 				#endregion
 
 				#region Virtual Interface
+				public virtual void CalcRenderRect(StateMachineEditorStyle style)
+				{
+					GUIContent stateId = new GUIContent(GetEditableObject().GetEditorLabel());
+
+					GUIStyle labelStyle = style._stateLabelStyle;
+					GUIStyle textStyle = style._stateTextStyle;
+
+					Vector2 stateIdDimensions = labelStyle.CalcSize(stateId);
+					Vector2 labelDimensions = GetDescriptionSize(textStyle);
+
+					float areaWidth = Mathf.Max(stateIdDimensions.x, labelDimensions.x) + kLabelPadding + style._shadowSize + (kMaxBorderSize * 2.0f);
+					float areaHeight = stateIdDimensions.y + kStateSeperationSize + labelDimensions.y + kLabelBottom + style._shadowSize + (kMaxBorderSize * 2.0f);
+
+					_rect.position = GetPosition();
+
+					_rect.width = areaWidth;
+					_rect.height = areaHeight;
+
+					_rect.x -= areaWidth * 0.5f;
+					_rect.y -= areaHeight * 0.5f;
+
+					_rect.x = Mathf.Round(_rect.position.x);
+					_rect.y = Mathf.Round(_rect.position.y);
+				}
+
+				public virtual void Render(Rect renderedRect, StateMachineEditorStyle style, Color borderColor, float borderSize)
+				{
+					GUIStyle labelStyle = style._stateLabelStyle;
+					GUIStyle contentStyle = style._stateTextStyle;
+
+					Color stateColor = GetEditableObject().GetEditorColor();
+
+					//Update text colors to contrast state color
+					{
+						Color.RGBToHSV(stateColor, out _, out _, out float v);
+						Color textColor = v > 0.66f ? Color.black : Color.white;
+						labelStyle.normal.textColor = textColor;
+						contentStyle.normal.textColor = textColor;
+						contentStyle.active.textColor = textColor;
+						contentStyle.focused.textColor = textColor;
+						contentStyle.hover.textColor = textColor;
+					}
+
+					GUIContent stateId = new GUIContent(GetEditableObject().GetEditorLabel());
+					float labelHeight = labelStyle.CalcSize(stateId).y;			
+					borderSize = Mathf.Min(borderSize, kMaxBorderSize);
+					float borderOffset = kMaxBorderSize - borderSize;
+
+					Rect mainBoxRect = new Rect(renderedRect.x + kMaxBorderSize, renderedRect.y + kMaxBorderSize, renderedRect.width - style._shadowSize - (kMaxBorderSize * 2.0f), renderedRect.height - style._shadowSize - (kMaxBorderSize * 2.0f));
+
+					//Draw shadow
+					Rect shadowRect = new Rect(mainBoxRect.x + borderOffset + style._shadowSize, mainBoxRect.y + borderOffset + style._shadowSize, mainBoxRect.width + borderSize * 2f, mainBoxRect.height + borderSize * 2f);
+					EditorUtils.DrawColoredRoundedBox(shadowRect, style._shadowColor, style._stateCornerRadius + borderSize);
+
+					//Draw border
+					Rect borderRect = new Rect(renderedRect.x + borderOffset, renderedRect.y + borderOffset, mainBoxRect.width + borderSize * 2f, mainBoxRect.height + borderSize * 2f);
+					EditorUtils.DrawColoredRoundedBox(borderRect, borderColor, style._stateCornerRadius + borderSize);
+
+					//Draw main box
+					EditorUtils.DrawColoredRoundedBox(mainBoxRect, stateColor, style._stateCornerRadius);
+
+					//Draw line seperating label and content	
+					Rect seperatorRect = new Rect(mainBoxRect.x, mainBoxRect.y + labelHeight + kStateSeperationSize * 0.5f, mainBoxRect.width, 1);
+					EditorUtils.DrawColoredRoundedBox(seperatorRect, borderColor, 0f);
+
+					//Draw label
+					GUI.Label(new Rect(mainBoxRect.x, mainBoxRect.y, mainBoxRect.width, labelHeight), stateId, labelStyle);
+
+					//Draw content
+					GUI.Label(new Rect(mainBoxRect.x, mainBoxRect.y + labelHeight + kStateSeperationSize, mainBoxRect.width, mainBoxRect.height - (labelHeight + kStateSeperationSize)), GetStateDescription(), contentStyle);
+				}
+
 				public virtual void OnDoubleClick()
 				{
 					
 				}
-
-				public virtual GUIStyle GetTextStyle(StateMachineEditorStyle style)
-				{
-					return style._stateTextStyle;
-				}
-
-				public virtual bool IsCentred()
-				{
-					return true;
-				}
 				#endregion
 
 				#region Protected Functions
-				protected Vector2 GetLabelSize(GUIStyle style)
+				protected Vector2 GetDescriptionSize(GUIStyle style)
 				{
 					string labelText = GetStateDescription();
 					Vector2 labelSize = style.CalcSize(new GUIContent(labelText));

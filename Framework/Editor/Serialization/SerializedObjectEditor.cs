@@ -18,14 +18,14 @@ namespace Framework
 			}
 
 			#region Protected Data
-			protected enum eDragType
+			protected enum DragType
 			{
 				NotDragging,
 				LeftClick,
 				MiddleMouseClick,
 				Custom,
 			}
-			protected eDragType _dragMode = eDragType.NotDragging;
+			protected DragType _dragMode = DragType.NotDragging;
 			protected SerializedObjectEditorGUI<T> _draggedObject;
 			protected Vector2 _dragPos = Vector2.zero;
 			protected Rect _dragAreaRect;
@@ -201,6 +201,16 @@ namespace Framework
 			#endregion
 
 			#region Virtual Interface
+			protected virtual bool CanBeCopied(SerializedObjectEditorGUI<T> editorGUI)
+			{
+				return true;
+			}
+
+			protected virtual bool CanBeDeleted(SerializedObjectEditorGUI<T> editorGUI)
+			{
+				return true;
+			}
+
 			protected virtual void OnLeftMouseDown(Event inputEvent)
 			{
 				SerializedObjectEditorGUI<T> clickedOnObject = null;
@@ -254,7 +264,7 @@ namespace Framework
 					}
 
 					_draggedObject = clickedOnObject;
-					_dragMode = eDragType.LeftClick;
+					_dragMode = DragType.LeftClick;
 					_dragPos = inputEvent.mousePosition;
 					_dragAreaRect = new Rect(-1.0f, -1.0f, 0.0f, 0.0f);
 
@@ -268,7 +278,7 @@ namespace Framework
 
 			protected virtual void OnMiddleMouseDown(Event inputEvent)
 			{
-				_dragMode = eDragType.MiddleMouseClick;
+				_dragMode = DragType.MiddleMouseClick;
 				_dragPos = inputEvent.mousePosition;
 				_dragAreaRect = new Rect(-1.0f, -1.0f, 0.0f, 0.0f);
 			}
@@ -320,9 +330,9 @@ namespace Framework
 
 			protected virtual void OnStopDragging(Event inputEvent, bool cancelled)
 			{
-				if (_dragMode != eDragType.NotDragging)
+				if (_dragMode != DragType.NotDragging)
 				{
-					if (_dragMode == eDragType.LeftClick)
+					if (_dragMode == DragType.LeftClick)
 					{
 						Undo.RegisterCompleteObjectUndo(_selectedObjects.ToArray(), "Move Objects(s)");
 
@@ -334,7 +344,7 @@ namespace Framework
 
 					SortObjects();
 					inputEvent.Use();
-					_dragMode = eDragType.NotDragging;
+					_dragMode = DragType.NotDragging;
 					_needsRepaint = true;
 				}
 			}
@@ -343,7 +353,7 @@ namespace Framework
 			{
 				Vector2 currentPos = inputEvent.mousePosition;
 
-				if (_dragMode == eDragType.LeftClick)
+				if (_dragMode == DragType.LeftClick)
 				{
 					_needsRepaint = true;
 
@@ -380,7 +390,7 @@ namespace Framework
 						}
 					}
 				}
-				else if (_dragMode == eDragType.MiddleMouseClick)
+				else if (_dragMode == DragType.MiddleMouseClick)
 				{
 					Vector2 delta = currentPos - _dragPos;
 					_dragPos = currentPos;
@@ -407,7 +417,7 @@ namespace Framework
 				
 				EventType controlEventType = inputEvent.GetTypeForControl(_controlID);
 				
-				if (_dragMode != eDragType.NotDragging && inputEvent.rawType == EventType.MouseUp)
+				if (_dragMode != DragType.NotDragging && inputEvent.rawType == EventType.MouseUp)
 				{
 					OnStopDragging(inputEvent, false);
 					_needsRepaint = true;
@@ -499,7 +509,7 @@ namespace Framework
 					case EventType.Repaint:
 						{
 							#region Dragging Rect
-							if (_dragMode != eDragType.NotDragging && _draggedObject == null)
+							if (_dragMode != DragType.NotDragging && _draggedObject == null)
 							{
 								EditorUtils.DrawSelectionRect(_dragAreaRect);
 							}
@@ -532,7 +542,7 @@ namespace Framework
 				}
 				else
 				{
-					_dragMode = eDragType.NotDragging;
+					_dragMode = DragType.NotDragging;
 				}
 			}
 
@@ -636,7 +646,10 @@ namespace Framework
 				_copiedObjects.Clear();
 				foreach (SerializedObjectEditorGUI<T> editorGUI in _selectedObjects)
 				{
-					_copiedObjects.Add(editorGUI);
+					if (CanBeCopied(editorGUI))
+					{
+						_copiedObjects.Add(editorGUI);
+					}
 				}
 			}
 
@@ -675,8 +688,15 @@ namespace Framework
 
 					foreach (SerializedObjectEditorGUI<T> editorGUI in selectedObjects)
 					{
-						_copiedObjects.Add(editorGUI);
-						RemoveObject(editorGUI);
+						if (CanBeCopied(editorGUI))
+						{
+							_copiedObjects.Add(editorGUI);
+
+							if (CanBeDeleted(editorGUI))
+							{
+								RemoveObject(editorGUI);
+							}
+						}				
 					}
 					_selectedObjects.Clear();
 
@@ -694,7 +714,10 @@ namespace Framework
 
 					foreach (SerializedObjectEditorGUI<T> editorGUI in new List<ScriptableObject>(_selectedObjects))
 					{
-						RemoveObject(editorGUI);
+						if (CanBeDeleted(editorGUI))
+						{
+							RemoveObject(editorGUI);
+						}
 					}
 					_selectedObjects.Clear();
 

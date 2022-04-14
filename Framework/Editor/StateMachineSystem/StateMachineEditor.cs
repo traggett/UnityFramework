@@ -203,17 +203,17 @@ namespace Framework
 
 					//Update state bounds
 					foreach (StateEditorGUI state in toRender)
-						state.CalcBounds(_style);
+						state.CalcRenderRect(_style);
 
 					//Check dragging a state link onto a state
-					if (_dragMode == eDragType.Custom)
+					if (_dragMode == DragType.Custom)
 					{
 						Vector2 gridPos = GetEditorPosition(Event.current.mousePosition);
 
 						//Check mouse is over a state
 						foreach (StateEditorGUI editorGUI in _editableObjects)
 						{
-							if (editorGUI.GetBounds().Contains(gridPos))
+							if (CanDragLinkTo(editorGUI) && editorGUI.GetBounds().Contains(gridPos))
 							{
 								dragHighlightState = editorGUI;
 								break;
@@ -224,7 +224,7 @@ namespace Framework
 					//Render each state
 					foreach (StateEditorGUI state in toRender)
 					{					
-						bool selected = (_dragMode != eDragType.Custom && _selectedObjects.Contains(state)) || dragHighlightState == state;
+						bool selected = (_dragMode != DragType.Custom && _selectedObjects.Contains(state)) || dragHighlightState == state;
 						float borderSize = 2f;
 
 						if (state.GetEditableObject() is StateMachineNote)
@@ -247,7 +247,7 @@ namespace Framework
 					}
 
 					//Render dragging link
-					if (_dragMode == eDragType.Custom)
+					if (_dragMode == DragType.Custom)
 					{
 						Vector3 startPos = GetLinkStartPosition(_draggingState, _draggingStateLinkIndex);
 						Vector3 endPos = Event.current.mousePosition + new Vector2(0,-5);
@@ -261,10 +261,20 @@ namespace Framework
 				#endregion
 
 				#region EditableObjectEditor
+				protected override bool CanBeCopied(SerializedObjectEditorGUI<State> editorGUI)
+				{
+					return !(editorGUI.GetEditableObject() is StateMachineEntryState || editorGUI.GetEditableObject() is StateMachineExternalState);
+				}
+
+				protected override bool CanBeDeleted(SerializedObjectEditorGUI<State> editorGUI)
+				{
+					return !(editorGUI.GetEditableObject() is StateMachineEntryState || editorGUI.GetEditableObject() is StateMachineExternalState);
+				}
+
 				protected override SerializedObjectEditorGUI<State> CreateObjectEditorGUI(State state)
 				{
 					StateEditorGUI editorGUI = StateEditorGUI.CreateStateEditorGUI(this, state);
-					editorGUI.CalcBounds(_style);
+					editorGUI.CalcRenderRect(_style);
 					return editorGUI;
 				}
 
@@ -327,7 +337,7 @@ namespace Framework
 
 								if (toField.magnitude < linkRadius)
 								{
-									_dragMode = eDragType.Custom;
+									_dragMode = DragType.Custom;
 									_draggingState = state;
 									_draggingStateLink = links[j];
 									_draggingStateLinkIndex = j;
@@ -360,7 +370,7 @@ namespace Framework
 
 				protected override void OnDragging(Event inputEvent)
 				{
-					if (_dragMode == eDragType.Custom)
+					if (_dragMode == DragType.Custom)
 					{
 						SetNeedsRepaint();
 					}
@@ -372,7 +382,7 @@ namespace Framework
 
 				protected override void OnStopDragging(Event inputEvent, bool cancelled)
 				{
-					if (_dragMode == eDragType.Custom)
+					if (_dragMode == DragType.Custom)
 					{
 						if (!cancelled)
 						{
@@ -383,11 +393,9 @@ namespace Framework
 							//Check mouse is over a state
 							foreach (StateEditorGUI editorGUI in _editableObjects)
 							{
-								if (editorGUI.GetBounds().Contains(gridPos))
+								if (CanDragLinkTo(editorGUI) && editorGUI.GetBounds().Contains(gridPos))
 								{
 									draggedOnToState = editorGUI;
-
-									// Check its moved more than 
 									break;
 								}
 							}
@@ -403,7 +411,7 @@ namespace Framework
 						}
 
 						inputEvent.Use();
-						_dragMode = eDragType.NotDragging;
+						_dragMode = DragType.NotDragging;
 
 						_draggingState = null;
 						_draggingStateLink = new StateMachineEditorLink();
@@ -452,22 +460,31 @@ namespace Framework
 
 				private StateMachine ConvertToStateMachine()
 				{
+					StateMachine stateMachine = new StateMachine();
+					stateMachine._name = System.IO.Path.GetFileNameWithoutExtension(_currentFileName);
+
 					List<State> states = new List<State>();
 					List<StateMachineNote> notes = new List<StateMachineNote>();
 
 					foreach (StateEditorGUI editorGUI in _editableObjects)
 					{
-						if (editorGUI is StateMachineNoteEditorGUI)
-							notes.Add((StateMachineNote)editorGUI.GetEditableObject());
+						if (editorGUI.GetEditableObject() is StateMachineEntryState entryState)
+						{
+							stateMachine._entryState = entryState;
+						}			
+						else if(editorGUI.GetEditableObject() is StateMachineNote stateMachineNote)
+						{
+							notes.Add(stateMachineNote);
+						}						
 						else if (!(editorGUI is StateMachineExternalStateEditorGUI))
+						{
 							states.Add(editorGUI.GetEditableObject());
+						}
 					}
 
-					StateMachine stateMachine = new StateMachine();
 					stateMachine._states = states.ToArray();
 					stateMachine._editorNotes = notes.ToArray();
-					stateMachine._name = System.IO.Path.GetFileNameWithoutExtension(_currentFileName);
-
+					
 					return stateMachine;
 				}
 
@@ -658,6 +675,13 @@ namespace Framework
 					_playModeHighlightedState = null;
 #endif
 
+					if (stateMachine._entryState == null)
+					{
+						stateMachine._entryState = new StateMachineEntryState();
+					}
+
+					AddNewObject(stateMachine._entryState);
+
 					for (int i = 0; i < stateMachine._states.Length; i++)
 					{
 						AddNewObject(stateMachine._states[i]);
@@ -718,7 +742,7 @@ namespace Framework
 
 					if (!externalState.ExternalHasRendered)
 					{
-						externalState.CalcBounds(_style);
+						externalState.CalcRenderRect(_style);
 						Color borderColor = selected ? _style._stateBorderSelectedColor : _style._stateBorderColor;
 						Rect renderedRect = GetScreenRect(externalState.GetBounds());
 						externalState.Render(renderedRect, _style, borderColor, selected ? 2.0f : 1.0f);
@@ -774,7 +798,7 @@ namespace Framework
 					{
 						Vector3 endPos = GetLinkEndPosition(toState, linkIndex);
 
-						RenderLinkLine(startPos, endPos, _dragMode == eDragType.Custom ? _style._linkInactiveColor : _style._linkColor);
+						RenderLinkLine(startPos, endPos, _dragMode == DragType.Custom ? _style._linkInactiveColor : _style._linkColor);
 
 						Vector2 textSize = _style._linkTextStyle.CalcSize(new GUIContent(description));
 						float lineFraction = 0.5f;
@@ -804,7 +828,7 @@ namespace Framework
 
 					bool highlighted = false;
 
-					if (_dragMode == eDragType.NotDragging)
+					if (_dragMode == DragType.NotDragging)
 					{
 						Vector2 toField = Event.current.mousePosition - position;
 						highlighted = toField.magnitude < linkRadius + 2.0f;
@@ -968,6 +992,11 @@ namespace Framework
 					}
 
 					return links.ToArray();
+				}
+
+				private bool CanDragLinkTo(StateEditorGUI editorGUI)
+				{
+					return !(editorGUI.GetEditableObject() is StateMachineEntryState || editorGUI.GetEditableObject() is StateMachineExternalState || editorGUI.GetEditableObject() is StateMachineNote);
 				}
 
 #if DEBUG

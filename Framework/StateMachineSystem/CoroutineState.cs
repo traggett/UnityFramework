@@ -40,7 +40,7 @@ namespace Framework
 			{
 				yield return _coroutine.RunCoroutine();
 
-				stateMachine.GoToState(StateMachine.Run(stateMachine, _goToState));
+				stateMachine.GoToState(_goToState);
 			}
 			#endregion
 		}

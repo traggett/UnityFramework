@@ -1,10 +1,5 @@
 using System;
-using System.Collections;
-
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Framework
 {
@@ -18,6 +13,7 @@ namespace Framework
 		{
 			#region Public Data
 			public string _name;
+			public StateMachineEntryState _entryState;
 			public State[] _states = new State[0];
 
 #if UNITY_EDITOR
@@ -52,59 +48,14 @@ namespace Framework
 				return timelineStateMachine;
 			}
 
-			public State GetState(int timelineId)
+			public State GetState(int stateId)
 			{
 				foreach (State state in _states)
 				{
-					if (state._stateId == timelineId)
+					if (state._stateId == stateId)
 					{
 						return state;
 					}
-				}
-
-				return null;
-			}
-
-			public static IEnumerator Run(StateMachineComponent stateMachine, StateRef startState, GameObject sourceObject = null)
-			{
-				State state = startState.GetState(sourceObject != null ? sourceObject : stateMachine.gameObject);
-
-				if (state != null)
-				{
-#if UNITY_EDITOR && DEBUG
-					string debugFileName = startState.GetExternalFile().GetFilePath();
-					StateMachineDebug.OnStateStarted(stateMachine, state, debugFileName);
-#endif
-					return state.PerformState(stateMachine);
-				}
-
-				return null;
-			}
-
-			public static IEnumerator Run(StateMachineComponent stateMachine, StateRefProperty startState, GameObject sourceObject = null)
-			{
-				State state = startState.LoadTimelineState(sourceObject != null ? sourceObject : stateMachine.gameObject);
-
-				if (state != null)
-				{
-#if UNITY_EDITOR && DEBUG
-					string debugFileName = AssetDatabase.GetAssetPath(startState.GetFile());
-					StateMachineDebug.OnStateStarted(stateMachine, state, debugFileName);
-#endif
-					return state.PerformState(stateMachine);
-				}
-
-				return null;
-			}
-
-			public static IEnumerator Run(StateMachineComponent stateMachine, State startState, GameObject sourceObject = null)
-			{
-				if (startState != null)
-				{
-#if UNITY_EDITOR && DEBUG
-					StateMachineDebug.OnStateStarted(stateMachine, startState, null);
-#endif
-					return startState.PerformState(stateMachine);
 				}
 
 				return null;

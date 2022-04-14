@@ -247,7 +247,7 @@ namespace Framework
 
 				protected override void OnDragging(Event inputEvent)
 				{
-					if (_dragMode == eDragType.Custom)
+					if (_dragMode == DragType.Custom)
 					{
 						SetNeedsRepaint();
 					}
@@ -259,7 +259,7 @@ namespace Framework
 
 				protected override void OnStopDragging(Event inputEvent, bool cancelled)
 				{
-					if (_dragMode == eDragType.Custom)
+					if (_dragMode == DragType.Custom)
 					{
 						if (!cancelled)
 						{
@@ -297,7 +297,7 @@ namespace Framework
 						}				
 
 						inputEvent.Use();
-						_dragMode = eDragType.NotDragging;
+						_dragMode = DragType.NotDragging;
 						_draggingNodeFieldFrom = null;
 						_draggingNodeFieldTo = null;
 					}
@@ -356,14 +356,14 @@ namespace Framework
 					{
 						_draggingNodeFieldFrom = clickedOnNodeFromField;
 						_draggingNodeFieldTo = clickedOnNodeToField;
-						_dragMode = eDragType.Custom;
+						_dragMode = DragType.Custom;
 						_dragPos = inputEvent.mousePosition;
 						_dragAreaRect = new Rect(-1.0f, -1.0f, 0.0f, 0.0f);
 					}
 					//Normal object clicking
 					else
 					{
-						_dragMode = eDragType.LeftClick;
+						_dragMode = DragType.LeftClick;
 
 						base.OnLeftMouseDown(inputEvent);
 					}
@@ -613,7 +613,7 @@ namespace Framework
 						{
 							bool highlighted = false;
 
-							if (_dragMode == eDragType.NotDragging)
+							if (_dragMode == DragType.NotDragging)
 							{
 								Vector2 toField = mousePosition - node.GetOutputField()._position;
 								highlighted = toField.magnitude < kLinkIconWidth;
@@ -627,7 +627,7 @@ namespace Framework
 						{
 							Color color; 
 
-							if (_dragMode == eDragType.Custom &&
+							if (_dragMode == DragType.Custom &&
 								(nodeInputField._type != _draggingNodeFieldFrom._type && !_draggingNodeFieldFrom._type.IsAssignableFrom(nodeInputField._type)))
 							{ 
 								color = kUnusableLinkIconColor;
@@ -639,7 +639,7 @@ namespace Framework
 
 							bool highlighted = nodeInputField == highlightedField;
 
-							if (_dragMode == eDragType.NotDragging)
+							if (_dragMode == DragType.NotDragging)
 							{
 								Vector2 toField = mousePosition - nodeInputField._position;
 								highlighted = toField.magnitude < kLinkIconWidth;
@@ -655,7 +655,7 @@ namespace Framework
 					{
 						foreach (NodeEditorField nodeInputField in node.GetInputFields())
 						{
-							if (_dragMode != eDragType.Custom || _draggingNodeFieldTo != nodeInputField)
+							if (_dragMode != DragType.Custom || _draggingNodeFieldTo != nodeInputField)
 							{
 								int linkedOutputNodeId = GetNodeInputFieldLinkNodeId(nodeInputField);
 
@@ -665,7 +665,7 @@ namespace Framework
 
 									if (outputNode != null && outputNode.HasOutput())
 									{
-										RenderLink(outputNode.GetOutputField()._position, nodeInputField._position, _dragMode == eDragType.Custom ? Color.Lerp(kLinkLineColor, Color.black, 0.3f) : kLinkLineColor, scale);
+										RenderLink(outputNode.GetOutputField()._position, nodeInputField._position, _dragMode == DragType.Custom ? Color.Lerp(kLinkLineColor, Color.black, 0.3f) : kLinkLineColor, scale);
 									}
 								}
 								
@@ -673,7 +673,7 @@ namespace Framework
 						}
 					}
 
-					if (_dragMode == eDragType.Custom)
+					if (_dragMode == DragType.Custom)
 					{
 						//Instead of rendering current dragging link, render it to mouse position
 						RenderLink(_draggingNodeFieldFrom._position, Event.current.mousePosition, kLinkLineColor, scale, true);
@@ -802,7 +802,7 @@ namespace Framework
 
 				private NodeEditorField GetHighlightedNode(Vector2 mousePosition)
 				{
-					if (_dragMode == eDragType.Custom)
+					if (_dragMode == DragType.Custom)
 					{
 						foreach (NodeEditorGUI node in _editableObjects)
 						{

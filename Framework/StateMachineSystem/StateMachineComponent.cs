@@ -9,13 +9,13 @@ namespace Framework
 		public class StateMachineComponent : MonoBehaviour
 		{
 			#region Private Data
-			private enum State
+			private enum RunState
 			{
 				NotRunning,
 				Running,
 				Paused,
 			}
-			private State _state = State.NotRunning;
+			private RunState _runState = RunState.NotRunning;
 			private Coroutine _process;
 			private IEnumerator _current;
 			private IEnumerator _next;
@@ -30,9 +30,32 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
+			public void RunStateMachine(StateMachine stateMachine, GameObject sourceObject = null)
+			{
+				GoToState(stateMachine._entryState._initialState, sourceObject);
+			}
+
+			public void GoToState(StateRef stateRef, GameObject sourceObject = null)
+			{
+				State state = stateRef.GetState(sourceObject);
+
+				if (state != null)
+				{
+#if UNITY_EDITOR && DEBUG
+					string debugFileName = stateRef.GetExternalFile().GetFilePath();
+					StateMachineDebug.OnStateStarted(this, state, debugFileName);
+#endif
+					GoToState(state.PerformState(this));
+				}
+				else
+				{
+					Stop();
+				}
+			}
+
 			public void GoToState(IEnumerator state)
 			{
-				if (_state == State.NotRunning)
+				if (_runState == RunState.NotRunning)
 				{
 					_current = state;
 					_process = StartCoroutine(Run());
@@ -46,11 +69,11 @@ namespace Framework
 
 			public void SetNextState(IEnumerator state)
 			{
-				if (_state == State.NotRunning)
+				if (_runState == RunState.NotRunning)
 				{
 					GoToState(state);
 				}
-				else if (_state == State.Running)
+				else if (_runState == RunState.Running)
 				{
 					_next = state;
 					_forceExit = false;
@@ -68,22 +91,22 @@ namespace Framework
 				_current = null;
 				_next = null;
 				_forceExit = false;
-				_state = State.NotRunning;
+				_runState = RunState.NotRunning;
 			}
 
 			public void Pause()
 			{
-				_state = State.Paused;
+				_runState = RunState.Paused;
 			}
 
 			public void Resume()
 			{
-				_state = State.Running;
+				_runState = RunState.Running;
 			}
 
 			public bool IsRunning()
 			{
-				return _state == State.Running;
+				return _runState == RunState.Running;
 			}
 			#endregion
 
@@ -97,7 +120,7 @@ namespace Framework
 			#region Private Functions
 			private IEnumerator Run()
 			{
-				_state = State.Running;
+				_runState = RunState.Running;
 
 				while (true)
 				{
@@ -110,7 +133,7 @@ namespace Framework
 							break;
 						}
 
-						while (_state == State.Paused)
+						while (_runState == RunState.Paused)
 						{
 							yield return null;
 						}
@@ -130,7 +153,7 @@ namespace Framework
 					}
 				}
 
-				_state = State.NotRunning;
+				_runState = RunState.NotRunning;
 			}
 			#endregion
 		}

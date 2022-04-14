@@ -53,7 +53,7 @@ namespace Framework
 					}
 				}
 
-				stateMachine.GoToState(StateMachine.Run(stateMachine, _goToState));
+				stateMachine.GoToState(_goToState);
 			}
 			#endregion
 		}
