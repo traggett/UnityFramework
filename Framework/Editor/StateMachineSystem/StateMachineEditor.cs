@@ -323,7 +323,7 @@ namespace Framework
 					{
 						StateEditorGUI state = (StateEditorGUI)_editableObjects[i];
 
-						StateMachineEditorLink[] links = GetStateLinks(state.GetEditableObject());
+						StateMachineEditorLink[] links = state.GetEditableObject().GetStateLinks();
 
 						if (links != null)
 						{
@@ -754,7 +754,7 @@ namespace Framework
 
 				private Vector3 GetLinkStartPosition(StateEditorGUI state, int linkIndex = 0)
 				{
-					float fraction = 1.0f / (GetStateLinks(state.GetEditableObject()).Length + 1.0f);
+					float fraction = 1.0f / ((state.GetEditableObject().GetStateLinks()).Length + 1.0f);
 					float edgeFraction = fraction * (1 + linkIndex);
 
 					Rect stateRect = GetScreenRect(state.GetBounds());
@@ -872,7 +872,7 @@ namespace Framework
 
 				private void RenderLinksForState(StateEditorGUI state, bool selected)
 				{
-					StateMachineEditorLink[] links = GetStateLinks(state.GetEditableObject());
+					StateMachineEditorLink[] links = state.GetEditableObject().GetStateLinks();
 
 					if (links != null)
 					{
@@ -959,53 +959,6 @@ namespace Framework
 				private void AddNewStateMenuCallback(object type)
 				{				 
 					CreateAndAddNewObject((Type)type);
-				}
-
-				private StateMachineEditorLink[] GetStateLinks(State state)
-				{
-					//Loop over member infos in state finding attrbute
-					FieldInfo[] fields = state.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
-					List<StateMachineEditorLink> links = new List<StateMachineEditorLink>();
-
-					for (int i = 0; i < fields.Length; i++)
-					{
-						StateLinkAttribute attribute = SystemUtils.GetAttribute<StateLinkAttribute>(fields[i]);
-
-						if (attribute != null)
-						{
-							if (fields[i].FieldType.IsArray)
-							{
-								Array array = fields[i].GetValue(state) as Array;
-
-								for (int j = 0; j < array.Length; j++)
-								{
-									StateMachineEditorLink link = new StateMachineEditorLink
-									{
-										_object = state,
-										_fieldInfo = fields[i],
-										_arrayIndex = j,
-										_description = attribute._editorName
-									};
-
-									links.Add(link);
-								}
-							}
-							else
-							{
-								StateMachineEditorLink link = new StateMachineEditorLink
-								{
-									_object = state,
-									_fieldInfo = fields[i],
-									_arrayIndex = -1,
-									_description = attribute._editorName
-								};
-
-								links.Add(link);
-							}
-						}
-					}
-
-					return links.ToArray();
 				}
 
 				private bool CanDragLinkTo(StateEditorGUI editorGUI)

@@ -2,6 +2,9 @@ using UnityEngine;
 
 using System;
 using System.Collections;
+using System.Reflection;
+using System.Collections.Generic;
+using Framework.Utils;
 
 namespace Framework
 {
@@ -35,6 +38,53 @@ namespace Framework
 			public abstract IEnumerator PerformState(StateMachineComponent stateMachine);
 
 #if UNITY_EDITOR
+			public virtual StateMachineEditorLink[] GetStateLinks()
+			{
+				//Loop over member infos in state finding attrbute
+				FieldInfo[] fields = GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
+				List<StateMachineEditorLink> links = new List<StateMachineEditorLink>();
+
+				for (int i = 0; i < fields.Length; i++)
+				{
+					StateLinkAttribute attribute = SystemUtils.GetAttribute<StateLinkAttribute>(fields[i]);
+
+					if (attribute != null)
+					{
+						if (fields[i].FieldType.IsArray)
+						{
+							Array array = fields[i].GetValue(this) as Array;
+
+							for (int j = 0; j < array.Length; j++)
+							{
+								StateMachineEditorLink link = new StateMachineEditorLink
+								{
+									_state = this,
+									_fieldInfo = fields[i],
+									_arrayIndex = j,
+									_description = attribute._editorName
+								};
+
+								links.Add(link);
+							}
+						}
+						else
+						{
+							StateMachineEditorLink link = new StateMachineEditorLink
+							{
+								_state = this,
+								_fieldInfo = fields[i],
+								_arrayIndex = -1,
+								_description = attribute._editorName
+							};
+
+							links.Add(link);
+						}
+					}
+				}
+
+				return links.ToArray();
+			}
+
 			public virtual string GetEditorLabel()
 			{
 				return "State" + _stateId.ToString("00") + " (" + GetType().Name + ")";
