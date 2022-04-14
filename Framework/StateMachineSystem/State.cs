@@ -58,7 +58,7 @@ namespace Framework
 							{
 								StateMachineEditorLink link = new StateMachineEditorLink
 								{
-									_state = this,
+									_object = this,
 									_fieldInfo = fields[i],
 									_arrayIndex = j,
 									_description = attribute._editorName
@@ -71,7 +71,7 @@ namespace Framework
 						{
 							StateMachineEditorLink link = new StateMachineEditorLink
 							{
-								_state = this,
+								_object = this,
 								_fieldInfo = fields[i],
 								_arrayIndex = -1,
 								_description = attribute._editorName

@@ -8,7 +8,7 @@ namespace Framework
 	{
 		public struct StateMachineEditorLink
 		{
-			public State _state;
+			public object _object;
 			public FieldInfo _fieldInfo;
 			public int _arrayIndex;
 			public string _description;
@@ -17,11 +17,11 @@ namespace Framework
 			{
 				if (_arrayIndex == -1)
 				{
-					return (StateRef)_fieldInfo.GetValue(_state);
+					return (StateRef)_fieldInfo.GetValue(_object);
 				}
 				else
 				{
-					StateRef[] stateRefs = (StateRef[])_fieldInfo.GetValue(_state);
+					StateRef[] stateRefs = (StateRef[])_fieldInfo.GetValue(_object);
 					return stateRefs[_arrayIndex];
 				}
 			}
@@ -30,13 +30,13 @@ namespace Framework
 			{
 				if (_arrayIndex == -1)
 				{
-					_fieldInfo.SetValue(_state, value);
+					_fieldInfo.SetValue(_object, value);
 				}
 				else
 				{
-					StateRef[] stateRefs = (StateRef[])_fieldInfo.GetValue(_state);
+					StateRef[] stateRefs = (StateRef[])_fieldInfo.GetValue(_object);
 					stateRefs[_arrayIndex] = value;
-					_fieldInfo.SetValue(_state, stateRefs);
+					_fieldInfo.SetValue(_object, stateRefs);
 				}
 			}
 		}
