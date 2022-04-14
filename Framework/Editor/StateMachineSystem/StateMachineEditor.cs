@@ -789,9 +789,31 @@ namespace Framework
 					Handles.EndGUI();
 				}
 
+				private void RenderLinkLabel(Rect labelPos, string text)
+				{
+					//Draw shadow
+					Rect shadowRect = new Rect(labelPos.x + _style._shadowSize, labelPos.y + _style._shadowSize, labelPos.width, labelPos.height);
+					EditorUtils.DrawColoredRoundedBox(shadowRect, _style._shadowColor, _style._stateCornerRadius);
+
+					//Draw label background
+					EditorUtils.DrawColoredRoundedBox(labelPos, _style._linkDescriptionColor, _style._stateCornerRadius);
+
+					//Draw label
+					GUI.Label(labelPos, text, _style._linkTextStyle);
+				}
+
 				private void RenderLink(string description, StateEditorGUI fromState, StateEditorGUI toState, int linkIndex, bool selected)
 				{
 					Vector3 startPos = GetLinkStartPosition(fromState, linkIndex);
+
+					if (toState == null)
+					{
+						Vector2 textSize = _style._linkTextStyle.CalcSize(new GUIContent(description));
+						Rect labelPos = new Rect(startPos.x - (textSize.x * 0.5f), startPos.y + (textSize.y * 0.5f), textSize.x, textSize.y);
+
+						RenderLinkLabel(labelPos, description);
+					}
+
 					RenderLinkIcon(fromState, startPos, fromState.GetEditableObject().GetEditorColor(), selected);
 
 					if (toState != null)
@@ -804,15 +826,7 @@ namespace Framework
 						float lineFraction = 0.5f;
 						Rect labelPos = new Rect(startPos.x + ((endPos.x - startPos.x) * lineFraction) - (textSize.x * 0.5f), startPos.y + ((endPos.y - startPos.y) * lineFraction) - (textSize.y * 0.5f), textSize.x, textSize.y);
 
-						//Draw shadow
-						Rect shadowRect = new Rect(labelPos.x + _style._shadowSize, labelPos.y + _style._shadowSize, labelPos.width, labelPos.height);
-						EditorUtils.DrawColoredRoundedBox(shadowRect, _style._shadowColor, _style._stateCornerRadius);
-
-						//Draw label background
-						EditorUtils.DrawColoredRoundedBox(labelPos, _style._linkDescriptionColor, _style._stateCornerRadius);
-
-						//Draw label
-						GUI.Label(labelPos, description, _style._linkTextStyle);
+						RenderLinkLabel(labelPos, description);
 					}
 				}
 
