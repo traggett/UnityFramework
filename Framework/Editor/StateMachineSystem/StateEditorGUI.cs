@@ -60,9 +60,9 @@ namespace Framework
 				public string GetStateDescription()
 				{
 					if (GetEditableObject()._editorAutoDescription)
-						return StringUtils.GetFirstLine(GetEditableObject().GetEditorDescription());
+						return GetEditableObject().GetEditorDescription();
 
-					return StringUtils.GetFirstLine(GetEditableObject()._editorDescription);
+					return GetEditableObject()._editorDescription;
 				}
 
 				public static StateEditorGUI CreateStateEditorGUI(StateMachineEditor editor, State state)
@@ -100,16 +100,17 @@ namespace Framework
 				#region Virtual Interface
 				public virtual void CalcRenderRect(StateMachineEditorStyle style)
 				{
-					GUIContent stateId = new GUIContent(GetEditableObject().GetEditorLabel());
+					GUIContent label = new GUIContent(GetEditableObject().GetEditorLabel());
+					GUIContent content = new GUIContent(GetStateDescription());
 
 					GUIStyle labelStyle = style._stateLabelStyle;
 					GUIStyle textStyle = style._stateTextStyle;
 
-					Vector2 stateIdDimensions = labelStyle.CalcSize(stateId);
-					Vector2 labelDimensions = GetDescriptionSize(textStyle);
+					Vector2 labelDimensions = labelStyle.CalcSize(label);
+					Vector2 contentDimensions = textStyle.CalcSize(content);
 
-					float areaWidth = Mathf.Max(stateIdDimensions.x, labelDimensions.x) + kLabelPadding + style._shadowSize + (kMaxBorderSize * 2.0f);
-					float areaHeight = stateIdDimensions.y + kStateSeperationSize + labelDimensions.y + kLabelBottom + style._shadowSize + (kMaxBorderSize * 2.0f);
+					float areaWidth = Mathf.Max(labelDimensions.x, contentDimensions.x) + kLabelPadding + style._shadowSize + (kMaxBorderSize * 2.0f);
+					float areaHeight = labelDimensions.y + kStateSeperationSize + contentDimensions.y + kLabelBottom + style._shadowSize + (kMaxBorderSize * 2.0f);
 
 					_rect.position = GetPosition();
 
@@ -177,13 +178,6 @@ namespace Framework
 				#endregion
 
 				#region Protected Functions
-				protected Vector2 GetDescriptionSize(GUIStyle style)
-				{
-					string labelText = GetStateDescription();
-					Vector2 labelSize = style.CalcSize(new GUIContent(labelText));
-					return labelSize;
-				}
-
 				protected bool RenderStateDescriptionField()
 				{
 					bool dataChanged = false;
