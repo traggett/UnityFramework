@@ -8,35 +8,43 @@ namespace Framework
 	{
 		public struct StateMachineEditorLink
 		{
+			public string _label;
 			public object _object;
-			public FieldInfo _fieldInfo;
-			public int _arrayIndex;
-			public string _description;
+			public FieldInfo _objectField;
+			public int _objectFieldArrayindex;
+			
+			public StateMachineEditorLink(string label, object obj, FieldInfo field, int arrayIndex = -1)
+			{
+				_label = label;
+				_object = obj;
+				_objectField = field;
+				_objectFieldArrayindex = arrayIndex;
+			}
 
 			public StateRef GetStateRef()
 			{
-				if (_arrayIndex == -1)
+				if (_objectFieldArrayindex == -1)
 				{
-					return (StateRef)_fieldInfo.GetValue(_object);
+					return (StateRef)_objectField.GetValue(_object);
 				}
 				else
 				{
-					StateRef[] stateRefs = (StateRef[])_fieldInfo.GetValue(_object);
-					return stateRefs[_arrayIndex];
+					StateRef[] stateRefs = (StateRef[])_objectField.GetValue(_object);
+					return stateRefs[_objectFieldArrayindex];
 				}
 			}
 
 			public void SetStateRef(StateRef value)
 			{
-				if (_arrayIndex == -1)
+				if (_objectFieldArrayindex == -1)
 				{
-					_fieldInfo.SetValue(_object, value);
+					_objectField.SetValue(_object, value);
 				}
 				else
 				{
-					StateRef[] stateRefs = (StateRef[])_fieldInfo.GetValue(_object);
-					stateRefs[_arrayIndex] = value;
-					_fieldInfo.SetValue(_object, stateRefs);
+					StateRef[] stateRefs = (StateRef[])_objectField.GetValue(_object);
+					stateRefs[_objectFieldArrayindex] = value;
+					_objectField.SetValue(_object, stateRefs);
 				}
 			}
 		}

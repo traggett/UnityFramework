@@ -1,30 +1,25 @@
+using Framework.Serialization;
 using System;
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace Framework
 {
-	using Serialization;
 
 	namespace Utils
 	{
 		[Serializable]
 		public struct GameObjectRef
 		{
-			public enum eSourceType
+			public enum SourceType
 			{
 				Scene,
-				Prefab,
-				Loaded
+				Relative,
 			}
 
 			#region Serialized Data
 			[SerializeField]
-			private eSourceType _sourceType;
+			private SourceType _sourceType;
 			[SerializeField]
 			private string _objectName;
 			[SerializeField]
@@ -32,12 +27,11 @@ namespace Framework
 			[SerializeField]
 			private int _sceneObjectID;
 			[SerializeField]
-			private AssetRef<GameObject> _prefab;
+			private string _relativeObjectPath;
 			#endregion
 
 			#region Private Data
 			private GameObject _gameObject;
-			private GameObject _sourceObject;
 			#endregion
 
 			#region Editor Data
@@ -50,11 +44,7 @@ namespace Framework
 			#region Public Interface
 			public static implicit operator string(GameObjectRef property)
 			{
-				if (property._prefab.IsValid())
-				{
-					return property._prefab;
-				}
-				else if (!string.IsNullOrEmpty(property._objectName))
+				if (!string.IsNullOrEmpty(property._objectName))
 				{
 					return System.IO.Path.GetFileNameWithoutExtension(property._objectName);
 				}
@@ -87,7 +77,7 @@ namespace Framework
 				return _objectName;
 			}
 
-			public eSourceType GetSourceType()
+			public SourceType GetSourceType()
 			{
 				return _sourceType;
 			}
@@ -98,14 +88,11 @@ namespace Framework
 				{
 					switch (_sourceType)
 					{
-						case eSourceType.Scene:
+						case SourceType.Scene:
 							_gameObject = GetSceneObject(_scene.GetScene());
 							break;
-						case eSourceType.Prefab:
-							_gameObject = GetPrefabObject();
-							break;
-						case eSourceType.Loaded:
-							_gameObject = GetLoadedObject(_scene.GetScene());
+						case SourceType.Relative:
+							_gameObject = null;
 							break;
 					}
 				}
@@ -117,95 +104,51 @@ namespace Framework
 			{
 				switch (_sourceType)
 				{
-					case eSourceType.Prefab:
-						return _prefab.IsValid() && !string.IsNullOrEmpty(_objectName);
-					case eSourceType.Loaded:
-						return !string.IsNullOrEmpty(_objectName);
-					case eSourceType.Scene:
+					case SourceType.Relative:
+						return !string.IsNullOrEmpty(_relativeObjectPath);
+					case SourceType.Scene:
 					default:
 						return _sceneObjectID != -1 && _scene.IsSceneRefValid();
 				}
 			}
 
-			public static object FixUpGameObjectRefsInObject(object obj, GameObject gameObject)
+			public static object FixUpGameObjectRefs(object obj, GameObject rootObject)
 			{
-				return Serializer.UpdateChildObjects(obj, FixUpGameObjectRef, gameObject);
+				return Serializer.UpdateChildObjects(obj, FixUpGameObjectRef, rootObject);
 			}
 
 #if UNITY_EDITOR
-			public GameObjectRef(eSourceType sourceType)
+			public GameObjectRef(SourceType sourceType)
 			{
 				_sourceType = sourceType;
 				_objectName = string.Empty;
 				_scene = new SceneRef();
 				_sceneObjectID = -1;
-				_prefab = new AssetRef<GameObject>();
+				_relativeObjectPath = string.Empty;
 				_gameObject = null;
-				_sourceObject = null;
 				_editorCollapsed = false;
 			}
 
-			public GameObjectRef(eSourceType sourceType, GameObject gameObject)
+			public GameObjectRef(SourceType sourceType, GameObject gameObject)
 			{
 				_sourceType = sourceType;
-				_sourceObject = null;
 				_editorCollapsed = false;
-				_prefab = new AssetRef<GameObject>();
+				_relativeObjectPath = string.Empty;
 				_scene = new SceneRef();
 				_gameObject = gameObject;
 
 				switch (sourceType)
 				{
-					case eSourceType.Prefab:
+					case SourceType.Relative:
 						{
-							GameObject prefabAsset = (GameObject)PrefabUtility.GetCorrespondingObjectFromSource(gameObject);
-
-							if (prefabAsset != null)
-								gameObject = prefabAsset;
-
-							//Then find its root
-							GameObject prefabRoot = PrefabUtility.GetOutermostPrefabInstanceRoot(gameObject);
-
-							if (prefabRoot != null)
-							{
-								_objectName = GameObjectUtils.GetChildFullName(gameObject, prefabRoot);
-								_prefab = new AssetRef<GameObject>(prefabRoot);
-							}
-							else
-							{
-								_objectName = string.Empty;
-							}
-
+							_objectName = null;
 							_sceneObjectID = -1;
-						}
-						break;
-					case eSourceType.Loaded:
-						{
-							GameObjectLoader loader = gameObject.GetComponentInParent<GameObjectLoader>();
 
-							if (loader != null)
-							{
-								_scene = new SceneRef(loader.gameObject.scene);
-								_sceneObjectID = SceneIndexer.GetIdentifier(loader.gameObject);
-
-								if (gameObject != null && GameObjectUtils.IsChildOf(gameObject.transform, loader.transform))
-								{
-									_objectName = GameObjectUtils.GetChildFullName(gameObject, loader.gameObject);
-								}
-								else
-								{
-									_objectName = null;
-								}
-							}
-							else
-							{
-								_objectName = null;
-								_sceneObjectID = -1;
-							}
+							//TO DO - find realtive path to serilaisation root
 						}
 						break;
 					default:
-					case eSourceType.Scene:
+					case SourceType.Scene:
 						{
 							if (gameObject != null && gameObject.scene.IsValid())
 							{
@@ -223,11 +166,6 @@ namespace Framework
 				}
 			}
 
-			public GameObjectLoader GetEditorGameObjectLoader(Scene scene)
-			{
-				return GetGameObjectLoader(scene);
-			}
-
 			public SceneRef GetSceneRef()
 			{
 				return _scene;
@@ -236,18 +174,6 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private static object FixUpGameObjectRef(object obj, object gameObject)
-			{
-				if (obj.GetType() == typeof(GameObjectRef))
-				{
-					GameObjectRef gameObjectRef = (GameObjectRef)obj;
-					gameObjectRef._sourceObject = (GameObject)gameObject;
-					return gameObjectRef;
-				}
-
-				return obj;
-			}
-
 			private GameObject GetSceneObject(Scene scene)
 			{
 				GameObject gameObject = null;
@@ -266,77 +192,28 @@ namespace Framework
 				return gameObject;
 			}
 
-			private GameObject GetPrefabObject()
+			private static object FixUpGameObjectRef(object obj, object rootObject)
 			{
-				GameObject gameObject = null;
-				GameObject sourceObject = _sourceObject;
-
-#if UNITY_EDITOR
-				if (_sourceObject == null)
+				if (obj.GetType() == typeof(GameObjectRef))
 				{
-					//In the editor find asset from the editor prefab field 
-					sourceObject = _prefab._editorAsset;
-				}
-#endif
-				GameObject prefabObject = PrefabRoot.GetPrefabRoot(sourceObject);
+					GameObjectRef gameObjectRef = (GameObjectRef)obj;
 
-				if (prefabObject != null && !string.IsNullOrEmpty(_objectName))
-				{
-					if (prefabObject.name == _objectName || prefabObject.name == _objectName + "(Clone)")
+					//Tell relativge pathed objects what root is
+
+					if (gameObjectRef._sourceType == SourceType.Relative)
 					{
-						gameObject = prefabObject;
+						gameObjectRef._relativeObjectPath = FindRelativePath(gameObjectRef._gameObject, (GameObject)rootObject);
 					}
-					else
-					{
-						Transform child = prefabObject.transform.Find(_objectName);
-						if (child != null)
-						{
-							gameObject = child.gameObject;
-						}
-					}
+
+					return gameObjectRef;
 				}
 
-				return gameObject;
+				return obj;
 			}
 
-			private GameObject GetLoadedObject(Scene scene)
+			private static string FindRelativePath(GameObject gameObject, GameObject rootObject)
 			{
-				GameObject gameObject = null;
-
-				if (scene.IsValid() && scene.isLoaded)
-				{
-					GameObjectLoader loader = GetGameObjectLoader(scene);
-					
-					if (loader != null && loader.IsLoaded())
-					{
-						Transform child = loader.transform.Find(_objectName);
-						if (child != null)
-						{
-							gameObject = child.gameObject;
-						}
-					}
-				}
-
-				return gameObject;
-			}
-
-			private GameObjectLoader GetGameObjectLoader(Scene scene)
-			{
-				GameObjectLoader loader = null;
-
-				if (_sourceType == eSourceType.Loaded)
-				{
-					if (scene.IsValid() && scene.isLoaded)
-					{
-						GameObject obj = SceneIndexer.GetObject(scene, _sceneObjectID);
-						if (obj != null)
-						{
-							loader = obj.GetComponent<GameObjectLoader>();
-						}
-					}
-				}
-
-				return loader;
+				return null;
 			}
 			#endregion
 		}

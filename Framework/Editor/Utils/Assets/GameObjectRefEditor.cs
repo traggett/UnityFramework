@@ -1,4 +1,3 @@
-
 using UnityEditor;
 using UnityEngine;
 
@@ -40,7 +39,7 @@ namespace Framework
 						EditorGUI.indentLevel++;
 
 						//Show drop down
-						GameObjectRef.eSourceType sourceType = SerializationEditorGUILayout.ObjectField(gameObjectRef.GetSourceType(), "Source Type", ref dataChanged);
+						GameObjectRef.SourceType sourceType = SerializationEditorGUILayout.ObjectField(gameObjectRef.GetSourceType(), "Source Type", ref dataChanged);
 
 						if (sourceType != gameObjectRef.GetSourceType())
 						{
@@ -50,19 +49,14 @@ namespace Framework
 
 						switch (sourceType)
 						{
-							case GameObjectRef.eSourceType.Scene:
+							case GameObjectRef.SourceType.Scene:
 								{
 									RenderSceneGameObjectField(ref gameObjectRef, ref dataChanged);
 								}
 								break;
-							case GameObjectRef.eSourceType.Prefab:
+							case GameObjectRef.SourceType.Relative:
 								{
-									RenderPrefabGameObjectField(ref gameObjectRef, ref dataChanged);
-								}
-								break;
-							case GameObjectRef.eSourceType.Loaded:
-								{
-									RenderLoadedGameObjectField(ref gameObjectRef, ref dataChanged);
+									RenderRelativeGameObjectField(ref gameObjectRef, ref dataChanged);
 								}
 								break;
 						}
@@ -86,13 +80,13 @@ namespace Framework
 							GameObject gameObj = (GameObject)EditorGUILayout.ObjectField(kLabel, gameObjectRef.GetGameObject(), typeof(GameObject), true);
 							if (EditorGUI.EndChangeCheck())
 							{
-								gameObjectRef = new GameObjectRef(GameObjectRef.eSourceType.Scene, gameObj);
+								gameObjectRef = new GameObjectRef(GameObjectRef.SourceType.Scene, gameObj);
 								dataChanged = true;
 							}
 						}
 						else if (RenderSceneNotLoadedField(gameObjectRef))
 						{
-							gameObjectRef = new GameObjectRef(GameObjectRef.eSourceType.Scene);
+							gameObjectRef = new GameObjectRef(GameObjectRef.SourceType.Scene);
 							dataChanged = true;
 						}
 					}
@@ -102,69 +96,21 @@ namespace Framework
 						GameObject gameObj = (GameObject)EditorGUILayout.ObjectField(kLabel, gameObjectRef.GetGameObject(), typeof(GameObject), true);
 						if (EditorGUI.EndChangeCheck())
 						{
-							gameObjectRef = new GameObjectRef(GameObjectRef.eSourceType.Scene, gameObj);
+							gameObjectRef = new GameObjectRef(GameObjectRef.SourceType.Scene, gameObj);
 							dataChanged = true;
 						}
 					}
 				}
 
-				private static void RenderPrefabGameObjectField(ref GameObjectRef gameObjectRef, ref bool dataChanged)
+				private static void RenderRelativeGameObjectField(ref GameObjectRef gameObjectRef, ref bool dataChanged)
 				{
 					EditorGUI.BeginChangeCheck();
-					GameObject prefabGameObject = (GameObject)EditorGUILayout.ObjectField(kLabel, gameObjectRef.GetGameObject(), typeof(GameObject), true);
+					GameObject prefabGameObject = (GameObject)EditorGUILayout.ObjectField(kLabel, gameObjectRef.GetGameObject(), typeof(GameObject), false);
+
 					if (EditorGUI.EndChangeCheck())
 					{
-						gameObjectRef = new GameObjectRef(GameObjectRef.eSourceType.Prefab, prefabGameObject);
+						gameObjectRef = new GameObjectRef(GameObjectRef.SourceType.Relative, prefabGameObject);
 						dataChanged = true;
-					}
-				}
-
-				private static void RenderLoadedGameObjectField(ref GameObjectRef gameObjectRef, ref bool dataChanged)
-				{
-					if (gameObjectRef.IsValid())
-					{
-						Scene scene = gameObjectRef.GetSceneRef().GetScene();
-
-						if (scene.IsValid() && scene.isLoaded)
-						{
-							//If loaded and not tried finding editor loader, find it now
-							GameObjectLoader gameObjectLoader = gameObjectRef.GetEditorGameObjectLoader(scene);
-
-							//If have a valid loader...
-							if (gameObjectLoader != null)
-							{
-								if (gameObjectLoader.IsLoaded())
-								{
-									EditorGUI.BeginChangeCheck();
-									GameObject obj = (GameObject)EditorGUILayout.ObjectField(kLabel, gameObjectRef.GetGameObject(), typeof(GameObject), true);
-									if (EditorGUI.EndChangeCheck())
-									{
-										gameObjectRef = new GameObjectRef(GameObjectRef.eSourceType.Loaded, obj);
-										dataChanged = true;
-									}
-								}
-								else if (RenderLoadedNotLoadedField(gameObjectLoader))
-								{
-									gameObjectRef = new GameObjectRef(GameObjectRef.eSourceType.Loaded);
-									dataChanged = true;
-								}
-							}
-						}
-						else if (RenderSceneNotLoadedField(gameObjectRef))
-						{
-							gameObjectRef = new GameObjectRef(GameObjectRef.eSourceType.Loaded);
-							dataChanged = true;
-						}
-					}
-					else
-					{
-						EditorGUI.BeginChangeCheck();
-						GameObject obj = (GameObject)EditorGUILayout.ObjectField(kLabel, gameObjectRef.GetGameObject(), typeof(GameObject), true);
-						if (EditorGUI.EndChangeCheck())
-						{
-							gameObjectRef = new GameObjectRef(GameObjectRef.eSourceType.Loaded, obj);
-							dataChanged = true;
-						}
 					}
 				}
 
@@ -178,27 +124,7 @@ namespace Framework
 
 						if (GUILayout.Button("Load", GUILayout.ExpandWidth(false)))
 						{
-							gameObjectRef.GetSceneRef() .OpenSceneInEditor();
-						}
-
-						clear = GUILayout.Button("Clear", GUILayout.ExpandWidth(false));
-					}
-					EditorGUILayout.EndHorizontal();
-
-					return clear;
-				}
-
-				public static bool RenderLoadedNotLoadedField(GameObjectLoader loader)
-				{
-					bool clear = false;
-
-					EditorGUILayout.BeginHorizontal();
-					{
-						EditorGUILayout.LabelField("('" + loader.name + "' not loaded)");
-
-						if (GUILayout.Button("Load", GUILayout.ExpandWidth(false)))
-						{
-							loader.Load();
+							gameObjectRef.GetSceneRef().OpenSceneInEditor();
 						}
 
 						clear = GUILayout.Button("Clear", GUILayout.ExpandWidth(false));

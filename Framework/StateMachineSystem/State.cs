@@ -38,7 +38,22 @@ namespace Framework
 			public abstract IEnumerator PerformState(StateMachineComponent stateMachine);
 
 #if UNITY_EDITOR
-			public virtual StateMachineEditorLink[] GetStateLinks()
+			public virtual string GetEditorLabel()
+			{
+				return "State" + _stateId.ToString("00") + " (" + GetType().Name + ")";
+			}
+
+			public virtual string GetEditorDescription() 
+			{
+				return GetType().Name;
+			}
+
+			public virtual Color GetEditorColor()
+			{
+				return new Color(61f / 255f, 154f / 255f, 92f / 255f);
+			}
+
+			public virtual StateMachineEditorLink[] GetEditorStateLinks()
 			{
 				//Loop over member infos in state finding attrbute
 				FieldInfo[] fields = GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
@@ -56,48 +71,17 @@ namespace Framework
 
 							for (int j = 0; j < array.Length; j++)
 							{
-								StateMachineEditorLink link = new StateMachineEditorLink
-								{
-									_object = this,
-									_fieldInfo = fields[i],
-									_arrayIndex = j,
-									_description = attribute._editorName
-								};
-
-								links.Add(link);
+								links.Add(new StateMachineEditorLink(attribute._editorName, this, fields[i], j));
 							}
 						}
 						else
 						{
-							StateMachineEditorLink link = new StateMachineEditorLink
-							{
-								_object = this,
-								_fieldInfo = fields[i],
-								_arrayIndex = -1,
-								_description = attribute._editorName
-							};
-
-							links.Add(link);
+							links.Add(new StateMachineEditorLink(attribute._editorName, this, fields[i]));
 						}
 					}
 				}
 
 				return links.ToArray();
-			}
-
-			public virtual string GetEditorLabel()
-			{
-				return "State" + _stateId.ToString("00") + " (" + GetType().Name + ")";
-			}
-
-			public virtual string GetEditorDescription() 
-			{
-				return GetType().Name;
-			}
-
-			public virtual Color GetEditorColor()
-			{
-				return new Color(61f / 255f, 154f / 255f, 92f / 255f);
 			}
 #endif
 			#endregion

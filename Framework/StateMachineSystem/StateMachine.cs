@@ -40,12 +40,12 @@ namespace Framework
 			#region Public Interface
 			public static StateMachine FromTextAsset(TextAsset asset, GameObject sourceObject = null)
 			{
-				StateMachine timelineStateMachine = Serializer.FromTextAsset<StateMachine>(asset);
+				StateMachine stateMachine = Serializer.FromTextAsset<StateMachine>(asset);
 
 				if (sourceObject != null)
-					GameObjectRef.FixUpGameObjectRefsInObject(timelineStateMachine, sourceObject);
+					GameObjectRef.FixUpGameObjectRefs(stateMachine, sourceObject);
 
-				return timelineStateMachine;
+				return stateMachine;
 			}
 
 			public State GetState(int stateId)

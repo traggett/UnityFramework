@@ -64,7 +64,7 @@ namespace Framework
 						EditorGUI.indentLevel++;
 
 						//Show drop down for gameobject type.
-						GameObjectRef.eSourceType sourceType = SerializationEditorGUILayout.ObjectField(componentRef.GetGameObjectRef().GetSourceType(), "Source Type", ref dataChanged);
+						GameObjectRef.SourceType sourceType = SerializationEditorGUILayout.ObjectField(componentRef.GetGameObjectRef().GetSourceType(), "Source Type", ref dataChanged);
 
 						if (sourceType != componentRef.GetGameObjectRef().GetSourceType())
 						{
@@ -74,14 +74,11 @@ namespace Framework
 
 						switch (sourceType)
 						{
-							case GameObjectRef.eSourceType.Scene:
+							case GameObjectRef.SourceType.Scene:
 								RenderSceneObjectField(ref componentRef, ref dataChanged);
 								break;
-							case GameObjectRef.eSourceType.Prefab:
-								RenderPrefabObjectField(ref componentRef, ref dataChanged);
-								break;
-							case GameObjectRef.eSourceType.Loaded:
-								RenderLoadedObjectField(ref componentRef, ref dataChanged);
+							case GameObjectRef.SourceType.Relative:
+								RenderRelativeObjectField(ref componentRef, ref dataChanged);
 								break;
 						}
 
@@ -197,7 +194,7 @@ namespace Framework
 						//If the scene is not loaded show warning and allow clearing of the component
 						else if (GameObjectRefEditor.RenderSceneNotLoadedField(componentRef.GetGameObjectRef()))
 						{
-							componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Scene);
+							componentRef = new ComponentRef<T>(GameObjectRef.SourceType.Scene);
 							dataChanged = true;
 						}
 					}
@@ -208,56 +205,9 @@ namespace Framework
 					}
 				}
 
-				private static void RenderPrefabObjectField<T>(ref ComponentRef<T> componentRef, ref bool dataChanged) where T : class
+				private static void RenderRelativeObjectField<T>(ref ComponentRef<T> componentRef, ref bool dataChanged) where T : class
 				{
 					if (RenderObjectField(ref componentRef))
-					{
-						dataChanged = true;
-					}
-				}
-
-				private static void RenderLoadedObjectField<T>(ref ComponentRef<T> componentRef, ref bool dataChanged) where T : class
-				{
-					//If the component is valid
-					if (componentRef.IsValid())
-					{
-						//Check its scene is loaded
-						Scene scene = componentRef.GetGameObjectRef().GetSceneRef().GetScene();
-
-						if (scene.isLoaded)
-						{
-							//If loaded and not tried finding editor loader, find it now
-							GameObjectLoader gameObjectLoader = componentRef.GetGameObjectRef().GetEditorGameObjectLoader(scene);
-
-							//If have a valid loader...
-							if (gameObjectLoader != null)
-							{
-								//Check its loaded
-								if (gameObjectLoader.IsLoaded())
-								{
-									//Then render component field
-									if (RenderObjectField(ref componentRef))
-									{
-										dataChanged = true;
-									}
-								}
-								//If the loader is not loaded show warning and allow clearing of the component
-								else if (GameObjectRefEditor.RenderLoadedNotLoadedField(gameObjectLoader))
-								{
-									componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded);
-									dataChanged = true;
-								}
-							}
-						}
-						//If the scene is not loaded show warning and allow clearing of the component
-						else if (GameObjectRefEditor.RenderSceneNotLoadedField(componentRef.GetGameObjectRef()))
-						{
-							componentRef = new ComponentRef<T>(GameObjectRef.eSourceType.Loaded);
-							dataChanged = true;
-						}
-					}
-					//Else don't have a component set, render component field
-					else if (RenderObjectField(ref componentRef))
 					{
 						dataChanged = true;
 					}

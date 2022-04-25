@@ -30,20 +30,19 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			public void RunStateMachine(StateMachine stateMachine, GameObject sourceObject = null)
+			public void RunStateMachine(StateMachine stateMachine)
 			{
-				GoToState(stateMachine._entryState._initialState, sourceObject);
+				GoToState(stateMachine._entryState._initialState);
 			}
 
-			public void GoToState(StateRef stateRef, GameObject sourceObject = null)
+			public void GoToState(StateRef stateRef)
 			{
-				State state = stateRef.GetState(sourceObject);
+				State state = stateRef.GetState();
 
 				if (state != null)
 				{
 #if UNITY_EDITOR && DEBUG
-					string debugFileName = stateRef.GetExternalFile().GetFilePath();
-					StateMachineDebug.OnStateStarted(this, state, debugFileName);
+					StateMachineDebug.OnStateStarted(this, state);
 #endif
 					GoToState(state.PerformState(this));
 				}

@@ -106,7 +106,7 @@ namespace Framework
 			}
 
 #if UNITY_EDITOR
-			public ComponentRef(GameObjectRef.eSourceType sourceType)
+			public ComponentRef(GameObjectRef.SourceType sourceType)
 			{
 				_gameObject = new GameObjectRef(sourceType);
 				_componentIndex = 0;
@@ -114,7 +114,7 @@ namespace Framework
 				_editorCollapsed = false;
 			}
 
-			public ComponentRef(GameObjectRef.eSourceType sourceType, Component component)
+			public ComponentRef(GameObjectRef.SourceType sourceType, Component component)
 			{
 				GameObject gameObject = component != null ? component.gameObject : null;
 				_gameObject = new GameObjectRef(sourceType, gameObject);
@@ -142,7 +142,7 @@ namespace Framework
 				}
 			}
 
-			public ComponentRef(GameObjectRef.eSourceType sourceType, Component component, int componentIndex)
+			public ComponentRef(GameObjectRef.SourceType sourceType, Component component, int componentIndex)
 			{
 				GameObject gameObject = component != null ? component.gameObject : null;
 				_gameObject = new GameObjectRef(sourceType, gameObject);

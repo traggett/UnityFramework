@@ -15,7 +15,6 @@ namespace Framework
 				public GUIStyle _toolbarStyle;
 				public GUIStyle _stateLabelStyle;
 				public GUIStyle _stateTextStyle;
-				public GUIStyle _externalStateTextStyle;
 				public GUIStyle _linkTextStyle;
 				public GUIStyle _noteTextStyle;
 
@@ -34,7 +33,6 @@ namespace Framework
 
 				public int _stateLabelFontSize;
 				public int _stateTextFontSize;
-				public int _externalStateTextStyleFontSize;
 				public int _linkTextFontSize;
 				public int _noteFontSize;
 
@@ -61,10 +59,6 @@ namespace Framework
 					_stateTextStyle.fontStyle = FontStyle.Bold;
 					_stateTextStyle.padding = new RectOffset(8, 8, 1, 1);
 					_stateTextFontSize = _stateTextStyle.fontSize;
-
-					_externalStateTextStyle = new GUIStyle(EditorUtils.TextWhiteStyle);
-					_externalStateTextStyle.fontStyle = FontStyle.Bold;
-					_externalStateTextStyleFontSize = _externalStateTextStyle.fontSize;
 
 					_linkTextStyle = new GUIStyle(EditorUtils.TextStyleSmall);
 					_linkTextStyle.fontSize = 10;

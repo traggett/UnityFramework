@@ -157,16 +157,6 @@ namespace Framework
 					SetStateMachine(stateMachine);
 					GetEditorWindow().DoRepaint();
 				}
-				
-				public void LoadExternalState(StateMachineExternalStateEditorGUI state)
-				{
-					if (ShowOnLoadSaveChangesDialog())
-					{
-						StateRef stateRef = state.ExternalStateRef.GetStateRef();
-						string fileName = AssetDatabase.GetAssetPath(stateRef.GetExternalFile()._editorAsset);
-						LoadFile(fileName);
-					}
-				}
 
 #if DEBUG
 				public bool IsDebugging()
@@ -186,23 +176,13 @@ namespace Framework
 				{
 					_style._stateLabelStyle.fontSize = Mathf.RoundToInt(_style._stateLabelFontSize * _currentZoom);
 					_style._stateTextStyle.fontSize = Mathf.RoundToInt(_style._stateTextFontSize * _currentZoom);
-					_style._externalStateTextStyle.fontSize = Mathf.RoundToInt(_style._externalStateTextStyleFontSize * _currentZoom);
 					_style._linkTextStyle.fontSize = Mathf.RoundToInt(_style._linkTextFontSize * _currentZoom);
 					_style._noteTextStyle.fontSize = Mathf.RoundToInt(_style._noteFontSize * _currentZoom);
-
-					SetupExternalState();
-
-					List<StateEditorGUI> toRender = new List<StateEditorGUI>();
-					foreach (StateEditorGUI editorGUI in _editableObjects)
-					{
-						if (!(editorGUI is StateMachineExternalStateEditorGUI))
-							toRender.Add(editorGUI);
-					}
 
 					StateEditorGUI dragHighlightState = null;
 
 					//Update state bounds
-					foreach (StateEditorGUI state in toRender)
+					foreach (StateEditorGUI state in _editableObjects)
 						state.CalcRenderRect(_style);
 
 					//Check dragging a state link onto a state
@@ -222,7 +202,7 @@ namespace Framework
 					}
 
 					//Render each state
-					foreach (StateEditorGUI state in toRender)
+					foreach (StateEditorGUI state in _editableObjects)
 					{					
 						bool selected = (_dragMode != DragType.Custom && _selectedObjects.Contains(state)) || dragHighlightState == state;
 						float borderSize = 2f;
@@ -254,21 +234,18 @@ namespace Framework
 
 						RenderLinkLine(startPos, endPos, _style._linkColor);
 					}
-
-
-					CleanupExternalState();
 				}
 				#endregion
 
 				#region EditableObjectEditor
 				protected override bool CanBeCopied(SerializedObjectEditorGUI<State> editorGUI)
 				{
-					return !(editorGUI.GetEditableObject() is StateMachineEntryState || editorGUI.GetEditableObject() is StateMachineExternalState);
+					return !(editorGUI.GetEditableObject() is StateMachineEntryState);
 				}
 
 				protected override bool CanBeDeleted(SerializedObjectEditorGUI<State> editorGUI)
 				{
-					return !(editorGUI.GetEditableObject() is StateMachineEntryState || editorGUI.GetEditableObject() is StateMachineExternalState);
+					return !(editorGUI.GetEditableObject() is StateMachineEntryState);
 				}
 
 				protected override SerializedObjectEditorGUI<State> CreateObjectEditorGUI(State state)
@@ -323,7 +300,7 @@ namespace Framework
 					{
 						StateEditorGUI state = (StateEditorGUI)_editableObjects[i];
 
-						StateMachineEditorLink[] links = state.GetEditableObject().GetStateLinks();
+						StateMachineEditorLink[] links = state.GetEditableObject().GetEditorStateLinks();
 
 						if (links != null)
 						{
@@ -432,8 +409,6 @@ namespace Framework
 						stateTypes.Remove(typeof(CoroutineState));
 						stateTypes.Remove(typeof(PlayableGraphState));
 						stateTypes.Remove(typeof(StateMachineNote));
-						stateTypes.Remove(typeof(StateMachineExternalState));
-
 
 						_stateTypes = stateTypes.ToArray();
 					}
@@ -475,8 +450,8 @@ namespace Framework
 						else if(editorGUI.GetEditableObject() is StateMachineNote stateMachineNote)
 						{
 							notes.Add(stateMachineNote);
-						}						
-						else if (!(editorGUI is StateMachineExternalStateEditorGUI))
+						}
+						else
 						{
 							states.Add(editorGUI.GetEditableObject());
 						}
@@ -620,13 +595,7 @@ namespace Framework
 
 							if (currentDbugObject != debugObject)
 							{
-								_editorPrefs._debugObject = new ComponentRef<StateMachineComponent>(GameObjectRef.eSourceType.Scene, debugObject);
-
-								if (debugObject != null && _editorPrefs._debugObject.GetComponent() == null)
-								{
-									_editorPrefs._debugObject = new ComponentRef<StateMachineComponent>(GameObjectRef.eSourceType.Prefab, debugObject);
-								}
-
+								_editorPrefs._debugObject = new ComponentRef<StateMachineComponent>(GameObjectRef.SourceType.Scene, debugObject);
 								SaveEditorPrefs();
 							}
 
@@ -708,53 +677,9 @@ namespace Framework
 					return null;
 				}
 				
-				private void RenderExternalLink(StateMachineEditorLink link, StateEditorGUI fromState, int linkIndex, bool selected)
-				{
-					StateMachineExternalStateEditorGUI externalState = null;
-
-					StateRef stateRef = link.GetStateRef();
-
-					//Find external link for this state
-					foreach (StateEditorGUI state in _editableObjects)
-					{
-						StateMachineExternalStateEditorGUI extState = state as StateMachineExternalStateEditorGUI;
-
-						if (extState != null)
-						{						
-							StateRef extStateRef = extState.ExternalStateRef.GetStateRef();
-
-							if (extStateRef.GetStateID() == stateRef.GetStateID() && extStateRef.GetExternalFile().GetFileGUID() == stateRef.GetExternalFile().GetFileGUID())
-							{
-								externalState = extState;
-								break;
-							}
-						}
-						
-					}
-
-					//If none exists, create a new one
-					if (externalState == null)
-					{
-						externalState = (StateMachineExternalStateEditorGUI)AddNewObject(new StateMachineExternalState());
-						externalState.ExternalStateRef = link;
-						_editableObjects.Add(externalState);
-					}
-
-					if (!externalState.ExternalHasRendered)
-					{
-						externalState.CalcRenderRect(_style);
-						Color borderColor = selected ? _style._stateBorderSelectedColor : _style._stateBorderColor;
-						Rect renderedRect = GetScreenRect(externalState.GetBounds());
-						externalState.Render(renderedRect, _style, borderColor, selected ? 2.0f : 1.0f);
-						externalState.ExternalHasRendered = true;
-					}
-
-					RenderLink(link._description, fromState, externalState, linkIndex, selected);
-				}
-
 				private Vector3 GetLinkStartPosition(StateEditorGUI state, int linkIndex = 0)
 				{
-					float fraction = 1.0f / ((state.GetEditableObject().GetStateLinks()).Length + 1.0f);
+					float fraction = 1.0f / ((state.GetEditableObject().GetEditorStateLinks()).Length + 1.0f);
 					float edgeFraction = fraction * (1 + linkIndex);
 
 					Rect stateRect = GetScreenRect(state.GetBounds());
@@ -872,23 +797,16 @@ namespace Framework
 
 				private void RenderLinksForState(StateEditorGUI state, bool selected)
 				{
-					StateMachineEditorLink[] links = state.GetEditableObject().GetStateLinks();
+					StateMachineEditorLink[] links = state.GetEditableObject().GetEditorStateLinks();
 
 					if (links != null)
 					{
 						for (int j = 0; j < links.Length; j++)
 						{
 							StateRef stateRef = links[j].GetStateRef();
+							StateEditorGUI toState = FindStateForLink(stateRef);
 
-							if (stateRef.IsInternal())
-							{
-								StateEditorGUI toState = FindStateForLink(stateRef);
-								RenderLink(links[j]._description, state, toState, j, selected);
-							}
-							else
-							{
-								RenderExternalLink(links[j], state, j, selected);
-							}
+							RenderLink(links[j]._label, state, toState, j, selected);
 						}
 					}				
 				}
@@ -923,34 +841,6 @@ namespace Framework
 					return null;
 				}
 
-				private void SetupExternalState()
-				{
-					foreach (StateEditorGUI state in _editableObjects)
-					{
-						StateMachineExternalStateEditorGUI extState = state as StateMachineExternalStateEditorGUI;
-
-						if (extState != null )
-							extState.ExternalHasRendered = false;
-					}
-				}
-
-				private void CleanupExternalState()
-				{
-					List<StateEditorGUI> states = new List<StateEditorGUI>();
-					foreach (StateEditorGUI editorGUI in _editableObjects)
-						states.Add(editorGUI);
-
-					foreach (StateEditorGUI editorGUI in states)
-					{
-						StateMachineExternalStateEditorGUI extState = editorGUI as StateMachineExternalStateEditorGUI;
-
-						if (extState != null && !extState.ExternalHasRendered)
-						{
-							RemoveObject(editorGUI);
-						}
-					}
-				}
-
 				private void OnDoubleClickState(StateEditorGUI state)
 				{
 					state.OnDoubleClick();
@@ -963,7 +853,7 @@ namespace Framework
 
 				private bool CanDragLinkTo(StateEditorGUI editorGUI)
 				{
-					return !(editorGUI.GetEditableObject() is StateMachineEntryState || editorGUI.GetEditableObject() is StateMachineExternalState || editorGUI.GetEditableObject() is StateMachineNote);
+					return !(editorGUI.GetEditableObject() is StateMachineEntryState || editorGUI.GetEditableObject() is StateMachineNote);
 				}
 
 #if DEBUG

@@ -43,7 +43,7 @@ namespace Framework
 				return null;
 			}
 
-			public static void OnStateStarted(StateMachineComponent stateMachine, State state, string fileName)
+			public static void OnStateStarted(StateMachineComponent stateMachine, State state)
 			{
 				StateMachine parentStateMachine = state._debugParentStateMachine;
 
@@ -62,8 +62,6 @@ namespace Framework
 						stateInfo._stateMachine = parentStateMachine;
 						stateInfo._state = state;
 						stateInfo._time = 0.0f;
-						if (!string.IsNullOrEmpty(fileName))
-							stateInfo._fileName = fileName;
 					}
 				}
 			}

@@ -321,7 +321,7 @@ namespace Framework
 
 				if (_nodegraph != null)
 				{
-					GameObjectRef.FixUpGameObjectRefsInObject(_nodegraph, this.gameObject);
+					GameObjectRef.FixUpGameObjectRefs(_nodegraph, this.gameObject);
 					FixupInputs();
 
 					_outputNodes = _nodegraph.GetOutputNodes();

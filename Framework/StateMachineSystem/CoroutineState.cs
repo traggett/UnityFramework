@@ -12,6 +12,8 @@ namespace Framework
 		public class CoroutineState : State
 		{
 			#region Public Data		
+			public GameObjectRef _testGameObject;
+			public ComponentRef<MonoBehaviour> _testComponent;
 			public CoroutineRef _coroutine;
 
 			[StateLink("And then")]

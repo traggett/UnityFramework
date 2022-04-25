@@ -20,6 +20,7 @@ namespace Framework
 					SerializedProperty pathProp = property.FindPropertyRelative("_scenePath");
 
 					EditorGUI.BeginChangeCheck();
+
 					Object sceneAsset = EditorGUI.ObjectField(filePosition, label, assetProp.objectReferenceValue, typeof(SceneAsset), false);
 		
 					if (EditorGUI.EndChangeCheck())
