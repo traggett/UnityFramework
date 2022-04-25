@@ -123,7 +123,7 @@ namespace Framework
 						StateMachine stateMachine = ConvertToStateMachine();
 
 						//Save to file
-						AssetDatabase.CreateAsset(stateMachine, _currentFileName);
+						AssetDatabase.CreateAsset(stateMachine, AssetUtils.GetAssetPath(_currentFileName));
 						
 						ClearDirtyFlag();
 						

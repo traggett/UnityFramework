@@ -100,7 +100,7 @@ namespace Framework
 						NodeGraph nodeGraph = ConvertToNodeGraph();
 
 						//Save to file
-						AssetDatabase.CreateAsset(nodeGraph, _currentFileName);
+						AssetDatabase.CreateAsset(nodeGraph, AssetUtils.GetAssetPath(_currentFileName));
 
 						ClearDirtyFlag();
 
@@ -540,13 +540,6 @@ namespace Framework
 					}
 
 					return true;
-				}
-
-				private NodeEditorGUI CreateNodeView(Node node)
-				{
-					NodeEditorGUI edtiorView = NodeEditorGUI.CreateInstance<NodeEditorGUI>();
-					edtiorView.Init(this, node);
-					return edtiorView;
 				}
 
 				private void SetNodeGraph(NodeGraph nodeGraph)
