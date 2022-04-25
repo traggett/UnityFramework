@@ -30,7 +30,7 @@ namespace Framework
 				[MenuItem("Assets/Load State Machine")]
 				private static void MenuLoadTimeline()
 				{
-					TextAsset asset = Selection.activeObject as TextAsset;
+					StateMachine asset = Selection.activeObject as StateMachine;
 					if (asset != null)
 					{
 						Load(asset);
@@ -40,23 +40,18 @@ namespace Framework
 				[MenuItem("Assets/Load State Machine", true)]
 				private static bool ValidateMenuLoadTimeline()
 				{
-					TextAsset asset = Selection.activeObject as TextAsset;
+					StateMachine asset = Selection.activeObject as StateMachine;
 
-					if (asset != null)
-					{
-						return Serializer.DoesAssetContainObject<StateMachine>(asset);
-					}
-
-					return false;
+					return asset != null;
 				}
 				#endregion
 
-				public static void Load(TextAsset textAsset)
+				public static void Load(StateMachine stateMachine)
 				{
 					if (_instance == null)
 						CreateWindow();
 
-					string fileName = AssetDatabase.GetAssetPath(textAsset);
+					string fileName = AssetDatabase.GetAssetPath(stateMachine);
 					_instance.Load(fileName);
 					_instance.Focus();
 				}

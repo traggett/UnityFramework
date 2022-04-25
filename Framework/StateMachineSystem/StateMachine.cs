@@ -9,7 +9,7 @@ namespace Framework
 	namespace StateMachineSystem
 	{
 		[Serializable]
-		public class StateMachine : ISerializationCallbackReceiver
+		public class StateMachine : ScriptableObject, ISerializationCallbackReceiver
 		{
 			#region Public Data
 			public string _name;
@@ -32,22 +32,15 @@ namespace Framework
 				FixUpStates(this);
 #if DEBUG
 				foreach (State state in _states)
-					state._debugParentStateMachine = this;
+				{
+					if (state != null)
+						state._debugParentStateMachine = this;
+				}			
 #endif
 			}
 			#endregion
 
 			#region Public Interface
-			public static StateMachine FromTextAsset(TextAsset asset, GameObject sourceObject = null)
-			{
-				StateMachine stateMachine = Serializer.FromTextAsset<StateMachine>(asset);
-
-				if (sourceObject != null)
-					GameObjectRef.FixUpGameObjectRefs(stateMachine, sourceObject);
-
-				return stateMachine;
-			}
-
 			public State GetState(int stateId)
 			{
 				foreach (State state in _states)

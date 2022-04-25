@@ -10,7 +10,7 @@ namespace Framework
 	namespace NodeGraphSystem
 	{
 		[Serializable]
-		public class NodeGraph : ISerializationCallbackReceiver
+		public class NodeGraph : ScriptableObject, ISerializationCallbackReceiver
 		{
 			#region Public Data
 			public Node[] _nodes = new Node[0];
@@ -114,7 +114,7 @@ namespace Framework
 				}
 			}
 
-			public void Update(float deltaTime)
+			public void UpdateGraph(float deltaTime)
 			{
 				_time += deltaTime;
 

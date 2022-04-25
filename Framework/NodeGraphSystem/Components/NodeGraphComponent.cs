@@ -14,11 +14,11 @@ namespace Framework
 		{
 			#region Public Data
 			public bool _unscaledTime = false;
-			public NodeGraphRefProperty _nodeGraphRef;
+			public NodeGraph _nodeGraph;
 			#endregion
 
 			#region Protected Data
-			protected NodeGraph _nodegraph;
+			protected NodeGraph _currentNodeGraph;
 			#endregion
 
 			#region Private Data 
@@ -234,7 +234,7 @@ namespace Framework
 			#region Unity Messages
 			void OnEnable()
 			{
-				if (Application.isPlaying && _nodegraph == null)
+				if (Application.isPlaying && _currentNodeGraph == null)
 				{
 					TryLoadNodeGraph();
 				}
@@ -242,7 +242,7 @@ namespace Framework
 
 			void OnDisable()
 			{
-				_nodegraph = null;
+				_currentNodeGraph = null;
 			}
 
 			void Update()
@@ -252,15 +252,15 @@ namespace Framework
 
 			void LateUpdate()
 			{
-				if (_nodegraph != null)
-					_nodegraph.Update(_unscaledTime ? Time.unscaledDeltaTime : Time.deltaTime);
+				if (_currentNodeGraph != null)
+					_currentNodeGraph.UpdateGraph(_unscaledTime ? Time.unscaledDeltaTime : Time.deltaTime);
 			}
 			#endregion
 
 			#region Public Interface
 			public NodeGraph GetNodeGraph()
 			{
-				return _nodegraph;
+				return _currentNodeGraph;
 			}
 
 			public Node[] GetOutputNodes()
@@ -306,25 +306,23 @@ namespace Framework
 			#region Private Functions 
 			public void TryLoadNodeGraph()
 			{
-				if (_nodegraph == null)
+				if (_currentNodeGraph == null)
 				{
 					LoadNodeGraph();
 
-					if (_nodegraph != null)
-						_nodegraph.Init();
+					if (_currentNodeGraph != null)
+						_currentNodeGraph.Init();
 				}
 			}
 
 			private void LoadNodeGraph()
 			{
-				_nodegraph = _nodeGraphRef.LoadNodeGraph();
-
-				if (_nodegraph != null)
+				if (_nodeGraph != null)
 				{
-					GameObjectRef.FixUpGameObjectRefs(_nodegraph, this.gameObject);
+					GameObjectRef.FixUpGameObjectRefs(_currentNodeGraph, this.gameObject);
 					FixupInputs();
 
-					_outputNodes = _nodegraph.GetOutputNodes();
+					_outputNodes = _currentNodeGraph.GetOutputNodes();
 				}
 			}
 
@@ -333,7 +331,7 @@ namespace Framework
 			{
 				if (!Application.isPlaying)
 				{
-					if (_nodegraph == null || _nodegraph._nodes.Length == 0)
+					if (_currentNodeGraph == null || _currentNodeGraph._nodes.Length == 0)
 						LoadNodeGraph();
 				}
 			}
@@ -367,7 +365,7 @@ namespace Framework
 				{
 					for (int i= 0; i<inputArray.Length; i++)
 					{
-						Node node = _nodegraph.GetNode(inputArray[i].GetNodeId());
+						Node node = _currentNodeGraph.GetNode(inputArray[i].GetNodeId());
 
 						if (node != null && node is InputNode<TValue>)
 						{

@@ -98,7 +98,9 @@ namespace Framework
 					{
 						//Save to file
 						NodeGraph nodeGraph = ConvertToNodeGraph();
-						Serializer.ToFile(nodeGraph, _currentFileName);
+
+						//Save to file
+						AssetDatabase.CreateAsset(nodeGraph, _currentFileName);
 
 						ClearDirtyFlag();
 
@@ -117,7 +119,7 @@ namespace Framework
 
 				public void SaveAs()
 				{
-					string path = EditorUtility.SaveFilePanelInProject("Save Node Graph", System.IO.Path.GetFileNameWithoutExtension(_currentFileName), "xml", "Please enter a file name to save the node graph to");
+					string path = EditorUtility.SaveFilePanelInProject("Save Node Graph", System.IO.Path.GetFileNameWithoutExtension(_currentFileName), "asset", "Please enter a file name to save the node graph to");
 
 					if (!string.IsNullOrEmpty(path))
 					{
@@ -430,7 +432,7 @@ namespace Framework
 							{
 								if (ShowOnLoadSaveChangesDialog())
 								{
-									string fileName = EditorUtility.OpenFilePanel("Open File", Application.dataPath + "/gamedata", "xml");
+									string fileName = EditorUtility.OpenFilePanel("Open File", Application.dataPath, "asset");
 									if (fileName != null && fileName != string.Empty)
 									{
 										LoadFile(fileName);
@@ -497,22 +499,10 @@ namespace Framework
 				private void LoadFile(string fileName)
 				{
 					_currentFileName = fileName;
-					NodeGraph nodeMachine = null;
 
-					try
-					{
-						nodeMachine = Serializer.FromFile<NodeGraph>(fileName);
-					}
-					catch (ObjectNotFoundException)
-					{
-						EditorUtility.DisplayDialog("Node Graph Editor", AssetUtils.GetAssetPath(_currentFileName) + " does not contain a valid Node Graph.", "Ok");
-					}
-					catch (CorruptFileException)
-					{
-						EditorUtility.DisplayDialog("Node Graph Editor", AssetUtils.GetAssetPath(_currentFileName) + " is corrupt.", "Ok");
-					}
+					NodeGraph nodeGraph = AssetDatabase.LoadAssetAtPath<NodeGraph>(AssetUtils.GetAssetPath(fileName));
 
-					if (nodeMachine != null)
+					if (nodeGraph != null)
 					{
 						if (_editorPrefs._fileName != fileName)
 						{
@@ -520,7 +510,7 @@ namespace Framework
 							SaveEditorPrefs();
 						}
 
-						SetNodeGraph(nodeMachine);
+						SetNodeGraph(nodeGraph);
 					}
 					else
 					{

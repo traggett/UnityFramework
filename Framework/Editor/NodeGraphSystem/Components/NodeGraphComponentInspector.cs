@@ -175,7 +175,7 @@ namespace Framework
 				private void ReloadNodeGraph()
 				{
 					NodeGraphComponent nodeGraphComponent = (NodeGraphComponent)target;
-					_nodeGraph = nodeGraphComponent._nodeGraphRef.LoadNodeGraph();
+					_nodeGraph = nodeGraphComponent._nodeGraph;
 				}
 
 				private void SyncInputNodes(Node[] inputNodes)

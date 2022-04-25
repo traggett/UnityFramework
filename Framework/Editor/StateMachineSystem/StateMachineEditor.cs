@@ -120,10 +120,10 @@ namespace Framework
 					if (!string.IsNullOrEmpty(_currentFileName))
 					{
 						//Update state machine name to reflect filename
-						StateMachine stateMachine = ConvertToStateMachine();	
+						StateMachine stateMachine = ConvertToStateMachine();
 
 						//Save to file
-						Serializer.ToFile(stateMachine, _currentFileName);
+						AssetDatabase.CreateAsset(stateMachine, _currentFileName);
 						
 						ClearDirtyFlag();
 						
@@ -137,7 +137,7 @@ namespace Framework
 
 				public void SaveAs()
 				{
-					string path = EditorUtility.SaveFilePanelInProject("Save state machine", System.IO.Path.GetFileNameWithoutExtension(_currentFileName), "xml", "Please enter a file name to save the state machine to");
+					string path = EditorUtility.SaveFilePanelInProject("Save state machine", System.IO.Path.GetFileNameWithoutExtension(_currentFileName), "asset", "Please enter a file name to save the state machine to");
 
 					if (!string.IsNullOrEmpty(path))
 					{
@@ -409,6 +409,7 @@ namespace Framework
 						stateTypes.Remove(typeof(CoroutineState));
 						stateTypes.Remove(typeof(PlayableGraphState));
 						stateTypes.Remove(typeof(StateMachineNote));
+						stateTypes.Remove(typeof(StateMachineEntryState));
 
 						_stateTypes = stateTypes.ToArray();
 					}
@@ -479,21 +480,7 @@ namespace Framework
 				{
 					_currentFileName = fileName;
 
-					StateMachine stateMachine = null;
-
-					try
-					{
-						stateMachine = Serializer.FromFile<StateMachine>(fileName);
-					}
-					catch (ObjectNotFoundException)
-					{
-						EditorUtility.DisplayDialog("StateMachine Editor", AssetUtils.GetAssetPath(_currentFileName) + " does not contain a valid StateMachine.", "Ok");
-					}
-					catch (CorruptFileException)
-					{
-						EditorUtility.DisplayDialog("StateMachine Editor", AssetUtils.GetAssetPath(_currentFileName) + " is corrupt.", "Ok");
-					}
-
+					StateMachine stateMachine = AssetDatabase.LoadAssetAtPath<StateMachine>(AssetUtils.GetAssetPath(fileName));
 
 					if (stateMachine != null)
 					{
@@ -568,7 +555,7 @@ namespace Framework
 							{
 								if (ShowOnLoadSaveChangesDialog())
 								{
-									string fileName = EditorUtility.OpenFilePanel("Open File", Application.dataPath + "/gamedata", "xml");
+									string fileName = EditorUtility.OpenFilePanel("Open File", Application.dataPath, "asset");
 									if (fileName != null && fileName != string.Empty)
 									{
 										LoadFile(fileName);
