@@ -19,7 +19,7 @@ namespace Framework
 
 				public object GetValue()
 				{
-					object inputValueInstance = _fieldInfo.GetValue(_nodeEditorGUI.GetEditableObject());
+					object inputValueInstance = _fieldInfo.GetValue(_nodeEditorGUI.Asset);
 
 					if (inputValueInstance == null)
 					{
@@ -42,7 +42,7 @@ namespace Framework
 
 				public void SetValue(object value)
 				{
-					_fieldInfo.SetValue(_nodeEditorGUI.GetEditableObject(), value);
+					_fieldInfo.SetValue(_nodeEditorGUI.Asset, value);
 				}
 			}
 		}

@@ -15,7 +15,7 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			public sealed class NodeEditorGUI : SerializedObjectEditorGUI<Node>
+			public sealed class NodeEditorGUI : SerializedObjectEditorGUI<NodeGraph, Node>
 			{
 				#region Private Data
 				private static readonly float kShadowSize = 3.0f;
@@ -40,7 +40,7 @@ namespace Framework
 				#region SerializedObjectEditorGUI
 				protected override void OnSetObject()
 				{
-					FieldInfo[] inputFields = GetEditableObject().GetEditorInputFields();
+					FieldInfo[] inputFields = Asset.GetEditorInputFields();
 					_inputNodeFields = new NodeEditorField[inputFields.Length];
 
 					for (int i=0; i< _inputNodeFields.Length; i++)
@@ -53,7 +53,7 @@ namespace Framework
 					}
 
 					_outputField = null;
-					Type outputType = SystemUtils.GetGenericImplementationType(typeof(IValueSource<>), GetEditableObject().GetType());
+					Type outputType = SystemUtils.GetGenericImplementationType(typeof(IValueSource<>), Asset.GetType());
 					if (outputType != null)
 					{
 						_outputField = new NodeEditorField();
@@ -67,13 +67,13 @@ namespace Framework
 
 				public override void SetPosition(Vector2 position)
 				{
-					GetEditableObject()._editorPosition = position;
-					MarkAsDirty(true);
+					Undo.RecordObject(Asset, "Move");
+					Asset._editorPosition = position;
 				}
 
 				public override Vector2 GetPosition()
 				{
-					return GetEditableObject()._editorPosition;
+					return Asset._editorPosition;
 				}
 
 				public override Rect GetBounds()
@@ -107,21 +107,21 @@ namespace Framework
 
 						//Draw main background
 						Rect labelRect = new Rect(mainBox.x + 1.0f, mainBox.y + 1.0f, mainBox.width - 2.0f, kLineHeight * 2.0f * scale);
-						EditorUtils.DrawColoredRoundedBox(labelRect, GetEditableObject().GetEditorColor());
+						EditorUtils.DrawColoredRoundedBox(labelRect, Asset.GetEditorColor());
 
 						//Draw label			
 						GUI.BeginGroup(labelRect);
 						{
 							float h, s, v;
-							Color.RGBToHSV(GetEditableObject().GetEditorColor(), out h, out s, out v);
+							Color.RGBToHSV(Asset.GetEditorColor(), out h, out s, out v);
 							titleStyle.normal.textColor = v > 0.66f ? Color.black : Color.white;
 
 							GUI.backgroundColor = Color.clear;
 							titleStyle.fontStyle = FontStyle.Bold;
 							//GetEditableObject()._editorDescription = GUI.TextField(new Rect(kTextPadding * scale, -2.0f * scale, labelRect.width - kTextPadding * 2.0f * scale, kLableHeight * scale), GetEditableObject()._editorDescription, titleStyle);
-							EditorGUI.LabelField(new Rect(kTextPadding * scale, -2.0f * scale, labelRect.width - kTextPadding * 2.0f * scale, kLableHeight * scale), GetEditableObject()._editorDescription, titleStyle);
+							EditorGUI.LabelField(new Rect(kTextPadding * scale, -2.0f * scale, labelRect.width - kTextPadding * 2.0f * scale, kLableHeight * scale), Asset._editorDescription, titleStyle);
 
-							string nodeTypeText = "<b>(" + StringUtils.FromPropertyCamelCase(GetEditableObject().GetType().Name) + ")</b>";
+							string nodeTypeText = "<b>(" + StringUtils.FromPropertyCamelCase(Asset.GetType().Name) + ")</b>";
 							textStyle.alignment = TextAnchor.MiddleLeft;
 							GUI.Label(new Rect(kTextPadding * scale, (kLineHeight - 4.0f) * scale, labelRect.width - kTextPadding * 2.0f * scale, kLableHeight * scale), nodeTypeText, textStyle);
 						}
@@ -191,10 +191,10 @@ namespace Framework
 
 					//Work out width and height
 					{
-						string nodeDescriptionText = "<b>" + GetEditableObject()._editorDescription + "</b>";
+						string nodeDescriptionText = "<b>" + Asset._editorDescription + "</b>";
 						float descriptionWidth = titleStyle.CalcSize(new GUIContent(nodeDescriptionText)).x;
 
-						string nodeTypeText = "<b>(" + StringUtils.FromPropertyCamelCase(GetEditableObject().GetType().Name) + ")</b>";
+						string nodeTypeText = "<b>(" + StringUtils.FromPropertyCamelCase(Asset.GetType().Name) + ")</b>";
 						float nodeTypeWidth = textStyle.CalcSize(new GUIContent(nodeTypeText)).x;
 
 						float titleBoxwidth = Mathf.Max(nodeTypeWidth, descriptionWidth) + ((kTextPadding * 2.0f) * scale) + 2.0f;
@@ -266,7 +266,7 @@ namespace Framework
 
 				public bool HasOutput()
 				{
-					return !SystemUtils.IsSubclassOfRawGeneric(typeof(OutputNode<,>), GetEditableObject().GetType()) && SystemUtils.IsSubclassOfRawGeneric(typeof(IValueSource<>), GetEditableObject().GetType());
+					return !SystemUtils.IsSubclassOfRawGeneric(typeof(OutputNode<,>), Asset.GetType()) && SystemUtils.IsSubclassOfRawGeneric(typeof(IValueSource<>), Asset.GetType());
 				}
 				#endregion
 			}

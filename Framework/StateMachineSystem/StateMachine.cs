@@ -12,11 +12,15 @@ namespace Framework
 		public class StateMachine : ScriptableObject, ISerializationCallbackReceiver
 		{
 			#region Public Data
+			[HideInInspector]
 			public string _name;
+			[HideInInspector]
 			public StateMachineEntryState _entryState;
+			[HideInInspector]
 			public State[] _states = new State[0];
 
 #if UNITY_EDITOR
+			[HideInInspector]
 			public StateMachineNote[] _editorNotes = new StateMachineNote[0];
 #endif
 			#endregion

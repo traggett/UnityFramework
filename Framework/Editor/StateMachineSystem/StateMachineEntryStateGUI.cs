@@ -14,7 +14,7 @@ namespace Framework
 			{
 				public override void CalcRenderRect(StateMachineEditorStyle style)
 				{
-					GUIContent stateId = new GUIContent(GetEditableObject().GetEditorLabel());
+					GUIContent stateId = new GUIContent(Asset.GetEditorLabel());
 					Vector2 labelDimensions = style._stateLabelStyle.CalcSize(stateId);
 					
 					float areaWidth = labelDimensions.x + style._shadowSize + (kMaxBorderSize * 2.0f);
@@ -35,7 +35,7 @@ namespace Framework
 				{
 					GUIStyle labelStyle = style._stateLabelStyle;
 					
-					Color stateColor = GetEditableObject().GetEditorColor();
+					Color stateColor = Asset.GetEditorColor();
 
 					//Update text colors to contrast state color
 					{
@@ -46,7 +46,7 @@ namespace Framework
 						labelStyle.alignment = TextAnchor.MiddleCenter;
 					}
 
-					GUIContent stateId = new GUIContent(GetEditableObject().GetEditorLabel());
+					GUIContent stateId = new GUIContent(Asset.GetEditorLabel());
 					borderSize = Mathf.Min(borderSize, kMaxBorderSize);
 					float borderOffset = kMaxBorderSize - borderSize;
 

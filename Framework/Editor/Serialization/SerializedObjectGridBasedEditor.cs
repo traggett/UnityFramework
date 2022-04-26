@@ -4,7 +4,7 @@ namespace Framework
 {
 	namespace Serialization
 	{
-		public abstract class SerializedObjectGridBasedEditor<T> : SerializedObjectEditor<T> where T : ScriptableObject
+		public abstract class SerializedObjectGridBasedEditor<TAsset, TSubAsset> : SerializedObjectEditor<TAsset, TSubAsset> where TAsset : ScriptableObject where TSubAsset : ScriptableObject
 		{
 			#region Protected Data
 			protected float _currentZoom = 1.0f;
@@ -62,7 +62,7 @@ namespace Framework
 				}
 			}
 
-			protected void CenterCameraOn(SerializedObjectEditorGUI<T> editorGUI)
+			protected void CenterCameraOn(SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI)
 			{
 				_cameraPosition = -editorGUI.GetPosition();
 			}
@@ -71,11 +71,11 @@ namespace Framework
 			{
 				if (_editableObjects.Count > 0)
 				{
-					Rect maxBounds = ((SerializedObjectEditorGUI<T>)_editableObjects[0]).GetBounds();
+					Rect maxBounds = ((SerializedObjectEditorGUI<TAsset, TSubAsset>)_editableObjects[0]).GetBounds();
 
 					for (int i = 1; i < _editableObjects.Count; i++)
 					{
-						SerializedObjectEditorGUI<T> editorGUI = (SerializedObjectEditorGUI<T>)_editableObjects[i];
+						SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI = (SerializedObjectEditorGUI<TAsset, TSubAsset>)_editableObjects[i];
 						maxBounds.xMin = Mathf.Min(maxBounds.xMin, editorGUI.GetBounds().xMin);
 						maxBounds.xMax = Mathf.Max(maxBounds.xMax, editorGUI.GetBounds().xMax);
 						maxBounds.yMin = Mathf.Min(maxBounds.yMin, editorGUI.GetBounds().yMin);
@@ -135,7 +135,7 @@ namespace Framework
 			{
 				delta *= (1.0f / _currentZoom);
 
-				foreach (SerializedObjectEditorGUI<T> editorGUI in _selectedObjects)
+				foreach (SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI in _selectedObjects)
 				{
 					editorGUI.SetPosition(editorGUI.GetPosition() + delta);
 				}

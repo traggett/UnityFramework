@@ -13,6 +13,10 @@ namespace Framework
 			#region Serialized Data
 			[SerializeField]
 			private int _stateId;
+
+			//Editor properties
+			[HideInInspector]
+			public Vector2 _editorPosition;
 			#endregion
 
 			#region Private Data
@@ -55,6 +59,7 @@ namespace Framework
 				_stateId = stateId;
 				_parentStateMachine = null;
 				_state = null;
+				_editorPosition = new Vector2(0f, 0f);
 			}
 
 			public int GetStateID()

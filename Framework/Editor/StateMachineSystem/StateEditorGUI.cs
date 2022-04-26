@@ -13,7 +13,7 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			public class StateEditorGUI : SerializedObjectEditorGUI<State>
+			public class StateEditorGUI : SerializedObjectEditorGUI<StateMachine, State>
 			{
 				#region Private Data
 				private static Dictionary<Type, Type> _editorGUIConstructorMap = null;
@@ -32,13 +32,13 @@ namespace Framework
 				#region SerializedObjectEditorGUI
 				public override void SetPosition(Vector2 position)
 				{
-					GetEditableObject()._editorPosition = position;
-					MarkAsDirty(true);
+					Undo.RecordObject(Asset, "Move");
+					Asset._editorPosition = position;
 				}
 
 				public override Vector2 GetPosition()
 				{
-					return GetEditableObject()._editorPosition;
+					return Asset._editorPosition;
 				}
 
 				public override Rect GetBounds()
@@ -54,15 +54,15 @@ namespace Framework
 				#region Public Interface
 				public int GetStateId()
 				{
-					return GetEditableObject()._stateId;
+					return Asset._stateId;
 				}
 
 				public string GetStateDescription()
 				{
-					if (GetEditableObject()._editorAutoDescription)
-						return GetEditableObject().GetEditorDescription();
+					if (Asset._editorAutoDescription)
+						return Asset.GetEditorDescription();
 
-					return GetEditableObject()._editorDescription;
+					return Asset._editorDescription;
 				}
 
 				public static StateEditorGUI CreateStateEditorGUI(StateMachineEditor editor, State state)
@@ -100,7 +100,7 @@ namespace Framework
 				#region Virtual Interface
 				public virtual void CalcRenderRect(StateMachineEditorStyle style)
 				{
-					GUIContent label = new GUIContent(GetEditableObject().GetEditorLabel());
+					GUIContent label = new GUIContent(Asset.GetEditorLabel());
 					GUIContent content = new GUIContent(GetStateDescription());
 
 					GUIStyle labelStyle = style._stateLabelStyle;
@@ -129,7 +129,7 @@ namespace Framework
 					GUIStyle labelStyle = style._stateLabelStyle;
 					GUIStyle contentStyle = style._stateTextStyle;
 
-					Color stateColor = GetEditableObject().GetEditorColor();
+					Color stateColor = Asset.GetEditorColor();
 
 					//Update text colors to contrast state color
 					{
@@ -142,7 +142,7 @@ namespace Framework
 						contentStyle.hover.textColor = textColor;
 					}
 
-					GUIContent stateId = new GUIContent(GetEditableObject().GetEditorLabel());
+					GUIContent stateId = new GUIContent(Asset.GetEditorLabel());
 					float labelHeight = labelStyle.CalcSize(stateId).y;			
 					borderSize = Mathf.Min(borderSize, kMaxBorderSize);
 					float borderOffset = kMaxBorderSize - borderSize;
@@ -189,13 +189,13 @@ namespace Framework
 						EditorGUI.indentLevel++;
 
 						EditorGUI.BeginChangeCheck();
-						GetEditableObject()._editorAutoDescription = EditorGUILayout.Toggle("Auto", GetEditableObject()._editorAutoDescription);
+						Asset._editorAutoDescription = EditorGUILayout.Toggle("Auto", Asset._editorAutoDescription);
 						dataChanged = EditorGUI.EndChangeCheck();
 
-						if (!GetEditableObject()._editorAutoDescription)
+						if (!Asset._editorAutoDescription)
 						{
 							EditorGUI.BeginChangeCheck();
-							GetEditableObject()._editorDescription = EditorGUILayout.TextArea(GetEditableObject()._editorDescription);
+							Asset._editorDescription = EditorGUILayout.TextArea(Asset._editorDescription);
 							dataChanged |= EditorGUI.EndChangeCheck();
 						}
 
@@ -217,13 +217,13 @@ namespace Framework
 						EditorGUI.indentLevel++;
 
 						EditorGUI.BeginChangeCheck();
-						GetEditableObject()._editorAutoColor = EditorGUILayout.Toggle("Auto", GetEditableObject()._editorAutoColor);
+						Asset._editorAutoColor = EditorGUILayout.Toggle("Auto", Asset._editorAutoColor);
 						dataChanged = EditorGUI.EndChangeCheck();
 
-						if (!GetEditableObject()._editorAutoColor)
+						if (!Asset._editorAutoColor)
 						{
 							EditorGUI.BeginChangeCheck();
-							GetEditableObject()._editorColor = EditorGUILayout.ColorField("Color", GetEditableObject()._editorColor);
+							Asset._editorColor = EditorGUILayout.ColorField("Color", Asset._editorColor);
 							dataChanged |= EditorGUI.EndChangeCheck();
 						}
 

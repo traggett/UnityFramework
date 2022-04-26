@@ -7,7 +7,6 @@ using UnityEditor;
 namespace Framework
 {
 	using Serialization;
-	using System.Reflection;
 	using Utils;
 	using Utils.Editor;
 	
@@ -15,18 +14,14 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			public sealed class StateMachineEditor : SerializedObjectGridBasedEditor<State>
+			public sealed class StateMachineEditor : SerializedObjectGridBasedEditor<StateMachine, State>
 			{
 				#region Private Data
-				private static readonly float kDoubleClickTime = 0.32f;
-
 				private string _title;
 				private string _editorPrefsTag;
 				private StateMachineEditorStyle _style;
 				private StateMachineEditorPrefs _editorPrefs;
 				
-				private string _currentFileName;
-
 				private Type[] _stateTypes;
 		
 				private StateEditorGUI _lastClickedState;
@@ -100,7 +95,7 @@ namespace Framework
 				{
 					if (HasChanges())
 					{
-						if (EditorUtility.DisplayDialog("State Machine Has Been Modified", "Do you want to save the changes you made to the state machine:\n\n" + AssetUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
+						if (EditorUtility.DisplayDialog("State Machine Has Been Modified", "Do you want to save the changes you made to the state machine:\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
 						{
 							Save();
 						}
@@ -115,47 +110,39 @@ namespace Framework
 					}
 				}
 
-				public void Save()
-				{
-					if (!string.IsNullOrEmpty(_currentFileName))
-					{
-						//Update state machine name to reflect filename
-						StateMachine stateMachine = ConvertToStateMachine();
-
-						//Save to file
-						AssetDatabase.CreateAsset(stateMachine, AssetUtils.GetAssetPath(_currentFileName));
-						
-						ClearDirtyFlag();
-						
-						GetEditorWindow().DoRepaint();
-					}
-					else
-					{
-						SaveAs();
-					}
-				}
-
 				public void SaveAs()
 				{
-					string path = EditorUtility.SaveFilePanelInProject("Save state machine", System.IO.Path.GetFileNameWithoutExtension(_currentFileName), "asset", "Please enter a file name to save the state machine to");
+					string path = EditorUtility.SaveFilePanelInProject("Save state machine", Asset.name, "asset", "Please enter a file name to save the state machine to");
 
 					if (!string.IsNullOrEmpty(path))
 					{
-						_currentFileName = path;
-						Save();
+						SaveAs(path);
 					}
 				}
 
 				public void New()
 				{
-					_currentFileName = null;
-					_editorPrefs._fileName = null;
-					_editorPrefs._stateId = -1;
-					SaveEditorPrefs();
+					if (ShowOnLoadSaveChangesDialog())
+					{
+						string path = EditorUtility.SaveFilePanelInProject("New State Machine", "StateMachine", "asset", "Please enter a file name to save the state machine to");
 
-					StateMachine stateMachine = new StateMachine();
-					SetStateMachine(stateMachine);
-					GetEditorWindow().DoRepaint();
+						if (!string.IsNullOrEmpty(path))
+						{
+							_editorPrefs._fileName = path;
+							_editorPrefs._stateId = -1;
+							SaveEditorPrefs();
+
+							Create(path);
+						}
+						else
+						{
+							_editorPrefs._fileName = null;
+							_editorPrefs._stateId = -1;
+							SaveEditorPrefs();
+
+							ClearAsset();
+						}
+					}
 				}
 
 #if DEBUG
@@ -207,7 +194,7 @@ namespace Framework
 						bool selected = (_dragMode != DragType.Custom && _selectedObjects.Contains(state)) || dragHighlightState == state;
 						float borderSize = 2f;
 
-						if (state.GetEditableObject() is StateMachineNote)
+						if (state.Asset is StateMachineNote)
 						{
 							borderSize = selected ? 1f : 0f;
 						}
@@ -238,17 +225,17 @@ namespace Framework
 				#endregion
 
 				#region EditableObjectEditor
-				protected override bool CanBeCopied(SerializedObjectEditorGUI<State> editorGUI)
+				protected override bool CanBeCopied(SerializedObjectEditorGUI<StateMachine, State> editorGUI)
 				{
-					return !(editorGUI.GetEditableObject() is StateMachineEntryState);
+					return !(editorGUI.Asset is StateMachineEntryState);
 				}
 
-				protected override bool CanBeDeleted(SerializedObjectEditorGUI<State> editorGUI)
+				protected override bool CanBeDeleted(SerializedObjectEditorGUI<StateMachine, State> editorGUI)
 				{
-					return !(editorGUI.GetEditableObject() is StateMachineEntryState);
+					return !(editorGUI.Asset is StateMachineEntryState);
 				}
 
-				protected override SerializedObjectEditorGUI<State> CreateObjectEditorGUI(State state)
+				protected override SerializedObjectEditorGUI<StateMachine, State> CreateObjectEditorGUI(State state)
 				{
 					StateEditorGUI editorGUI = StateEditorGUI.CreateStateEditorGUI(this, state);
 					editorGUI.CalcRenderRect(_style);
@@ -257,10 +244,13 @@ namespace Framework
 
 				protected override void OnCreatedNewObject(State state)
 				{
-					bool isNote = state is StateMachineNote;
-
-					if (isNote)
+					if (state is StateMachineEntryState)
 					{
+						state.name = "Start State";
+					}
+					else if(state is StateMachineNote)
+					{
+						state.name = "Note";
 						state._editorDescription = "New Note";
 					}
 					else
@@ -268,29 +258,11 @@ namespace Framework
 						if (state._stateId == -1)
 							state._stateId = GenerateNewStateId();
 
+						state.name = "State_" + state._stateId.ToString("000");
+
 						if (string.IsNullOrEmpty(state._editorDescription))
 							state._editorDescription = "State" + state._stateId;
 					}
-
-					//Create a temporary stateMachine and fixUp any StateRefs etc using it
-					StateMachine stateMachine = ConvertToStateMachine();
-					stateMachine.FixUpStates(stateMachine);
-				}
-
-				protected override State CreateCopyFrom(SerializedObjectEditorGUI<State> editorGUI)
-				{
-					StateEditorGUI timeLineGUI = (StateEditorGUI)editorGUI;
-					State newState = Serializer.CreateCopy(timeLineGUI.GetEditableObject());
-
-					newState._editorDescription = timeLineGUI.GetStateDescription() + " (Copy)";
-					newState._stateId = GenerateNewStateId();
-
-					return newState;
-				}
-
-				protected override void SetObjectPosition(SerializedObjectEditorGUI<State> editorGUI, Vector2 position)
-				{
-					editorGUI.GetEditableObject()._editorPosition = position;
 				}
 
 				protected override void OnLeftMouseDown(Event inputEvent)
@@ -300,7 +272,7 @@ namespace Framework
 					{
 						StateEditorGUI state = (StateEditorGUI)_editableObjects[i];
 
-						StateMachineEditorLink[] links = state.GetEditableObject().GetEditorStateLinks();
+						StateMachineEditorLink[] links = state.Asset.GetEditorStateLinks();
 
 						if (links != null)
 						{
@@ -379,11 +351,11 @@ namespace Framework
 
 							if (draggedOnToState != null)
 							{
-								_draggingStateLink.SetStateRef(new StateRef(draggedOnToState.GetStateId()));
+								SetStateLink(_draggingState.Asset, _draggingStateLink, new StateRef(draggedOnToState.GetStateId()));
 							}
 							else
 							{
-								_draggingStateLink.SetStateRef(new StateRef());
+								SetStateLink(_draggingState.Asset, _draggingStateLink, new StateRef());
 							}
 						}
 
@@ -425,6 +397,22 @@ namespace Framework
 						menu.AddItem(new GUIContent("Add " + _stateTypes[i].Name), false, AddNewStateMenuCallback, _stateTypes[i]);
 					}
 				}
+
+				protected override void OnLoadAsset(StateMachine asset)
+				{
+#if DEBUG
+					_playModeHighlightedState = null;
+#endif
+
+					//If no entry state is found create one now
+					if (asset._entryState == null)
+					{
+						asset._entryState = CreateAndAddNewObject<StateMachineEntryState>();
+					}
+
+					CenterCamera();
+				}
+
 				#endregion
 
 				#region Private Functions
@@ -434,40 +422,8 @@ namespace Framework
 					ProjectEditorPrefs.SetString(_editorPrefsTag, prefsXml);
 				}
 
-				private StateMachine ConvertToStateMachine()
-				{
-					StateMachine stateMachine = new StateMachine();
-					stateMachine._name = System.IO.Path.GetFileNameWithoutExtension(_currentFileName);
-
-					List<State> states = new List<State>();
-					List<StateMachineNote> notes = new List<StateMachineNote>();
-
-					foreach (StateEditorGUI editorGUI in _editableObjects)
-					{
-						if (editorGUI.GetEditableObject() is StateMachineEntryState entryState)
-						{
-							stateMachine._entryState = entryState;
-						}			
-						else if(editorGUI.GetEditableObject() is StateMachineNote stateMachineNote)
-						{
-							notes.Add(stateMachineNote);
-						}
-						else
-						{
-							states.Add(editorGUI.GetEditableObject());
-						}
-					}
-
-					stateMachine._states = states.ToArray();
-					stateMachine._editorNotes = notes.ToArray();
-					
-					return stateMachine;
-				}
-
 				private void CreateViews()
 				{
-					_currentFileName = string.Empty;
-
 					_currentZoom = _editorPrefs._zoom;
 
 					if (!string.IsNullOrEmpty(_editorPrefs._fileName))
@@ -478,8 +434,6 @@ namespace Framework
 
 				private void LoadFile(string fileName)
 				{
-					_currentFileName = fileName;
-
 					StateMachine stateMachine = AssetDatabase.LoadAssetAtPath<StateMachine>(AssetUtils.GetAssetPath(fileName));
 
 					if (stateMachine != null)
@@ -491,7 +445,7 @@ namespace Framework
 							SaveEditorPrefs();
 						}
 
-						SetStateMachine(stateMachine);
+						Load(stateMachine);
 					}
 					else
 					{
@@ -507,7 +461,7 @@ namespace Framework
 				{
 					if (HasChanges())
 					{
-						int option = EditorUtility.DisplayDialogComplex("State Machine Has Been Modified", "Do you want to save the changes you made to the state machine:\n\n" + AssetUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save", "Cancel");
+						int option = EditorUtility.DisplayDialogComplex("State Machine Has Been Modified", "Do you want to save the changes you made to the state machine:\n\n" + Asset.name + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save", "Cancel");
 
 						switch (option)
 						{
@@ -530,7 +484,7 @@ namespace Framework
 					{
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							string titleText = _title + " - <b>" + System.IO.Path.GetFileName(_currentFileName);
+							string titleText = _title + (Asset != null ? " - <b>" + Asset.name : "");
 
 							if (HasChanges())
 								titleText += "*";
@@ -545,10 +499,7 @@ namespace Framework
 						{
 							if (GUILayout.Button("New", EditorStyles.toolbarButton))
 							{
-								if (ShowOnLoadSaveChangesDialog())
-								{
-									New();
-								}
+								New();
 							}
 
 							if (GUILayout.Button("Load", EditorStyles.toolbarButton))
@@ -622,34 +573,6 @@ namespace Framework
 					}
 					EditorGUILayout.EndVertical();
 				}
-				
-				private void SetStateMachine(StateMachine stateMachine)
-				{
-					ClearObjects();
-					
-#if DEBUG
-					_playModeHighlightedState = null;
-#endif
-
-					if (stateMachine._entryState == null)
-					{
-						stateMachine._entryState = new StateMachineEntryState();
-					}
-
-					AddNewObject(stateMachine._entryState);
-
-					for (int i = 0; i < stateMachine._states.Length; i++)
-					{
-						AddNewObject(stateMachine._states[i]);
-					}
-
-					for (int i = 0; i < stateMachine._editorNotes.Length; i++)
-					{
-						AddNewObject(stateMachine._editorNotes[i]);
-					}
-
-					CenterCamera();
-				}
 
 				private StateEditorGUI GetStateGUI(int stateId)
 				{
@@ -666,7 +589,7 @@ namespace Framework
 				
 				private Vector3 GetLinkStartPosition(StateEditorGUI state, int linkIndex = 0)
 				{
-					float fraction = 1.0f / ((state.GetEditableObject().GetEditorStateLinks()).Length + 1.0f);
+					float fraction = 1.0f / ((state.Asset.GetEditorStateLinks()).Length + 1.0f);
 					float edgeFraction = fraction * (1 + linkIndex);
 
 					Rect stateRect = GetScreenRect(state.GetBounds());
@@ -726,7 +649,7 @@ namespace Framework
 						RenderLinkLabel(labelPos, description);
 					}
 
-					RenderLinkIcon(fromState, startPos, fromState.GetEditableObject().GetEditorColor(), selected);
+					RenderLinkIcon(fromState, startPos, fromState.Asset.GetEditorColor(), selected);
 
 					if (toState != null)
 					{
@@ -784,7 +707,7 @@ namespace Framework
 
 				private void RenderLinksForState(StateEditorGUI state, bool selected)
 				{
-					StateMachineEditorLink[] links = state.GetEditableObject().GetEditorStateLinks();
+					StateMachineEditorLink[] links = state.Asset.GetEditorStateLinks();
 
 					if (links != null)
 					{
@@ -840,7 +763,14 @@ namespace Framework
 
 				private bool CanDragLinkTo(StateEditorGUI editorGUI)
 				{
-					return !(editorGUI.GetEditableObject() is StateMachineEntryState || editorGUI.GetEditableObject() is StateMachineNote);
+					return !(editorGUI.Asset is StateMachineEntryState || editorGUI.Asset is StateMachineNote);
+				}
+
+
+				private void SetStateLink(State state, StateMachineEditorLink link, StateRef stateRef)
+				{
+					Undo.RecordObject(state, "Set link");
+					link.SetStateRef(stateRef);
 				}
 
 #if DEBUG
@@ -857,10 +787,9 @@ namespace Framework
 						{
 							_debugging = true;
 
-							if (_currentFileName != stateInfo._fileName && stateInfo._fileName != null)
+							if (stateInfo._stateMachine != Asset)
 							{
-								_currentFileName = stateInfo._fileName;
-								SetStateMachine(stateInfo._stateMachine);
+								Load(stateInfo._stateMachine);
 							}
 
 							if (_playModeHighlightedState != stateInfo._state)

@@ -8,8 +8,8 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			[CustomEditor(typeof(StateEditorGUI), true)]
-			public sealed class StateEditorGUIInspector : SerializedObjectEditorGUIInspector<State>
+			[CustomEditor(typeof(StateMachine), true)]
+			public sealed class StateMachineInspector : UnityEditor.Editor
 			{
 			}
 		}

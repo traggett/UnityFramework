@@ -6,11 +6,12 @@ using System.Collections.Generic;
 
 namespace Framework
 {
+	using Utils;
 	using Utils.Editor;
 	
 	namespace Serialization
 	{
-		public abstract class SerializedObjectEditor<T> : ScriptableObject where T : ScriptableObject
+		public abstract class SerializedObjectEditor<TAsset, TSubAsset> : ScriptableObject where TAsset : ScriptableObject where TSubAsset : ScriptableObject
 		{
 			public interface IEditorWindow
 			{
@@ -18,6 +19,16 @@ namespace Framework
 			}
 
 			#region Protected Data
+			protected static readonly float kDoubleClickTime = 0.32f;
+
+			protected TAsset Asset
+			{
+				get
+				{
+					return _currentAsset;
+				}
+			}
+			
 			protected enum DragType
 			{
 				NotDragging,
@@ -26,11 +37,11 @@ namespace Framework
 				Custom,
 			}
 			protected DragType _dragMode = DragType.NotDragging;
-			protected SerializedObjectEditorGUI<T> _draggedObject;
+			protected SerializedObjectEditorGUI<TAsset, TSubAsset> _draggedObject;
 			protected Vector2 _dragPos = Vector2.zero;
 			protected Rect _dragAreaRect;
 
-			//Note these should all be SerializedObjectEditorGUI<T> but unity won't serialize them (and thus make them usable in Undo actions) if they are a template class
+			//Note these should all be SerializedObjectEditorGUI<TAsset, TSubAsset> but unity won't serialize them (and thus make them usable in Undo actions) if they are a template class
 			[SerializeField]
 			protected List<ScriptableObject> _editableObjects = new List<ScriptableObject>();
 			[SerializeField]
@@ -40,7 +51,7 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private enum eRightClickOperation
+			private enum RightClickOperation
 			{
 				Copy,
 				Paste,
@@ -50,66 +61,43 @@ namespace Framework
 
 			private class RightClickData
 			{
-				public eRightClickOperation _operation;
-				public SerializedObjectEditorGUI<T> _editableObject;
+				public RightClickOperation _operation;
+				public SerializedObjectEditorGUI<TAsset, TSubAsset> _editableObject;
 			}
 			[SerializeField]
 			private IEditorWindow _editorWindow;
+			private TAsset _currentAsset;
 			private int _controlID;
 			private bool _needsRepaint;
-			private bool _isDirty;
-			private List<ScriptableObject> _cachedEditableObjects = new List<ScriptableObject>();
 			#endregion
 
 			#region Public Methods
-			public SerializedObjectEditor()
-			{
-				Undo.undoRedoPerformed += UndoRedoCallback;
-			}
-
-			~SerializedObjectEditor()
-			{
-				Undo.undoRedoPerformed -= UndoRedoCallback;
-			}
-
 			public void OnEnable()
 			{
 				_controlID = GUIUtility.GetControlID(FocusType.Passive);
 			}
 
-			public bool NeedsRepaint()
-			{
-				return _needsRepaint;
-			}
-
 			public void MarkAsDirty()
 			{
-				_isDirty = true;
-				EditorUtility.SetDirty(this);
+				EditorUtility.SetDirty(_currentAsset);
 			}
 
 			public bool HasChanges()
 			{
-				if (_isDirty)
+				if (EditorUtility.IsDirty(_currentAsset))
 					return true;
-
-				foreach (SerializedObjectEditorGUI<T> editorGUI in _editableObjects)
-				{
-					if (editorGUI.IsDirty())
-						return true;
-				}
 
 				return false;
 			}
 
 			public void ClearDirtyFlag()
 			{
-				_isDirty = false;
+				EditorUtility.ClearDirty(_currentAsset);
+			}
 
-				foreach (SerializedObjectEditorGUI<T> editorGUI in _editableObjects)
-				{
-					editorGUI.MarkAsDirty(false);
-				}
+			public bool NeedsRepaint()
+			{
+				return _needsRepaint;
 			}
 
 			public void SetNeedsRepaint(bool needsRepaint = true)
@@ -124,70 +112,96 @@ namespace Framework
 			#endregion
 
 			#region Protected Functions
+			public void ClearAsset()
+			{
+				_editableObjects.Clear();
+				_selectedObjects.Clear();
+				_draggedObject = null;
+
+				_currentAsset = null;
+
+				GetEditorWindow().DoRepaint();
+			}
+
+			public void Save()
+			{
+				//Save to file
+				AssetDatabase.SaveAssets();
+
+				ClearDirtyFlag();
+
+				GetEditorWindow().DoRepaint();
+			}
+
+			public void SaveAs(string path)
+			{
+				string assetPath = AssetUtils.GetAssetPath(path);
+
+				AssetDatabase.DeleteAsset(assetPath);
+
+				//Save to file
+				AssetDatabase.CreateAsset(Asset, assetPath);
+				AssetDatabase.SaveAssets();
+
+				//Then load new asset
+				Load(AssetDatabase.LoadMainAssetAtPath(assetPath) as TAsset);
+			}
+
+			public void Create(string path)
+			{
+				string assetPath = AssetUtils.GetAssetPath(path);
+
+				AssetDatabase.DeleteAsset(assetPath);
+
+				//Create new assset
+				AssetDatabase.CreateAsset(ScriptableObject.CreateInstance<TAsset>(), assetPath);
+				AssetDatabase.SaveAssets();
+
+				//Then load new asset
+				Load(AssetDatabase.LoadMainAssetAtPath(assetPath) as TAsset);
+			}
+
+			public void Load(TAsset asset)
+			{
+				_editableObjects.Clear();
+				_selectedObjects.Clear();
+				_draggedObject = null;
+
+				_currentAsset = asset;
+
+				//Find child assets and add them
+				UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset));
+
+				foreach (UnityEngine.Object subAsset in assets)
+				{
+					if (subAsset is TSubAsset subAsset1)
+					{
+						CreateObjectGUI(subAsset1);
+					}
+				}
+				
+				OnLoadAsset(asset);
+
+				GetEditorWindow().DoRepaint();
+			}
+
 			protected void SetEditorWindow(IEditorWindow editorWindow)
 			{
 				_editorWindow = editorWindow;
 			}
 
-			protected void ClearObjects()
-			{
-				foreach (SerializedObjectEditorGUI<T> editorGUI in _editableObjects)
-				{
-					Undo.ClearUndo(editorGUI);
-
-					if (Selection.activeObject == editorGUI)
-						Selection.activeObject = null;
-				}
-
-				_editableObjects.Clear();
-				_selectedObjects.Clear();
-				_draggedObject = null;
-
-				Undo.ClearUndo(this);
-
-				ClearDirtyFlag();
-			}
-
-			protected SerializedObjectEditorGUI<T> AddNewObject(T obj)
-			{
-				SerializedObjectEditorGUI<T> editorGUI = null;
-
-				if (obj != null)
-				{
-					editorGUI = CreateObjectEditorGUI(obj);
-					editorGUI.SetEditableObject(obj);
-
-					_editableObjects.Add(editorGUI);
-					SortObjects();
-
-					UpdateCachedObjectList();
-				}
-
-				return editorGUI;
-			}
-
-			protected void RemoveObject(SerializedObjectEditorGUI<T> editorGUI)
-			{
-				if (Selection.activeObject == editorGUI)
-					Selection.activeObject = null;
-
-				_editableObjects.Remove(editorGUI);
-				_selectedObjects.Remove(editorGUI);
-				UpdateCachedObjectList();
-			}
-
 			protected void SortObjects()
 			{
-				_editableObjects.Sort((a, b) => (((SerializedObjectEditorGUI<T>)a).CompareTo((SerializedObjectEditorGUI<T>)b)));
+				_editableObjects.Sort((a, b) => (((SerializedObjectEditorGUI<TAsset, TSubAsset>)a).CompareTo((SerializedObjectEditorGUI<TAsset, TSubAsset>)b)));
 			}
 			#endregion
 
 			#region Abstract Interface
-			protected abstract void OnCreatedNewObject(T obj);
+			protected abstract void OnLoadAsset(TAsset asset);
 
-			protected abstract SerializedObjectEditorGUI<T> CreateObjectEditorGUI(T obj);
+			protected abstract void OnCreatedNewObject(TSubAsset obj);
 
-			protected abstract T CreateCopyFrom(SerializedObjectEditorGUI<T> editorGUI);
+			protected abstract SerializedObjectEditorGUI<TAsset, TSubAsset> CreateObjectEditorGUI(TSubAsset obj);
 
 			protected abstract void ZoomEditorView(float amount);
 
@@ -196,31 +210,30 @@ namespace Framework
 			protected abstract void DragObjects(Vector2 delta);
 
 			protected abstract void AddContextMenu(GenericMenu menu);
-
-			protected abstract void SetObjectPosition(SerializedObjectEditorGUI<T> obj, Vector2 position);
 			#endregion
 
 			#region Virtual Interface
-			protected virtual bool CanBeCopied(SerializedObjectEditorGUI<T> editorGUI)
+			protected virtual bool CanBeCopied(SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI)
 			{
 				return true;
 			}
 
-			protected virtual bool CanBeDeleted(SerializedObjectEditorGUI<T> editorGUI)
+			protected virtual bool CanBeDeleted(SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI)
 			{
 				return true;
 			}
 
 			protected virtual void OnLeftMouseDown(Event inputEvent)
 			{
-				SerializedObjectEditorGUI<T> clickedOnObject = null;
+				SerializedObjectEditorGUI<TAsset, TSubAsset> clickedOnObject = null;
 
-				Vector2 gridPosition = GetEditorPosition(inputEvent.mousePosition);
+				Vector2 mousePosition = GetEditorPosition(inputEvent.mousePosition);
 
 				for (int i = 0; i < _editableObjects.Count; i++)
 				{
-					SerializedObjectEditorGUI<T> evnt = (SerializedObjectEditorGUI<T>)_editableObjects[i];
-					if (evnt.GetBounds().Contains(gridPosition))
+					SerializedObjectEditorGUI<TAsset, TSubAsset> evnt = (SerializedObjectEditorGUI<TAsset, TSubAsset>)_editableObjects[i];
+					
+					if (evnt.GetBounds().Contains(mousePosition))
 					{
 						clickedOnObject = evnt;
 						break;
@@ -251,28 +264,22 @@ namespace Framework
 					_selectedObjects = new List<ScriptableObject>() { clickedOnObject };
 				}
 
+				//Update selection
+				if (clickedOnObject == null)
+				{
+					Selection.activeObject = null;
+				}
+				else
+				{
+					Selection.activeObject = clickedOnObject.Asset;
+				}
+
 				//Dragging
 				{
-					if (clickedOnObject != null)
-					{
-						Selection.activeObject = clickedOnObject;
-						GUIUtility.keyboardControl = 0;
-					}
-					else
-					{
-						Selection.activeObject = null;
-					}
-
 					_draggedObject = clickedOnObject;
 					_dragMode = DragType.LeftClick;
 					_dragPos = inputEvent.mousePosition;
 					_dragAreaRect = new Rect(-1.0f, -1.0f, 0.0f, 0.0f);
-
-					//Save state before dragging
-					foreach (SerializedObjectEditorGUI<T> evnt in _selectedObjects)
-					{
-						evnt.CacheUndoStatePreChanges();
-					}
 				}
 			}
 
@@ -285,32 +292,35 @@ namespace Framework
 
 			protected virtual void OnRightMouseDown(Event inputEvent)
 			{
-				SerializedObjectEditorGUI<T> clickedNode = null;
+				SerializedObjectEditorGUI<TAsset, TSubAsset> clickedNode = null;
 				_dragPos = GetEditorPosition(inputEvent.mousePosition);
-				
-				//Check clicked on event
-				Vector2 gridPosition = GetEditorPosition(inputEvent.mousePosition);
 
-				foreach (SerializedObjectEditorGUI<T> node in _editableObjects)
+				if (Asset != null)
 				{
-					if (node.GetBounds().Contains(gridPosition))
+					//Check clicked on event
+					Vector2 gridPosition = GetEditorPosition(inputEvent.mousePosition);
+
+					foreach (SerializedObjectEditorGUI<TAsset, TSubAsset> node in _editableObjects)
 					{
-						clickedNode = node;
-						break;
+						if (node.GetBounds().Contains(gridPosition))
+						{
+							clickedNode = node;
+							break;
+						}
 					}
-				}
 
-				if (clickedNode != null)
-				{
-					if (!_selectedObjects.Contains(clickedNode))
-						_selectedObjects = new List<ScriptableObject>() { clickedNode };
+					if (clickedNode != null)
+					{
+						if (!_selectedObjects.Contains(clickedNode))
+							_selectedObjects = new List<ScriptableObject>() { clickedNode };
 
-					GetEditorWindow().DoRepaint();
-				}
+						GetEditorWindow().DoRepaint();
+					}
 
-				// Now create the menu, add items and show it
-				GenericMenu menu = GetRightMouseMenu(clickedNode);
-				menu.ShowAsContext();
+					// Now create the menu, add items and show it
+					GenericMenu menu = GetRightMouseMenu(clickedNode);
+					menu.ShowAsContext();
+				}			
 			}
 
 			protected virtual Vector2 GetEditorPosition(Vector2 screenPosition)
@@ -335,11 +345,6 @@ namespace Framework
 					if (_dragMode == DragType.LeftClick)
 					{
 						Undo.RegisterCompleteObjectUndo(_selectedObjects.ToArray(), "Move Objects(s)");
-
-						foreach (SerializedObjectEditorGUI<T> evnt in _selectedObjects)
-						{
-							evnt.CacheUndoStatePreChanges();
-						}
 					}
 
 					SortObjects();
@@ -379,7 +384,7 @@ namespace Framework
 
 						for (int i = 0; i < _editableObjects.Count; i++)
 						{
-							SerializedObjectEditorGUI<T> editorGUI = (SerializedObjectEditorGUI<T>)_editableObjects[i];
+							SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI = (SerializedObjectEditorGUI<TAsset, TSubAsset>)_editableObjects[i];
 							//Bounds need to account for scale
 							//when zoom is 0.5 boxes are half size?
 
@@ -387,6 +392,18 @@ namespace Framework
 							{
 								_selectedObjects.Add(editorGUI);
 							}
+						}
+
+						//Update selection
+						{
+							UnityEngine.Object[] selectedAssets = new TSubAsset[_selectedObjects.Count];
+
+							for (int i = 0; i < selectedAssets.Length; i++)
+							{
+								selectedAssets[i] = ((SerializedObjectEditorGUI<TAsset, TSubAsset>)_selectedObjects[i]).Asset;
+							}
+
+							Selection.objects = selectedAssets;
 						}
 					}
 				}
@@ -403,6 +420,21 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
+			private SerializedObjectEditorGUI<TAsset, TSubAsset> CreateObjectGUI(TSubAsset obj)
+			{
+				SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI = null;
+
+				if (obj != null)
+				{
+					editorGUI = CreateObjectEditorGUI(obj);
+					
+					_editableObjects.Add(editorGUI);
+					SortObjects();
+				}
+
+				return editorGUI;
+			}
+
 			protected void HandleInput()
 			{
 				if (_editorWindow == null)
@@ -546,22 +578,22 @@ namespace Framework
 				}
 			}
 
-			private GenericMenu GetRightMouseMenu(SerializedObjectEditorGUI<T> clickedObject)
+			private GenericMenu GetRightMouseMenu(SerializedObjectEditorGUI<TAsset, TSubAsset> clickedObject)
 			{
 				GenericMenu menu = new GenericMenu();
 
 				if (clickedObject != null)
 				{
 					RightClickData copyData = new RightClickData();
-					copyData._operation = eRightClickOperation.Copy;
+					copyData._operation = RightClickOperation.Copy;
 					copyData._editableObject = clickedObject;
 					menu.AddItem(new GUIContent("Copy"), false, ContextMenuCallback, copyData);
 					RightClickData cutData = new RightClickData();
-					cutData._operation = eRightClickOperation.Cut;
+					cutData._operation = RightClickOperation.Cut;
 					cutData._editableObject = clickedObject;
 					menu.AddItem(new GUIContent("Cut"), false, ContextMenuCallback, cutData);
 					RightClickData removeData = new RightClickData();
-					removeData._operation = eRightClickOperation.Remove;
+					removeData._operation = RightClickOperation.Remove;
 					removeData._editableObject = clickedObject;
 					menu.AddItem(new GUIContent("Remove"), false, ContextMenuCallback, removeData);
 				}
@@ -573,7 +605,7 @@ namespace Framework
 					if (_copiedObjects.Count > 0)
 					{
 						pasteData = new RightClickData();
-						pasteData._operation = eRightClickOperation.Paste;
+						pasteData._operation = RightClickOperation.Paste;
 						pasteData._editableObject = clickedObject;
 						menu.AddItem(new GUIContent(_copiedObjects.Count == 1 ? "Paste" : "Paste"), false, ContextMenuCallback, pasteData);
 					}
@@ -593,22 +625,22 @@ namespace Framework
 
 				switch (data._operation)
 				{
-					case eRightClickOperation.Copy:
+					case RightClickOperation.Copy:
 						{
 							CopySelected();
 						}
 						break;
-					case eRightClickOperation.Paste:
+					case RightClickOperation.Paste:
 						{
 							Paste();
 						}
 						break;
-					case eRightClickOperation.Cut:
+					case RightClickOperation.Cut:
 						{
 							CutSelected();
 						}
 						break;
-					case eRightClickOperation.Remove:
+					case RightClickOperation.Remove:
 						{
 							DeleteSelected();
 						}
@@ -619,22 +651,51 @@ namespace Framework
 			protected void CreateAndAddNewObject(Type type)
 			{
 				Undo.RegisterCompleteObjectUndo(this, "Create Object");
-				T newObject = ScriptableObject.CreateInstance(type) as T;
-				SerializedObjectEditorGUI<T> editorGUI = AddNewObject(newObject);
-				OnCreatedNewObject(newObject);
-				
-				Selection.activeObject = editorGUI;
-				GUIUtility.keyboardControl = 0;
 
-				_selectedObjects.Clear();
-				_selectedObjects.Add(editorGUI);
-				SetObjectPosition(editorGUI, _dragPos);
+				TSubAsset newObject = ScriptableObject.CreateInstance(type) as TSubAsset;
+
+				if (newObject != null)
+				{
+					AssetDatabase.AddObjectToAsset(newObject, _currentAsset);
+					SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI = CreateObjectGUI(newObject);
+					OnCreatedNewObject(newObject);
+
+					_selectedObjects.Clear();
+					_selectedObjects.Add(editorGUI);
+
+					editorGUI.SetPosition(_dragPos);
+				}		
+			}
+
+			protected T CreateAndAddNewObject<T>() where T : TSubAsset
+			{
+				T newObject = ScriptableObject.CreateInstance<T>();
+
+				AssetDatabase.AddObjectToAsset(newObject, _currentAsset);
+				CreateObjectGUI(newObject);
+				OnCreatedNewObject(newObject);
+
+				return newObject;
+			}
+
+			protected void RemoveObject(SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI)
+			{
+				TSubAsset asset = editorGUI.Asset;
+
+				if (Selection.activeObject == editorGUI.Asset)
+					Selection.activeObject = null;
+
+				_editableObjects.Remove(editorGUI);
+				_selectedObjects.Remove(editorGUI);
+				
+				AssetDatabase.RemoveObjectFromAsset(asset);
+				DestroyImmediate(asset);
 			}
 
 			private void SelectAll()
 			{
 				_selectedObjects.Clear();
-				foreach (SerializedObjectEditorGUI<T> editorGUI in _editableObjects)
+				foreach (SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI in _editableObjects)
 				{
 					_selectedObjects.Add(editorGUI);
 				}
@@ -644,7 +705,7 @@ namespace Framework
 			private void CopySelected()
 			{
 				_copiedObjects.Clear();
-				foreach (SerializedObjectEditorGUI<T> editorGUI in _selectedObjects)
+				foreach (SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI in _selectedObjects)
 				{
 					if (CanBeCopied(editorGUI))
 					{
@@ -655,19 +716,22 @@ namespace Framework
 
 			private void Paste()
 			{
-				if (_copiedObjects.Count > 0)
+				if (Asset != null && _copiedObjects.Count > 0)
 				{
 					Undo.RegisterCompleteObjectUndo(this, "Paste Object(s)");
 
-					Vector2 pos = ((SerializedObjectEditorGUI<T>)_copiedObjects[0]).GetPosition();
+					Vector2 pos = ((SerializedObjectEditorGUI<TAsset, TSubAsset>)_copiedObjects[0]).GetPosition();
 
-
-					foreach (SerializedObjectEditorGUI<T> editorGUI in _copiedObjects)
+					foreach (SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI in _copiedObjects)
 					{
-						T copyObject = CreateCopyFrom(editorGUI);
-						SerializedObjectEditorGUI<T> copyEditorGUI = AddNewObject(copyObject);
+						//Create a copy and add to asset
+						TSubAsset copyObject = ScriptableObject.Instantiate(editorGUI.Asset);
+						AssetDatabase.AddObjectToAsset(copyObject, _currentAsset);
+
+						SerializedObjectEditorGUI<TAsset, TSubAsset> copyEditorGUI = CreateObjectGUI(copyObject);
 						OnCreatedNewObject(copyObject);
-						SetObjectPosition(copyEditorGUI, _dragPos + editorGUI.GetPosition() - pos);
+						
+						copyEditorGUI.SetPosition(_dragPos + editorGUI.GetPosition() - pos);
 					}
 
 					MarkAsDirty();
@@ -686,7 +750,7 @@ namespace Framework
 
 					List<ScriptableObject> selectedObjects = new List<ScriptableObject>(_selectedObjects);
 
-					foreach (SerializedObjectEditorGUI<T> editorGUI in selectedObjects)
+					foreach (SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI in selectedObjects)
 					{
 						if (CanBeCopied(editorGUI))
 						{
@@ -712,7 +776,7 @@ namespace Framework
 				{
 					Undo.RegisterCompleteObjectUndo(this, "Remove Object(s)");
 
-					foreach (SerializedObjectEditorGUI<T> editorGUI in new List<ScriptableObject>(_selectedObjects))
+					foreach (SerializedObjectEditorGUI<TAsset, TSubAsset> editorGUI in new List<ScriptableObject>(_selectedObjects))
 					{
 						if (CanBeDeleted(editorGUI))
 						{
@@ -724,23 +788,6 @@ namespace Framework
 					MarkAsDirty();
 
 					_needsRepaint = true;
-				}
-			}
-
-			private void UpdateCachedObjectList()
-			{
-				_cachedEditableObjects = new List<ScriptableObject>(_editableObjects);
-			}
-
-			private void UndoRedoCallback()
-			{
-				//Need way of knowing when a objects been restored from undo history
-				foreach (SerializedObjectEditorGUI<T> editorGUI in _editableObjects)
-				{
-					if (!_cachedEditableObjects.Contains(editorGUI))
-					{
-						OnCreatedNewObject(editorGUI.GetEditableObject());
-					}
 				}
 			}
 			#endregion

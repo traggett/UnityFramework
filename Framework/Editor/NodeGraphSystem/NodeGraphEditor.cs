@@ -14,7 +14,7 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			public sealed class NodeGraphEditor : SerializedObjectGridBasedEditor<Node>
+			public sealed class NodeGraphEditor : SerializedObjectGridBasedEditor<NodeGraph, Node>
 			{
 				#region Private Data
 				private static readonly Color kLinkLineColor = Color.white;
@@ -31,8 +31,6 @@ namespace Framework
 				private string _title;
 				private string _editorPrefsTag;
 				private NodeGraphEditorPrefs _editorPrefs;
-
-				private string _currentFileName;
 
 				private GUIStyle _titleStyle;
 				private GUIStyle _nodeTitleTextStyle;
@@ -67,7 +65,7 @@ namespace Framework
 				{
 					if (HasChanges())
 					{
-						if (EditorUtility.DisplayDialog("Node Machine Has Been Modified", "Do you want to save the changes you made to the node machine:\n\n" + AssetUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
+						if (EditorUtility.DisplayDialog("Node Machine Has Been Modified", "Do you want to save the changes you made to the node machine:\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
 						{
 							Save();
 						}
@@ -84,47 +82,34 @@ namespace Framework
 
 				public void New()
 				{
-					_currentFileName = null;
-					_editorPrefs._fileName = null;
-					SaveEditorPrefs();
-					NodeGraph nodeGraph = new NodeGraph();
-					SetNodeGraph(nodeGraph);
-					GetEditorWindow().DoRepaint();
-				}
-
-				public void Save()
-				{
-					if (!string.IsNullOrEmpty(_currentFileName))
+					if (ShowOnLoadSaveChangesDialog())
 					{
-						//Save to file
-						NodeGraph nodeGraph = ConvertToNodeGraph();
+						string path = EditorUtility.SaveFilePanelInProject("New Node Graph", "NodeGraph", "asset", "Please enter a file name to save the node graph to");
 
-						//Save to file
-						AssetDatabase.CreateAsset(nodeGraph, AssetUtils.GetAssetPath(_currentFileName));
-
-						ClearDirtyFlag();
-
-						foreach (NodeEditorGUI node in _editableObjects)
+						if (!string.IsNullOrEmpty(path))
 						{
-							node.MarkAsDirty(false);
+							_editorPrefs._fileName = path;
+							SaveEditorPrefs();
+
+							Create(path);
 						}
-						
-						GetEditorWindow().DoRepaint();
-					}
-					else
-					{
-						SaveAs();
+						else
+						{
+							_editorPrefs._fileName = null;
+							SaveEditorPrefs();
+
+							ClearAsset();
+						}
 					}
 				}
 
 				public void SaveAs()
 				{
-					string path = EditorUtility.SaveFilePanelInProject("Save Node Graph", System.IO.Path.GetFileNameWithoutExtension(_currentFileName), "asset", "Please enter a file name to save the node graph to");
+					string path = EditorUtility.SaveFilePanelInProject("Save Node Graph", Asset.name, "asset", "Please enter a file name to save the node graph to");
 
 					if (!string.IsNullOrEmpty(path))
 					{
-						_currentFileName = path;
-						Save();
+						SaveAs(path);
 					}
 				}
 
@@ -151,6 +136,11 @@ namespace Framework
 				#endregion
 
 				#region EditableObjectGridEditor
+				protected override void OnLoadAsset(NodeGraph asset)
+				{
+					CenterCamera();
+				}
+
 				protected override void OnZoomChanged(float zoom)
 				{
 					SaveEditorPrefs();
@@ -180,7 +170,7 @@ namespace Framework
 				#endregion
 
 				#region EditableObjectEditor
-				protected override SerializedObjectEditorGUI<Node> CreateObjectEditorGUI(Node node)
+				protected override SerializedObjectEditorGUI<NodeGraph, Node> CreateObjectEditorGUI(Node node)
 				{
 					NodeEditorGUI editorGUI = NodeEditorGUI.CreateInstance<NodeEditorGUI>();
 					editorGUI.Init(this, node);
@@ -190,6 +180,8 @@ namespace Framework
 				protected override void OnCreatedNewObject(Node node)
 				{
 					node._nodeId = GenerateNewNodeId();
+					node.name = "Node_" + node._nodeId.ToString("000");
+
 					if (string.IsNullOrEmpty(node._editorDescription))
 					{
 						if (SystemUtils.IsSubclassOfRawGeneric(typeof(InputNode<>), node.GetType()))
@@ -207,21 +199,6 @@ namespace Framework
 							node._editorDescription = "Node" + node._nodeId.ToString("000");
 						}
 					}					
-				}
-
-				protected override Node CreateCopyFrom(SerializedObjectEditorGUI<Node> editorGUI)
-				{
-					Node newNode = Serializer.CreateCopy(editorGUI.GetEditableObject());
-					newNode._nodeId = GenerateNewNodeId();
-					newNode._editorDescription = editorGUI.GetEditableObject()._editorDescription + " (Copy)";
-					return newNode;
-				}
-
-				protected override void SetObjectPosition(SerializedObjectEditorGUI<Node> editorGUI, Vector2 position)
-				{
-					NodeEditorGUI nodeGUI = (NodeEditorGUI)editorGUI;
-					nodeGUI.GetEditableObject()._editorPosition = position;
-					nodeGUI.CalcBounds(_nodeTitleTextStyle, _nodeTextStyle, _currentZoom);
 				}
 
 				protected override void AddContextMenu(GenericMenu menu)
@@ -278,23 +255,16 @@ namespace Framework
 								if (_draggingNodeFieldTo != null)
 								{
 									effectedNodes.Add(_draggingNodeFieldTo._nodeEditorGUI);
-									_draggingNodeFieldTo._nodeEditorGUI.CacheUndoStatePreChanges();
 									SetNodeInputFieldLinkNodeID(_draggingNodeFieldTo, -1);
 								}
 
 								if (mouseOverNodeField != null)
 								{
 									effectedNodes.Add(mouseOverNodeField._nodeEditorGUI);
-									mouseOverNodeField._nodeEditorGUI.CacheUndoStatePreChanges();
-									SetNodeInputFieldLinkNodeID(mouseOverNodeField, _draggingNodeFieldFrom._nodeEditorGUI.GetEditableObject()._nodeId);
+									SetNodeInputFieldLinkNodeID(mouseOverNodeField, _draggingNodeFieldFrom._nodeEditorGUI.Asset._nodeId);
 								}
 
 								Undo.RecordObjects(effectedNodes.ToArray(), "Edit Node Link(s)");
-
-								foreach (NodeEditorGUI editorGUI in effectedNodes)
-								{
-									editorGUI.SaveUndoStatePostChanges();
-								}
 							}
 						}				
 
@@ -412,7 +382,7 @@ namespace Framework
 					{
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							string titleText = _title + " - <b>" + System.IO.Path.GetFileName(_currentFileName) + "</b>";
+							string titleText = _title + (Asset != null ? " - <b>" + Asset.name : "");
 
 							if (HasChanges())
 								titleText += "<b>*</b>";
@@ -486,8 +456,6 @@ namespace Framework
 
 				private void CreateViews()
 				{
-					_currentFileName = string.Empty;
-
 					_currentZoom = _editorPrefs._zoom;
 
 					if (!string.IsNullOrEmpty(_editorPrefs._fileName))
@@ -498,8 +466,6 @@ namespace Framework
 
 				private void LoadFile(string fileName)
 				{
-					_currentFileName = fileName;
-
 					NodeGraph nodeGraph = AssetDatabase.LoadAssetAtPath<NodeGraph>(AssetUtils.GetAssetPath(fileName));
 
 					if (nodeGraph != null)
@@ -510,7 +476,7 @@ namespace Framework
 							SaveEditorPrefs();
 						}
 
-						SetNodeGraph(nodeGraph);
+						Load(nodeGraph);
 					}
 					else
 					{
@@ -525,7 +491,7 @@ namespace Framework
 				{
 					if (HasChanges())
 					{
-						int option = EditorUtility.DisplayDialogComplex("Node Machine Has Been Modified", "Do you want to save the changes you made to the node machine:\n\n" + AssetUtils.GetAssetPath(_currentFileName) + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save", "Cancel");
+						int option = EditorUtility.DisplayDialogComplex("Node Machine Has Been Modified", "Do you want to save the changes you made to the node machine:\n\n" + Asset.name + "\n\nYour changes will be lost if you don't save them.", "Save", "Don't Save", "Cancel");
 
 						switch (option)
 						{
@@ -542,28 +508,13 @@ namespace Framework
 					return true;
 				}
 
-				private void SetNodeGraph(NodeGraph nodeGraph)
-				{
-					ClearObjects();
-					
-					if (nodeGraph._nodes.Length > 0)
-					{
-						for (int i = 0; i < nodeGraph._nodes.Length; i++)
-						{
-							AddNewObject(nodeGraph._nodes[i]);
-						}
-					}
-
-					CenterCamera();
-				}
-
 				private void SetNodeInputFieldLinkNodeID(NodeEditorField nodeField, int nodeId)
 				{
 					object inputValueInstance = nodeField.GetValue();
 					INodeInputField inputField = inputValueInstance as INodeInputField;
 					inputField.SetSourceNode(nodeId);
 					nodeField.SetValue(inputValueInstance);
-					nodeField._nodeEditorGUI.MarkAsDirty(true);
+					EditorUtility.SetDirty(nodeField._nodeEditorGUI.Asset);
 				}
 				
 				private int GetNodeInputFieldLinkNodeId(NodeEditorField nodeField)
@@ -577,7 +528,7 @@ namespace Framework
 				{
 					foreach (NodeEditorGUI node in _editableObjects)
 					{
-						if (node.GetEditableObject()._nodeId == nodeId)
+						if (node.Asset._nodeId == nodeId)
 						{
 							return node;
 						}
@@ -752,7 +703,7 @@ namespace Framework
 
 					foreach (NodeEditorGUI nodeView in _editableObjects)
 					{
-						nodes.Add(nodeView.GetEditableObject());
+						nodes.Add(nodeView.Asset);
 					}
 
 					nodeGraph._nodes = nodes.ToArray();
@@ -771,7 +722,7 @@ namespace Framework
 
 						foreach (NodeEditorGUI node in _editableObjects)
 						{
-							if (node.GetEditableObject()._nodeId == nodeId)
+							if (node.Asset._nodeId == nodeId)
 							{
 								foundNode = false;
 								nodeId++;
