@@ -1,5 +1,4 @@
 using System.Collections;
-
 using UnityEngine;
 
 namespace Framework
@@ -19,7 +18,6 @@ namespace Framework
 			private Coroutine _process;
 			private IEnumerator _current;
 			private IEnumerator _next;
-			private bool _forceExit;
 			#endregion
 
 			#region Unity Messages
@@ -37,8 +35,11 @@ namespace Framework
 
 			public void GoToState(StateRef stateRef)
 			{
-				State state = stateRef.GetState();
+				GoToState(stateRef.GetState());
+			}
 
+			public void GoToState(State state)
+			{
 				if (state != null)
 				{
 #if UNITY_EDITOR && DEBUG
@@ -54,16 +55,10 @@ namespace Framework
 
 			public void GoToState(IEnumerator state)
 			{
-				if (_runState == RunState.NotRunning)
-				{
-					_current = state;
-					_process = StartCoroutine(Run());
-				}
-				else
-				{
-					_next = state;
-					_forceExit = true;
-				}
+				Stop();
+
+				_current = state;
+				_process = StartCoroutine(Run());
 			}
 
 			public void SetNextState(IEnumerator state)
@@ -75,7 +70,6 @@ namespace Framework
 				else if (_runState == RunState.Running)
 				{
 					_next = state;
-					_forceExit = false;
 				}
 			}
 
@@ -89,7 +83,6 @@ namespace Framework
 
 				_current = null;
 				_next = null;
-				_forceExit = false;
 				_runState = RunState.NotRunning;
 			}
 
@@ -127,18 +120,11 @@ namespace Framework
 					{
 						yield return _current.Current;
 
-						if (_forceExit)
-						{
-							break;
-						}
-
 						while (_runState == RunState.Paused)
 						{
 							yield return null;
 						}
 					}
-
-					_forceExit = false;
 
 					if (_next != null)
 					{

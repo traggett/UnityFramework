@@ -15,8 +15,6 @@ namespace Framework
 			{
 				public StateMachine _stateMachine;
 				public State _state;
-				public string _fileName;
-				public float _time;
 			}
 
 			private static Dictionary<GameObject, StateInfo> _stateMachineMap = new Dictionary<GameObject, StateInfo>();
@@ -33,9 +31,7 @@ namespace Framework
 					_lastSelectedObject = obj;
 				}
 
-				StateInfo stateInfo = null;
-
-				if (obj != null && _stateMachineMap.TryGetValue(obj, out stateInfo))
+				if (obj != null && _stateMachineMap.TryGetValue(obj, out StateInfo stateInfo))
 				{
 					return stateInfo;
 				}
@@ -61,24 +57,8 @@ namespace Framework
 
 						stateInfo._stateMachine = parentStateMachine;
 						stateInfo._state = state;
-						stateInfo._time = 0.0f;
 					}
 				}
-			}
-
-			public static void OnTimelineStateTimeProgress(StateMachineComponent stateMachine, State intialState, float time)
-			{
-				StateInfo stateInfo;
-
-				if (_stateMachineMap.TryGetValue(stateMachine.gameObject, out stateInfo))
-				{
-					_stateMachineMap[stateMachine.gameObject]._time = time;
-				}
-			}
-
-			public static void OnTimelineStateStoped(StateMachineComponent stateMachine)
-			{
-				_stateMachineMap.Remove(stateMachine.gameObject);
 			}
 		}
 	}
