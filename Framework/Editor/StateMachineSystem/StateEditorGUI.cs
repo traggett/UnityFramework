@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace Framework
 {
-	using Serialization;
 	using Utils;
 	using Utils.Editor;
 
@@ -13,7 +12,7 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			public class StateEditorGUI : SerializedObjectEditorGUI<StateMachine, State>
+			public class StateEditorGUI : ScriptableObjectHierarchyEditorObjectGUI<StateMachine, State>
 			{
 				#region Private Data
 				private static Dictionary<Type, Type> _editorGUIConstructorMap = null;
@@ -29,10 +28,10 @@ namespace Framework
 				protected Rect _rect = new Rect();
 				#endregion
 
-				#region SerializedObjectEditorGUI
+				#region ScriptableObjectHierarchyEditorObjectGUI
 				public override void SetPosition(Vector2 position)
 				{
-					Undo.RecordObject(Asset, "Move");
+					Undo.RecordObject(Asset, "Move State");
 					Asset._editorPosition = position;
 				}
 
@@ -90,7 +89,7 @@ namespace Framework
 						editorGUIType = typeof(StateEditorGUI);
 					}
 
-					StateEditorGUI editorGUI = (StateEditorGUI)CreateInstance(editorGUIType);
+					StateEditorGUI editorGUI = new StateEditorGUI();
 					editorGUI.Init(editor, state);
 
 					return editorGUI;

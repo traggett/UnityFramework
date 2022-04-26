@@ -3,8 +3,6 @@ using UnityEditor;
 
 namespace Framework
 {
-	using Serialization;
-	
 	namespace StateMachineSystem
 	{
 		namespace Editor
@@ -28,21 +26,18 @@ namespace Framework
 				}
 
 				[MenuItem("Assets/Load State Machine")]
-				private static void MenuLoadTimeline()
+				private static void MenuLoadStateMachine()
 				{
-					StateMachine asset = Selection.activeObject as StateMachine;
-					if (asset != null)
+					if (Selection.activeObject is StateMachine stateMachine)
 					{
-						Load(asset);
+						Load(stateMachine);
 					}
 				}
 
 				[MenuItem("Assets/Load State Machine", true)]
-				private static bool ValidateMenuLoadTimeline()
+				private static bool ValidateMenuLoadStateMachine()
 				{
-					StateMachine asset = Selection.activeObject as StateMachine;
-
-					return asset != null;
+					return Selection.activeObject is StateMachine;
 				}
 				#endregion
 
@@ -51,19 +46,10 @@ namespace Framework
 					if (_instance == null)
 						CreateWindow();
 
-					string fileName = AssetDatabase.GetAssetPath(stateMachine);
-					_instance.Load(fileName);
+					_instance.CreateEditor();
+
+					_instance._stateMachineEditor.Load(stateMachine);
 					_instance.Focus();
-				}
-
-				public void Load(string fileName)
-				{
-					if (_instance == null)
-						CreateWindow();
-
-					CreateEditor();
-
-					_stateMachineEditor.Load(fileName);
 				}
 
 				private void CreateEditor()

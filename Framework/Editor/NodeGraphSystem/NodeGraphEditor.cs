@@ -14,7 +14,7 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			public sealed class NodeGraphEditor : SerializedObjectGridBasedEditor<NodeGraph, Node>
+			public sealed class NodeGraphEditor : ScriptableObjectHierarchyGridEditor<NodeGraph, Node>
 			{
 				#region Private Data
 				private static readonly Color kLinkLineColor = Color.white;
@@ -135,7 +135,7 @@ namespace Framework
 				}
 				#endregion
 
-				#region EditableObjectGridEditor
+				#region ScriptableObjectHierarchyGridEditor
 				protected override void OnLoadAsset(NodeGraph asset)
 				{
 					CenterCamera();
@@ -167,12 +167,10 @@ namespace Framework
 
 					RenderLinks(_currentZoom, highlightedField);
 				}
-				#endregion
-
-				#region EditableObjectEditor
-				protected override SerializedObjectEditorGUI<NodeGraph, Node> CreateObjectEditorGUI(Node node)
+				
+				protected override ScriptableObjectHierarchyEditorObjectGUI<NodeGraph, Node> CreateObjectEditorGUI(Node node)
 				{
-					NodeEditorGUI editorGUI = NodeEditorGUI.CreateInstance<NodeEditorGUI>();
+					NodeEditorGUI editorGUI = new NodeEditorGUI();
 					editorGUI.Init(this, node);
 					return editorGUI;
 				}
@@ -250,17 +248,17 @@ namespace Framework
 
 							if (linkChanged)
 							{
-								List<NodeEditorGUI> effectedNodes = new List<NodeEditorGUI>();
+								List<Node> effectedNodes = new List<Node>();
 
 								if (_draggingNodeFieldTo != null)
 								{
-									effectedNodes.Add(_draggingNodeFieldTo._nodeEditorGUI);
+									effectedNodes.Add(_draggingNodeFieldTo._nodeEditorGUI.Asset);
 									SetNodeInputFieldLinkNodeID(_draggingNodeFieldTo, -1);
 								}
 
 								if (mouseOverNodeField != null)
 								{
-									effectedNodes.Add(mouseOverNodeField._nodeEditorGUI);
+									effectedNodes.Add(mouseOverNodeField._nodeEditorGUI.Asset);
 									SetNodeInputFieldLinkNodeID(mouseOverNodeField, _draggingNodeFieldFrom._nodeEditorGUI.Asset._nodeId);
 								}
 

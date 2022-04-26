@@ -14,7 +14,7 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			public sealed class StateMachineEditor : SerializedObjectGridBasedEditor<StateMachine, State>
+			public sealed class StateMachineEditor : ScriptableObjectHierarchyGridEditor<StateMachine, State>
 			{
 				#region Private Data
 				private string _title;
@@ -153,7 +153,7 @@ namespace Framework
 #endif
 				#endregion
 
-				#region EditableObjectGridEditor
+				#region ScriptableObjectHierarchyGridEditor
 				protected override void OnZoomChanged(float zoom)
 				{
 					SaveEditorPrefs();
@@ -222,20 +222,18 @@ namespace Framework
 						RenderLinkLine(startPos, endPos, _style._linkColor);
 					}
 				}
-				#endregion
-
-				#region EditableObjectEditor
-				protected override bool CanBeCopied(SerializedObjectEditorGUI<StateMachine, State> editorGUI)
+				
+				protected override bool CanBeCopied(ScriptableObjectHierarchyEditorObjectGUI<StateMachine, State> editorGUI)
 				{
 					return !(editorGUI.Asset is StateMachineEntryState);
 				}
 
-				protected override bool CanBeDeleted(SerializedObjectEditorGUI<StateMachine, State> editorGUI)
+				protected override bool CanBeDeleted(ScriptableObjectHierarchyEditorObjectGUI<StateMachine, State> editorGUI)
 				{
 					return !(editorGUI.Asset is StateMachineEntryState);
 				}
 
-				protected override SerializedObjectEditorGUI<StateMachine, State> CreateObjectEditorGUI(State state)
+				protected override ScriptableObjectHierarchyEditorObjectGUI<StateMachine, State> CreateObjectEditorGUI(State state)
 				{
 					StateEditorGUI editorGUI = StateEditorGUI.CreateStateEditorGUI(this, state);
 					editorGUI.CalcRenderRect(_style);

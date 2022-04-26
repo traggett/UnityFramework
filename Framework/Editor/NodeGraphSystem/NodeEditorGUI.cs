@@ -9,13 +9,12 @@ namespace Framework
 	using Utils;
 	using Utils.Editor;
 	using DynamicValueSystem;
-	using Serialization;
-
+	
 	namespace NodeGraphSystem
 	{
 		namespace Editor
 		{
-			public sealed class NodeEditorGUI : SerializedObjectEditorGUI<NodeGraph, Node>
+			public sealed class NodeEditorGUI : ScriptableObjectHierarchyEditorObjectGUI<NodeGraph, Node>
 			{
 				#region Private Data
 				private static readonly float kShadowSize = 3.0f;
@@ -37,7 +36,7 @@ namespace Framework
 				private float _outputFieldWidth;
 				#endregion
 
-				#region SerializedObjectEditorGUI
+				#region ScriptableObjectHierarchyEditorObjectGUI
 				protected override void OnSetObject()
 				{
 					FieldInfo[] inputFields = Asset.GetEditorInputFields();
@@ -67,7 +66,7 @@ namespace Framework
 
 				public override void SetPosition(Vector2 position)
 				{
-					Undo.RecordObject(Asset, "Move");
+					Undo.RecordObject(Asset, "Move Node");
 					Asset._editorPosition = position;
 				}
 

@@ -3,8 +3,6 @@ using UnityEditor;
 
 namespace Framework
 {
-	using Serialization;
-
 	namespace NodeGraphSystem
 	{
 		namespace Editor
@@ -34,50 +32,31 @@ namespace Framework
 				}
 
 				[MenuItem("Assets/Load NodeGraph")]
-				private static void MenuLoadTimeline()
+				private static void MenuLoadNodeGraph()
 				{
-					TextAsset asset = Selection.activeObject as TextAsset;
-
-					if (asset != null)
+					if (Selection.activeObject is NodeGraph nodeGraph)
 					{
-						Load(asset);
+						Load(nodeGraph);
 					}
 				}
 
 				[MenuItem("Assets/Load NodeGraph", true)]
-				private static bool ValidateMenuLoadTimeline()
+				private static bool ValidateMenuLoadNodeGraph()
 				{
-					TextAsset asset = Selection.activeObject as TextAsset;
-
-					if (asset != null)
-					{
-						return Serializer.DoesAssetContainObject<NodeGraph>(asset);
-					}
-
-					return false;
+					return Selection.activeObject is NodeGraph;
 				}
 				#endregion
 
-				public static void Load(TextAsset textAsset)
+				public static void Load(NodeGraph nodeGraph)
 				{
 					if (_instance == null)
 						CreateWindow();
 
-					string fileName = AssetDatabase.GetAssetPath(textAsset);
-					_instance.Load(fileName);
+					_instance.CreateEditor();
+
+					_instance._nodeGraphEditor.Load(nodeGraph);
 					_instance.Focus();
 				}
-
-				public void Load(string fileName)
-				{
-					if (_instance == null)
-						CreateWindow();
-
-					CreateEditor();
-
-					_nodeGraphEditor.Load(fileName);
-				}
-
 
 				private void CreateEditor()
 				{

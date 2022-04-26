@@ -106,7 +106,7 @@ namespace Framework
 
 									if (GUILayout.Button("Edit"))
 									{
-										NodeGraphEditorWindow.Load(_nodeGraphRefAsset.objectReferenceValue as TextAsset);
+										NodeGraphEditorWindow.Load(_nodeGraphRefAsset.objectReferenceValue as NodeGraph);
 									}
 									else if (GUILayout.Button("Refresh"))
 									{
