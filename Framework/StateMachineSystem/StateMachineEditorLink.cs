@@ -3,10 +3,11 @@
 namespace Framework
 {
 	using System.Reflection;
+	using UnityEngine;
 
 	namespace StateMachineSystem
 	{
-		public struct StateMachineEditorLink
+		public class StateMachineEditorLink
 		{
 			public string _label;
 			public object _object;

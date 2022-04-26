@@ -17,7 +17,7 @@ namespace Framework
 			public sealed class StateMachineEditor : ScriptableObjectHierarchyGridEditor<StateMachine, State>
 			{
 				#region Private Data
-				private static readonly float kLineTangent = 50.0f;
+				private static readonly float kLineTangent = 30.0f;
 
 				private string _title;
 				private string _editorPrefsTag;
@@ -29,6 +29,12 @@ namespace Framework
 				private StateEditorGUI _lastClickedState;
 				private double _lastClickTime;
 
+				private enum StateLinkDragMode
+				{ 
+					Link,
+					Label,
+				}
+				private StateLinkDragMode _stateLinkDragMode;
 				private StateEditorGUI _draggingState;
 				private StateMachineEditorLink _draggingStateLink;
 				private int _draggingStateLinkIndex;
@@ -192,8 +198,18 @@ namespace Framework
 
 					//Render each state
 					foreach (StateEditorGUI state in _editableObjects)
-					{					
-						bool selected = (_dragMode != DragType.Custom && _selectedObjects.Contains(state)) || dragHighlightState == state;
+					{
+						bool selected;
+
+						if (_dragMode == DragType.Custom)
+						{
+							selected = _draggingState == null ? false : dragHighlightState == state; 
+						}
+						else
+						{
+							selected = _selectedObjects.Contains(state);
+						}
+
 						float borderSize = 2f;
 
 						if (state.Asset is StateMachineNote)
@@ -212,16 +228,67 @@ namespace Framework
 						Rect renderedRect = GetScreenRect(state.GetBounds());
 						state.Render(renderedRect, _style, borderColor, borderSize);
 
-						RenderLinksForState(state, selected);
+						StateMachineEditorLink[] links = state.Asset.GetEditorStateLinks();
+
+						if (links != null)
+						{
+							for (int j = 0; j < links.Length; j++)
+							{
+								StateRef stateRef = links[j].GetStateRef();
+								StateEditorGUI toState = FindStateForLink(stateRef);
+								Vector3 startPos = GetLinkStartPosition(state, j);
+
+								if (toState == null)
+								{
+									Vector2 textSize = _style._linkTextStyle.CalcSize(new GUIContent(links[j]._label));
+									Rect labelRect = new Rect(startPos.x - (textSize.x * 0.5f), startPos.y + (textSize.y * 0.5f), textSize.x, textSize.y);
+
+									RenderLinkLabel(labelRect, links[j]._label, 0f);
+								}
+
+								RenderLinkIcon(state, startPos, state.Asset.GetEditorColor(), selected);
+
+								if (toState != null)
+								{
+									Vector3 endPos = GetLinkEndPosition(toState, j);
+
+									Vector3 labelPos = GetScreenPosition(stateRef._editorPosition);
+									
+									Vector2 labelSize = _style._linkTextStyle.CalcSize(new GUIContent(links[j]._label));
+									Rect labelRect = new Rect(labelPos.x - (labelSize.x * 0.5f), labelPos.y - (labelSize.y * 0.5f), labelSize.x, labelSize.y);
+
+									bool linkActive = true;
+									float labelBorder = 0f;
+
+									if (_dragMode == DragType.Custom)
+									{
+										if (_stateLinkDragMode == StateLinkDragMode.Label && _draggingState == state && _draggingStateLinkIndex == j)
+										{
+											linkActive = true;
+											labelBorder = borderSize;
+										}
+										else
+										{
+											linkActive = false;
+										}
+									}
+
+									RenderLinkLine(startPos, endPos, labelPos, linkActive ? _style._linkColor : _style._linkInactiveColor);
+
+									RenderLinkLabel(labelRect, links[j]._label, labelBorder);
+								}
+							}
+						}
 					}
 
 					//Render dragging link
-					if (_dragMode == DragType.Custom)
+					if (_dragMode == DragType.Custom && _stateLinkDragMode == StateLinkDragMode.Link)
 					{
 						Vector3 startPos = GetLinkStartPosition(_draggingState, _draggingStateLinkIndex);
 						Vector3 endPos = Event.current.mousePosition + new Vector2(0,-5);
+						Vector3 labelPos = new Vector3(startPos.x + ((endPos.x - startPos.x) * 0.5f), startPos.y + ((endPos.y - startPos.y) * 0.5f), 0f);
 
-						RenderLinkLine(startPos, endPos, _style._linkColor);
+						RenderLinkLine(startPos, endPos, labelPos, _style._linkColor);
 					}
 				}
 				
@@ -289,6 +356,7 @@ namespace Framework
 								if (toField.magnitude < linkRadius)
 								{
 									_dragMode = DragType.Custom;
+									_stateLinkDragMode = StateLinkDragMode.Link;
 									_draggingState = state;
 									_draggingStateLink = links[j];
 									_draggingStateLinkIndex = j;
@@ -296,6 +364,44 @@ namespace Framework
 									_dragAreaRect = new Rect(-1.0f, -1.0f, 0.0f, 0.0f);
 									_selectedObjects.Clear();
 									return;
+								}
+							}
+						}
+					}
+
+					//Dragging state links
+					for (int i = 0; i < _editableObjects.Count; i++)
+					{
+						StateEditorGUI state = (StateEditorGUI)_editableObjects[i];
+
+						StateMachineEditorLink[] links = state.Asset.GetEditorStateLinks();
+
+						if (links != null)
+						{
+							for (int j = 0; j < links.Length; j++)
+							{
+								StateRef stateRef = links[j].GetStateRef();
+								StateEditorGUI toState = FindStateForLink(stateRef);
+
+								if (toState != null)
+								{
+									Vector3 labelPos = GetScreenPosition(stateRef._editorPosition);
+
+									Vector2 labelSize = _style._linkTextStyle.CalcSize(new GUIContent(links[j]._label));
+									Rect labelRect = new Rect(labelPos.x - (labelSize.x * 0.5f), labelPos.y - (labelSize.y * 0.5f), labelSize.x, labelSize.y);
+
+									if (labelRect.Contains(inputEvent.mousePosition))
+									{
+										_dragMode = DragType.Custom;
+										_stateLinkDragMode = StateLinkDragMode.Label;
+										_draggingState = state;
+										_draggingStateLink = links[j];
+										_draggingStateLinkIndex = j;
+										_dragPos = inputEvent.mousePosition;
+										_dragAreaRect = new Rect(-1.0f, -1.0f, 0.0f, 0.0f);
+										_selectedObjects.Clear();
+										return;
+									}
 								}
 							}
 						}
@@ -323,6 +429,20 @@ namespace Framework
 				{
 					if (_dragMode == DragType.Custom)
 					{
+						Vector2 currentPos = inputEvent.mousePosition;
+						Vector2 delta = currentPos - _dragPos;
+						_dragPos = currentPos;
+
+						if (_stateLinkDragMode == StateLinkDragMode.Label)
+						{
+							delta *= (1.0f / _currentZoom);
+
+							//Move label by position
+							StateRef stateRef = _draggingStateLink.GetStateRef();
+							stateRef._editorPosition += delta;
+							SetStateLink(_draggingState.Asset, _draggingStateLink, stateRef);
+						}
+
 						SetNeedsRepaint();
 					}
 					else
@@ -335,7 +455,7 @@ namespace Framework
 				{
 					if (_dragMode == DragType.Custom)
 					{
-						if (!cancelled)
+						if (!cancelled && _stateLinkDragMode == StateLinkDragMode.Link)
 						{
 							Vector2 gridPos = GetEditorPosition(Event.current.mousePosition);
 
@@ -353,7 +473,12 @@ namespace Framework
 
 							if (draggedOnToState != null)
 							{
-								SetStateLink(_draggingState.Asset, _draggingStateLink, new StateRef(draggedOnToState.GetStateId()));
+								StateRef stateRef = new StateRef(draggedOnToState.GetStateId());
+								Vector3 startPos = GetLinkStartPosition(_draggingState, _draggingStateLinkIndex);
+								Vector3 endPos = GetLinkEndPosition(draggedOnToState, _draggingStateLinkIndex);
+								stateRef._editorPosition = GetEditorPosition(new Vector3(startPos.x + ((endPos.x - startPos.x) * 0.5f), startPos.y + ((endPos.y - startPos.y) * 0.5f), 0f));
+
+								SetStateLink(_draggingState.Asset, _draggingStateLink, stateRef);
 							}
 							else
 							{
@@ -365,8 +490,8 @@ namespace Framework
 						_dragMode = DragType.NotDragging;
 
 						_draggingState = null;
-						_draggingStateLink = new StateMachineEditorLink();
-						_draggingStateLinkIndex = 0;
+						_draggingStateLink = null;
+						_draggingStateLinkIndex = -1;
 					}
 					else
 					{
@@ -607,16 +732,16 @@ namespace Framework
 					float edgeFraction = fraction * (1 + linkIndex);
 
 					Rect stateRect = GetScreenRect(state.GetBounds());
-					return new Vector3(Mathf.Round(stateRect.x + stateRect.width * edgeFraction), Mathf.Round(stateRect.y + stateRect.height - _style._shadowSize - 1.0f), 0);
+					return new Vector3(Mathf.Round(stateRect.x + stateRect.width * edgeFraction), Mathf.Round(stateRect.y + stateRect.height - _style._shadowSize - 1.0f), 0f);
 				}
 
 				private Vector3 GetLinkEndPosition(StateEditorGUI state, int linkIndex = 0)
 				{
 					Rect stateRect = GetScreenRect(state.GetBounds());
-					return new Vector3(Mathf.Round(stateRect.x + stateRect.width / 2.0f) + 0.5f, Mathf.Round(stateRect.y - _style._linkArrowHeight - 1.0f) + 0.5f, 0);
+					return new Vector3(Mathf.Round(stateRect.x + stateRect.width / 2.0f) + 0.5f, Mathf.Round(stateRect.y - _style._linkArrowHeight - 1.0f) + 0.5f, 0f);
 				}
 
-				private void RenderLinkLine(Vector3 startPos, Vector3 endPos, Color color)
+				private void RenderLinkLine(Vector3 startPos, Vector3 endPos, Vector3 labelPos, Color color)
 				{
 					Vector3 line = endPos - startPos;
 					float lineLength = line.magnitude;
@@ -628,52 +753,36 @@ namespace Framework
 
 					Vector3 startTangent = startPos + Vector3.up * tangent;
 					Vector3 endTangent = endPos - Vector3.up * tangent;
+
 					Handles.BeginGUI();
 					Handles.color = color;
-					Handles.DrawBezier(startPos, endPos, startTangent, endTangent, color, EditorUtils.BezierAATexture, _style._lineLineWidth);
+
+					Handles.DrawBezier(startPos, labelPos, startTangent, labelPos - Vector3.up * tangent * 0.5f, color, EditorUtils.BezierAATexture, _style._lineLineWidth);
+					Handles.DrawBezier(labelPos, endPos, labelPos + Vector3.up * tangent * 0.5f, endTangent, color, EditorUtils.BezierAATexture, _style._lineLineWidth);
+
 					Handles.DrawAAConvexPolygon(new Vector3[] { new Vector3(endPos.x, endPos.y + _style._linkArrowHeight, 0.0f), new Vector3(endPos.x + _style._linkArrowWidth, endPos.y, 0.0f), new Vector3(endPos.x - _style._linkArrowWidth, endPos.y, 0.0f) });
 					Handles.EndGUI();
+
+					//draw line passing through label pos
 				}
 
-				private void RenderLinkLabel(Rect labelPos, string text)
+				private void RenderLinkLabel(Rect labelPos, string text, float borderSize)
 				{
 					//Draw shadow
 					Rect shadowRect = new Rect(labelPos.x + _style._shadowSize, labelPos.y + _style._shadowSize, labelPos.width, labelPos.height);
 					EditorUtils.DrawColoredRoundedBox(shadowRect, _style._shadowColor, _style._stateCornerRadius);
+
+					if (borderSize > 0f)
+					{
+						Rect outlineRect = new Rect(labelPos.x - borderSize, labelPos.y - borderSize, labelPos.width + borderSize + borderSize, labelPos.height + borderSize + borderSize);
+						EditorUtils.DrawColoredRoundedBox(outlineRect, _style._stateBorderSelectedColor, _style._stateCornerRadius);
+					}
 
 					//Draw label background
 					EditorUtils.DrawColoredRoundedBox(labelPos, _style._linkDescriptionColor, _style._stateCornerRadius);
 
 					//Draw label
 					GUI.Label(labelPos, text, _style._linkTextStyle);
-				}
-
-				private void RenderLink(string description, StateEditorGUI fromState, StateEditorGUI toState, int linkIndex, bool selected)
-				{
-					Vector3 startPos = GetLinkStartPosition(fromState, linkIndex);
-
-					if (toState == null)
-					{
-						Vector2 textSize = _style._linkTextStyle.CalcSize(new GUIContent(description));
-						Rect labelPos = new Rect(startPos.x - (textSize.x * 0.5f), startPos.y + (textSize.y * 0.5f), textSize.x, textSize.y);
-
-						RenderLinkLabel(labelPos, description);
-					}
-
-					RenderLinkIcon(fromState, startPos, fromState.Asset.GetEditorColor(), selected);
-
-					if (toState != null)
-					{
-						Vector3 endPos = GetLinkEndPosition(toState, linkIndex);
-
-						RenderLinkLine(startPos, endPos, _dragMode == DragType.Custom ? _style._linkInactiveColor : _style._linkColor);
-
-						Vector2 textSize = _style._linkTextStyle.CalcSize(new GUIContent(description));
-						float lineFraction = 0.5f;
-						Rect labelPos = new Rect(startPos.x + ((endPos.x - startPos.x) * lineFraction) - (textSize.x * 0.5f), startPos.y + ((endPos.y - startPos.y) * lineFraction) - (textSize.y * 0.5f), textSize.x, textSize.y);
-
-						RenderLinkLabel(labelPos, description);
-					}
 				}
 
 				private void Draw2DCircle(Vector2 position, float radius, Color color)
@@ -714,22 +823,6 @@ namespace Framework
 
 					//Hole
 					Draw2DCircle(position, linkRadius - 2.0f, Color.Lerp(color, Color.black, 0.5f));
-				}
-
-				private void RenderLinksForState(StateEditorGUI state, bool selected)
-				{
-					StateMachineEditorLink[] links = state.Asset.GetEditorStateLinks();
-
-					if (links != null)
-					{
-						for (int j = 0; j < links.Length; j++)
-						{
-							StateRef stateRef = links[j].GetStateRef();
-							StateEditorGUI toState = FindStateForLink(stateRef);
-
-							RenderLink(links[j]._label, state, toState, j, selected);
-						}
-					}				
 				}
 
 				private int GenerateNewStateId()

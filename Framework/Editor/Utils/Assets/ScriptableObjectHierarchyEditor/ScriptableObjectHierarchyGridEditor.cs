@@ -107,6 +107,14 @@ namespace Framework
 					return (1.0f / _currentZoom) * screenPosition - _renderOffset;
 				}
 
+				protected override Vector2 GetScreenPosition(Vector2 gridPos)
+				{
+					gridPos += _renderOffset;
+					gridPos *= _currentZoom;
+					gridPos = new Vector2(Mathf.Round(gridPos.x), Mathf.Round(gridPos.y));
+					return gridPos;
+				}
+
 				protected override Rect GetScreenRect(Rect gridRect)
 				{
 					Rect screenRect = gridRect;

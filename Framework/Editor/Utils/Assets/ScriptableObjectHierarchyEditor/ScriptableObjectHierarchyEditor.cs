@@ -331,6 +331,11 @@ namespace Framework
 					return screenRect;
 				}
 
+				protected virtual Vector2 GetScreenPosition(Vector2 editorPos)
+				{
+					return editorPos;
+				}
+
 				protected virtual Rect GetScreenRect(Rect editorRect)
 				{
 					return editorRect;
