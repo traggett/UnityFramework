@@ -17,6 +17,8 @@ namespace Framework
 			public sealed class StateMachineEditor : ScriptableObjectHierarchyGridEditor<StateMachine, State>
 			{
 				#region Private Data
+				private static readonly float kLineTangent = 50.0f;
+
 				private string _title;
 				private string _editorPrefsTag;
 				private StateMachineEditorStyle _style;
@@ -260,6 +262,8 @@ namespace Framework
 
 						if (string.IsNullOrEmpty(state._editorDescription))
 							state._editorDescription = "State" + state._stateId;
+
+						ArrayUtils.Add(ref Asset._states, state);
 					}
 				}
 
@@ -407,6 +411,18 @@ namespace Framework
 					{
 						asset._entryState = CreateAndAddNewObject<StateMachineEntryState>();
 					}
+
+					List<State> states = new List<State>();
+
+					foreach (StateEditorGUI state in _editableObjects)
+					{
+						if (!(state.Asset is StateMachineEntryState || state.Asset is StateMachineNote))
+						{
+							states.Add(state.Asset);
+						}
+					}
+
+					asset._states = states.ToArray();
 
 					CenterCamera();
 				}
@@ -599,9 +615,6 @@ namespace Framework
 					Rect stateRect = GetScreenRect(state.GetBounds());
 					return new Vector3(Mathf.Round(stateRect.x + stateRect.width / 2.0f) + 0.5f, Mathf.Round(stateRect.y - _style._linkArrowHeight - 1.0f) + 0.5f, 0);
 				}
-
-				private static readonly float kLineTangent = 50.0f;
-
 
 				private void RenderLinkLine(Vector3 startPos, Vector3 endPos, Color color)
 				{

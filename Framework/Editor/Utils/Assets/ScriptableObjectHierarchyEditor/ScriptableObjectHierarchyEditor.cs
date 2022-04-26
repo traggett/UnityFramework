@@ -64,6 +64,7 @@ namespace Framework
 				private TParentAsset _currentAsset;
 				private int _controlID;
 				private bool _needsRepaint;
+				private bool _hasChanges;
 				#endregion
 
 				#region Public Methods
@@ -74,12 +75,13 @@ namespace Framework
 
 				public void MarkAsDirty()
 				{
+					_hasChanges = true;
 					EditorUtility.SetDirty(_currentAsset);
 				}
 
 				public bool HasChanges()
 				{
-					if (EditorUtility.IsDirty(_currentAsset))
+					if (_hasChanges || EditorUtility.IsDirty(_currentAsset))
 						return true;
 
 					return false;
@@ -87,6 +89,7 @@ namespace Framework
 
 				public void ClearDirtyFlag()
 				{
+					_hasChanges = false;
 					EditorUtility.ClearDirty(_currentAsset);
 				}
 
@@ -187,7 +190,7 @@ namespace Framework
 
 				protected void SortObjects()
 				{
-					_editableObjects.Sort((a, b) => (((ScriptableObjectHierarchyEditorObjectGUI<TParentAsset, TChildAsset>)a).CompareTo((ScriptableObjectHierarchyEditorObjectGUI<TParentAsset, TChildAsset>)b)));
+					_editableObjects.Sort((a, b) => a.CompareTo(b));
 				}
 				#endregion
 

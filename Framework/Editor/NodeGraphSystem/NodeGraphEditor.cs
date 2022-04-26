@@ -138,6 +138,15 @@ namespace Framework
 				#region ScriptableObjectHierarchyGridEditor
 				protected override void OnLoadAsset(NodeGraph asset)
 				{
+					List<Node> nodes = new List<Node>();
+
+					foreach (NodeEditorGUI node in _editableObjects)
+					{
+						nodes.Add(node.Asset);
+					}
+
+					asset._nodes = nodes.ToArray();
+
 					CenterCamera();
 				}
 
@@ -196,7 +205,9 @@ namespace Framework
 						{
 							node._editorDescription = "Node" + node._nodeId.ToString("000");
 						}
-					}					
+					}
+
+					ArrayUtils.Add(ref Asset._nodes, node);
 				}
 
 				protected override void AddContextMenu(GenericMenu menu)
