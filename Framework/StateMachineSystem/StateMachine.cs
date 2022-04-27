@@ -4,8 +4,7 @@ using UnityEngine;
 namespace Framework
 {
 	using Serialization;
-	using Utils;
-
+	
 	namespace StateMachineSystem
 	{
 		[Serializable]

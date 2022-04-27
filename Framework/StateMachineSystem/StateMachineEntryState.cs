@@ -18,6 +18,7 @@ namespace Framework
 				throw new NotImplementedException();
 			}
 
+#if UNITY_EDITOR
 			public override string GetEditorLabel()
 			{
 				return string.Empty;
@@ -32,6 +33,7 @@ namespace Framework
 			{
 				return new Color(82 / 255f, 122 / 255f, 80 / 255f);
 			}
+#endif
 		}
 	}
 }
