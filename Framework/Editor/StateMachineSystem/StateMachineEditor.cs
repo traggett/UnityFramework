@@ -236,14 +236,11 @@ namespace Framework
 							{
 								StateRef stateRef = links[j].GetStateRef();
 								StateEditorGUI toState = FindStateForLink(stateRef);
-								Vector3 startPos = GetLinkStartPosition(state, j);
+								Vector2 startPos = GetLinkStartPosition(state, j);
 
 								if (toState == null)
 								{
-									Vector2 textSize = _style._linkTextStyle.CalcSize(new GUIContent(links[j]._label));
-									Rect labelRect = new Rect(startPos.x - (textSize.x * 0.5f), startPos.y + (textSize.y * 0.5f), textSize.x, textSize.y);
-
-									RenderLinkLabel(labelRect, links[j]._label, 0f);
+									RenderLinkLabel(startPos + new Vector2(0f, _style._linkIconWidth * 1.75f), links[j]._label, 0f);
 								}
 
 								RenderLinkIcon(state, startPos, state.Asset.GetEditorColor(), selected);
@@ -251,11 +248,7 @@ namespace Framework
 								if (toState != null)
 								{
 									Vector2 endPos = GetLinkEndPosition(toState, j);
-
-									Vector2 labelPos = GetScreenPosition(stateRef._editorPosition);
-									
-									Vector2 labelSize = _style._linkTextStyle.CalcSize(new GUIContent(links[j]._label));
-									Rect labelRect = new Rect(labelPos.x - (labelSize.x * 0.5f), labelPos.y - (labelSize.y * 0.5f), labelSize.x, labelSize.y);
+									Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos) + stateRef._editorPosition;
 
 									bool linkActive = true;
 									float labelBorder = 0f;
@@ -274,8 +267,7 @@ namespace Framework
 									}
 
 									RenderLinkLine(startPos, endPos, labelPos, linkActive ? _style._linkColor : _style._linkInactiveColor, state == toState);
-
-									RenderLinkLabel(labelRect, links[j]._label, labelBorder);
+									RenderLinkLabel(labelPos, links[j]._label, labelBorder);
 								}
 							}
 						}
@@ -385,7 +377,9 @@ namespace Framework
 
 								if (toState != null)
 								{
-									Vector3 labelPos = GetScreenPosition(stateRef._editorPosition);
+									Vector3 startPos = GetLinkStartPosition(state, j);
+									Vector2 endPos = GetLinkEndPosition(toState, j);
+									Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos) + stateRef._editorPosition;
 
 									Vector2 labelSize = _style._linkTextStyle.CalcSize(new GUIContent(links[j]._label));
 									Rect labelRect = new Rect(labelPos.x - (labelSize.x * 0.5f), labelPos.y - (labelSize.y * 0.5f), labelSize.x, labelSize.y);
@@ -474,9 +468,7 @@ namespace Framework
 							if (draggedOnToState != null)
 							{
 								StateRef stateRef = new StateRef(draggedOnToState.GetStateId());
-								Vector3 startPos = GetLinkStartPosition(_draggingState, _draggingStateLinkIndex);
-								Vector3 endPos = GetLinkEndPosition(draggedOnToState, _draggingStateLinkIndex);
-								stateRef._editorPosition = GetEditorPosition(GetDefaultLinkLabelPos(startPos, endPos));
+								stateRef._editorPosition = Vector2.zero;
 								
 								SetStateLink(_draggingState.Asset, _draggingStateLink, stateRef);
 							}
@@ -726,19 +718,19 @@ namespace Framework
 					return null;
 				}
 				
-				private Vector3 GetLinkStartPosition(StateEditorGUI state, int linkIndex = 0)
+				private Vector2 GetLinkStartPosition(StateEditorGUI state, int linkIndex = 0)
 				{
 					float fraction = 1.0f / ((state.Asset.GetEditorStateLinks()).Length + 1.0f);
 					float edgeFraction = fraction * (1 + linkIndex);
 
 					Rect stateRect = GetScreenRect(state.GetBounds());
-					return new Vector3(Mathf.Round(stateRect.x + stateRect.width * edgeFraction), Mathf.Round(stateRect.y + stateRect.height - _style._shadowSize - 1.0f), 0f);
+					return new Vector2(Mathf.Round(stateRect.x + stateRect.width * edgeFraction), Mathf.Round(stateRect.y + stateRect.height - _style._shadowSize - 1.0f));
 				}
 
-				private Vector3 GetLinkEndPosition(StateEditorGUI state, int linkIndex = 0)
+				private Vector2 GetLinkEndPosition(StateEditorGUI state, int linkIndex = 0)
 				{
 					Rect stateRect = GetScreenRect(state.GetBounds());
-					return new Vector3(Mathf.Round(stateRect.x + stateRect.width / 2.0f) + 0.5f, Mathf.Round(stateRect.y - _style._linkArrowHeight - 1.0f) + 0.5f, 0f);
+					return new Vector2(Mathf.Round(stateRect.x + stateRect.width / 2.0f) + 0.5f, Mathf.Round(stateRect.y - _style._linkArrowHeight - 1.0f) + 0.5f);
 				}
 
 				private void RenderLinkLine(Vector2 startPos, Vector2 endPos, Vector2 labelPos, Color color, bool looped = false)
@@ -785,23 +777,26 @@ namespace Framework
 					Handles.EndGUI();
 				}
 
-				private void RenderLinkLabel(Rect labelPos, string text, float borderSize)
+				private void RenderLinkLabel(Vector2 labelPos, string text, float borderSize)
 				{
+					Vector2 labelSize = _style._linkTextStyle.CalcSize(new GUIContent(text));
+					Rect labelRect = new Rect(labelPos.x - (labelSize.x * 0.5f), labelPos.y - (labelSize.y * 0.5f), labelSize.x, labelSize.y);
+
 					//Draw shadow
-					Rect shadowRect = new Rect(labelPos.x + _style._shadowSize, labelPos.y + _style._shadowSize, labelPos.width, labelPos.height);
+					Rect shadowRect = new Rect(labelRect.x + _style._shadowSize, labelRect.y + _style._shadowSize, labelRect.width, labelRect.height);
 					EditorUtils.DrawColoredRoundedBox(shadowRect, _style._shadowColor, _style._stateCornerRadius);
 
 					if (borderSize > 0f)
 					{
-						Rect outlineRect = new Rect(labelPos.x - borderSize, labelPos.y - borderSize, labelPos.width + borderSize + borderSize, labelPos.height + borderSize + borderSize);
+						Rect outlineRect = new Rect(labelRect.x - borderSize, labelRect.y - borderSize, labelRect.width + borderSize + borderSize, labelRect.height + borderSize + borderSize);
 						EditorUtils.DrawColoredRoundedBox(outlineRect, _style._stateBorderSelectedColor, _style._stateCornerRadius);
 					}
 
 					//Draw label background
-					EditorUtils.DrawColoredRoundedBox(labelPos, _style._linkDescriptionColor, _style._stateCornerRadius);
+					EditorUtils.DrawColoredRoundedBox(labelRect, _style._linkDescriptionColor, _style._stateCornerRadius);
 
 					//Draw label
-					GUI.Label(labelPos, text, _style._linkTextStyle);
+					GUI.Label(labelRect, text, _style._linkTextStyle);
 				}
 
 				private void Draw2DCircle(Vector2 position, float radius, Color color)

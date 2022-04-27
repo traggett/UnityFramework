@@ -1,9 +1,8 @@
 using UnityEditor;
+using UnityEngine;
 
 namespace Framework
 {
-	using Serialization;
-
 	namespace StateMachineSystem
 	{
 		namespace Editor
@@ -11,6 +10,13 @@ namespace Framework
 			[CustomEditor(typeof(StateMachine), true)]
 			public sealed class StateMachineInspector : UnityEditor.Editor
 			{
+				public override void OnInspectorGUI()
+				{
+					if (GUILayout.Button("Edit State Machine"))
+					{
+						StateMachineEditorWindow.Open((StateMachine)target);
+					}
+				}
 			}
 		}
 	}

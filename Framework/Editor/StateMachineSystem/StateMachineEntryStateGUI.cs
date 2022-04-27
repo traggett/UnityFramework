@@ -14,14 +14,15 @@ namespace Framework
 			{
 				public override void CalcRenderRect(StateMachineEditorStyle style)
 				{
-					GUIContent label = EditorGUIUtility.IconContent("StepButton");
+					GUIStyle labelStyle = style._stateLabelStyle;
+					Vector2 labelDimensions = labelStyle.CalcSize(new GUIContent("W"));
 
-					float areaWidth = 30f + style._shadowSize + (kMaxBorderSize * 2.0f);
+					float areaWidth = (labelDimensions.y * 3f) + style._shadowSize + (kMaxBorderSize * 2.0f);
 					
 					_rect.position = GetPosition();
 
 					_rect.width = areaWidth;
-					_rect.height = areaWidth;
+					_rect.height = areaWidth * 0.66f;
 
 					_rect.x -= areaWidth * 0.5f;
 					_rect.y -= areaWidth * 0.5f;
@@ -41,17 +42,17 @@ namespace Framework
 
 					//Draw shadow
 					Rect shadowRect = new Rect(mainBoxRect.x + borderOffset + style._shadowSize, mainBoxRect.y + borderOffset + style._shadowSize, mainBoxRect.width + borderSize * 2f, mainBoxRect.height + borderSize * 2f);
-					EditorUtils.DrawColoredRoundedBox(shadowRect, style._shadowColor, mainBoxRect.width);
+					EditorUtils.DrawColoredRoundedBox(shadowRect, style._shadowColor, mainBoxRect.height);
 
 					//Draw border
 					Rect borderRect = new Rect(renderedRect.x + borderOffset, renderedRect.y + borderOffset, mainBoxRect.width + borderSize * 2f, mainBoxRect.height + borderSize * 2f);
-					EditorUtils.DrawColoredRoundedBox(borderRect, borderColor, mainBoxRect.width);
+					EditorUtils.DrawColoredRoundedBox(borderRect, borderColor, mainBoxRect.height);
 
 					//Draw main box
-					EditorUtils.DrawColoredRoundedBox(mainBoxRect, stateColor, mainBoxRect.width);
+					EditorUtils.DrawColoredRoundedBox(mainBoxRect, stateColor, mainBoxRect.height);
 
 					//Draw label
-					Rect labelRect = new Rect(mainBoxRect.x + 5f, mainBoxRect.y, mainBoxRect.width, mainBoxRect.height);
+					Rect labelRect = new Rect(mainBoxRect.x + mainBoxRect.width * 0.25f, mainBoxRect.y, mainBoxRect.width, mainBoxRect.height);
 					GUI.Label(labelRect, EditorGUIUtility.IconContent("StepButton"));
 				}
 			}

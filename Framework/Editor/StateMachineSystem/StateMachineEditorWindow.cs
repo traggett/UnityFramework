@@ -25,23 +25,23 @@ namespace Framework
 					_instance = (StateMachineEditorWindow)GetWindow(typeof(StateMachineEditorWindow), false, kWindowWindowName);
 				}
 
-				[MenuItem("Assets/Load State Machine")]
+				[MenuItem("Assets/Edit State Machine")]
 				private static void MenuLoadStateMachine()
 				{
 					if (Selection.activeObject is StateMachine stateMachine)
 					{
-						Load(stateMachine);
+						Open(stateMachine);
 					}
 				}
 
-				[MenuItem("Assets/Load State Machine", true)]
+				[MenuItem("Assets/Edit State Machine", true)]
 				private static bool ValidateMenuLoadStateMachine()
 				{
 					return Selection.activeObject is StateMachine;
 				}
 				#endregion
 
-				public static void Load(StateMachine stateMachine)
+				public static void Open(StateMachine stateMachine)
 				{
 					if (_instance == null)
 						CreateWindow();
