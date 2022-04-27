@@ -250,9 +250,9 @@ namespace Framework
 
 								if (toState != null)
 								{
-									Vector3 endPos = GetLinkEndPosition(toState, j);
+									Vector2 endPos = GetLinkEndPosition(toState, j);
 
-									Vector3 labelPos = GetScreenPosition(stateRef._editorPosition);
+									Vector2 labelPos = GetScreenPosition(stateRef._editorPosition);
 									
 									Vector2 labelSize = _style._linkTextStyle.CalcSize(new GUIContent(links[j]._label));
 									Rect labelRect = new Rect(labelPos.x - (labelSize.x * 0.5f), labelPos.y - (labelSize.y * 0.5f), labelSize.x, labelSize.y);
@@ -273,7 +273,7 @@ namespace Framework
 										}
 									}
 
-									RenderLinkLine(startPos, endPos, labelPos, linkActive ? _style._linkColor : _style._linkInactiveColor);
+									RenderLinkLine(startPos, endPos, labelPos, linkActive ? _style._linkColor : _style._linkInactiveColor, state == toState);
 
 									RenderLinkLabel(labelRect, links[j]._label, labelBorder);
 								}
@@ -284,14 +284,14 @@ namespace Framework
 					//Render dragging link
 					if (_dragMode == DragType.Custom && _stateLinkDragMode == StateLinkDragMode.Link)
 					{
-						Vector3 startPos = GetLinkStartPosition(_draggingState, _draggingStateLinkIndex);
-						Vector3 endPos = Event.current.mousePosition + new Vector2(0,-5);
-						Vector3 labelPos = new Vector3(startPos.x + ((endPos.x - startPos.x) * 0.5f), startPos.y + ((endPos.y - startPos.y) * 0.5f), 0f);
+						Vector2 startPos = GetLinkStartPosition(_draggingState, _draggingStateLinkIndex);
+						Vector2 endPos = Event.current.mousePosition + new Vector2(0,-5);
+						Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos);
 
 						RenderLinkLine(startPos, endPos, labelPos, _style._linkColor);
 					}
 				}
-				
+
 				protected override bool CanBeCopied(ScriptableObjectHierarchyEditorObjectGUI<StateMachine, State> editorGUI)
 				{
 					return !(editorGUI.Asset is StateMachineEntryState);
@@ -476,8 +476,8 @@ namespace Framework
 								StateRef stateRef = new StateRef(draggedOnToState.GetStateId());
 								Vector3 startPos = GetLinkStartPosition(_draggingState, _draggingStateLinkIndex);
 								Vector3 endPos = GetLinkEndPosition(draggedOnToState, _draggingStateLinkIndex);
-								stateRef._editorPosition = GetEditorPosition(new Vector3(startPos.x + ((endPos.x - startPos.x) * 0.5f), startPos.y + ((endPos.y - startPos.y) * 0.5f), 0f));
-
+								stateRef._editorPosition = GetEditorPosition(GetDefaultLinkLabelPos(startPos, endPos));
+								
 								SetStateLink(_draggingState.Asset, _draggingStateLink, stateRef);
 							}
 							else
@@ -741,29 +741,48 @@ namespace Framework
 					return new Vector3(Mathf.Round(stateRect.x + stateRect.width / 2.0f) + 0.5f, Mathf.Round(stateRect.y - _style._linkArrowHeight - 1.0f) + 0.5f, 0f);
 				}
 
-				private void RenderLinkLine(Vector3 startPos, Vector3 endPos, Vector3 labelPos, Color color)
+				private void RenderLinkLine(Vector2 startPos, Vector2 endPos, Vector2 labelPos, Color color, bool looped = false)
 				{
-					Vector3 line = endPos - startPos;
-					float lineLength = line.magnitude;
+					Vector2 lineTangent;
+					Vector2 labelTangent;
 
-					float tangent = kLineTangent;
+					if (looped)
+					{
+						lineTangent = Vector2.up * kLineTangent;
+						labelTangent = Vector2.down * kLineTangent * 2f;
+					}
+					else
+					{
+						Vector2 line = (endPos - startPos).normalized;
 
-					if (lineLength < tangent * 2.0f)
-						tangent = lineLength * 0.5f;
+						float tangent = kLineTangent;
 
-					Vector3 startTangent = startPos + Vector3.up * tangent;
-					Vector3 endTangent = endPos - Vector3.up * tangent;
+						lineTangent = Vector2.up * tangent;
+
+						//Work out label tangent
+						{
+							//Get closest point on line to label position
+							float lineDot = Vector2.Dot(line, labelPos - startPos);
+							Vector2 labelLinePoint = startPos + line * lineDot;
+
+							//Label tangent is based on this distance in line tanget space
+							float labelTangentDist = Mathf.Abs(Vector2.Dot(labelPos - labelLinePoint, Maths.MathUtils.Cross(line)));
+
+							labelTangent = Vector2.up * labelTangentDist * 0.25f;
+						}
+					}
+
+					Vector2 startTangent = startPos + lineTangent;
+					Vector2 endTangent = endPos - lineTangent;
 
 					Handles.BeginGUI();
 					Handles.color = color;
 
-					Handles.DrawBezier(startPos, labelPos, startTangent, labelPos - Vector3.up * tangent * 0.5f, color, EditorUtils.BezierAATexture, _style._lineLineWidth);
-					Handles.DrawBezier(labelPos, endPos, labelPos + Vector3.up * tangent * 0.5f, endTangent, color, EditorUtils.BezierAATexture, _style._lineLineWidth);
+					Handles.DrawBezier(startPos, labelPos, startTangent, labelPos - labelTangent, color, EditorUtils.BezierAATexture, _style._lineLineWidth);
+					Handles.DrawBezier(labelPos, endPos, labelPos + labelTangent, endTangent, color, EditorUtils.BezierAATexture, _style._lineLineWidth);
 
 					Handles.DrawAAConvexPolygon(new Vector3[] { new Vector3(endPos.x, endPos.y + _style._linkArrowHeight, 0.0f), new Vector3(endPos.x + _style._linkArrowWidth, endPos.y, 0.0f), new Vector3(endPos.x - _style._linkArrowWidth, endPos.y, 0.0f) });
 					Handles.EndGUI();
-
-					//draw line passing through label pos
 				}
 
 				private void RenderLinkLabel(Rect labelPos, string text, float borderSize)
@@ -875,6 +894,11 @@ namespace Framework
 				{
 					Undo.RecordObject(state, "Set link");
 					link.SetStateRef(stateRef);
+				}
+
+				private Vector2 GetDefaultLinkLabelPos(Vector3 lineStartPos, Vector3 lineStartEnd)
+				{
+					return new Vector3(lineStartPos.x + ((lineStartEnd.x - lineStartPos.x) * 0.5f), lineStartPos.y + ((lineStartEnd.y - lineStartPos.y) * 0.5f));
 				}
 
 #if DEBUG

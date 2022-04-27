@@ -89,7 +89,7 @@ namespace Framework
 						editorGUIType = typeof(StateEditorGUI);
 					}
 
-					StateEditorGUI editorGUI = new StateEditorGUI();
+					StateEditorGUI editorGUI = (StateEditorGUI)editorGUIType.GetConstructor(new Type[0]).Invoke(new object[0]);
 					editorGUI.Init(editor, state);
 
 					return editorGUI;

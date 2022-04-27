@@ -70,7 +70,7 @@ namespace Framework
 				private const string kPrefabUnpackWarningIgnore = "Ignore";
 				#endregion
 
-				#region Interanl Properties (For Editor Window)
+				#region Internal Properties (For Editor Window)
 				internal static PlayModeStateChange CurrentPlayModeState
 				{
 					get

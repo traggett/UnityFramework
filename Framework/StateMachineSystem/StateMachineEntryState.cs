@@ -22,7 +22,7 @@ namespace Framework
 
 			public override string GetEditorLabel()
 			{
-				return "Start";
+				return string.Empty;
 			}
 
 			public override string GetEditorDescription()
