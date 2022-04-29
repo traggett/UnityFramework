@@ -12,6 +12,10 @@ namespace Framework
 			{
 				public override void OnInspectorGUI()
 				{
+					DrawDefaultInspector();
+
+					EditorGUILayout.Separator();
+
 					if (GUILayout.Button("Edit State Machine"))
 					{
 						StateMachineEditorWindow.Open((StateMachine)target);
