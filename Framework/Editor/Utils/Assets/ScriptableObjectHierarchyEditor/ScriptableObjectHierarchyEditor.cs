@@ -135,7 +135,11 @@ namespace Framework
 				{
 					string assetPath = AssetUtils.GetAssetPath(path);
 
-					AssetDatabase.DeleteAsset(assetPath);
+					//If not the same file, delete current first
+					if (AssetDatabase.LoadMainAssetAtPath(assetPath) != Asset)
+					{
+						AssetDatabase.DeleteAsset(assetPath);
+					}
 
 					//Save to file
 					AssetDatabase.CreateAsset(Asset, assetPath);

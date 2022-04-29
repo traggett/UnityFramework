@@ -52,8 +52,9 @@ namespace Framework
 					EditorUtils.DrawColoredRoundedBox(mainBoxRect, stateColor, mainBoxRect.height);
 
 					//Draw label
-					Rect labelRect = new Rect(mainBoxRect.x + mainBoxRect.width * 0.25f, mainBoxRect.y, mainBoxRect.width, mainBoxRect.height);
-					GUI.Label(labelRect, EditorGUIUtility.IconContent("StepButton"));
+					Texture icon = EditorGUIUtility.IconContent("StepButton").image;
+					Rect labelRect = new Rect(mainBoxRect.x + (mainBoxRect.width - icon.width)  * 0.5f, mainBoxRect.y + (mainBoxRect.height - icon.height) * 0.5f, icon.width, icon.height);
+					GUI.DrawTexture(labelRect, EditorGUIUtility.IconContent("StepButton").image);
 				}
 			}
 		}
