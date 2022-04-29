@@ -17,7 +17,7 @@ namespace Framework
 			public sealed class StateMachineEditor : ScriptableObjectHierarchyGridEditor<StateMachine, State>
 			{
 				#region Private Data
-				private static readonly float kLineTangent = 30.0f;
+				private static readonly float kLineTangent = 20.0f;
 
 				private string _title;
 				private string _editorPrefsTag;
@@ -248,7 +248,7 @@ namespace Framework
 								if (toState != null)
 								{
 									Vector2 endPos = GetLinkEndPosition(toState, j);
-									Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos) + stateRef._editorPosition;
+									Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos) + stateRef._editorPosition * _currentZoom;
 
 									bool linkActive = true;
 									float labelBorder = 0f;
@@ -379,7 +379,7 @@ namespace Framework
 								{
 									Vector3 startPos = GetLinkStartPosition(state, j);
 									Vector2 endPos = GetLinkEndPosition(toState, j);
-									Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos) + stateRef._editorPosition;
+									Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos) + stateRef._editorPosition * _currentZoom;
 
 									Vector2 labelSize = _style._linkTextStyle.CalcSize(new GUIContent(links[j]._label));
 									Rect labelRect = new Rect(labelPos.x - (labelSize.x * 0.5f), labelPos.y - (labelSize.y * 0.5f), labelSize.x, labelSize.y);
@@ -738,17 +738,16 @@ namespace Framework
 					Vector2 lineTangent;
 					Vector2 labelTangent;
 
+					float tangent = kLineTangent * _currentZoom;
+
 					if (looped)
 					{
-						lineTangent = Vector2.up * kLineTangent;
-						labelTangent = Vector2.down * kLineTangent * 2f;
+						lineTangent = Vector2.up * tangent;
+						labelTangent = Vector2.down * tangent * 2f;
 					}
 					else
 					{
 						Vector2 line = (endPos - startPos).normalized;
-
-						float tangent = kLineTangent;
-
 						lineTangent = Vector2.up * tangent;
 
 						//Work out label tangent
