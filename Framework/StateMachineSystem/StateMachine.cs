@@ -12,8 +12,6 @@ namespace Framework
 		{
 			#region Public Data
 			[HideInInspector]
-			public string _name;
-			[HideInInspector]
 			public StateMachineEntryState _entryState;
 			[HideInInspector]
 			public State[] _states = new State[0];
