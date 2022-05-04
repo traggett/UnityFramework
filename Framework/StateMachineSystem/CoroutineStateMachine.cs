@@ -58,13 +58,13 @@ namespace Framework
 
 			public void SetNextState(IEnumerator state)
 			{
-				if (_runState == RunState.NotRunning)
-				{
-					GoToState(state);
-				}
-				else if (_runState == RunState.Running)
+				if (IsRunning())
 				{
 					_next = state;
+				}
+				else
+				{
+					GoToState(state);
 				}
 			}
 
@@ -86,17 +86,23 @@ namespace Framework
 
 			public void Pause()
 			{
-				_runState = RunState.Paused;
+				if (_runState == RunState.Running)
+				{
+					_runState = RunState.Paused;
+				}
 			}
 
 			public void Resume()
 			{
-				_runState = RunState.Running;
+				if (_runState == RunState.Paused)
+				{
+					_runState = RunState.Running;
+				}
 			}
 
 			public bool IsRunning()
 			{
-				return _runState == RunState.Running;
+				return _runState != RunState.NotRunning;
 			}
 
 			public IEnumerator GetNextState()
@@ -143,6 +149,11 @@ namespace Framework
 					if (_abort[runIndex])
 					{
 						yield break;
+					}
+
+					while (_runState == RunState.Paused)
+					{
+						yield return null;
 					}
 
 					if (_next != null)
