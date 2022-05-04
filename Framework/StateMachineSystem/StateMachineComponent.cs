@@ -18,6 +18,8 @@ namespace Framework
 			private Coroutine _process;
 			private IEnumerator _current;
 			private IEnumerator _next;
+			private readonly bool[] _abort = new bool[2];
+			private int _runIndex = 0;
 			#endregion
 
 			#region Unity Messages
@@ -45,10 +47,12 @@ namespace Framework
 					if (_process != null)
 					{
 						StopCoroutine(_process);
+						_abort[_runIndex] = true;
 					}
 
 					_current = state.PerformState(this);
 					_next = null;
+					_runIndex = _runIndex == 0 ? 1 : 0;
 					_process = StartCoroutine(Run());
 					_runState = RunState.Running;
 
@@ -69,10 +73,12 @@ namespace Framework
 					if (_process != null)
 					{
 						StopCoroutine(_process);
+						_abort[_runIndex] = true;
 					}
 
 					_current = state;
 					_next = null;
+					_runIndex = _runIndex == 0 ? 1 : 0;
 					_process = StartCoroutine(Run());
 					_runState = RunState.Running;
 
@@ -103,6 +109,7 @@ namespace Framework
 				if (_process != null)
 				{
 					StopCoroutine(_process);
+					_abort[_runIndex] = true;
 					_process = null;
 				}
 
@@ -141,18 +148,29 @@ namespace Framework
 			#region Private Functions
 			private IEnumerator Run()
 			{
-				_runState = RunState.Running;
+				int runIndex = _runIndex;
+				_abort[runIndex] = false;
 
 				while (true)
 				{
 					while (_current != null && _current.MoveNext())
 					{
-						yield return _current.Current;
+						if (_abort[runIndex])
+						{
+							yield break;
+						}
 
 						while (_runState == RunState.Paused)
 						{
 							yield return null;
 						}
+
+						yield return _current.Current;
+					}
+
+					if (_abort[runIndex])
+					{
+						yield break;
 					}
 
 					if (_next != null)

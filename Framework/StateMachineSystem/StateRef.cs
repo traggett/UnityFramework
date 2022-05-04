@@ -12,59 +12,24 @@ namespace Framework
 		{
 			#region Serialized Data
 			[SerializeField]
-			private int _stateId;
+			private State _state;
 
 			//Editor properties
 			[HideInInspector]
 			public Vector2 _editorPosition;
 			#endregion
 
-			#region Private Data
-			private StateMachine _parentStateMachine;
-			private State _state;
-			#endregion
-
 			#region Public Interface
-			public void SetParentStatemachine(StateMachine stateMachine)
-			{
-				_parentStateMachine = stateMachine;
-				_state = null;
-			}
-
-			public bool IsValid()
-			{
-				return _stateId != -1;
-			}
-
 			public State GetState()
 			{
-				if (_state == null)
-				{
-					if (_parentStateMachine != null)
-					{
-						_state = _parentStateMachine.GetState(_stateId);
-					}
-					else
-					{
-						throw new Exception("StateRefProperty need to be fixed up by a StateMachine before allowing access.");
-					}
-				}
-
 				return _state;
 			}
 
 #if UNITY_EDITOR
-			public StateRef(int stateId)
+			public StateRef(State state)
 			{
-				_stateId = stateId;
-				_parentStateMachine = null;
-				_state = null;
+				_state = state;
 				_editorPosition = new Vector2(0f, 0f);
-			}
-
-			public int GetStateID()
-			{
-				return _stateId;
 			}
 #endif
 			#endregion

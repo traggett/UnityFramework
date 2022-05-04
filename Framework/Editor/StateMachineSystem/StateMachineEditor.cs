@@ -467,7 +467,7 @@ namespace Framework
 
 							if (draggedOnToState != null)
 							{
-								StateRef stateRef = new StateRef(draggedOnToState.GetStateId());
+								StateRef stateRef = new StateRef(draggedOnToState.Asset);
 								stateRef._editorPosition = Vector2.zero;
 								
 								SetStateLink(_draggingState.Asset, _draggingStateLink, stateRef);
@@ -858,15 +858,15 @@ namespace Framework
 
 				private StateEditorGUI FindStateForLink(StateRef link)
 				{
-					int stateId = link.GetStateID();
+					State state = link.GetState();
 
-					if (stateId != -1)
+					if (state != null)
 					{
-						foreach (StateEditorGUI state in _editableObjects)
+						foreach (StateEditorGUI stateGUI in _editableObjects)
 						{
-							if (stateId == state.GetStateId())
+							if (state == stateGUI.Asset)
 							{
-								return state;
+								return stateGUI;
 							}
 						}
 					}

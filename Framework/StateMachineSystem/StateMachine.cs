@@ -30,7 +30,6 @@ namespace Framework
 
 			public void OnAfterDeserialize()
 			{
-				FixUpStates(this);
 #if DEBUG
 				foreach (State state in _states)
 				{
@@ -54,24 +53,7 @@ namespace Framework
 
 				return null;
 			}
-
-			public void FixUpStates(object obj)
-			{
-				Serializer.UpdateChildObjects(obj, FixupStateRefs, this);
-			}
 			#endregion
-
-			private static object FixupStateRefs(object obj, object stateMachine)
-			{
-				if (obj.GetType() == typeof(StateRef))
-				{
-					StateRef StateRef = (StateRef)obj;
-					StateRef.SetParentStatemachine((StateMachine)stateMachine);
-					return StateRef;
-				}
-
-				return obj;
-			}
 		}
 	}
 }
