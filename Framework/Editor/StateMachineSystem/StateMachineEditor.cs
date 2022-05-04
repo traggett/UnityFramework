@@ -17,7 +17,7 @@ namespace Framework
 			public sealed class StateMachineEditor : ScriptableObjectHierarchyGridEditor<StateMachine, State>
 			{
 				#region Private Data
-				private static readonly float kLineTangent = 20.0f;
+				private static readonly float kLineTangent = 30.0f;
 
 				private string _title;
 				private string _editorPrefsTag;
@@ -735,32 +735,38 @@ namespace Framework
 
 				private void RenderLinkLine(Vector2 startPos, Vector2 endPos, Vector2 labelPos, Color color, bool looped = false)
 				{
-					Vector2 lineTangent;
-					Vector2 labelTangent;
-
 					float tangent = kLineTangent * _currentZoom;
+					Vector2 lineTangent;
+
+					float labelTangentDist;
 
 					if (looped)
 					{
 						lineTangent = Vector2.up * tangent;
-						labelTangent = Vector2.down * tangent * 2f;
+						labelTangentDist = tangent * 2f;
 					}
 					else
 					{
 						Vector2 line = (endPos - startPos).normalized;
 						lineTangent = Vector2.up * tangent;
 
-						//Work out label tangent
-						{
-							//Get closest point on line to label position
-							float lineDot = Vector2.Dot(line, labelPos - startPos);
-							Vector2 labelLinePoint = startPos + line * lineDot;
+						//Get closest point on line to label position
+						float lineDot = Vector2.Dot(line, labelPos - startPos);
+						Vector2 labelLinePoint = startPos + line * lineDot;
 
-							//Label tangent is based on this distance in line tanget space
-							float labelTangentDist = Mathf.Abs(Vector2.Dot(labelPos - labelLinePoint, Maths.MathUtils.Cross(line)));
+						//Label tangent is based on this distance in line tanget space
+						labelTangentDist = Mathf.Abs(Vector2.Dot(labelPos - labelLinePoint, Maths.MathUtils.Cross(line)));
+					}
 
-							labelTangent = Vector2.up * labelTangentDist * 0.25f;
-						}
+					Vector2 labelTangent;
+
+					if (startPos.y < endPos.y)
+					{
+						labelTangent = Vector2.up * labelTangentDist * 0.25f;
+					}
+					else
+					{
+						labelTangent = Vector2.down * labelTangentDist * 0.25f;
 					}
 
 					Vector2 startTangent = startPos + lineTangent;
