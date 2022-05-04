@@ -42,11 +42,13 @@ namespace Framework
 
 					_current = state;
 					_next = null;
-					_runIndex = _runIndex == 0 ? 1 : 0;
-					_runState = RunState.Running;
-					_process = StartCoroutine(Run());
 
 					OnEnterState(state);
+
+					_runIndex = _runIndex == 0 ? 1 : 0;
+					_runState = RunState.Running;
+					
+					_process = StartCoroutine(Run());
 				}
 				else
 				{
