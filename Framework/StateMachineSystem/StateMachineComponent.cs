@@ -42,7 +42,15 @@ namespace Framework
 			{
 				if (state != null)
 				{
-					GoToState(state.PerformState(this));
+					if (_process != null)
+					{
+						StopCoroutine(_process);
+					}
+
+					_current = state.PerformState(this);
+					_next = null;
+					_process = StartCoroutine(Run());
+					_runState = RunState.Running;
 
 #if UNITY_EDITOR && DEBUG
 					StateMachineDebug.OnEnterState(this, state);
@@ -56,14 +64,26 @@ namespace Framework
 
 			public void GoToState(IEnumerator state)
 			{
-				Stop();
+				if (state != null)
+				{
+					if (_process != null)
+					{
+						StopCoroutine(_process);
+					}
 
-				_current = state;
-				_process = StartCoroutine(Run());
+					_current = state;
+					_next = null;
+					_process = StartCoroutine(Run());
+					_runState = RunState.Running;
 
 #if UNITY_EDITOR && DEBUG
-				StateMachineDebug.OnEnterCoroutineState(this, state);
+					StateMachineDebug.Clear(this);
 #endif
+				}
+				else
+				{
+					Stop();
+				}
 			}
 
 			public void SetNextState(IEnumerator state)
@@ -91,7 +111,7 @@ namespace Framework
 				_runState = RunState.NotRunning;
 
 #if UNITY_EDITOR && DEBUG
-				StateMachineDebug.OnStopped(this);
+				StateMachineDebug.Clear(this);
 #endif
 			}
 
@@ -141,7 +161,7 @@ namespace Framework
 						_next = null;
 
 #if UNITY_EDITOR && DEBUG
-						StateMachineDebug.OnEnterCoroutineState(this, _current);
+						StateMachineDebug.Clear(this);
 #endif
 					}
 					else
@@ -154,7 +174,7 @@ namespace Framework
 				_runState = RunState.NotRunning;
 
 #if UNITY_EDITOR && DEBUG
-				StateMachineDebug.OnStopped(this);
+				StateMachineDebug.Clear(this);
 #endif
 			}
 			#endregion
