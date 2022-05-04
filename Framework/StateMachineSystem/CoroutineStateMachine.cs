@@ -8,13 +8,7 @@ namespace Framework
 		public class CoroutineStateMachine : MonoBehaviour
 		{
 			#region Private Data
-			private enum RunState
-			{
-				NotRunning,
-				Running,
-				Paused,
-			}
-			private RunState _runState = RunState.NotRunning;
+			private bool _isRunning;
 			private Coroutine _process;
 			private IEnumerator _current;
 			private IEnumerator _next;
@@ -46,7 +40,7 @@ namespace Framework
 					OnEnterState(state);
 
 					_runIndex = _runIndex == 0 ? 1 : 0;
-					_runState = RunState.Running;
+					_isRunning = true;
 					
 					_process = StartCoroutine(Run());
 				}
@@ -79,30 +73,14 @@ namespace Framework
 
 				_current = null;
 				_next = null;
-				_runState = RunState.NotRunning;
+				_isRunning = false;
 
 				OnStopped();
 			}
 
-			public void Pause()
-			{
-				if (_runState == RunState.Running)
-				{
-					_runState = RunState.Paused;
-				}
-			}
-
-			public void Resume()
-			{
-				if (_runState == RunState.Paused)
-				{
-					_runState = RunState.Running;
-				}
-			}
-
 			public bool IsRunning()
 			{
-				return _runState != RunState.NotRunning;
+				return _isRunning;
 			}
 
 			public IEnumerator GetNextState()
@@ -138,22 +116,12 @@ namespace Framework
 							yield break;
 						}
 
-						while (_runState == RunState.Paused)
-						{
-							yield return null;
-						}
-
 						yield return _current.Current;
 					}
 
 					if (_abort[runIndex])
 					{
 						yield break;
-					}
-
-					while (_runState == RunState.Paused)
-					{
-						yield return null;
 					}
 
 					if (_next != null)
@@ -170,7 +138,7 @@ namespace Framework
 					}
 				}
 
-				_runState = RunState.NotRunning;
+				_isRunning = false;
 				OnStopped();
 			}
 			#endregion
