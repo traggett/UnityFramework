@@ -42,10 +42,11 @@ namespace Framework
 			{
 				if (state != null)
 				{
-#if UNITY_EDITOR && DEBUG
-					StateMachineDebug.OnStateStarted(this, state);
-#endif
 					GoToState(state.PerformState(this));
+
+#if UNITY_EDITOR && DEBUG
+					StateMachineDebug.OnEnterState(this, state);
+#endif
 				}
 				else
 				{
@@ -59,6 +60,10 @@ namespace Framework
 
 				_current = state;
 				_process = StartCoroutine(Run());
+
+#if UNITY_EDITOR && DEBUG
+				StateMachineDebug.OnEnterCoroutineState(this, state);
+#endif
 			}
 
 			public void SetNextState(IEnumerator state)
@@ -84,6 +89,10 @@ namespace Framework
 				_current = null;
 				_next = null;
 				_runState = RunState.NotRunning;
+
+#if UNITY_EDITOR && DEBUG
+				StateMachineDebug.OnStopped(this);
+#endif
 			}
 
 			public void Pause()
@@ -130,6 +139,10 @@ namespace Framework
 					{
 						_current = _next;
 						_next = null;
+
+#if UNITY_EDITOR && DEBUG
+						StateMachineDebug.OnEnterCoroutineState(this, _current);
+#endif
 					}
 					else
 					{
@@ -139,6 +152,10 @@ namespace Framework
 				}
 
 				_runState = RunState.NotRunning;
+
+#if UNITY_EDITOR && DEBUG
+				StateMachineDebug.OnStopped(this);
+#endif
 			}
 			#endregion
 		}

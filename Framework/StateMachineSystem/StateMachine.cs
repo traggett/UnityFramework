@@ -46,7 +46,7 @@ namespace Framework
 			{
 				foreach (State state in _states)
 				{
-					if (state._stateId == stateId)
+					if (state != null && state._stateId == stateId)
 					{
 						return state;
 					}

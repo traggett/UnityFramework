@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 namespace Framework
 {
+	using System.Collections;
 	using Utils;
 
 	namespace StateMachineSystem
@@ -39,26 +40,46 @@ namespace Framework
 				return null;
 			}
 
-			public static void OnStateStarted(StateMachineComponent stateMachine, State state)
+			public static void OnEnterState(StateMachineComponent stateMachine, State state)
 			{
-				StateMachine parentStateMachine = state._debugParentStateMachine;
+				StateInfo stateInfo;
 
-				if (parentStateMachine != null)
+				if (!_stateMachineMap.TryGetValue(stateMachine.gameObject, out stateInfo))
 				{
-					if (parentStateMachine != null)
-					{
-						StateInfo stateInfo;
-
-						if (!_stateMachineMap.TryGetValue(stateMachine.gameObject, out stateInfo))
-						{
-							stateInfo = new StateInfo();
-							_stateMachineMap.Add(stateMachine.gameObject, stateInfo);
-						}
-
-						stateInfo._stateMachine = parentStateMachine;
-						stateInfo._state = state;
-					}
+					stateInfo = new StateInfo();
+					_stateMachineMap.Add(stateMachine.gameObject, stateInfo);
 				}
+
+				stateInfo._stateMachine = state._debugParentStateMachine;
+				stateInfo._state = state;
+			}
+
+			public static void OnEnterCoroutineState(StateMachineComponent stateMachine, IEnumerator coroutineState)
+			{
+				StateInfo stateInfo;
+
+				if (!_stateMachineMap.TryGetValue(stateMachine.gameObject, out stateInfo))
+				{
+					stateInfo = new StateInfo();
+					_stateMachineMap.Add(stateMachine.gameObject, stateInfo);
+				}
+
+				stateInfo._stateMachine = null;
+				stateInfo._state = null;
+			}
+
+			public static void OnStopped(StateMachineComponent stateMachine)
+			{
+				StateInfo stateInfo;
+
+				if (!_stateMachineMap.TryGetValue(stateMachine.gameObject, out stateInfo))
+				{
+					stateInfo = new StateInfo();
+					_stateMachineMap.Add(stateMachine.gameObject, stateInfo);
+				}
+
+				stateInfo._stateMachine = null;
+				stateInfo._state = null;
 			}
 		}
 	}
