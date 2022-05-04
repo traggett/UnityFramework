@@ -1,13 +1,11 @@
 #if DEBUG
-using UnityEngine;
 
 using System.Collections.Generic;
 
 namespace Framework
 {
 	using System.Collections;
-	using Utils;
-
+	
 	namespace StateMachineSystem
 	{
 		public static class StateMachineDebug
@@ -18,10 +16,10 @@ namespace Framework
 				public State _state;
 			}
 
-			private static Dictionary<GameObject, StateInfo> _stateMachineMap = new Dictionary<GameObject, StateInfo>();
-			private static GameObject _lastSelectedObject;
+			private static Dictionary<StateMachineComponent, StateInfo> _stateMachineMap = new Dictionary<StateMachineComponent, StateInfo>();
+			private static StateMachineComponent _lastSelectedObject;
 
-			public static StateInfo GetStateInfo(GameObject obj)
+			public static StateInfo GetStateInfo(StateMachineComponent obj)
 			{
 				if (obj == null)
 				{
@@ -44,10 +42,10 @@ namespace Framework
 			{
 				StateInfo stateInfo;
 
-				if (!_stateMachineMap.TryGetValue(stateMachine.gameObject, out stateInfo))
+				if (!_stateMachineMap.TryGetValue(stateMachine, out stateInfo))
 				{
 					stateInfo = new StateInfo();
-					_stateMachineMap.Add(stateMachine.gameObject, stateInfo);
+					_stateMachineMap.Add(stateMachine, stateInfo);
 				}
 
 				stateInfo._stateMachine = state._debugParentStateMachine;
@@ -58,10 +56,10 @@ namespace Framework
 			{
 				StateInfo stateInfo;
 
-				if (!_stateMachineMap.TryGetValue(stateMachine.gameObject, out stateInfo))
+				if (!_stateMachineMap.TryGetValue(stateMachine, out stateInfo))
 				{
 					stateInfo = new StateInfo();
-					_stateMachineMap.Add(stateMachine.gameObject, stateInfo);
+					_stateMachineMap.Add(stateMachine, stateInfo);
 				}
 
 				stateInfo._stateMachine = null;
@@ -70,16 +68,7 @@ namespace Framework
 
 			public static void OnStopped(StateMachineComponent stateMachine)
 			{
-				StateInfo stateInfo;
-
-				if (!_stateMachineMap.TryGetValue(stateMachine.gameObject, out stateInfo))
-				{
-					stateInfo = new StateInfo();
-					_stateMachineMap.Add(stateMachine.gameObject, stateInfo);
-				}
-
-				stateInfo._stateMachine = null;
-				stateInfo._state = null;
+				_stateMachineMap.Remove(stateMachine);
 			}
 		}
 	}

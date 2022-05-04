@@ -165,26 +165,33 @@ namespace Framework
 
 				public void Load(TParentAsset asset)
 				{
-					_editableObjects.Clear();
-					_selectedObjects.Clear();
-					_draggedObject = null;
-
-					_currentAsset = asset;
-
-					//Find child assets and add them
-					UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset));
-
-					foreach (UnityEngine.Object subAsset in assets)
+					if (asset != null)
 					{
-						if (subAsset is TChildAsset subAsset1)
+						_editableObjects.Clear();
+						_selectedObjects.Clear();
+						_draggedObject = null;
+
+						_currentAsset = asset;
+
+						//Find child assets and add them
+						UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset));
+
+						foreach (UnityEngine.Object subAsset in assets)
 						{
-							CreateObjectGUI(subAsset1);
+							if (subAsset is TChildAsset subAsset1)
+							{
+								CreateObjectGUI(subAsset1);
+							}
 						}
+
+						OnLoadAsset(asset);
+
+						GetEditorWindow().DoRepaint();
 					}
-
-					OnLoadAsset(asset);
-
-					GetEditorWindow().DoRepaint();
+					else
+					{
+						ClearAsset();
+					}
 				}
 
 				protected void SetEditorWindow(IEditorWindow editorWindow)

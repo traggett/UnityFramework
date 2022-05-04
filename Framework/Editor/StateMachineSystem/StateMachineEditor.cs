@@ -909,7 +909,7 @@ namespace Framework
 					if (_editorPrefs._debug)
 					{
 						StateMachineComponent stateMachine = _editorPrefs._debugObject.GetComponent();
-						StateMachineDebug.StateInfo stateInfo = StateMachineDebug.GetStateInfo(stateMachine != null ? stateMachine.gameObject : null);
+						StateMachineDebug.StateInfo stateInfo = StateMachineDebug.GetStateInfo(stateMachine);
 
 						if (stateInfo != null)
 						{
