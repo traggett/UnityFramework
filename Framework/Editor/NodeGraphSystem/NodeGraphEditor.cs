@@ -72,14 +72,6 @@ namespace Framework
 					}
 				}
 
-				public void Load(string fileName)
-				{
-					if (ShowOnLoadSaveChangesDialog())
-					{
-						LoadFile(fileName);
-					}
-				}
-
 				public void New()
 				{
 					if (ShowOnLoadSaveChangesDialog())
@@ -475,25 +467,19 @@ namespace Framework
 
 				private void LoadFile(string fileName)
 				{
-					NodeGraph nodeGraph = AssetDatabase.LoadAssetAtPath<NodeGraph>(AssetUtils.GetAssetPath(fileName));
-
-					if (nodeGraph != null)
+					if (Load(AssetUtils.GetAssetPath(fileName)))
 					{
 						if (_editorPrefs._fileName != fileName)
 						{
 							_editorPrefs._fileName = fileName;
 							SaveEditorPrefs();
 						}
-
-						Load(nodeGraph);
 					}
 					else
 					{
 						_editorPrefs._fileName = null;
 						SaveEditorPrefs();
 					}
-
-					GetEditorWindow().DoRepaint();
 				}
 
 				private bool ShowOnLoadSaveChangesDialog()

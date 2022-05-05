@@ -1,10 +1,9 @@
 #if UNITY_EDITOR
 
+using System.Reflection;
+
 namespace Framework
 {
-	using System.Reflection;
-	using UnityEngine;
-
 	namespace StateMachineSystem
 	{
 		public class StateMachineEditorLink

@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Framework
 {
-	using Serialization;
-	
 	namespace StateMachineSystem
 	{
 		[Serializable]

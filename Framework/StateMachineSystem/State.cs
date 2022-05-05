@@ -5,6 +5,7 @@ using System.Collections;
 using System.Reflection;
 using System.Collections.Generic;
 using Framework.Utils;
+using UnityEditor;
 
 namespace Framework
 {
@@ -55,6 +56,21 @@ namespace Framework
 
 			public virtual StateMachineEditorLink[] GetEditorStateLinks()
 			{
+				//Could use serialsed properties??
+				/*
+				SerializedObject serialisedObject = new SerializedObject(this);
+				SerializedProperty property = serialisedObject.GetIterator();
+				List<SerializedProperty> stateRefProps = new List<SerializedProperty>();
+				do
+				{
+					if (property.type == typeof(StateRef).Name)
+					{
+						stateRefProps.Add(property);
+					}
+				}
+				while (property.Next(true));*/
+
+
 				//Loop over member infos in state finding attrbute
 				FieldInfo[] fields = GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
 				List<StateMachineEditorLink> links = new List<StateMachineEditorLink>();

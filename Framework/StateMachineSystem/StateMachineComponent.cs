@@ -14,7 +14,7 @@ namespace Framework
 
 			public void GoToState(StateRef stateRef)
 			{
-				GoToState(stateRef.GetState());
+				GoToState(stateRef.State);
 			}
 
 			public void GoToState(State state)

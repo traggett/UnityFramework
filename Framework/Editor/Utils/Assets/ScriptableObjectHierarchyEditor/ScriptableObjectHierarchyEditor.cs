@@ -123,8 +123,8 @@ namespace Framework
 
 				public void Save()
 				{
-					//Save to file
-					AssetDatabase.SaveAssets();
+					EditorUtility.SetDirty(Asset);
+					AssetDatabase.SaveAssetIfDirty(Asset);
 
 					ClearDirtyFlag();
 
@@ -133,23 +133,19 @@ namespace Framework
 
 				public void SaveAs(string path)
 				{
+					string origAssetPath = AssetDatabase.GetAssetPath(Asset);
 					string assetPath = AssetUtils.GetAssetPath(path);
 
-					//If not the same file, delete current first
-					if (AssetDatabase.LoadMainAssetAtPath(assetPath) != Asset)
+					if (assetPath != origAssetPath)
 					{
-						AssetDatabase.DeleteAsset(assetPath);
+						if (AssetDatabase.CopyAsset(origAssetPath, assetPath))
+						{
+							Load(assetPath);
+						}
 					}
-
-					//Save to file
-					AssetDatabase.CreateAsset(Asset, assetPath);
-					AssetDatabase.SaveAssets();
-
-					//Then load new asset
-					Load(AssetDatabase.LoadMainAssetAtPath(assetPath) as TParentAsset);
 				}
 
-				public void Create(string path)
+				public bool Create(string path)
 				{
 					string assetPath = AssetUtils.GetAssetPath(path);
 
@@ -160,38 +156,50 @@ namespace Framework
 					AssetDatabase.SaveAssets();
 
 					//Then load new asset
-					Load(AssetDatabase.LoadMainAssetAtPath(assetPath) as TParentAsset);
+					return Load(assetPath);
 				}
 
-				public void Load(TParentAsset asset)
+				public bool Load(TParentAsset asset)
 				{
-					if (asset != null)
+					return Load(AssetDatabase.GetAssetPath(asset));
+				}
+
+				public bool Load(string assetPath)
+				{
+					if (!string.IsNullOrEmpty(assetPath))
 					{
-						_editableObjects.Clear();
-						_selectedObjects.Clear();
-						_draggedObject = null;
+						TParentAsset asset = AssetDatabase.LoadMainAssetAtPath(assetPath) as TParentAsset;
 
-						_currentAsset = asset;
-
-						//Find child assets and add them
-						UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset));
-
-						foreach (UnityEngine.Object subAsset in assets)
+						if (asset != null)
 						{
-							if (subAsset is TChildAsset subAsset1)
+							_editableObjects.Clear();
+							_selectedObjects.Clear();
+							_draggedObject = null;
+
+							_currentAsset = asset;
+
+							//Find child assets and add them
+							UnityEngine.Object[] assets = AssetDatabase.LoadAllAssetsAtPath(assetPath);
+
+							foreach (UnityEngine.Object subAsset in assets)
 							{
-								CreateObjectGUI(subAsset1);
+								if (subAsset is TChildAsset subAsset1)
+								{
+									CreateObjectGUI(subAsset1);
+								}
 							}
+
+							OnLoadAsset(asset);
+
+							GetEditorWindow().DoRepaint();
+
+							return true;
 						}
-
-						OnLoadAsset(asset);
-
-						GetEditorWindow().DoRepaint();
 					}
-					else
-					{
-						ClearAsset();
-					}
+
+					ClearAsset();
+
+					return false;
 				}
 
 				protected void SetEditorWindow(IEditorWindow editorWindow)

@@ -110,14 +110,6 @@ namespace Framework
 					}
 				}
 
-				public void Load(string fileName)
-				{
-					if (ShowOnLoadSaveChangesDialog())
-					{
-						LoadFile(fileName);
-					}
-				}
-
 				public void SaveAs()
 				{
 					string path = EditorUtility.SaveFilePanelInProject("Save state machine", Asset.name, "asset", "Please enter a file name to save the state machine to");
@@ -565,9 +557,7 @@ namespace Framework
 
 				private void LoadFile(string fileName)
 				{
-					StateMachine stateMachine = AssetDatabase.LoadAssetAtPath<StateMachine>(AssetUtils.GetAssetPath(fileName));
-
-					if (stateMachine != null)
+					if (Load(AssetUtils.GetAssetPath(fileName)))
 					{
 						if (_editorPrefs._fileName != fileName)
 						{
@@ -575,8 +565,6 @@ namespace Framework
 							_editorPrefs._stateId = -1;
 							SaveEditorPrefs();
 						}
-
-						Load(stateMachine);
 					}
 					else
 					{
@@ -584,8 +572,6 @@ namespace Framework
 						_editorPrefs._stateId = -1;
 						SaveEditorPrefs();
 					}
-
-					GetEditorWindow().DoRepaint();
 				}
 
 				private bool ShowOnLoadSaveChangesDialog()
@@ -858,7 +844,7 @@ namespace Framework
 
 				private StateEditorGUI FindStateForLink(StateRef link)
 				{
-					State state = link.GetState();
+					State state = link.State;
 
 					if (state != null)
 					{
