@@ -38,9 +38,7 @@ namespace Framework
 
 			public static void OnEnterState(StateMachineComponent stateMachine, State state)
 			{
-				StateInfo stateInfo;
-
-				if (!_stateMachineMap.TryGetValue(stateMachine, out stateInfo))
+				if (!_stateMachineMap.TryGetValue(stateMachine, out StateInfo stateInfo))
 				{
 					stateInfo = new StateInfo();
 					_stateMachineMap.Add(stateMachine, stateInfo);

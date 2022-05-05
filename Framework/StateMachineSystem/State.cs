@@ -15,9 +15,6 @@ namespace Framework
 		public abstract class State : ScriptableObject
 		{
 			#region Public Data
-			[HideInInspector]	
-			public int _stateId = -1;
-
 			//Editor properties
 			[HideInInspector]
 			public Vector2 _editorPosition = Vector2.zero;
@@ -41,7 +38,7 @@ namespace Framework
 #if UNITY_EDITOR
 			public virtual string GetEditorLabel()
 			{
-				return "State" + _stateId.ToString("00") + " (" + GetType().Name + ")";
+				return this.name;
 			}
 
 			public virtual string GetEditorDescription() 

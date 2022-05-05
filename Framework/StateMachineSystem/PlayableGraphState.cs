@@ -24,7 +24,7 @@ namespace Framework
 #if UNITY_EDITOR
 			public override string GetEditorLabel()
 			{
-				return "PlayableGraph (State" + _stateId.ToString("00") + ")";
+				return "PlayableGraph " + _playableAsset;
 			}
 
 			public override string GetEditorDescription()

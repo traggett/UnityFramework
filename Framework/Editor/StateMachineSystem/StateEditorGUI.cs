@@ -51,11 +51,6 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public int GetStateId()
-				{
-					return Asset._stateId;
-				}
-
 				public string GetStateDescription()
 				{
 					if (Asset._editorAutoDescription)

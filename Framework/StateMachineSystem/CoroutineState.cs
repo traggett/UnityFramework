@@ -12,8 +12,6 @@ namespace Framework
 		public class CoroutineState : State
 		{
 			#region Public Data		
-			public GameObjectRef _testGameObject;
-			public ComponentRef<MonoBehaviour> _testComponent;
 			public CoroutineRef _coroutine;
 
 			[StateLink("And then")]
@@ -24,7 +22,7 @@ namespace Framework
 #if UNITY_EDITOR
 			public override string GetEditorLabel()
 			{
-				return "Coroutine (State" + _stateId.ToString("00") + ")";
+				return "Coroutine " + _coroutine;
 			}
 
 			public override string GetEditorDescription()

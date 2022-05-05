@@ -211,7 +211,7 @@ namespace Framework
 
 						Color borderColor = selected ? _style._stateBorderSelectedColor : _style._stateBorderColor;
 #if DEBUG
-						if (_debugging && _playModeHighlightedState != null && state.GetStateId() == _playModeHighlightedState._stateId)
+						if (_debugging && _playModeHighlightedState != null && state.Asset == _playModeHighlightedState)
 						{
 							borderColor = _style._stateBorderColorDebug;
 							borderSize = 2.0f;
@@ -297,22 +297,23 @@ namespace Framework
 				{
 					if (state is StateMachineEntryState)
 					{
-						state.name = "Start State";
+						state.name = "Entry State";
 					}
 					else if(state is StateMachineNote)
 					{
-						state.name = "Note";
+						int stateId = GenerateNewNoteId();
+
+						state.name = "Note_" + stateId.ToString("000");
 						state._editorDescription = "New Note";
 					}
 					else
 					{
-						if (state._stateId == -1)
-							state._stateId = GenerateNewStateId();
+						int stateId = GenerateNewStateId();
 
-						state.name = "State_" + state._stateId.ToString("000");
+						state.name = "State_" + stateId.ToString("000");
 
 						if (string.IsNullOrEmpty(state._editorDescription))
-							state._editorDescription = "State" + state._stateId;
+							state._editorDescription = "State" + stateId;
 
 						ArrayUtils.Add(ref Asset._states, state);
 					}
@@ -523,11 +524,11 @@ namespace Framework
 
 					List<State> states = new List<State>();
 
-					foreach (StateEditorGUI state in _editableObjects)
+					foreach (StateEditorGUI stateGUI in _editableObjects)
 					{
-						if (!(state.Asset is StateMachineEntryState || state.Asset is StateMachineNote))
+						if (!(stateGUI.Asset is StateMachineEntryState || stateGUI.Asset is StateMachineNote))
 						{
-							states.Add(state.Asset);
+							states.Add(stateGUI.Asset);
 						}
 					}
 
@@ -691,11 +692,11 @@ namespace Framework
 					EditorGUILayout.EndVertical();
 				}
 
-				private StateEditorGUI GetStateGUI(int stateId)
+				private StateEditorGUI GetStateGUI(State state)
 				{
 					foreach (StateEditorGUI editorGUI in _editableObjects)
 					{
-						if (editorGUI.GetStateId() == stateId)
+						if (editorGUI.Asset == state)
 						{
 							return editorGUI;
 						}
@@ -830,13 +831,31 @@ namespace Framework
 					Draw2DCircle(position, linkRadius - 2.0f, Color.Lerp(color, Color.black, 0.5f));
 				}
 
+				private int GenerateNewNoteId()
+				{
+					int stateId = 0;
+
+					foreach (StateEditorGUI stateGUI in _editableObjects)
+					{
+						if (stateGUI.Asset is StateMachineNote)
+						{
+							stateId++;
+						}
+					}
+
+					return stateId;
+				}
+
 				private int GenerateNewStateId()
 				{
-					int stateId = 1;
+					int stateId = 0;
 
-					foreach (StateEditorGUI state in _editableObjects)
+					foreach (StateEditorGUI stateGUI in _editableObjects)
 					{
-						stateId = Math.Max(stateId, state.GetStateId() + 1);
+						if (!(stateGUI.Asset is StateMachineEntryState || stateGUI.Asset is StateMachineNote))
+						{
+							stateId++;
+						}
 					}
 
 					return stateId;
@@ -912,7 +931,7 @@ namespace Framework
 							_playModeHighlightedState = stateInfo._state;
 
 							if (_editorPrefs._debugLockFocus)
-								CenterCameraOn(GetStateGUI(_playModeHighlightedState._stateId));
+								CenterCameraOn(GetStateGUI(_playModeHighlightedState));
 						}
 					}
 				}
