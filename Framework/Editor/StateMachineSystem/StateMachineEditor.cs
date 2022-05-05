@@ -33,11 +33,20 @@ namespace Framework
 				{ 
 					Link,
 					Label,
+					LabelFlipped,
 				}
 				private StateLinkDragMode _stateLinkDragMode;
 				private StateEditorGUI _draggingState;
 				private StateMachineEditorLink _draggingStateLink;
 				private int _draggingStateLinkIndex;
+
+				private enum LinkArrowDirection
+				{
+					Down,
+					Left,
+					Right
+				}
+
 #if DEBUG
 				private State _playModeHighlightedState = null;
 				private bool _debugging = false;
@@ -239,15 +248,20 @@ namespace Framework
 
 								if (toState != null)
 								{
-									Vector2 endPos = GetLinkEndPosition(toState, j);
-									Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos) + stateRef._editorPosition * _currentZoom;
+									Vector2 endPos = GetLinkEndPosition(state, startPos, toState, out LinkArrowDirection linkArrowDirection);
+									Vector2 labelOffset = stateRef._editorPosition;
+
+									if (linkArrowDirection == LinkArrowDirection.Right)
+										labelOffset.x = -labelOffset.x;
+
+									Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos) + labelOffset * _currentZoom;
 
 									bool linkActive = true;
 									float labelBorder = 0f;
 
 									if (_dragMode == DragType.Custom)
 									{
-										if (_stateLinkDragMode == StateLinkDragMode.Label && _draggingState == state && _draggingStateLinkIndex == j)
+										if ((_stateLinkDragMode == StateLinkDragMode.Label || _stateLinkDragMode == StateLinkDragMode.LabelFlipped) && _draggingState == state && _draggingStateLinkIndex == j)
 										{
 											linkActive = true;
 											labelBorder = borderSize;
@@ -258,7 +272,7 @@ namespace Framework
 										}
 									}
 
-									RenderLinkLine(startPos, endPos, labelPos, linkActive ? _style._linkColor : _style._linkInactiveColor, state == toState);
+									RenderLinkLine(startPos, endPos, labelPos, linkActive ? _style._linkColor : _style._linkInactiveColor, state == toState, linkArrowDirection);
 									RenderLinkLabel(labelPos, links[j]._label, labelBorder);
 								}
 							}
@@ -314,9 +328,9 @@ namespace Framework
 
 						if (string.IsNullOrEmpty(state._editorDescription))
 							state._editorDescription = "State" + stateId;
-
-						ArrayUtils.Add(ref Asset._states, state);
 					}
+
+					state.SetParent(Asset);
 				}
 
 				protected override void OnLeftMouseDown(Event inputEvent)
@@ -370,9 +384,15 @@ namespace Framework
 
 								if (toState != null)
 								{
-									Vector3 startPos = GetLinkStartPosition(state, j);
-									Vector2 endPos = GetLinkEndPosition(toState, j);
-									Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos) + stateRef._editorPosition * _currentZoom;
+									Vector2 startPos = GetLinkStartPosition(state, j);
+									Vector2 endPos = GetLinkEndPosition(state, startPos, toState, out LinkArrowDirection linkArrowDirection);
+
+									Vector2 labelOffset = stateRef._editorPosition;
+
+									if (linkArrowDirection == LinkArrowDirection.Right)
+										labelOffset.x = -labelOffset.x;
+
+									Vector2 labelPos = GetDefaultLinkLabelPos(startPos, endPos) + labelOffset * _currentZoom;
 
 									Vector2 labelSize = _style._linkTextStyle.CalcSize(new GUIContent(links[j]._label));
 									Rect labelRect = new Rect(labelPos.x - (labelSize.x * 0.5f), labelPos.y - (labelSize.y * 0.5f), labelSize.x, labelSize.y);
@@ -380,7 +400,7 @@ namespace Framework
 									if (labelRect.Contains(inputEvent.mousePosition))
 									{
 										_dragMode = DragType.Custom;
-										_stateLinkDragMode = StateLinkDragMode.Label;
+										_stateLinkDragMode = linkArrowDirection == LinkArrowDirection.Right ? StateLinkDragMode.LabelFlipped : StateLinkDragMode.Label;
 										_draggingState = state;
 										_draggingStateLink = links[j];
 										_draggingStateLinkIndex = j;
@@ -420,9 +440,12 @@ namespace Framework
 						Vector2 delta = currentPos - _dragPos;
 						_dragPos = currentPos;
 
-						if (_stateLinkDragMode == StateLinkDragMode.Label)
+						if (_stateLinkDragMode == StateLinkDragMode.Label || _stateLinkDragMode == StateLinkDragMode.LabelFlipped)
 						{
 							delta *= (1.0f / _currentZoom);
+
+							if (_stateLinkDragMode == StateLinkDragMode.LabelFlipped)
+								delta.x = -delta.x;
 
 							//Move label by position
 							StateRef stateRef = _draggingStateLink.GetStateRef();
@@ -522,21 +545,13 @@ namespace Framework
 						asset._entryState = CreateAndAddNewObject<StateMachineEntryState>();
 					}
 
-					List<State> states = new List<State>();
-
 					foreach (StateEditorGUI stateGUI in _editableObjects)
 					{
-						if (!(stateGUI.Asset is StateMachineEntryState || stateGUI.Asset is StateMachineNote))
-						{
-							states.Add(stateGUI.Asset);
-						}
+						stateGUI.Asset.SetParent(Asset);
 					}
-
-					asset._states = states.ToArray();
 
 					CenterCamera();
 				}
-
 				#endregion
 
 				#region Private Functions
@@ -714,29 +729,52 @@ namespace Framework
 					return new Vector2(Mathf.Round(stateRect.x + stateRect.width * edgeFraction), Mathf.Round(stateRect.y + stateRect.height - _style._shadowSize - 1.0f));
 				}
 
-				private Vector2 GetLinkEndPosition(StateEditorGUI state, int linkIndex = 0)
+				private Vector2 GetLinkEndPosition(StateEditorGUI fromState, Vector2 fromPos, StateEditorGUI state, out LinkArrowDirection linkArrowDirection)
 				{
 					Rect stateRect = GetScreenRect(state.GetBounds());
-					return new Vector2(Mathf.Round(stateRect.x + stateRect.width / 2.0f) + 0.5f, Mathf.Round(stateRect.y - _style._linkArrowHeight - 1.0f) + 0.5f);
+
+					if (fromState == state)
+					{
+						linkArrowDirection = LinkArrowDirection.Left;
+						return new Vector2(Mathf.Round(stateRect.x + stateRect.width) + 0.5f, Mathf.Round(stateRect.y + stateRect.height * 0.5f) + 0.5f);
+					}
+					else
+					{
+						if (fromPos.y < stateRect.y + stateRect.height * 0.5f)
+						{
+							linkArrowDirection = LinkArrowDirection.Down;
+							return new Vector2(Mathf.Round(stateRect.x + stateRect.width * 0.5f) + 0.5f, Mathf.Round(stateRect.y - _style._linkArrowHeight - 1.0f) + 0.5f);
+						}
+						else
+						{
+							if (fromPos.x < stateRect.x + stateRect.width * 0.5f)
+							{
+								linkArrowDirection = LinkArrowDirection.Right;
+								return new Vector2(Mathf.Round(stateRect.x) + 0.5f, Mathf.Round(stateRect.y + stateRect.height * 0.5f) + 0.5f);
+							}
+							else
+							{
+								linkArrowDirection = LinkArrowDirection.Left;
+								return new Vector2(Mathf.Round(stateRect.x + stateRect.width) + 0.5f, Mathf.Round(stateRect.y + stateRect.height * 0.5f) + 0.5f);
+							}
+						}
+					}
 				}
 
-				private void RenderLinkLine(Vector2 startPos, Vector2 endPos, Vector2 labelPos, Color color, bool looped = false)
+				private void RenderLinkLine(Vector2 startPos, Vector2 endPos, Vector2 labelPos, Color color, bool looped = false, LinkArrowDirection linkArrowDirection = LinkArrowDirection.Down)
 				{
 					float tangent = kLineTangent * _currentZoom;
-					Vector2 lineTangent;
-
 					float labelTangentDist;
 
 					if (looped)
 					{
-						lineTangent = Vector2.up * tangent;
+
 						labelTangentDist = tangent * 2f;
 					}
 					else
 					{
 						Vector2 line = (endPos - startPos).normalized;
-						lineTangent = Vector2.up * tangent;
-
+						
 						//Get closest point on line to label position
 						float lineDot = Vector2.Dot(line, labelPos - startPos);
 						Vector2 labelLinePoint = startPos + line * lineDot;
@@ -756,8 +794,30 @@ namespace Framework
 						labelTangent = Vector2.down * labelTangentDist * 0.25f;
 					}
 
-					Vector2 startTangent = startPos + lineTangent;
-					Vector2 endTangent = endPos - lineTangent;
+					Vector2 arrowTangent;
+
+					switch (linkArrowDirection)
+					{
+						case LinkArrowDirection.Left:
+							{
+								arrowTangent = Vector2.left * tangent;
+								break;
+							}
+						case LinkArrowDirection.Right:
+							{
+								arrowTangent = Vector2.right * tangent;
+								break;
+							}
+						case LinkArrowDirection.Down:
+						default:
+							{
+								arrowTangent = Vector2.up * tangent;
+								break;
+							}
+					}
+
+					Vector2 startTangent = startPos + Vector2.up * tangent;
+					Vector2 endTangent = endPos - arrowTangent;
 
 					Handles.BeginGUI();
 					Handles.color = color;
@@ -765,7 +825,26 @@ namespace Framework
 					Handles.DrawBezier(startPos, labelPos, startTangent, labelPos - labelTangent, color, EditorUtils.BezierAATexture, _style._lineLineWidth);
 					Handles.DrawBezier(labelPos, endPos, labelPos + labelTangent, endTangent, color, EditorUtils.BezierAATexture, _style._lineLineWidth);
 
-					Handles.DrawAAConvexPolygon(new Vector3[] { new Vector3(endPos.x, endPos.y + _style._linkArrowHeight, 0.0f), new Vector3(endPos.x + _style._linkArrowWidth, endPos.y, 0.0f), new Vector3(endPos.x - _style._linkArrowWidth, endPos.y, 0.0f) });
+					switch (linkArrowDirection)
+					{
+						case LinkArrowDirection.Down:
+							{
+								Handles.DrawAAConvexPolygon(new Vector3[] { new Vector3(endPos.x, endPos.y + _style._linkArrowHeight, 0.0f), new Vector3(endPos.x + _style._linkArrowWidth, endPos.y, 0.0f), new Vector3(endPos.x - _style._linkArrowWidth, endPos.y, 0.0f) });
+								break;
+							}
+						case LinkArrowDirection.Left:
+							{
+								Handles.DrawAAConvexPolygon(new Vector3[] { new Vector3(endPos.x, endPos.y, 0.0f), new Vector3(endPos.x + _style._linkArrowHeight, endPos.y + _style._linkArrowWidth, 0.0f), new Vector3(endPos.x + _style._linkArrowHeight, endPos.y - _style._linkArrowWidth, 0.0f) });
+								break;
+							}
+						case LinkArrowDirection.Right:
+							{
+								Handles.DrawAAConvexPolygon(new Vector3[] { new Vector3(endPos.x, endPos.y, 0.0f), new Vector3(endPos.x - _style._linkArrowHeight, endPos.y + _style._linkArrowWidth, 0.0f), new Vector3(endPos.x - _style._linkArrowHeight, endPos.y - _style._linkArrowWidth, 0.0f) });
+								break;
+							}
+					}
+
+
 					Handles.EndGUI();
 				}
 

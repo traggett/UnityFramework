@@ -1,11 +1,9 @@
 using UnityEngine;
-
 using System;
 using System.Collections;
 using System.Reflection;
 using System.Collections.Generic;
 using Framework.Utils;
-using UnityEditor;
 
 namespace Framework
 {
@@ -26,10 +24,19 @@ namespace Framework
 			public bool _editorAutoColor = true;
 			[HideInInspector]
 			public Color _editorColor = Color.gray;
-#if DEBUG
-			[NonSerialized]
-			public StateMachine _debugParentStateMachine;
-#endif
+
+			public StateMachine Parent
+			{
+				get
+				{
+					return _stateMachine;
+				}
+			}
+			#endregion
+
+			#region Public Data
+			[SerializeField]
+			private StateMachine _stateMachine;
 			#endregion
 
 			#region Public Interface
@@ -95,6 +102,11 @@ namespace Framework
 				}
 
 				return links.ToArray();
+			}
+
+			public void SetParent(StateMachine stateMachine)
+			{
+				_stateMachine = stateMachine;
 			}
 #endif
 			#endregion

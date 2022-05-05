@@ -44,7 +44,7 @@ namespace Framework
 					_stateMachineMap.Add(stateMachine, stateInfo);
 				}
 
-				stateInfo._stateMachine = state._debugParentStateMachine;
+				stateInfo._stateMachine = state.Parent;
 				stateInfo._state = state;
 			}
 			
