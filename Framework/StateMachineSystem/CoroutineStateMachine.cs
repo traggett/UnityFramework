@@ -39,8 +39,8 @@ namespace Framework
 				{
 					if (_process != null)
 					{
-						StopCoroutine(_process);
 						_processes[_currentIndex]._abort = true;
+						StopCoroutine(_process);
 					}
 
 					_currentIndex = _currentIndex == 0 ? 1 : 0;
@@ -95,8 +95,8 @@ namespace Framework
 			{
 				if (_process != null)
 				{
-					StopCoroutine(_process);
 					_processes[_currentIndex]._abort = true;
+					StopCoroutine(_process);
 					_process = null;
 				}
 
@@ -128,7 +128,9 @@ namespace Framework
 			{
 				while (!_processes[index]._abort)
 				{
-					while (_processes[index]._current != null && _processes[index]._current.MoveNext())
+					while (!_processes[index]._abort 
+						&& _processes[index]._current != null
+						&& _processes[index]._current.MoveNext())
 					{
 						if (_processes[index]._abort)
 						{
