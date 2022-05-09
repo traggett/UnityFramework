@@ -126,7 +126,7 @@ namespace Framework
 			#region Private Functions
 			private IEnumerator Run(int index)
 			{
-				while (true)
+				while (!_processes[index]._abort)
 				{
 					while (_processes[index]._current != null && _processes[index]._current.MoveNext())
 					{
@@ -138,22 +138,20 @@ namespace Framework
 						yield return _processes[index]._current.Current;
 					}
 
-					if (_processes[index]._abort)
+					if (!_processes[index]._abort)
 					{
-						break;
-					}
+						if (_processes[index]._next != null)
+						{
+							_processes[index]._current = _processes[index]._next;
+							_processes[index]._next = null;
 
-					if (_processes[index]._next != null)
-					{
-						_processes[index]._current = _processes[index]._next;
-						_processes[index]._next = null;
-
-						OnEnterState(_processes[index]._current);
-					}
-					else
-					{
-						_processes[index]._current = null;
-						break;
+							OnEnterState(_processes[index]._current);
+						}
+						else
+						{
+							_processes[index]._current = null;
+							break;
+						}
 					}
 				}
 
