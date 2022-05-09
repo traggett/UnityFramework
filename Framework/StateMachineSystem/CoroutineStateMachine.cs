@@ -10,10 +10,14 @@ namespace Framework
 			#region Private Data
 			private bool _isRunning;
 			private Coroutine _process;
-			private IEnumerator _current;
-			private IEnumerator _next;
-			private readonly bool[] _abort = new bool[2];
-			private int _runIndex = 0;
+			private struct ProcessData
+			{
+				public IEnumerator _current;
+				public IEnumerator _next;
+				public bool _abort;
+			}
+			private readonly ProcessData[] _processes = new ProcessData[2];
+			private int _currentIndex = 0;
 			#endregion
 
 			#region Unity Messages
@@ -24,6 +28,11 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
+			public void GoToState(Coroutine state)
+			{
+				GoToState(state);
+			}
+
 			public void GoToState(IEnumerator state)
 			{
 				if (state != null)
@@ -31,18 +40,20 @@ namespace Framework
 					if (_process != null)
 					{
 						StopCoroutine(_process);
-						_abort[_runIndex] = true;
+						_processes[_currentIndex]._abort = true;
 					}
 
-					_current = state;
-					_next = null;
+					_currentIndex = _currentIndex == 0 ? 1 : 0;
+
+					_processes[_currentIndex]._current = state;
+					_processes[_currentIndex]._next = null;
+					_processes[_currentIndex]._abort = false;
 
 					OnEnterState(state);
 
-					_runIndex = _runIndex == 0 ? 1 : 0;
 					_isRunning = true;
 					
-					_process = StartCoroutine(Run());
+					_process = StartCoroutine(Run(_currentIndex));
 				}
 				else
 				{
@@ -50,15 +61,33 @@ namespace Framework
 				}
 			}
 
+			public void SetNextState(Coroutine state)
+			{
+				SetNextState(state);
+			}
+
 			public void SetNextState(IEnumerator state)
 			{
 				if (IsRunning())
 				{
-					_next = state;
+					_processes[_currentIndex]._next = state;
 				}
 				else
 				{
 					GoToState(state);
+				}
+			}
+
+			public IEnumerator GetNextState()
+			{
+				return _processes[_currentIndex]._next;
+			}
+
+			public void ClearNextState()
+			{
+				if (IsRunning())
+				{
+					_processes[_currentIndex]._next = null;
 				}
 			}
 
@@ -67,12 +96,10 @@ namespace Framework
 				if (_process != null)
 				{
 					StopCoroutine(_process);
-					_abort[_runIndex] = true;
+					_processes[_currentIndex]._abort = true;
 					_process = null;
 				}
 
-				_current = null;
-				_next = null;
 				_isRunning = false;
 
 				OnStopped();
@@ -81,11 +108,6 @@ namespace Framework
 			public bool IsRunning()
 			{
 				return _isRunning;
-			}
-
-			public IEnumerator GetNextState()
-			{
-				return _next;
 			}
 			#endregion
 
@@ -102,44 +124,46 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private IEnumerator Run()
+			private IEnumerator Run(int index)
 			{
-				int runIndex = _runIndex;
-				_abort[runIndex] = false;
-
 				while (true)
 				{
-					while (_current != null && _current.MoveNext())
+					while (_processes[index]._current != null && _processes[index]._current.MoveNext())
 					{
-						if (_abort[runIndex])
+						if (_processes[index]._abort)
 						{
-							yield break;
+							break;
 						}
 
-						yield return _current.Current;
+						yield return _processes[index]._current.Current;
 					}
 
-					if (_abort[runIndex])
+					if (_processes[index]._abort)
 					{
-						yield break;
+						break;
 					}
 
-					if (_next != null)
+					if (_processes[index]._next != null)
 					{
-						_current = _next;
-						_next = null;
+						_processes[index]._current = _processes[index]._next;
+						_processes[index]._next = null;
 
-						OnEnterState(_current);
+						OnEnterState(_processes[index]._current);
 					}
 					else
 					{
-						_current = null;
+						_processes[index]._current = null;
 						break;
 					}
 				}
 
-				_isRunning = false;
-				OnStopped();
+				if (!_processes[index]._abort)
+				{
+					_isRunning = false;
+					OnStopped();
+				}
+
+				yield break;
 			}
 			#endregion
 		}
