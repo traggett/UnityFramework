@@ -16,7 +16,7 @@ namespace Framework
 				public IEnumerator _next;
 				public bool _abort;
 			}
-			private readonly ProcessData[] _processes = new ProcessData[2];
+			private readonly ProcessData[] _processes = new ProcessData[4];
 			private int _currentIndex = 0;
 			#endregion
 
@@ -43,7 +43,7 @@ namespace Framework
 						StopCoroutine(_process);
 					}
 
-					_currentIndex = _currentIndex == 0 ? 1 : 0;
+					_currentIndex = (_currentIndex + 1) % _processes.Length;
 
 					_processes[_currentIndex]._current = state;
 					_processes[_currentIndex]._next = null;
