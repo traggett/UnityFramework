@@ -23,17 +23,25 @@ namespace Framework
 				{
 					GoToState(state.PerformState(this));
 
-#if UNITY_EDITOR && DEBUG
 					if (IsRunning())
 					{
+						OnEnterState(state);
+#if UNITY_EDITOR && DEBUG
 						StateMachineDebug.OnEnterState(this, state);
-					}
 #endif
+					}
 				}
 				else
 				{
 					Stop();
 				}
+			}
+			#endregion
+
+			#region Virtual Interface
+			protected virtual void OnEnterState(State state)
+			{
+
 			}
 			#endregion
 
