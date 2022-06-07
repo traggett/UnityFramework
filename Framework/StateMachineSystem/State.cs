@@ -34,8 +34,8 @@ namespace Framework
 			}
 			#endregion
 
-			#region Public Data
-			[SerializeField]
+			#region Private Data
+			[SerializeField, HideInInspector]
 			private StateMachine _stateMachine;
 			#endregion
 
