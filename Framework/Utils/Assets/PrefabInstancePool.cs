@@ -191,7 +191,7 @@ namespace Framework
 			{
 				PooledPrefab pooledPrefab = GetPooledPrefab(component);
 
-				if (pooledPrefab != null)
+				if (pooledPrefab != null && pooledPrefab._parentPool != null)
 				{
 					return pooledPrefab._parentPool.DestroyPooledPrefab(pooledPrefab, instant);
 				}
@@ -203,7 +203,7 @@ namespace Framework
 			{
 				PooledPrefab pooledPrefab = GetPooledPrefab(gameObject);
 
-				if (pooledPrefab != null)
+				if (pooledPrefab != null && pooledPrefab._parentPool != null)
 				{
 					return pooledPrefab._parentPool.DestroyPooledPrefab(pooledPrefab, instant);
 				}
@@ -271,12 +271,13 @@ namespace Framework
 				_instances[index]._isFree = true;
 
 				GameObject gameObject = _instances[index].gameObject;
-				gameObject.SetActive(false);
-
+				
 				if (gameObject.transform.parent != this.transform)
 				{
 					gameObject.transform.SetParent(this.transform, false);
 				}
+
+				gameObject.SetActive(false);
 			}
 
 			private static PooledPrefab GetPooledPrefab(GameObject gameObject)
