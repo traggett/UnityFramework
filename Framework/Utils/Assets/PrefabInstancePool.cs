@@ -103,25 +103,25 @@ namespace Framework
 					newItems[0]._isFree = false;
 				}
 
-				if (parent != null && parent != newInstance.transform.parent)
+				if (newInstance.transform.parent != parent)
 				{
-					if (resetTransform)
-					{
-						newInstance.transform.localPosition = _prefab.transform.localPosition;
-						newInstance.transform.localRotation = _prefab.transform.localRotation;
-						newInstance.transform.localScale = _prefab.transform.localScale;
-
-						if (newInstance.transform is RectTransform rectTransform && _prefab.transform is RectTransform prefabRectTransform)
-						{
-							rectTransform.anchoredPosition = prefabRectTransform.anchoredPosition;
-							rectTransform.anchorMin = prefabRectTransform.anchorMin;
-							rectTransform.anchorMax = prefabRectTransform.anchorMax;
-							rectTransform.sizeDelta = prefabRectTransform.sizeDelta;
-							rectTransform.pivot = prefabRectTransform.pivot;
-						}
-					}
-
 					newInstance.transform.SetParent(parent, false);
+				}
+
+				if (resetTransform)
+				{
+					newInstance.transform.localPosition = _prefab.transform.localPosition;
+					newInstance.transform.localRotation = _prefab.transform.localRotation;
+					newInstance.transform.localScale = _prefab.transform.localScale;
+
+					if (newInstance.transform is RectTransform rectTransform && _prefab.transform is RectTransform prefabRectTransform)
+					{
+						rectTransform.anchoredPosition = prefabRectTransform.anchoredPosition;
+						rectTransform.anchorMin = prefabRectTransform.anchorMin;
+						rectTransform.anchorMax = prefabRectTransform.anchorMax;
+						rectTransform.sizeDelta = prefabRectTransform.sizeDelta;
+						rectTransform.pivot = prefabRectTransform.pivot;
+					}
 				}
 
 				newInstance.SetActive(true);
