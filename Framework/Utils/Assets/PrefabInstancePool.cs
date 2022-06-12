@@ -26,7 +26,7 @@ namespace Framework
 
 			#region Private Data
 			private PooledPrefab[] _instances;
-			private List<int> _toDestroy = new List<int>();
+			private readonly List<int> _toDestroy = new List<int>();
 			#endregion
 
 			#region Unity Messages
@@ -129,7 +129,7 @@ namespace Framework
 				return newInstance;
 			}
 
-			public bool Destroy(GameObject gameObject, bool instant = true)
+			public bool Destroy(GameObject gameObject, bool instant = false)
 			{
 				PooledPrefab pooledPrefab = GetPooledPrefab(gameObject);
 
@@ -141,7 +141,7 @@ namespace Framework
 				return false;
 			}
 
-			public bool Destroy(Component component, bool instant = true)
+			public bool Destroy(Component component, bool instant = false)
 			{
 				PooledPrefab pooledPrefab = GetPooledPrefab(component);
 
@@ -187,7 +187,7 @@ namespace Framework
 				}
 			}
 
-			public static bool DestroyPrefab(Component component, bool instant = true)
+			public static bool DestroyPrefab(Component component, bool instant = false)
 			{
 				PooledPrefab pooledPrefab = GetPooledPrefab(component);
 
@@ -199,7 +199,7 @@ namespace Framework
 				return false;
 			}
 
-			public static bool DestroyPrefab(GameObject gameObject, bool instant = true)
+			public static bool DestroyPrefab(GameObject gameObject, bool instant = false)
 			{
 				PooledPrefab pooledPrefab = GetPooledPrefab(gameObject);
 
@@ -246,7 +246,7 @@ namespace Framework
 				return prefab;
 			}
 
-			private bool DestroyPooledPrefab(PooledPrefab pooledPrefab, bool instant = true)
+			private bool DestroyPooledPrefab(PooledPrefab pooledPrefab, bool instant)
 			{
 				if (pooledPrefab != null && pooledPrefab._parentPool == this)
 				{
