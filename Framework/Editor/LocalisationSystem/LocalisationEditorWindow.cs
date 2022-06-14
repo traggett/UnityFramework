@@ -474,7 +474,8 @@ namespace Framework
 							//Then render viewable range
 							for (int i = _viewStartIndex; i < _viewEndIndex && i < _keys.Length; i++)
 							{
-								bool selected = IsSelected(_keys[i]);
+								string key = _keys[i];
+								bool selected = IsSelected(key);
 
 								Color origBackgroundColor = GUI.backgroundColor;
 								Color origContentColor = GUI.contentColor;
@@ -485,10 +486,10 @@ namespace Framework
 									if (selected)
 									{
 										//Work out highest text size
-										string textA = Localisation.GetRawString(_keys[i], Localisation.GetCurrentLanguage());
+										string textA = Localisation.GetRawString(key, Localisation.GetCurrentLanguage());
 										float textAHeight = _selectedTextStyle.CalcHeight(new GUIContent(textA), _editorPrefs._firstLanguageWidth);
 
-										string textB = Localisation.GetRawString(_keys[i], _editorPrefs._secondLanguage);
+										string textB = Localisation.GetRawString(key, _editorPrefs._secondLanguage);
 										float textBHeight = _selectedTextStyle.CalcHeight(new GUIContent(textB), secondLangWidth);
 
 										float textHeight = Mathf.Max(textAHeight, textBHeight);
@@ -514,17 +515,17 @@ namespace Framework
 										if (_editingKeyName == _keys[i])
 										{
 											EditorGUI.BeginChangeCheck();
-											string key = EditorGUILayout.DelayedTextField(_keys[i], _editKeyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight));
+											string newKey = EditorGUILayout.DelayedTextField(key, _editKeyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight));
 											if (EditorGUI.EndChangeCheck())
 											{
 												_editingKeyName = null;
-												Localisation.ChangeKey(_keys[i], key);
+												Localisation.ChangeKey(key, newKey);
 												UpdateKeys();
 											}
 										}
 										else
 										{
-											if (GUILayout.Button(_keys[i], selected ? _selectedKeyStyle : _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight)))
+											if (GUILayout.Button(key, selected ? _selectedKeyStyle : _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight)))
 											{
 												OnClickItem(i, SystemLanguage.Unknown);
 											}
@@ -537,7 +538,7 @@ namespace Framework
 										GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 
 										//Render First Language
-										string text = Localisation.GetRawString(_keys[i], currentLanguage);
+										string text = Localisation.GetRawString(key, currentLanguage);
 
 										if (GUILayout.Button(selected ? text : StringUtils.GetFirstLine(text), selected ? _selectedTextStyle : _textStyle, GUILayout.Width(_editorPrefs._firstLanguageWidth), GUILayout.Height(itemHeight)))
 										{
@@ -547,7 +548,7 @@ namespace Framework
 										//Render Second Language
 										EditorGUILayout.BeginVertical(GUILayout.Width(secondLangWidth));
 										{
-											string stext = Localisation.GetRawString(_keys[i], _editorPrefs._secondLanguage);
+											string stext = Localisation.GetRawString(key, _editorPrefs._secondLanguage);
 
 											if (GUILayout.Button(selected ? stext : StringUtils.GetFirstLine(stext), selected ? _selectedTextStyle : _textStyle, GUILayout.Width(secondLangWidth), GUILayout.Height(itemHeight)))
 											{
