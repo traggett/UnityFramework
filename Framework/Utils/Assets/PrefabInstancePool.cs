@@ -103,6 +103,11 @@ namespace Framework
 					newItems[0]._isFree = false;
 				}
 
+				if (parent == null)
+				{
+					parent = this.transform;
+				}
+
 				if (newInstance.transform.parent != parent)
 				{
 					newInstance.transform.SetParent(parent, false);
