@@ -114,6 +114,11 @@ namespace Framework
 				return _min + Mathf.RoundToInt(t * (_max - _min));
 			}
 
+			public float GetLerpFraction(int value)
+			{
+				return (value - _min) / (float)(_max - _min);
+			}
+
 			public float Clamp(int value)
 			{
 				return Math.Clamp(value, _min, _max);

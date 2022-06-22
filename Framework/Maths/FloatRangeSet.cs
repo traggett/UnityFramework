@@ -8,7 +8,24 @@ namespace Framework
 		public class FloatRangeSet 
 		{
 			#region Private Data
-			private FloatRange[] _ranges;
+			private FloatRange[] _ranges = new FloatRange[0];
+			#endregion
+
+			#region Public Properties
+			public float Range
+			{
+				get
+				{
+					float totalRange = 0f;
+
+					for (int i = 0; i < _ranges.Length; i++)
+					{
+						totalRange += _ranges[i].Range;
+					}
+
+					return totalRange;
+				}
+			}
 			#endregion
 
 			#region Public Interface
@@ -108,14 +125,7 @@ namespace Framework
 
 			public float GetRandomValue()
 			{
-				float totalRange = 0f;
-
-				for (int i = 0; i < _ranges.Length; i++)
-				{
-					totalRange += _ranges[i].Range;
-				}
-
-				float randomValue = Random.value * totalRange;
+				float randomValue = Random.value * Range;
 				float value = 0f;
 
 				for (int i = 0; i < _ranges.Length; i++)
