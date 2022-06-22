@@ -10,7 +10,9 @@ namespace Framework
 		public struct IntRange
 		{
 			#region Private Data
+			[SerializeField]
 			private int _min;
+			[SerializeField]
 			private int _max;
 			#endregion
 

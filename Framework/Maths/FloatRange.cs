@@ -10,7 +10,9 @@ namespace Framework
 		public struct FloatRange
 		{
 			#region Private Data
+			[SerializeField]
 			private float _min;
+			[SerializeField]
 			private float _max;
 			#endregion
 
