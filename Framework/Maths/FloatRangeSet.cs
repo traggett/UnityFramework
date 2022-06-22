@@ -50,6 +50,13 @@ namespace Framework
 						_ranges[i].Min = range.Min;
 						range.Min = _ranges[i].Max;
 					}
+					//If range starts from within the array range, remove array range, set start of this range to start of array range
+					else if (_ranges[i].Min <= range.Min && range.Min <= _ranges[i].Max)
+					{
+						range.Min = _ranges[i].Min;
+						ArrayUtils.RemoveAt(ref _ranges, i);
+						i--;
+					}
 					//Otherwise subtract array range from new range
 					else
 					{
