@@ -17,12 +17,12 @@ namespace Framework
 				EditorGUILayout.LabelField(GUIContent.none, GUILayout.Height(EditorGUIUtility.singleLineHeight), GUILayout.ExpandWidth(true));
 				Rect rect = GUILayoutUtility.GetLastRect();
 				EditorGUI.BeginChangeCheck();
-				float[] values = new float[] { (float)intRange._min, (float)intRange._max };
+				float[] values = new float[] { (float)intRange.Min, (float)intRange.Max };
 				EditorGUI.MultiFloatField(rect, new GUIContent(label), new GUIContent[] { new GUIContent("f"), new GUIContent("t") }, values);
 				if (EditorGUI.EndChangeCheck())
 				{
-					intRange._min = Mathf.RoundToInt(values[0]);
-					intRange._max = Mathf.RoundToInt(values[1]);
+					intRange.Min = Mathf.RoundToInt(values[0]);
+					intRange.Max = Mathf.RoundToInt(values[1]);
 					dataChanged = true;
 				}
 

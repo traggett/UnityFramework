@@ -35,10 +35,7 @@ namespace Framework
 
 			public static FloatRange Lerp(FloatRange from, FloatRange to, float t)
 			{
-				FloatRange lerp = from;
-				lerp._min = Mathf.Lerp(from._min, to._min, t);
-				lerp._max = Mathf.Lerp(from._max, to._max, t);
-				return lerp;
+				return new FloatRange(Mathf.Lerp(from.Min, to.Max, t), Mathf.Lerp(from.Min, to.Max, t));
 			}
 
 			public static float Interpolate(InterpolationType type, float start, float end, float t)

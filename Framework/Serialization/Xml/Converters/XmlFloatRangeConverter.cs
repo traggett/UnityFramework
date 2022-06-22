@@ -16,8 +16,8 @@ namespace Framework
 				{
 					//Add to nodes for x and y
 					FloatRange floatRange = (FloatRange)obj;
-					XmlConverter.AppendFieldObject(node, floatRange._min, "min");
-					XmlConverter.AppendFieldObject(node, floatRange._max, "max");
+					XmlConverter.AppendFieldObject(node, floatRange.Min, "min");
+					XmlConverter.AppendFieldObject(node, floatRange.Max, "max");
 				}
 
 				public static object OnConvertFromXmlNode(object obj, XmlNode node)
@@ -27,8 +27,8 @@ namespace Framework
 
 					FloatRange floatRange = (FloatRange)obj;
 
-					floatRange._min = XmlConverter.FieldObjectFromXmlNode<float>(node, "min");
-					floatRange._max = XmlConverter.FieldObjectFromXmlNode<float>(node, "max");
+					floatRange.Min = XmlConverter.FieldObjectFromXmlNode<float>(node, "min");
+					floatRange.Max = XmlConverter.FieldObjectFromXmlNode<float>(node, "max");
 
 					return floatRange;
 				}

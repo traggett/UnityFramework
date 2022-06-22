@@ -20,7 +20,7 @@ namespace Framework
 
 					}
 					
-					int[] values = new int[] { range._min, range._max };
+					int[] values = new int[] { range.Min, range.Max };
 					EditorGUI.MultiIntField(position, new GUIContent[] { new GUIContent("f"), new GUIContent("t") }, values);
 
 					return new IntRange(values[0], values[1]);

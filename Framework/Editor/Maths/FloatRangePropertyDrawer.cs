@@ -19,7 +19,7 @@ namespace Framework
 						EditorGUI.LabelField(labelPosition, label);
 					}
 					
-					float[] values = new float[] { range._min, range._max };
+					float[] values = new float[] { range.Min, range.Max };
 					EditorGUI.MultiFloatField(position, new GUIContent[] { new GUIContent("f"), new GUIContent("t") }, values);
 
 					return new FloatRange(values[0], values[1]);

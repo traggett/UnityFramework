@@ -1,33 +1,79 @@
+using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Framework
 {
 	namespace Maths
 	{
-		[System.Serializable]
+		[Serializable]
 		public struct IntRange
 		{
-			public int _min;
-			public int _max;
+			#region Private Data
+			private int _min;
+			private int _max;
+			#endregion
 
+			#region Public Properties
+			public int Min
+			{
+				get
+				{
+					return _min;
+				}
+				set
+				{
+					if (value > _max)
+						_max = value;
+
+					_min = value;
+				}
+			}
+
+			public int Max
+			{
+				get
+				{
+					return _max;
+				}
+				set
+				{
+					if (value < _min)
+						_min = value;
+
+					_max = value;
+				}
+			}
+
+			public int Range
+			{
+				get
+				{
+					return _max - _min;
+				}
+			}
+			#endregion
+
+			#region Public Interface
 			public IntRange(int min, int max)
 			{
-				_min = min;
-				_max = max;
+				if (min > max)
+				{
+					_min = max;
+					_max = min;
+				}
+				else
+				{
+					_min = min;
+					_max = max;
+				}
 			}
 
 			public static bool operator ==(IntRange a, IntRange b)
 			{
-				// If both are null, or both are same instance, return true.
 				if (ReferenceEquals(a, b))
 				{
 					return true;
-				}
-
-				// If one is null, but not both, return false.
-				if (((object)a == null) || ((object)b == null))
-				{
-					return false;
 				}
 
 				return a._min == b._min && a._max == b._max;
@@ -35,24 +81,12 @@ namespace Framework
 
 			public static bool operator !=(IntRange a, IntRange b)
 			{
-				// If both are null, or both are same instance, return false.
 				if (ReferenceEquals(a, b))
 				{
 					return false;
 				}
 
-				// If one is null, but not both, return true.
-				if (((object)a == null) || ((object)b == null))
-				{
-					return true;
-				}
-
 				return a._min != b._min || a._max != b._max;
-			}
-
-			public static implicit operator string(IntRange obj)
-			{
-				return "(" + obj._min + ", " + obj._max + ")";
 			}
 
 			public override string ToString()
@@ -75,24 +109,14 @@ namespace Framework
 				return _min.GetHashCode() ^ _max.GetHashCode();
 			}
 
-			public int Get(float t)
+			public int Lerp(float t)
 			{
-				return Mathf.RoundToInt(Mathf.Lerp(_min, _max, t));
+				return _min + Mathf.RoundToInt(t * (_max - _min));
 			}
 
-			public float GetT(float value)
+			public float Clamp(int value)
 			{
-				return (value - _min) / (_max - _min);
-			}
-
-			public float Clamp(float value)
-			{
-				return Mathf.Clamp(value, _min, _max);
-			}
-
-			public float GetClampedT(float value)
-			{
-				return Mathf.Clamp01(GetT(value));
+				return Math.Clamp(value, _min, _max);
 			}
 
 			public bool Contains(int value)
@@ -100,15 +124,10 @@ namespace Framework
 				return _min <= value && value <= _max;
 			}
 
-			public bool Overlaps(IntRange other)
-			{
-				return (_min <= other._min && other._min <= _max) || (_min <= other._max && other._max <= _max);
-			}
-
 			public int GetRandomValue()
 			{
 				float t = Random.value;
-				return Get(t);
+				return Lerp(t);
 			}
 
 			public int GetRandomSignedValue()
@@ -116,6 +135,26 @@ namespace Framework
 				int value = GetRandomValue();
 				return Random.value > 0.5f ? value : -value;
 			}
+
+			public bool Overlaps(IntRange other)
+			{
+				return _max <= other._min && _min <= other._max;
+			}
+
+			public bool Intersect(IntRange other, out IntRange intersection)
+			{
+				if (Overlaps(other))
+				{
+					int min = Math.Max(_min, other._min);
+					int max = Math.Min(_max, other._max);
+					intersection = new IntRange(min, max);
+					return true;
+				}
+
+				intersection = default;
+				return false;
+			}
+			#endregion
 		}
 	}
 }

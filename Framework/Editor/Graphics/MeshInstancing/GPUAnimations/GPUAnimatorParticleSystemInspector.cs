@@ -85,9 +85,9 @@ namespace Framework
 							rect.x += columnWidth;
 							{
 								rect.width = columnWidth * 0.5f;
-								animation._speedRange._min = EditorGUI.FloatField(rect, animation._speedRange._min);
+								animation._speedRange.Min = EditorGUI.FloatField(rect, animation._speedRange.Min);
 								rect.x += rect.width;
-								animation._speedRange._max = EditorGUI.FloatField(rect, animation._speedRange._max);
+								animation._speedRange.Max = EditorGUI.FloatField(rect, animation._speedRange.Max);
 							}
 
 							_animationList.list[index] = animation;

@@ -27,7 +27,7 @@ namespace Framework
 			{
 				FloatRange range = _range;
 				float lerp = MathUtils.Interpolate(_easeType, 0.0f, 1.0f, _input);
-				_value = range.Get(lerp);
+				_value = range.Lerp(lerp);
 			}
 
 #if UNITY_EDITOR

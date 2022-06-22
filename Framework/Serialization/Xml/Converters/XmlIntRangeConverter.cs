@@ -16,8 +16,8 @@ namespace Framework
 				{
 					//Add to nodes for x and y
 					IntRange intRange = (IntRange)obj;
-					XmlConverter.AppendFieldObject(node, intRange._min, "min");
-					XmlConverter.AppendFieldObject(node, intRange._max, "max");
+					XmlConverter.AppendFieldObject(node, intRange.Min, "min");
+					XmlConverter.AppendFieldObject(node, intRange.Max, "max");
 				}
 
 				public static object OnConvertFromXmlNode(object obj, XmlNode node)
@@ -27,8 +27,8 @@ namespace Framework
 
 					IntRange intRange = (IntRange)obj;
 
-					intRange._min = XmlConverter.FieldObjectFromXmlNode<int>(node, "min");
-					intRange._max = XmlConverter.FieldObjectFromXmlNode<int>(node, "max");
+					intRange.Min = XmlConverter.FieldObjectFromXmlNode<int>(node, "min");
+					intRange.Max = XmlConverter.FieldObjectFromXmlNode<int>(node, "max");
 
 					return intRange;
 				}
