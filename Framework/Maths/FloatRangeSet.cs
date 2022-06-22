@@ -44,7 +44,7 @@ namespace Framework
 					{
 						return;
 					}
-					//If array range is totally inside new range then replace it with this,
+					//If array range is totally inside new range then replace it with this (update array range with new min, clip range by its max)
 					else if (range.Min <= _ranges[i].Min && _ranges[i].Max <= range.Max)
 					{
 						_ranges[i].Min = range.Min;
@@ -65,7 +65,7 @@ namespace Framework
 					}
 				}
 
-				//If range is still valid add to array
+				//If range is still valid add to array (in sorted order by range min)
 				if (range.Range > 0f)
 				{
 					int index;
@@ -90,10 +90,10 @@ namespace Framework
 						break;
 					}
 
-					//If range is totally inside other range 
+					//If range is totally inside array range 
 					if (_ranges[i].Min <= range.Min && range.Max <= _ranges[i].Max)
 					{
-						//Need to split this range into two (subtract range from it)
+						//Need to split array range into two (subtract range from it)
 						FloatRange rangeA = new FloatRange(_ranges[i].Min, range.Min);
 						FloatRange rangeB = new FloatRange(range.Max, _ranges[i].Max);
 
@@ -106,6 +106,12 @@ namespace Framework
 							ArrayUtils.Insert(ref _ranges, rangeA, i);
 
 						return;
+					}
+					//If array range is totally inside range then remove it
+					else if (range.Min <= _ranges[i].Min && _ranges[i].Max <= range.Max)
+					{
+						ArrayUtils.RemoveAt(ref _ranges, i);
+						i--;
 					}
 					//Otherwise subtract range from range in array
 					else
