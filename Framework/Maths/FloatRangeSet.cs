@@ -57,6 +57,13 @@ namespace Framework
 						ArrayUtils.RemoveAt(ref _ranges, i);
 						i--;
 					}
+					//If range ends from within the array range, remove array range, set start of this range to start of array range
+					else if (_ranges[i].Min <= range.Max && range.Max <= _ranges[i].Max)
+					{
+						range.Max = _ranges[i].Max;
+						ArrayUtils.RemoveAt(ref _ranges, i);
+						i--;
+					}
 					//Otherwise subtract array range from new range
 					else
 					{
