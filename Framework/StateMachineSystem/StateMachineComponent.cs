@@ -21,15 +21,11 @@ namespace Framework
 			{
 				if (state != null)
 				{
-					GoToState(state.PerformState(this));
-
-					if (IsRunning())
-					{
-						OnEnterState(state);
 #if UNITY_EDITOR && DEBUG
-						StateMachineDebug.OnEnterState(this, state);
+					StateMachineDebug.OnEnterState(this, state);
 #endif
-					}
+					OnEnterState(state);
+					GoToState(state.PerformState(this));
 				}
 				else
 				{
@@ -42,22 +38,6 @@ namespace Framework
 			protected virtual void OnEnterState(State state)
 			{
 
-			}
-			#endregion
-
-			#region CoroutineStateMachine
-			protected override void OnEnterState(IEnumerator state)
-			{
-#if UNITY_EDITOR && DEBUG
-				StateMachineDebug.Clear(this);
-#endif
-			}
-
-			protected override void OnStopped()
-			{
-#if UNITY_EDITOR && DEBUG
-				StateMachineDebug.Clear(this);
-#endif
 			}
 			#endregion
 		}
