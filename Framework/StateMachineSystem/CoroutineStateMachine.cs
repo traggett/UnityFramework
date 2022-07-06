@@ -107,6 +107,11 @@ namespace Framework
 
 			public bool IsRunning()
 			{
+				if (_isRunning && _process == null)
+				{
+					_isRunning = false;
+				}
+
 				return _isRunning;
 			}
 			#endregion
