@@ -17,15 +17,18 @@ namespace Framework
 
 				private void OnEnable() 
 				{
-					_style = new GUIStyle(EditorStyles.textArea);
-					_style.fixedHeight = 0f;
-					_style.richText= true;
-
 					_animation = ((LegacyAnimator)target).GetComponent<Animation>();
 				}
 
 				public override void OnInspectorGUI()
 				{
+					if (_style == null)
+					{
+						_style = new GUIStyle(EditorStyles.textArea);
+						_style.fixedHeight = 0f;
+						_style.richText = true;
+					}
+
 					DrawDefaultInspector();
 
 					_foldout = EditorGUILayout.BeginFoldoutHeaderGroup(_foldout, "Current Animation State Info");
