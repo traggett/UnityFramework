@@ -9,6 +9,7 @@ namespace Framework
 		public abstract class HidableComponent : MonoBehaviour
 		{
 			#region Public Data
+			[Header("Animation Params")]
 			public bool _showOnEnable;
 			public bool _disableOnHidden;
 			public float _showTime;
@@ -153,7 +154,7 @@ namespace Framework
 
 			protected virtual void OnStartHideAnimation()
 			{
-				_onHidden.Invoke();
+				_onHide.Invoke();
 			}
 
 			protected abstract void OnUpdateAnimations(float showLerp, bool showing);
