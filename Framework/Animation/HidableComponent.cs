@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Framework
 {
@@ -10,14 +11,22 @@ namespace Framework
 			#region Public Data
 			public bool _showOnEnable;
 			public bool _disableOnHidden;
-
 			public float _showTime;
 			public float _hideTime;
-
 			public bool _unscaledTime;
 
-			public Action _onShown;
-			public Action _onHidden;
+			[Serializable]
+			public class AnimtationEvent : UnityEvent { }
+
+			[Header("Animation Events")]
+			[Tooltip("Event that is triggered when the show animations start.")]
+			public AnimtationEvent _onShow;
+			[Tooltip("Event that is triggered when the component is fully shown.")]
+			public AnimtationEvent _onShown;
+			[Tooltip("Event that is triggered when the hide animations start.")]
+			public AnimtationEvent _onHide;
+			[Tooltip("Event that is triggered when the component is fully hidden.")]
+			public AnimtationEvent _onHidden;
 
 			public bool Active
 			{
@@ -139,11 +148,12 @@ namespace Framework
 			protected virtual void OnStartShowAnimation()
 			{
 				UpdateAnimations(0f);
+				_onShow.Invoke();
 			}
 
 			protected virtual void OnStartHideAnimation()
 			{
-
+				_onHidden.Invoke();
 			}
 
 			protected abstract void OnUpdateAnimations(float showLerp, bool showing);
@@ -203,7 +213,7 @@ namespace Framework
 				_showLerp = 1f;
 				OnUpdateAnimations(1f, true);
 
-				_onShown?.Invoke();
+				_onShown.Invoke();
 			}
 
 			private void OnHidden()
@@ -212,7 +222,7 @@ namespace Framework
 				_showLerp = 0f;
 				OnUpdateAnimations(0f, false);
 
-				_onHidden?.Invoke();
+				_onHidden.Invoke();
 
 				if (_disableOnHidden)
 					this.gameObject.SetActive(false);
