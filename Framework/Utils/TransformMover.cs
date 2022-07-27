@@ -142,7 +142,7 @@ namespace Framework
 			else
 			{
 				_positionTarget.Clear();
-				this.transform.localPosition = position;
+				this.transform.position = position;
 			}
 		}
 
