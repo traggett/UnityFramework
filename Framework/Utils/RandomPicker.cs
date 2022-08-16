@@ -50,7 +50,7 @@ namespace Framework
 				public int _pickCount;
 				public float _chance;
 			}
-			private readonly ItemData[] _array;
+			private ItemData[] _array;
 			private float _bias = 0f;
 			private bool _dontRepeat = false;
 			#endregion
@@ -63,6 +63,50 @@ namespace Framework
 				for (int i=0; i<_array.Length; i++)
 				{
 					_array[i]._item = array[i];
+					_array[i]._pickCount = 0;
+				}
+			}
+
+			public void Add(T item)
+			{
+				ItemData itemData = new ItemData()
+				{
+					_item = item,
+					_pickCount = 0,
+				};
+
+				ArrayUtils.Add(ref _array, itemData);
+			}
+
+			public bool Contains(T item)
+			{
+				for (int i = 0; i < _array.Length; i++)
+				{
+					if (_array[i]._item.Equals(item))
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+
+			public void Remove(T item)
+			{
+				for (int i = 0; i < _array.Length; i++)
+				{
+					if (_array[i]._item.Equals(item))
+					{
+						ArrayUtils.RemoveAt(ref _array, i);
+						break;
+					}
+				}
+			}
+
+			public void Reset()
+			{
+				for (int i = 0; i < _array.Length; i++)
+				{
 					_array[i]._pickCount = 0;
 				}
 			}
@@ -82,7 +126,7 @@ namespace Framework
 			public T PickRandom()
 			{
 				//Reset chance based on bias
-				ResetChances();
+				CalcualateChances();
 
 				if (_dontRepeat)
 				{
@@ -103,7 +147,7 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private void ResetChances()
+			private void CalcualateChances()
 			{
 				for (int i = 0; i < _array.Length; i++)
 				{
@@ -159,7 +203,6 @@ namespace Framework
 
 				float randomValue = Random.value * totalChance;
 				float cumulative = 0f;
-
 
 				for (int i = 0; i < _array.Length; i++)
 				{
