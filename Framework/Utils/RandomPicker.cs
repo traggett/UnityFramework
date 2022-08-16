@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -44,70 +46,55 @@ namespace Framework
 			#endregion
 
 			#region Private Data		
-			private struct ItemData
+			private class ItemData
 			{
 				public T _item;
 				public int _pickCount;
 				public float _chance;
 			}
-			private ItemData[] _array;
+			private Dictionary<T, ItemData> _items = new Dictionary<T, ItemData>();
 			private float _bias = 0f;
 			private bool _dontRepeat = false;
 			#endregion
 
 			#region Public Interface
-			public RandomPicker(params T[] array)
+			public RandomPicker(params T[] items)
 			{
-				_array = new ItemData[array.Length];
+				_items = new Dictionary<T, ItemData>(items.Length);
 
-				for (int i=0; i<_array.Length; i++)
+				for (int i=0; i< items.Length; i++)
 				{
-					_array[i]._item = array[i];
-					_array[i]._pickCount = 0;
+					Add(items[i]);
 				}
 			}
 
 			public void Add(T item)
 			{
-				ItemData itemData = new ItemData()
+				if (!Contains(item))
 				{
-					_item = item,
-					_pickCount = 0,
-				};
-
-				ArrayUtils.Add(ref _array, itemData);
+					_items[item] = new ItemData()
+					{
+						_item = item,
+						_pickCount = 0,
+					};
+				}
 			}
 
 			public bool Contains(T item)
 			{
-				for (int i = 0; i < _array.Length; i++)
-				{
-					if (_array[i]._item.Equals(item))
-					{
-						return true;
-					}
-				}
-
-				return false;
+				return _items.ContainsKey(item);
 			}
 
 			public void Remove(T item)
 			{
-				for (int i = 0; i < _array.Length; i++)
-				{
-					if (_array[i]._item.Equals(item))
-					{
-						ArrayUtils.RemoveAt(ref _array, i);
-						break;
-					}
-				}
+				_items.Remove(item);
 			}
 
 			public void Reset()
 			{
-				for (int i = 0; i < _array.Length; i++)
+				foreach (var keyPair in _items)
 				{
-					_array[i]._pickCount = 0;
+					keyPair.Value._pickCount = 0;
 				}
 			}
 
@@ -123,101 +110,125 @@ namespace Framework
 				return new RandomPicker<int>(indexes);
 			}
 
-			public T PickRandom()
+			public T PickRandomFrom(params T[] items)
 			{
+				//Add all items
+				for (int i = 0; i < items.Length; i++)
+				{
+					Add(items[i]);
+				}
+
 				//Reset chance based on bias
-				CalcualateChances();
+				CalcualateChances(items);
 
 				if (_dontRepeat)
 				{
-					DontAllowRepeats();
+					DontAllowRepeats(items);
 				}
 
 				//Pick based on chance
-				int index = PickFromChance();
+				return PickFromChance(items);
+			}
 
-				if (index != -1)
+			public T PickRandom()
+			{
+				T[] allItems = _items.Keys.ToArray();
+
+				//Reset chance based on bias
+				CalcualateChances(allItems);
+
+				if (_dontRepeat)
 				{
-					_array[index]._pickCount++;
-					return _array[index]._item;
+					DontAllowRepeats(allItems);
 				}
 
-				throw new Exception();
+				//Pick based on chance
+				return PickFromChance(allItems);
 			}
 			#endregion
 
 			#region Private Functions
-			private void CalcualateChances()
+			private void CalcualateChances(T[] items)
 			{
-				for (int i = 0; i < _array.Length; i++)
+				for (int i = 0; i < items.Length; i++)
 				{
+					ItemData itemData = _items[items[i]];
+
 					if (_bias > 0f)
 					{
-						_array[i]._chance = Mathf.Lerp(1f, 1f / _array[i]._pickCount, _bias);
+						itemData._chance = Mathf.Lerp(1f, 1f / itemData._pickCount, _bias);
 					}
 					else
 					{
-						_array[i]._chance = 1f;
+						itemData._chance = 1f;
 					}
 				}
 			}
 
-			private void DontAllowRepeats()
+			private void DontAllowRepeats(T[] items)
 			{
 				//Find loweset pick count
-				int lowestCount = GetLowestPickCount();
+				int lowestCount = GetLowestPickCount(items);
 
 				//Set all items that have been picked more than this to zero
-				for (int i = 0; i < _array.Length; i++)
+				for (int i = 0; i < items.Length; i++)
 				{
-					if (_array[i]._pickCount > lowestCount)
+					ItemData itemData = _items[items[i]];
+
+					if (itemData._pickCount > lowestCount)
 					{
-						_array[i]._chance = 0f;
+						itemData._chance = 0f;
 					}
 				}
 			}
 
-			private int GetLowestPickCount()
+			private int GetLowestPickCount(T[] items)
 			{
 				int count = int.MaxValue;
 
-				for (int i = 0; i < _array.Length; i++)
+				for (int i = 0; i < items.Length; i++)
 				{
-					count = Math.Min(count, _array[i]._pickCount);
+					ItemData itemData = _items[items[i]];
+					count = Math.Min(count, itemData._pickCount);
 				}
 
 				return count;
 			}
 
-			private int PickFromChance()
+			private T PickFromChance(T[] items)
 			{
 				float totalChance = 0f;
 
-				for (int i = 0; i < _array.Length; i++)
+				for (int i = 0; i < items.Length; i++)
 				{
-					if (_array[i]._chance > 0f)
+					ItemData itemData = _items[items[i]];
+
+					if (itemData._chance > 0f)
 					{
-						totalChance += _array[i]._chance;
+						totalChance += itemData._chance;
 					}
 				}
 
 				float randomValue = Random.value * totalChance;
 				float cumulative = 0f;
 
-				for (int i = 0; i < _array.Length; i++)
+				for (int i = 0; i < items.Length; i++)
 				{
-					if (_array[i]._chance > 0f)
+					ItemData itemData = _items[items[i]];
+
+					if (itemData._chance > 0f)
 					{
-						cumulative += _array[i]._chance;
+						cumulative += itemData._chance;
 
 						if (randomValue < cumulative)
 						{
-							return i;
+							itemData._pickCount++;
+							return items[i];
 						}
 					}
 				}
 
-				return _array.Length - 1;
+				throw new Exception();
 			}
 			#endregion
 		}
