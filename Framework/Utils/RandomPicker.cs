@@ -134,11 +134,6 @@ namespace Framework
 					//Reset chance based on bias
 					CalcualateChances(items);
 
-					if (_dontRepeat)
-					{
-						DontAllowRepeats(items);
-					}
-
 					//Pick based on chance
 					return PickFromChance(items);
 				}			
@@ -166,28 +161,38 @@ namespace Framework
 			#region Private Functions
 			private void CalcualateChances(T[] items)
 			{
-				GetTotalPicks(items, out int totalPicks, out float totalWeight);
+				GetItemsData(items, out int totalPicks, out int lowestPickCount, out float totalWeight);
+
+				bool applyBias = _bias > 0f && totalPicks > 0 && totalWeight > 0f;
 
 				for (int i = 0; i < items.Length; i++)
 				{
 					ItemData itemData = _items[items[i]];
 
-					itemData._chance = itemData._weight;
-
-					if (_bias > 0f && totalPicks > 0 && totalWeight > 0f)
+					if (_dontRepeat && itemData._pickCount > lowestPickCount)
 					{
-						float pickedAmount = itemData._pickCount / totalPicks;
-						float expectedAmount = itemData._weight / totalWeight;
+						itemData._chance = 0f;
+					}
+					else
+					{
+						itemData._chance = itemData._weight;
 
-						itemData._chance *= Mathf.Lerp(1f, expectedAmount / pickedAmount, _bias);
+						if (applyBias)
+						{
+							float pickedAmount = itemData._pickCount / totalPicks;
+							float expectedAmount = itemData._weight / totalWeight;
+
+							itemData._chance *= Mathf.Lerp(1f, expectedAmount / pickedAmount, _bias);
+						}
 					}
 				}
 			}
 
-			private void GetTotalPicks(T[] items, out int totalPicks, out float totalWeight)
+			private void GetItemsData(T[] items, out int totalPicks, out int lowestPicks, out float totalWeight)
 			{
 				totalPicks = 0;
 				totalWeight = 0f;
+				lowestPicks = int.MaxValue;
 
 				for (int i = 0; i < items.Length; i++)
 				{
@@ -195,37 +200,9 @@ namespace Framework
 
 					totalPicks += itemData._pickCount;
 					totalWeight += itemData._weight;
+
+					lowestPicks = Math.Min(lowestPicks, itemData._pickCount);
 				}
-			}
-
-			private void DontAllowRepeats(T[] items)
-			{
-				//Find loweset pick count
-				int lowestCount = GetLowestPickCount(items);
-
-				//Set all items that have been picked more than this to zero
-				for (int i = 0; i < items.Length; i++)
-				{
-					ItemData itemData = _items[items[i]];
-
-					if (itemData._pickCount > lowestCount)
-					{
-						itemData._chance = 0f;
-					}
-				}
-			}
-
-			private int GetLowestPickCount(T[] items)
-			{
-				int count = int.MaxValue;
-
-				for (int i = 0; i < items.Length; i++)
-				{
-					ItemData itemData = _items[items[i]];
-					count = Math.Min(count, itemData._pickCount);
-				}
-
-				return count;
 			}
 
 			private T PickFromChance(T[] items)
