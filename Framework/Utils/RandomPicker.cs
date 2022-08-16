@@ -161,7 +161,7 @@ namespace Framework
 			#region Private Functions
 			private void CalcualateChances(T[] items)
 			{
-				GetItemsData(items, out int totalPicks, out int lowestPickCount, out float totalWeight);
+				GetItemsData(items, out float totalPicks, out int lowestPickCount, out float totalWeight);
 
 				bool applyBias = _bias > 0f && totalPicks > 0 && totalWeight > 0f;
 
@@ -177,20 +177,20 @@ namespace Framework
 					{
 						itemData._chance = itemData._weight;
 
-						if (applyBias)
+						if (applyBias && itemData._pickCount > 0)
 						{
-							float pickedAmount = itemData._pickCount / totalPicks;
+							float actualAmount = itemData._pickCount / totalPicks;
 							float expectedAmount = itemData._weight / totalWeight;
 
-							itemData._chance *= Mathf.Lerp(1f, expectedAmount / pickedAmount, _bias);
+							itemData._chance *= Mathf.Lerp(1f, expectedAmount / actualAmount, _bias);
 						}
 					}
 				}
 			}
 
-			private void GetItemsData(T[] items, out int totalPicks, out int lowestPicks, out float totalWeight)
+			private void GetItemsData(T[] items, out float totalPicks, out int lowestPicks, out float totalWeight)
 			{
-				totalPicks = 0;
+				totalPicks = 0f;
 				totalWeight = 0f;
 				lowestPicks = int.MaxValue;
 
