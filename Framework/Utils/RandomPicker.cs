@@ -56,7 +56,7 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
-			public RandomPicker(T[] array)
+			public RandomPicker(params T[] array)
 			{
 				_array = new ItemData[array.Length];
 
