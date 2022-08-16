@@ -166,16 +166,35 @@ namespace Framework
 			#region Private Functions
 			private void CalcualateChances(T[] items)
 			{
+				GetTotalPicks(items, out int totalPicks, out float totalWeight);
+
 				for (int i = 0; i < items.Length; i++)
 				{
 					ItemData itemData = _items[items[i]];
 
 					itemData._chance = itemData._weight;
 
-					if (_bias > 0f && itemData._pickCount > 0)
+					if (_bias > 0f && totalPicks > 0 && totalWeight > 0f)
 					{
-						itemData._chance *= Mathf.Lerp(1f, 1f / itemData._pickCount, _bias);
+						float pickedAmount = itemData._pickCount / totalPicks;
+						float expectedAmount = itemData._weight / totalWeight;
+
+						itemData._chance *= Mathf.Lerp(1f, expectedAmount / pickedAmount, _bias);
 					}
+				}
+			}
+
+			private void GetTotalPicks(T[] items, out int totalPicks, out float totalWeight)
+			{
+				totalPicks = 0;
+				totalWeight = 0f;
+
+				for (int i = 0; i < items.Length; i++)
+				{
+					ItemData itemData = _items[items[i]];
+
+					totalPicks += itemData._pickCount;
+					totalWeight += itemData._weight;
 				}
 			}
 
