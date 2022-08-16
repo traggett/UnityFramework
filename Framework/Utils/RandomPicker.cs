@@ -50,6 +50,7 @@ namespace Framework
 			{
 				public T _item;
 				public int _pickCount;
+				public float _weight;
 				public float _chance;
 			}
 			private Dictionary<T, ItemData> _items = new Dictionary<T, ItemData>();
@@ -76,6 +77,7 @@ namespace Framework
 					{
 						_item = item,
 						_pickCount = 0,
+						_weight = 1f,
 					};
 				}
 			}
@@ -148,6 +150,17 @@ namespace Framework
 
 				return PickRandomFrom(allItems);
 			}
+
+			public bool SetWeight(T item, float weight)
+			{
+				if (_items.TryGetValue(item, out ItemData itemData))
+				{
+					itemData._weight = weight;
+					return true;
+				}
+
+				return false;
+			}
 			#endregion
 
 			#region Private Functions
@@ -157,13 +170,11 @@ namespace Framework
 				{
 					ItemData itemData = _items[items[i]];
 
+					itemData._chance = itemData._weight;
+
 					if (_bias > 0f && itemData._pickCount > 0)
 					{
-						itemData._chance = Mathf.Lerp(1f, 1f / itemData._pickCount, _bias);
-					}
-					else
-					{
-						itemData._chance = 1f;
+						itemData._chance *= Mathf.Lerp(1f, 1f / itemData._pickCount, _bias);
 					}
 				}
 			}
