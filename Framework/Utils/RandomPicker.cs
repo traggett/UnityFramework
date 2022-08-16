@@ -112,38 +112,41 @@ namespace Framework
 
 			public T PickRandomFrom(params T[] items)
 			{
+				if (items.Length == 0)
+					throw new Exception();
+
 				//Add all items
 				for (int i = 0; i < items.Length; i++)
 				{
 					Add(items[i]);
 				}
 
-				//Reset chance based on bias
-				CalcualateChances(items);
-
-				if (_dontRepeat)
+				if (items.Length == 1)
 				{
-					DontAllowRepeats(items);
+					ItemData itemData = _items[items[0]];
+					itemData._pickCount++;
+					return items[0];
 				}
+				else
+				{
+					//Reset chance based on bias
+					CalcualateChances(items);
 
-				//Pick based on chance
-				return PickFromChance(items);
+					if (_dontRepeat)
+					{
+						DontAllowRepeats(items);
+					}
+
+					//Pick based on chance
+					return PickFromChance(items);
+				}			
 			}
 
 			public T PickRandom()
 			{
 				T[] allItems = _items.Keys.ToArray();
 
-				//Reset chance based on bias
-				CalcualateChances(allItems);
-
-				if (_dontRepeat)
-				{
-					DontAllowRepeats(allItems);
-				}
-
-				//Pick based on chance
-				return PickFromChance(allItems);
+				return PickRandomFrom(allItems);
 			}
 			#endregion
 
@@ -154,7 +157,7 @@ namespace Framework
 				{
 					ItemData itemData = _items[items[i]];
 
-					if (_bias > 0f)
+					if (_bias > 0f && itemData._pickCount > 0)
 					{
 						itemData._chance = Mathf.Lerp(1f, 1f / itemData._pickCount, _bias);
 					}
