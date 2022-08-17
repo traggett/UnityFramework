@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -69,13 +68,13 @@ namespace Framework
 				}
 			}
 			
-			public RandomPicker(IList<T> items)
+			public RandomPicker(IEnumerable<T> items)
 			{
-				_items = new Dictionary<T, ItemData>(items.Count);
+				_items = new Dictionary<T, ItemData>();
 
-				for (int i = 0; i < items.Count; i++)
+				foreach (T item in items)
 				{
-					Add(items[i]);
+					Add(item);
 				}
 			}
 
@@ -110,22 +109,26 @@ namespace Framework
 				}
 			}
 
-			public T PickRandomFrom(IList<T> items)
+			public T PickRandomFrom(IEnumerable<T> items)
 			{
-				if (items.Count == 0)
-					throw new Exception();
+				int count = 0;
 
-				//Add all items
-				for (int i = 0; i < items.Count; i++)
+				foreach (T item in items)
 				{
-					Add(items[i]);
+					Add(item);
+					count++;
 				}
 
-				if (items.Count == 1)
+				if (count == 0)
 				{
-					ItemData itemData = _items[items[0]];
+					throw new Exception();
+				}
+				else if (count == 1)
+				{
+					T item = items.GetEnumerator().Current;
+					ItemData itemData = _items[item];
 					itemData._pickCount++;
-					return items[0];
+					return item; ;
 				}
 				else
 				{
@@ -139,9 +142,7 @@ namespace Framework
 
 			public T PickRandom()
 			{
-				T[] allItems = _items.Keys.ToArray();
-
-				return PickRandomFrom(allItems);
+				return PickRandomFrom(_items.Keys);
 			}
 
 			public bool SetWeight(T item, float weight)
@@ -157,15 +158,15 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private void CalcualateChances(IList<T> items)
+			private void CalcualateChances(IEnumerable<T> items)
 			{
 				GetItemsData(items, out float totalPicks, out int lowestPickCount, out float totalWeight);
 
 				bool applyBias = _bias > 0f && totalPicks > 0 && totalWeight > 0f;
 
-				for (int i = 0; i < items.Count; i++)
+				foreach (T item in items)
 				{
-					ItemData itemData = _items[items[i]];
+					ItemData itemData = _items[item];
 
 					if (_dontRepeat && itemData._pickCount > lowestPickCount)
 					{
@@ -186,15 +187,15 @@ namespace Framework
 				}
 			}
 
-			private void GetItemsData(IList<T> items, out float totalPicks, out int lowestPicks, out float totalWeight)
+			private void GetItemsData(IEnumerable<T> items, out float totalPicks, out int lowestPicks, out float totalWeight)
 			{
 				totalPicks = 0f;
 				totalWeight = 0f;
 				lowestPicks = int.MaxValue;
 
-				for (int i = 0; i < items.Count; i++)
+				foreach (T item in items)
 				{
-					ItemData itemData = _items[items[i]];
+					ItemData itemData = _items[item];
 
 					totalPicks += itemData._pickCount;
 					totalWeight += itemData._weight;
@@ -203,13 +204,13 @@ namespace Framework
 				}
 			}
 
-			private T PickFromChance(IList<T> items)
+			private T PickFromChance(IEnumerable<T> items)
 			{
 				float totalChance = 0f;
 
-				for (int i = 0; i < items.Count; i++)
+				foreach (T item in items)
 				{
-					ItemData itemData = _items[items[i]];
+					ItemData itemData = _items[item];
 
 					if (itemData._chance > 0f)
 					{
@@ -220,9 +221,9 @@ namespace Framework
 				float randomValue = Random.value * totalChance;
 				float cumulative = 0f;
 
-				for (int i = 0; i < items.Count; i++)
+				foreach (T item in items)
 				{
-					ItemData itemData = _items[items[i]];
+					ItemData itemData = _items[item];
 
 					if (itemData._chance > 0f)
 					{
@@ -231,7 +232,7 @@ namespace Framework
 						if (randomValue < cumulative)
 						{
 							itemData._pickCount++;
-							return items[i];
+							return item;
 						}
 					}
 				}
