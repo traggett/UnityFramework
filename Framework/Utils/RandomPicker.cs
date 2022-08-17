@@ -68,6 +68,16 @@ namespace Framework
 					Add(items[i]);
 				}
 			}
+			
+			public RandomPicker(IList<T> items)
+			{
+				_items = new Dictionary<T, ItemData>(items.Count);
+
+				for (int i = 0; i < items.Count; i++)
+				{
+					Add(items[i]);
+				}
+			}
 
 			public void Add(T item)
 			{
@@ -100,30 +110,18 @@ namespace Framework
 				}
 			}
 
-			public static RandomPicker<int> CreateIndexPicker(T[] array)
+			public T PickRandomFrom(IList<T> items)
 			{
-				int[] indexes = new int[array.Length];
-
-				for (int i = 0; i < array.Length; i++)
-				{
-					indexes[i] = i;
-				}
-
-				return new RandomPicker<int>(indexes);
-			}
-
-			public T PickRandomFrom(params T[] items)
-			{
-				if (items.Length == 0)
+				if (items.Count == 0)
 					throw new Exception();
 
 				//Add all items
-				for (int i = 0; i < items.Length; i++)
+				for (int i = 0; i < items.Count; i++)
 				{
 					Add(items[i]);
 				}
 
-				if (items.Length == 1)
+				if (items.Count == 1)
 				{
 					ItemData itemData = _items[items[0]];
 					itemData._pickCount++;
@@ -136,7 +134,7 @@ namespace Framework
 
 					//Pick based on chance
 					return PickFromChance(items);
-				}			
+				}
 			}
 
 			public T PickRandom()
@@ -159,13 +157,13 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private void CalcualateChances(T[] items)
+			private void CalcualateChances(IList<T> items)
 			{
 				GetItemsData(items, out float totalPicks, out int lowestPickCount, out float totalWeight);
 
 				bool applyBias = _bias > 0f && totalPicks > 0 && totalWeight > 0f;
 
-				for (int i = 0; i < items.Length; i++)
+				for (int i = 0; i < items.Count; i++)
 				{
 					ItemData itemData = _items[items[i]];
 
@@ -188,13 +186,13 @@ namespace Framework
 				}
 			}
 
-			private void GetItemsData(T[] items, out float totalPicks, out int lowestPicks, out float totalWeight)
+			private void GetItemsData(IList<T> items, out float totalPicks, out int lowestPicks, out float totalWeight)
 			{
 				totalPicks = 0f;
 				totalWeight = 0f;
 				lowestPicks = int.MaxValue;
 
-				for (int i = 0; i < items.Length; i++)
+				for (int i = 0; i < items.Count; i++)
 				{
 					ItemData itemData = _items[items[i]];
 
@@ -205,11 +203,11 @@ namespace Framework
 				}
 			}
 
-			private T PickFromChance(T[] items)
+			private T PickFromChance(IList<T> items)
 			{
 				float totalChance = 0f;
 
-				for (int i = 0; i < items.Length; i++)
+				for (int i = 0; i < items.Count; i++)
 				{
 					ItemData itemData = _items[items[i]];
 
@@ -222,7 +220,7 @@ namespace Framework
 				float randomValue = Random.value * totalChance;
 				float cumulative = 0f;
 
-				for (int i = 0; i < items.Length; i++)
+				for (int i = 0; i < items.Count; i++)
 				{
 					ItemData itemData = _items[items[i]];
 
