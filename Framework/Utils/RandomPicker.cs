@@ -119,16 +119,19 @@ namespace Framework
 					count++;
 				}
 
-				if (count == 0)
+				if (count <= 1)
 				{
-					throw new Exception();
-				}
-				else if (count == 1)
-				{
-					T item = items.GetEnumerator().Current;
-					ItemData itemData = _items[item];
-					itemData._pickCount++;
-					return item; ;
+					IEnumerator<T> enumerator = items.GetEnumerator();
+
+					if (enumerator.MoveNext())
+					{
+						T item = enumerator.Current;
+						ItemData itemData = _items[item];
+						itemData._pickCount++;
+						return item;
+					}
+
+					throw new Exception("Items can't be empty.");
 				}
 				else
 				{
