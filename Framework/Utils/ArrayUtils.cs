@@ -113,8 +113,7 @@ namespace Framework
 			public static int[] GetIndexArray<T>(IList<T> array)
 			{
 				int[] indexes = new int[array.Count];
-				int index = 0;
-
+				
 				for (int i=0; i< indexes.Length; i++)
 				{
 					indexes[i] = i;

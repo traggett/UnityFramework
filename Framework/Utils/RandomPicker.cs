@@ -221,26 +221,29 @@ namespace Framework
 					}
 				}
 
-				float randomValue = Random.value * totalChance;
-				float cumulative = 0f;
-
-				foreach (T item in items)
+				if (totalChance > 0f)
 				{
-					ItemData itemData = _items[item];
+					float randomValue = Random.value * totalChance;
+					float cumulative = 0f;
 
-					if (itemData._chance > 0f)
+					foreach (T item in items)
 					{
-						cumulative += itemData._chance;
+						ItemData itemData = _items[item];
 
-						if (randomValue < cumulative)
+						if (itemData._chance > 0f)
 						{
-							itemData._pickCount++;
-							return item;
+							cumulative += itemData._chance;
+
+							if (randomValue <= cumulative)
+							{
+								itemData._pickCount++;
+								return item;
+							}
 						}
 					}
 				}
 
-				throw new Exception();
+				throw new Exception("All options weighted zero");
 			}
 			#endregion
 		}
