@@ -362,12 +362,17 @@ namespace Framework
 
 					for (int i = 0; i < _items.Count; i++)
 					{
+						if (currentColumn == 0)
+						{
+							RectTransform transform = _items[i]._item.RectTransform;
+							contentHeight += transform.sizeDelta.y;
+						}
+						
 						currentColumn++;
 
 						if (currentColumn >= NumColumns)
 						{
-							RectTransform transform = _items[i]._item.RectTransform;
-							contentHeight += transform.sizeDelta.y;
+							currentColumn = 0;
 
 							if (i != _items.Count - 1)
 							{
