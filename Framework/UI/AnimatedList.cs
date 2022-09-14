@@ -292,6 +292,11 @@ namespace Framework
 			{
 				Initialise(null);
 			}
+
+			public void SetAlpha(float alpha)
+			{
+				//TO DO!
+			}
 			#endregion
 
 			#region Private Functions
