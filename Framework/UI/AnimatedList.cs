@@ -128,7 +128,7 @@ namespace Framework
 
 			#region Serialised Data
 			[SerializeField]
-			private RectOffset _borders = new RectOffset(0, 0, 0, 0);
+			private RectOffset _borders;
 
 			[SerializeField]
 			private int _numColumns = 1;
