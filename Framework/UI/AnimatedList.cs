@@ -77,6 +77,9 @@ namespace Framework
 		{
 			#region Serialised Data
 			[SerializeField]
+			private PrefabInstancePool _itemPool;
+
+			[SerializeField]
 			private RectOffset _borders;
 
 			[SerializeField]
@@ -89,13 +92,10 @@ namespace Framework
 			private InterpolationType _itemMovementInterpolation;
 
 			[SerializeField]
-			private PrefabInstancePool _itemPool;
+			private float _itemMovementTime = 2f;
 
 			[SerializeField]
-			private float _movementLerpSpeed = 4f;
-
-			[SerializeField]
-			private float _fadeLerpSpeed = 2f;
+			private float _itemFadeTime = 2f;
 			#endregion
 
 			#region Private Data
@@ -121,6 +121,8 @@ namespace Framework
 			private void Update()
 			{
 				float deltaTime = Time.deltaTime;
+				float fadeLerpSpeed = 1f / _itemFadeTime;
+				float movementLerpSpeed = 1f / _itemMovementTime;
 
 				//Lerp items to their target positions, lerp fade in
 				foreach (ScrollListItem item in _items)
@@ -128,9 +130,9 @@ namespace Framework
 					//Update fading in
 					if (item._fade < 1f)
 					{
-						if (_fadeLerpSpeed > 0f)
+						if (fadeLerpSpeed > 0f)
 						{
-							item._fade = Mathf.Clamp01(item._fade + _fadeLerpSpeed * deltaTime);
+							item._fade = Mathf.Clamp01(item._fade + fadeLerpSpeed * deltaTime);
 							item._item.SetFade(item._fade);
 						}
 						else
@@ -143,9 +145,9 @@ namespace Framework
 					//Update movment
 					if (item._movementLerp < 1f)
 					{
-						if (_movementLerpSpeed > 0f)
+						if (movementLerpSpeed > 0f)
 						{
-							item._movementLerp = Mathf.Clamp01(item._movementLerp + _movementLerpSpeed * deltaTime);
+							item._movementLerp = Mathf.Clamp01(item._movementLerp + movementLerpSpeed * deltaTime);
 							item._item.RectTransform.anchoredPosition = MathUtils.Interpolate(ItemMovementInterpolation, item._fromPosition, item._targetPosition, item._movementLerp);
 						}
 						else
@@ -159,9 +161,9 @@ namespace Framework
 				//Lerp fade out for items being removed, destroy any that are no zero
 				for (int i = 0; i < _itemsBeingRemoved.Count;)
 				{
-					if (_fadeLerpSpeed > 0f)
+					if (fadeLerpSpeed > 0f)
 					{
-						_itemsBeingRemoved[i]._fade -= _fadeLerpSpeed * deltaTime;
+						_itemsBeingRemoved[i]._fade -= fadeLerpSpeed * deltaTime;
 
 						if (_itemsBeingRemoved[i]._fade <= 0f)
 						{
@@ -232,25 +234,11 @@ namespace Framework
 			{
 				set
 				{
-					if (value > 0.0f)
-					{
-						_movementLerpSpeed = 1.0f / value;
-					}
-					else
-					{
-						_movementLerpSpeed = -1f;
-					}
+					_itemMovementTime = value;
 				}
 				get
 				{
-					if (_movementLerpSpeed > 0.0f)
-					{
-						return 1.0f / _movementLerpSpeed;
-					}
-					else
-					{
-						return 0;
-					}
+					return _itemMovementTime;
 				}
 			}
 
@@ -270,25 +258,11 @@ namespace Framework
 			{
 				set
 				{
-					if (value > 0.0f)
-					{
-						_fadeLerpSpeed = 1.0f / value;
-					}
-					else
-					{
-						_fadeLerpSpeed = -1f;
-					}
+					_itemFadeTime = value;
 				}
 				get
 				{
-					if (_fadeLerpSpeed > 0.0f)
-					{
-						return 1.0f / _fadeLerpSpeed;
-					}
-					else
-					{
-						return 0;
-					}
+					return _itemFadeTime;
 				}
 			}
 
@@ -404,7 +378,7 @@ namespace Framework
 							item._item.OnShow();
 
 							//Optionally fade the item in
-							if (_fadeLerpSpeed > 0f)
+							if (_itemFadeTime > 0f)
 							{
 								item._fade = 0f;
 								item._item.SetFade(0f);
@@ -432,7 +406,7 @@ namespace Framework
 							
 							if (item._targetPosition != pos)
 							{
-								if (_movementLerpSpeed > 0f)
+								if (_itemMovementTime > 0f)
 								{
 									item._targetPosition = pos;
 									item._fromPosition = transform.anchoredPosition;
