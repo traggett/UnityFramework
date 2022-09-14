@@ -10,6 +10,50 @@ namespace Framework
 	
 	namespace UI
 	{
+		public interface IAnimatedList
+		{
+			RectOffset Borders
+			{
+				get;
+				set;
+			}
+
+			int NumColumns
+			{
+				get;
+				set;
+			}
+
+			Vector2 ItemSpacing
+			{
+				get;
+				set;
+			}
+
+			float ItemMovementTime
+			{
+				get;
+				set;
+			}
+
+			InterpolationType ItemMovementInterpolation
+			{
+				get;
+				set;
+			}
+
+			float ItemFadeTime
+			{
+				get;
+				set;
+			}
+
+			RectTransform RectTransform
+			{
+				get;
+			}
+		}
+
 		public interface IAnimatedListItem<T>
 		{
 			T Data
@@ -29,103 +73,8 @@ namespace Framework
 			void SetFade(float fade);
 		}
 
-		public abstract class AnimatedList<T> : MonoBehaviour, IEnumerable<IAnimatedListItem<T>> where T : IComparable
+		public abstract class AnimatedList<T> : MonoBehaviour, IAnimatedList, IEnumerable<IAnimatedListItem<T>> where T : IComparable
 		{
-			#region Public Data
-			public RectOffset Borders
-			{
-				get
-				{
-					return _borders;
-				}
-				set
-				{
-					_borders = value;
-
-					//TO DO update positioning!!
-				}
-			}
-
-			public int NumColumns
-			{
-				get
-				{
-					return _numColumns;
-				}
-				set
-				{
-					if (value >= 1 && value != _numColumns)
-					{
-						_numColumns = value;
-						UpdateItemLayout();
-					}
-				}
-			}
-
-			public Vector2 ItemSpacing
-			{
-				get
-				{
-					return _itemSpacing;
-				}
-				set
-				{
-					_itemSpacing = value;
-					UpdateItemLayout();
-				}
-			}
-
-			public int ItemMovementTime
-			{
-				set
-				{
-					if (value > 0.0f)
-					{
-						_movementLerpSpeed = 1.0f / value;
-					}
-					else
-					{
-						_movementLerpSpeed = -1f;
-					}
-				}
-			}
-
-			public InterpolationType ItemMovementInterpolation
-			{
-				get
-				{
-					return _itemMovementInterpolation;
-				}
-				set
-				{
-					_itemMovementInterpolation = value;
-				}
-			}
-
-			public float ItemFadeTime
-			{
-				set
-				{
-					if (value > 0.0f)
-					{
-						_fadeLerpSpeed = 1.0f / value;
-					}
-					else
-					{
-						_fadeLerpSpeed = -1f;
-					}
-				}
-			}
-
-			public RectTransform RectTransform
-			{
-				get
-				{
-					return (RectTransform)this.transform;
-				}
-			}
-			#endregion
-
 			#region Serialised Data
 			[SerializeField]
 			private RectOffset _borders;
@@ -232,6 +181,122 @@ namespace Framework
 						_itemPool.Destroy(_itemsBeingRemoved[i]._item.RectTransform.gameObject);
 						_itemsBeingRemoved.RemoveAt(i);
 					}
+				}
+			}
+			#endregion
+
+			#region IAnimatedList
+			public RectOffset Borders
+			{
+				get
+				{
+					return _borders;
+				}
+				set
+				{
+					_borders = value;
+					UpdateItemLayout();
+				}
+			}
+
+			public int NumColumns
+			{
+				get
+				{
+					return _numColumns;
+				}
+				set
+				{
+					if (value >= 1 && value != _numColumns)
+					{
+						_numColumns = value;
+						UpdateItemLayout();
+					}
+				}
+			}
+
+			public Vector2 ItemSpacing
+			{
+				get
+				{
+					return _itemSpacing;
+				}
+				set
+				{
+					_itemSpacing = value;
+					UpdateItemLayout();
+				}
+			}
+
+			public float ItemMovementTime
+			{
+				set
+				{
+					if (value > 0.0f)
+					{
+						_movementLerpSpeed = 1.0f / value;
+					}
+					else
+					{
+						_movementLerpSpeed = -1f;
+					}
+				}
+				get
+				{
+					if (_movementLerpSpeed > 0.0f)
+					{
+						return 1.0f / _movementLerpSpeed;
+					}
+					else
+					{
+						return 0;
+					}
+				}
+			}
+
+			public InterpolationType ItemMovementInterpolation
+			{
+				get
+				{
+					return _itemMovementInterpolation;
+				}
+				set
+				{
+					_itemMovementInterpolation = value;
+				}
+			}
+
+			public float ItemFadeTime
+			{
+				set
+				{
+					if (value > 0.0f)
+					{
+						_fadeLerpSpeed = 1.0f / value;
+					}
+					else
+					{
+						_fadeLerpSpeed = -1f;
+					}
+				}
+				get
+				{
+					if (_fadeLerpSpeed > 0.0f)
+					{
+						return 1.0f / _fadeLerpSpeed;
+					}
+					else
+					{
+						return 0;
+					}
+				}
+			}
+
+			public RectTransform RectTransform
+			{
+				get
+				{
+					return (RectTransform)this.transform;
 				}
 			}
 			#endregion
