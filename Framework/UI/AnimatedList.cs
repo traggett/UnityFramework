@@ -121,8 +121,8 @@ namespace Framework
 			private void Update()
 			{
 				float deltaTime = Time.deltaTime;
-				float fadeLerpSpeed = 1f / _itemFadeTime;
-				float movementLerpSpeed = 1f / _itemMovementTime;
+				float fadeLerpDist = _itemFadeTime > 0f ? deltaTime / _itemFadeTime : 0f;
+				float movementLerpDist = _itemMovementTime > 0f ? deltaTime / _itemMovementTime : 0f;
 
 				//Lerp items to their target positions, lerp fade in
 				foreach (ScrollListItem item in _items)
@@ -130,9 +130,9 @@ namespace Framework
 					//Update fading in
 					if (item._fade < 1f)
 					{
-						if (fadeLerpSpeed > 0f)
+						if (_itemFadeTime > 0f)
 						{
-							item._fade = Mathf.Clamp01(item._fade + fadeLerpSpeed * deltaTime);
+							item._fade = Mathf.Clamp01(item._fade + fadeLerpDist);
 							item._item.SetFade(item._fade);
 						}
 						else
@@ -145,9 +145,9 @@ namespace Framework
 					//Update movment
 					if (item._movementLerp < 1f)
 					{
-						if (movementLerpSpeed > 0f)
+						if (_itemMovementTime > 0f)
 						{
-							item._movementLerp = Mathf.Clamp01(item._movementLerp + movementLerpSpeed * deltaTime);
+							item._movementLerp = Mathf.Clamp01(item._movementLerp + movementLerpDist);
 							item._item.RectTransform.anchoredPosition = MathUtils.Interpolate(ItemMovementInterpolation, item._fromPosition, item._targetPosition, item._movementLerp);
 						}
 						else
@@ -161,9 +161,9 @@ namespace Framework
 				//Lerp fade out for items being removed, destroy any that are no zero
 				for (int i = 0; i < _itemsBeingRemoved.Count;)
 				{
-					if (fadeLerpSpeed > 0f)
+					if (_itemFadeTime > 0f)
 					{
-						_itemsBeingRemoved[i]._fade -= fadeLerpSpeed * deltaTime;
+						_itemsBeingRemoved[i]._fade -= fadeLerpDist;
 
 						if (_itemsBeingRemoved[i]._fade <= 0f)
 						{
