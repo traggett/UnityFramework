@@ -2,13 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Framework
 {
-	using Framework.Maths;
+	using Maths;
 	using Utils;
-
+	
 	namespace UI
 	{
 		public interface IAnimatedListItem<T>
@@ -30,45 +29,127 @@ namespace Framework
 			void SetFade(float fade);
 		}
 
-		public class AnimatedList<T> : IEnumerable<IAnimatedListItem<T>> where T : IComparable
+		public abstract class AnimatedList<T> : MonoBehaviour, IEnumerable<IAnimatedListItem<T>> where T : IComparable
 		{
 			#region Public Data
-			public RectOffset Borders { get; set; }
+			public RectOffset Borders
+			{
+				get
+				{
+					return _borders;
+				}
+				set
+				{
+					_borders = value;
 
-			public int NumColumns { get; set; }
+					//TO DO update positioning!!
+				}
+			}
 
-			public Vector2 ItemSpacing { get; set; }
+			public int NumColumns
+			{
+				get
+				{
+					return _numColumns;
+				}
+				set
+				{
+					if (value >= 1 && value != _numColumns)
+					{
+						_numColumns = value;
+						UpdateItemLayout();
+					}
+				}
+			}
 
-			public float ItemMovementTime
+			public Vector2 ItemSpacing
+			{
+				get
+				{
+					return _itemSpacing;
+				}
+				set
+				{
+					_itemSpacing = value;
+					UpdateItemLayout();
+				}
+			}
+
+			public int ItemMovementTime
 			{
 				set
 				{
 					if (value > 0.0f)
+					{
 						_movementLerpSpeed = 1.0f / value;
+					}
+					else
+					{
+						_movementLerpSpeed = -1f;
+					}
 				}
 			}
 
-			public InterpolationType ItemMovementInterpolation { get; set; }
+			public InterpolationType ItemMovementInterpolation
+			{
+				get
+				{
+					return _itemMovementInterpolation;
+				}
+				set
+				{
+					_itemMovementInterpolation = value;
+				}
+			}
 
 			public float ItemFadeTime
 			{
 				set
 				{
 					if (value > 0.0f)
+					{
 						_fadeLerpSpeed = 1.0f / value;
+					}
+					else
+					{
+						_fadeLerpSpeed = -1f;
+					}
+				}
+			}
+
+			public RectTransform RectTransform
+			{
+				get
+				{
+					return (RectTransform)this.transform;
 				}
 			}
 			#endregion
 
+			#region Serialised Data
+			[SerializeField]
+			private RectOffset _borders = new RectOffset(0, 0, 0, 0);
+
+			[SerializeField]
+			private int _numColumns = 1;
+
+			[SerializeField]
+			private Vector2 _itemSpacing = Vector2.zero;
+
+			[SerializeField]
+			private InterpolationType _itemMovementInterpolation;
+
+			[SerializeField]
+			private PrefabInstancePool _itemPool;
+
+			[SerializeField]
+			private float _movementLerpSpeed = 4f;
+
+			[SerializeField]
+			private float _fadeLerpSpeed = 2f;
+			#endregion
+
 			#region Private Data
-			private const float kDefaultMovementTime = 0.25f;
-			private const float kDefaultFadeTime = 0.25f;
-
-			private readonly PrefabInstancePool _itemPool;
-			private readonly RectTransform _contentArea;
-			private float _movementLerpSpeed;
-			private float _fadeLerpSpeed;
-
 			private class ScrollListItem
 			{
 				public IAnimatedListItem<T> _item;
@@ -87,55 +168,10 @@ namespace Framework
 			private readonly List<ScrollListItem> _itemsBeingRemoved = new List<ScrollListItem>();
 			#endregion
 
-			#region Public Interface
-			public static void Create(ref AnimatedList<T> scrollList, RectTransform listRoot, PrefabInstancePool itemPool, IList<T> items = null,
-									RectOffset borders = null, Vector2 spacing = default, int numColumns = 1,
-									float movementTime = kDefaultMovementTime, InterpolationType movementInterpolation = InterpolationType.InOutSine,
-									float fadeTime = kDefaultFadeTime)
+			#region Unity Messages
+			private void Update()
 			{
-				if (borders == null)
-				{
-					borders = new RectOffset(0, 0, 0, 0);
-				}
-					
-				if (numColumns <= 0)
-				{
-					numColumns = 1;
-				}
-				
-				if (scrollList == null)
-				{
-					scrollList = new AnimatedList<T>(listRoot, itemPool);
-				}
-
-				scrollList.ItemMovementInterpolation = movementInterpolation;
-				scrollList.ItemMovementTime = movementTime;
-				scrollList.ItemFadeTime = fadeTime;
-				scrollList.Borders = borders;
-				scrollList.ItemSpacing = spacing;
-				scrollList.NumColumns = numColumns;
-
-				scrollList.Initialise(items);
-			}
-
-			public void Clear()
-			{
-				Initialise(null);
-			}
-
-			public void Update(IList<T> items, float deltaTime)
-			{
-				FindChanges(items, out _, out List<ScrollListItem> toRemove);
-
-				//Fade out and destroy old ones
-				foreach (ScrollListItem item in toRemove)
-				{
-					item._item.OnHide();
-					_itemsBeingRemoved.Add(item);
-				}
-
-				UpdateOrdering();
-				UpdateContentHeight();
+				float deltaTime = Time.deltaTime;
 
 				//Lerp items to their target positions, lerp fade in
 				foreach (ScrollListItem item in _items)
@@ -198,21 +234,10 @@ namespace Framework
 					}
 				}
 			}
-
-			public float GetContentHeight()
-			{
-				return RectTransformUtils.GetHeight(_contentArea);
-			}
 			#endregion
 
-			#region Private Functions
-			private AnimatedList(RectTransform listRoot, PrefabInstancePool itemPool)
-			{
-				_itemPool = itemPool;
-				_contentArea = listRoot;
-			}
-
-			private void Initialise(IList<T> items = null)
+			#region Public Interface
+			public void Initialise(IList<T> items = null)
 			{
 				FindChanges(items, out _, out List<ScrollListItem> toRemove);
 
@@ -235,7 +260,7 @@ namespace Framework
 				foreach (ScrollListItem item in _items)
 				{
 					RectTransform transform = item._item.RectTransform;
-					
+
 					item._fade = 1.0f;
 					item._item.SetFade(1.0f);
 
@@ -248,6 +273,28 @@ namespace Framework
 				UpdateContentHeight();
 			}
 
+			public void SetItems(IList<T> items)
+			{
+				FindChanges(items, out _, out List<ScrollListItem> toRemove);
+
+				//Fade out and destroy old ones
+				foreach (ScrollListItem item in toRemove)
+				{
+					item._item.OnHide();
+					_itemsBeingRemoved.Add(item);
+				}
+
+				UpdateOrdering();
+				UpdateContentHeight();
+			}
+
+			public void Clear()
+			{
+				Initialise(null);
+			}
+			#endregion
+
+			#region Private Functions
 			private void FindChanges(IList<T> items, out List<ScrollListItem> toAdd, out List<ScrollListItem> toRemove)
 			{
 				toAdd = new List<ScrollListItem>();
@@ -257,7 +304,7 @@ namespace Framework
 				Vector2 pos = new Vector2(Borders.left, -Borders.top);
 				int currentColumn = 0;
 
-				float ColumnWidth = (_contentArea.rect.width - Borders.horizontal) / NumColumns;
+				float ColumnWidth = (RectTransform.rect.width - Borders.horizontal) / NumColumns;
 
 				if (items != null)
 				{
@@ -281,7 +328,7 @@ namespace Framework
 						//If no item exists for this create a new one
 						if (item == null)
 						{
-							GameObject gameObject = _itemPool.Instantiate(_contentArea);
+							GameObject gameObject = _itemPool.Instantiate();
 							item = new ScrollListItem(gameObject.GetComponent<IAnimatedListItem<T>>());
 							item._item.Data = items[i];
 							item._item.OnShow();
@@ -381,7 +428,7 @@ namespace Framework
 						}
 					}
 
-					RectTransformUtils.SetHeight(_contentArea, contentHeight);
+					RectTransformUtils.SetHeight(RectTransform, contentHeight);
 				}
 			}
 
@@ -395,6 +442,11 @@ namespace Framework
 					}
 				}
 
+			}
+
+			private void UpdateItemLayout()
+			{
+				//TO DO!
 			}
 			#endregion
 
