@@ -490,7 +490,8 @@ namespace Framework
 
 			private void UpdateItemLayout()
 			{
-				//TO DO!
+				//TO DO - reinitialise with current items to be in new layout?
+				//Initialise(_items);
 			}
 			#endregion
 

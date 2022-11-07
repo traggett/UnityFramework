@@ -34,12 +34,13 @@ namespace Framework
 			{
 				if (_instances != null)
 				{
-					foreach (int index in _toDestroy)
+					List<int> toDestroy = new List<int>(_toDestroy);
+					_toDestroy.Clear();
+
+					foreach (int index in toDestroy)
 					{
 						DestroyAtIndex(index);
 					}
-
-					_toDestroy.Clear();
 				}
 			}
 			#endregion
@@ -134,7 +135,7 @@ namespace Framework
 				return newInstance;
 			}
 
-			public bool Destroy(GameObject gameObject, bool instant = false)
+			public bool Destroy(GameObject gameObject, bool instant = true)
 			{
 				PooledPrefab pooledPrefab = GetPooledPrefab(gameObject);
 
@@ -146,7 +147,7 @@ namespace Framework
 				return false;
 			}
 
-			public bool Destroy(Component component, bool instant = false)
+			public bool Destroy(Component component, bool instant = true)
 			{
 				PooledPrefab pooledPrefab = GetPooledPrefab(component);
 
@@ -253,7 +254,7 @@ namespace Framework
 
 			private bool DestroyPooledPrefab(PooledPrefab pooledPrefab, bool instant)
 			{
-				if (pooledPrefab != null && pooledPrefab._parentPool == this)
+				if (pooledPrefab != null && pooledPrefab._parentPool == this && !pooledPrefab._isFree)
 				{
 					if (instant)
 					{
