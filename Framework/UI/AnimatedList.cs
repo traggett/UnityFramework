@@ -374,9 +374,9 @@ namespace Framework
 						{
 							GameObject gameObject = _itemPool.Instantiate();
 							item = new ScrollListItem(gameObject.GetComponent<IAnimatedListItem<T>>());
-							item._item.Data = items[i];
 							item._item.OnShow();
-
+							item._item.Data = items[i];
+							
 							//Optionally fade the item in
 							if (_itemFadeTime > 0f)
 							{
