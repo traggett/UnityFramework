@@ -375,7 +375,6 @@ namespace Framework
 							GameObject gameObject = _itemPool.Instantiate();
 							item = new ScrollListItem(gameObject.GetComponent<IAnimatedListItem<T>>());
 							item._item.OnShow();
-							item._item.Data = items[i];
 							
 							//Optionally fade the item in
 							if (_itemFadeTime > 0f)
@@ -394,7 +393,6 @@ namespace Framework
 							item._fromPosition = pos;
 							transform = item._item.RectTransform;
 							transform.anchoredPosition = pos;
-
 							
 							_items.Add(item);
 							toAdd.Add(item);
@@ -420,10 +418,12 @@ namespace Framework
 									item._movementLerp = 1f;
 								}
 							}
-
-							item._item.Data = items[i];
 						}
 
+						//Update item data
+						item._item.Data = items[i];
+
+						//Work out next item pos
 						float itemHeight = RectTransformUtils.GetHeight(transform);
 
 						//Put next item in next column
