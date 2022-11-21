@@ -131,7 +131,7 @@ namespace Framework
 						return item;
 					}
 
-					throw new Exception("Items can't be empty.");
+					return default;
 				}
 				else
 				{
@@ -243,7 +243,7 @@ namespace Framework
 					}
 				}
 
-				throw new Exception("All options weighted zero");
+				return default;
 			}
 			#endregion
 		}
