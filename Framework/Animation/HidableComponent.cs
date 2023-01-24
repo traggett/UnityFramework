@@ -188,7 +188,7 @@ namespace Framework
 			{
 				if (_shouldBeShowing || _showLerp > 0f)
 				{
-					OnShowComplete();
+					OnHideComplete();
 				}
 			}
 
