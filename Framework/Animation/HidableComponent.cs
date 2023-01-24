@@ -8,13 +8,13 @@ namespace Framework
 	{
 		public abstract class HidableComponent : MonoBehaviour
 		{
-			#region Public Data
+			#region Serialised Data
 			[Header("Animation Params")]
-			public bool _showOnEnable;
-			public bool _disableOnHidden;
-			public float _showTime;
-			public float _hideTime;
-			public bool _unscaledTime;
+			[SerializeField] private bool _showOnEnable;
+			[SerializeField] private bool _disableOnHidden;
+			[SerializeField] private float _showTime;
+			[SerializeField] private float _hideTime;
+			[SerializeField] private bool _unscaledTime;
 
 			[Serializable]
 			public class AnimtationEvent : UnityEvent { }
@@ -22,17 +22,19 @@ namespace Framework
 			[Header("Animation Events")]
 			
 			[Tooltip("Event that is triggered when the show animations start.")]
-			public AnimtationEvent _onShow;
+			[SerializeField] private AnimtationEvent _onShow;
 			
 			[Tooltip("Event that is triggered when the component is fully shown.")]
-			public AnimtationEvent _onShown;
+			[SerializeField] private AnimtationEvent _onShown;
 			
 			[Tooltip("Event that is triggered when the hide animations start.")]
-			public AnimtationEvent _onHide;
+			[SerializeField] private AnimtationEvent _onHide;
 			
 			[Tooltip("Event that is triggered when the component is fully hidden.")]
-			public AnimtationEvent _onHidden;
-			
+			[SerializeField] private AnimtationEvent _onHidden;
+			#endregion
+
+			#region Public Properties
 			public bool Active
 			{
 				get
@@ -47,11 +49,6 @@ namespace Framework
 
 						if (value)
 						{
-							if (!_initialised)
-							{
-								_showOnEnable = true;
-							}
-
 							this.gameObject.SetActive(true);
 
 							if (_showTime > 0f)
@@ -62,16 +59,11 @@ namespace Framework
 							else
 							{
 								OnStartShowAnimation();
-								OnShown();
+								OnShowComplete();
 							}
 						}
 						else
 						{
-							if (!_initialised)
-							{
-								_showOnEnable = false;
-							}
-
 							if (_hideTime > 0f && _showLerp > 0f)
 							{
 								_showLerpSpeed = 1f / _hideTime;
@@ -79,30 +71,73 @@ namespace Framework
 							}
 							else
 							{
-								OnHidden();
+								OnHideComplete();
 							}
 						}
 					}
 				}
 			}
+
+			public AnimtationEvent OnShow
+			{
+				get { return _onShow; }
+			}
+
+			public AnimtationEvent OnShown
+			{
+				get { return _onShown; }
+			}
+
+			public AnimtationEvent OnHide
+			{
+				get { return _onHide; }
+			}
+
+			public AnimtationEvent OnHidden
+			{
+				get { return _onHidden; }
+			}
+
+			public float ShowTime
+			{
+				get { return _showTime; }
+
+				set 
+				{
+					_showTime = value;
+
+					if (!_shouldBeShowing && _showLerp < 1f && _showTime > 0f)
+					{
+						_showLerpSpeed = 1f / _showTime;
+					}
+				}
+			}
+
+			public float HideTime
+			{
+				get { return _hideTime; }
+
+				set
+				{
+					_hideTime = value;
+
+					if (!_shouldBeShowing && _showLerp > 0f && _hideTime > 0f)
+					{
+						_showLerpSpeed = 1f / _hideTime;
+					}				
+				}
+			}
+
 			#endregion
 
 			#region Private Data
-			private bool _shouldBeShowing;
-			private float _showLerp;
-			private float _showLerpSpeed;
-			private bool _initialised;
+			private bool _shouldBeShowing = false;
+			private float _showLerp = 0f;
+			private float _showLerpSpeed = 0f;
+			private bool _initialised = false;
 			#endregion
 
 			#region Unity Messages
-			protected virtual void Awake()
-			{
-				_initialised = true;
-				_shouldBeShowing = false;
-				_showLerp = 0f;
-				OnUpdateAnimations(0f, false);
-			}
-
 			protected virtual void OnEnable()
 			{
 				if (_showOnEnable)
@@ -126,7 +161,7 @@ namespace Framework
 				if (!_shouldBeShowing || _showLerp < 1f)
 				{
 					this.gameObject.SetActive(true);
-					OnShown();
+					OnShowComplete();
 				}
 			}
 
@@ -134,7 +169,7 @@ namespace Framework
 			{
 				if (_shouldBeShowing || _showLerp > 0f)
 				{
-					OnHidden();
+					OnShowComplete();
 				}
 			}
 
@@ -181,7 +216,7 @@ namespace Framework
 
 						if (_showLerp >= 1f)
 						{
-							OnShown();
+							OnShowComplete();
 						}
 						else
 						{
@@ -202,7 +237,7 @@ namespace Framework
 
 						if (_showLerp <= 0f)
 						{
-							OnHidden();
+							OnHideComplete();
 						}
 						else
 						{
@@ -212,7 +247,7 @@ namespace Framework
 				}
 			}
 
-			private void OnShown()
+			private void OnShowComplete()
 			{
 				_shouldBeShowing = true;
 				_showLerp = 1f;
@@ -221,7 +256,7 @@ namespace Framework
 				_onShown?.Invoke();
 			}
 
-			private void OnHidden()
+			private void OnHideComplete()
 			{
 				_shouldBeShowing = false;
 				_showLerp = 0f;
