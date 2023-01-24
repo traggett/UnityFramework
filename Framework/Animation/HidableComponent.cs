@@ -128,6 +128,15 @@ namespace Framework
 				}
 			}
 
+			public bool UnscaledTime
+			{
+				get { return _unscaledTime; }
+
+				set
+				{
+					_unscaledTime = value;
+				}
+			}
 			#endregion
 
 			#region Private Data
