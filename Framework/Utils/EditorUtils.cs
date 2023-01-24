@@ -53,7 +53,7 @@ namespace Framework
 						if (_textStyle == null)
 						{
 							_textStyle = new GUIStyle();
-							_textStyle.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+							_textStyle.font = null;
 							_textStyle.fontSize = 11;
 							_textStyle.fontStyle = FontStyle.Normal;
 							_textStyle.alignment = TextAnchor.UpperLeft;
