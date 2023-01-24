@@ -147,6 +147,16 @@ namespace Framework
 			#endregion
 
 			#region Unity Messages
+			protected virtual void Awake()
+			{
+				_initialised = true;
+
+				if (!_shouldBeShowing)
+				{
+					HideInstant();
+				}
+			}
+
 			protected virtual void OnEnable()
 			{
 				if (_showOnEnable)
