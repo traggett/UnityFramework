@@ -151,7 +151,7 @@ namespace Framework
 			{
 				_initialised = true;
 
-				if (!_shouldBeShowing)
+				if (!_shouldBeShowing && !_showOnEnable)
 				{
 					HideInstant();
 				}
