@@ -153,7 +153,7 @@ namespace Framework
 
 				if (!_shouldBeShowing && !_showOnEnable)
 				{
-					HideInstant();
+					OnHideComplete();
 				}
 			}
 
