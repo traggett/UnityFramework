@@ -9,18 +9,21 @@ namespace Framework
 	{
 		public class PrefabInstancePool : MonoBehaviour
 		{
-			#region Public Data
-			public GameObject _prefab;
-			public int _initialPoolSize;
-			public int _growAmount;
+			#region Serialised Data
+			[SerializeField] private GameObject _prefab;
+			[SerializeField] private bool _initialiseOnAwake;
+			[SerializeField] private int _initialPoolSize = 10;
+			[SerializeField] private int _growAmount = 1;		
 			#endregion
 
 			#region Helper Component
 			private class PooledPrefab : MonoBehaviour
 			{
+				#region Public Data
 				public PrefabInstancePool _parentPool;
 				public int _index;
 				public bool _isFree;
+				#endregion
 			}
 			#endregion
 
@@ -30,6 +33,14 @@ namespace Framework
 			#endregion
 
 			#region Unity Messages
+			private void Awake()
+			{
+				if (_initialiseOnAwake)
+				{
+					Init();
+				}
+			}
+
 			private void Update()
 			{
 				if (_instances != null)
@@ -46,6 +57,49 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
+			public static void InitialiseAllPrefabInstancePools()
+			{
+				for (int i = 0; i < SceneManager.sceneCount; i++)
+				{
+					Scene scene = SceneManager.GetSceneAt(i);
+					InitialiseScenePrefabInstancePools(scene);
+				}
+			}
+
+			public static void InitialiseScenePrefabInstancePools(Scene scene)
+			{
+				PrefabInstancePool[] prefabPools = SceneUtils.FindAllComponentInferfacesInScene<PrefabInstancePool>(scene, true);
+
+				for (int j = 0; j < prefabPools.Length; j++)
+				{
+					prefabPools[j].Init();
+				}
+			}
+
+			public static bool DestroyPrefab(Component component, bool instant = false)
+			{
+				PooledPrefab pooledPrefab = GetPooledPrefab(component);
+
+				if (pooledPrefab != null && pooledPrefab._parentPool != null)
+				{
+					return pooledPrefab._parentPool.DestroyPooledPrefab(pooledPrefab, instant);
+				}
+
+				return false;
+			}
+
+			public static bool DestroyPrefab(GameObject gameObject, bool instant = false)
+			{
+				PooledPrefab pooledPrefab = GetPooledPrefab(gameObject);
+
+				if (pooledPrefab != null && pooledPrefab._parentPool != null)
+				{
+					return pooledPrefab._parentPool.DestroyPooledPrefab(pooledPrefab, instant);
+				}
+
+				return false;
+			}
+
 			public T Instantiate<T>(Transform parent = null, bool resetTransform = true) where T : Component
 			{
 				GameObject gameObject = Instantiate(parent, resetTransform);
@@ -177,45 +231,6 @@ namespace Framework
 					}
 				}
 			}
-
-			public static void InitAllPrefabInstancePools()
-			{
-				for (int i = 0; i < SceneManager.sceneCount; i++)
-				{
-					Scene scene = SceneManager.GetSceneAt(i);
-
-					PrefabInstancePool[] prefabPools = SceneUtils.FindAllComponentInferfacesInScene<PrefabInstancePool>(scene, true);
-
-					for (int j = 0; j < prefabPools.Length; j++)
-					{
-						prefabPools[j].Init();
-					}
-				}
-			}
-
-			public static bool DestroyPrefab(Component component, bool instant = false)
-			{
-				PooledPrefab pooledPrefab = GetPooledPrefab(component);
-
-				if (pooledPrefab != null && pooledPrefab._parentPool != null)
-				{
-					return pooledPrefab._parentPool.DestroyPooledPrefab(pooledPrefab, instant);
-				}
-
-				return false;
-			}
-
-			public static bool DestroyPrefab(GameObject gameObject, bool instant = false)
-			{
-				PooledPrefab pooledPrefab = GetPooledPrefab(gameObject);
-
-				if (pooledPrefab != null && pooledPrefab._parentPool != null)
-				{
-					return pooledPrefab._parentPool.DestroyPooledPrefab(pooledPrefab, instant);
-				}
-
-				return false;
-			}
 			#endregion
 
 			#region Private Functions
@@ -223,7 +238,7 @@ namespace Framework
 			{
 				if (_instances == null)
 				{
-					_instances = new PooledPrefab[Math.Max(_initialPoolSize, 0)];
+					_instances = new PooledPrefab[Math.Max(_initialPoolSize, 1)];
 
 					for (int i = 0; i < _instances.Length; i++)
 					{
@@ -288,12 +303,12 @@ namespace Framework
 
 			private static PooledPrefab GetPooledPrefab(GameObject gameObject)
 			{
-				return gameObject.GetComponent<PooledPrefab>(); ;
+				return gameObject.GetComponent<PooledPrefab>();
 			}
 
 			private static PooledPrefab GetPooledPrefab(Component component)
 			{
-				return component.GetComponent<PooledPrefab>(); ;
+				return component.GetComponent<PooledPrefab>();
 			}
 			#endregion
 		}

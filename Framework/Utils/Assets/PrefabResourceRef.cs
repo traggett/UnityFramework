@@ -12,10 +12,12 @@ namespace Framework
 		[Serializable]
 		public struct PrefabResourceRef
 		{
+			#region Private Data
 			[SerializeField]
 			private string _filePath;
 			[SerializeField]
 			private string _fileGUID;
+			#endregion
 
 			public GameObject LoadAndInstantiatePrefab(Transform parent = null)
 			{
