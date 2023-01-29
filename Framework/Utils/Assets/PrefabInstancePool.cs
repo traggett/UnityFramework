@@ -13,7 +13,17 @@ namespace Framework
 			[SerializeField] private GameObject _prefab;
 			[SerializeField] private bool _initialiseOnAwake;
 			[SerializeField] private int _initialPoolSize = 10;
-			[SerializeField] private int _growAmount = 1;		
+			[SerializeField] private int _growAmount = 1;
+			#endregion
+
+			#region Public Properties
+			public GameObject Prefab
+			{
+				get
+				{
+					return _prefab;
+				}
+			}
 			#endregion
 
 			#region Helper Component
