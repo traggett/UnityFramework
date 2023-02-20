@@ -177,14 +177,17 @@ namespace Framework
 					}
 					else
 					{
-						itemData._chance = itemData._weight;
-
-						if (applyBias && itemData._pickCount > 0)
+						if (applyBias && totalPicks > 0 && itemData._pickCount > 0)
 						{
-							float actualAmount = itemData._pickCount / totalPicks;
-							float expectedAmount = itemData._weight / totalWeight;
+							float actualFractionPicked = itemData._pickCount / totalPicks;
+							float expectedFractionPicked = itemData._weight / totalWeight;
+							float biasedChance = expectedFractionPicked / actualFractionPicked;
 
-							itemData._chance *= Mathf.Lerp(1f, expectedAmount / actualAmount, _bias);
+							itemData._chance = Mathf.Lerp(itemData._weight, itemData._weight * biasedChance, _bias);
+						}
+						else
+						{
+							itemData._chance = itemData._weight;
 						}
 					}
 				}
