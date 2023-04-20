@@ -2,12 +2,11 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Playables;
 using UnityEditor.SceneManagement;
-using UnityEngine.SceneManagement;
+using UnityEditor.Timeline;
 using System.Collections.Generic;
 
 namespace Framework
 {
-	using UnityEditor.Timeline;
 	using Utils;
 
 	namespace Playables
@@ -23,6 +22,7 @@ namespace Framework
 				static public void Init()
 				{
 					EditorSceneManager.sceneSaving += OnSceneSaving;
+					PrefabStage.prefabSaving += OnPrefabSaving;
 				}
 
 				public override void OnInspectorGUI()
@@ -134,7 +134,17 @@ namespace Framework
 					}
 				}
 
-				public static void OnSceneSaving(Scene scene, string path)
+				private static void OnPrefabSaving(GameObject prefabObj)
+				{
+					PlayableDirectorBindings[] bindings = prefabObj.GetComponentsInChildren<PlayableDirectorBindings>();
+
+					foreach (PlayableDirectorBindings binding in bindings)
+					{
+						SyncBindings(binding);
+					}
+				}
+
+				public static void OnSceneSaving(UnityEngine.SceneManagement.Scene scene, string path)
 				{
 					PlayableDirectorBindings[] bindings = SceneUtils.FindAllInScene<PlayableDirectorBindings>(scene, true);
 
@@ -219,6 +229,10 @@ namespace Framework
 
 						ArrayUtils.Add(ref bindings._playableAssetData, playableAssetData);
 					}
+
+					EditorUtility.SetDirty(bindings.gameObject);
+					PrefabUtility.RecordPrefabInstancePropertyModifications(bindings);
+					EditorSceneManager.MarkSceneDirty(bindings.gameObject.scene);
 				}
 			}
 		}
