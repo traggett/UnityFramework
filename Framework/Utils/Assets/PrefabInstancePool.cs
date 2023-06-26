@@ -204,7 +204,7 @@ namespace Framework
 
 					ArrayUtils.Resize(ref _instances, _instances.Length + growAmount);
 
-					for (int i = origSize; i < growAmount; i++)
+					for (int i = origSize; i < _instances.Length; i++)
 					{
 						InstantiatePrefab(i);
 					}
@@ -323,7 +323,7 @@ namespace Framework
 				else
 #endif
 				{
-					gameObject = Instantiate(_prefab, this.transform);
+					gameObject = UnityEngine.Object.Instantiate(_prefab, this.transform);
 				}
 
 				gameObject.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable;
