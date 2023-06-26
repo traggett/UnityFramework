@@ -34,6 +34,27 @@ namespace Framework
 					return _instances != null ? _instances.Length : 0; 
 				}
 			}
+
+			public int ActivePrefabCount
+			{
+				get
+				{
+					int count = 0;
+
+					if (_instances != null)
+					{
+						for (int i = 0; i < _instances.Length; i++)
+						{
+							if (!_instances[i]._isFree)
+							{
+								count++;
+							}
+						}
+					}
+					
+					return count;
+				}
+			}
 			#endregion
 
 			#region Helper Struct
@@ -332,7 +353,7 @@ namespace Framework
 					{
 						_toDestroy.Add(index);
 
-						if (_instances[i]._prefabRoot != null)
+						if (_instances[index]._prefabRoot != null)
 							_instances[index]._prefabRoot.SetActive(false);
 					}
 

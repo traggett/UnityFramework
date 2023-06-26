@@ -27,7 +27,7 @@ namespace Framework
 
 					EditorGUILayout.Separator();
 
-					EditorGUILayout.HelpBox(new GUIContent(string.Format("Current Pool Size: {0}", + prefabInstancePool.PoolSize)));
+					EditorGUILayout.HelpBox(new GUIContent(string.Format("Current Pool Size: {0} Number active Prefabs: {1}", + prefabInstancePool.PoolSize, prefabInstancePool.ActivePrefabCount)));
 
 					EditorGUILayout.Separator();
 
