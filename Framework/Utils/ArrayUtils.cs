@@ -85,6 +85,23 @@ namespace Framework
 				array = newArray;
 			}
 
+			public static void Resize<T>(ref T[] array, int newSize)
+			{
+				if (array == null)
+				{
+					array = new T[newSize];
+				}
+				else
+				{
+					T[] newArray = new T[newSize];
+
+					if (array.Length > 0 && newSize > 0)
+						Array.Copy(array, newArray, Math.Min(array.Length, newSize));
+
+					array = newArray;
+				}
+			}
+
 			public static void Randomise<T>(T[] array)
 			{
 				int n = array.Length;

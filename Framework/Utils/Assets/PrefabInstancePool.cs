@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -14,6 +15,7 @@ namespace Framework
 			[SerializeField] private bool _initialiseOnAwake;
 			[SerializeField] private int _initialPoolSize = 10;
 			[SerializeField] private int _growAmount = 1;
+			[SerializeField] private PooledPrefab[] _instances;
 			#endregion
 
 			#region Public Properties
@@ -24,21 +26,28 @@ namespace Framework
 					return _prefab;
 				}
 			}
+
+			public int PoolSize
+			{
+				get 
+				{ 
+					return _instances != null ? _instances.Length : 0; 
+				}
+			}
 			#endregion
 
-			#region Helper Component
-			private class PooledPrefab : MonoBehaviour
+			#region Helper Struct
+			[Serializable]
+			private struct PooledPrefab
 			{
 				#region Public Data
-				public PrefabInstancePool _parentPool;
-				public int _index;
+				public GameObject _prefabRoot;
 				public bool _isFree;
 				#endregion
 			}
 			#endregion
 
-			#region Private Data
-			private PooledPrefab[] _instances;
+			#region Private Data		
 			private readonly List<int> _toDestroy = new List<int>();
 			#endregion
 
@@ -47,7 +56,7 @@ namespace Framework
 			{
 				if (_initialiseOnAwake)
 				{
-					Init();
+					InitialisePool();
 				}
 			}
 
@@ -67,6 +76,44 @@ namespace Framework
 			#endregion
 
 			#region Public Interface
+			public void InitialisePool()
+			{
+				if (_prefab != null && _instances == null)
+				{
+					_instances = new PooledPrefab[Math.Max(_initialPoolSize, 1)];
+
+					for (int i = 0; i < _instances.Length; i++)
+					{
+						InstantiatePrefab(i);
+					}
+				}
+			}
+
+			public void DeInitialisePool()
+			{
+				if (_instances != null)
+				{
+					for (int i = 0; i < _instances.Length; i++)
+					{
+						if (_instances[i]._prefabRoot != null)
+						{
+#if UNITY_EDITOR
+							if (!Application.isPlaying)
+							{
+								DestroyImmediate(_instances[i]._prefabRoot);
+							}
+							else
+#endif
+							{
+								UnityEngine.Object.Destroy(_instances[i]._prefabRoot);
+							}
+						}
+					}
+
+					_instances = null;
+				}
+			}
+
 			public static void InitialiseAllPrefabInstancePools()
 			{
 				for (int i = 0; i < SceneManager.sceneCount; i++)
@@ -82,32 +129,8 @@ namespace Framework
 
 				for (int j = 0; j < prefabPools.Length; j++)
 				{
-					prefabPools[j].Init();
+					prefabPools[j].InitialisePool();
 				}
-			}
-
-			public static bool DestroyPrefab(Component component, bool instant = false)
-			{
-				PooledPrefab pooledPrefab = GetPooledPrefab(component);
-
-				if (pooledPrefab != null && pooledPrefab._parentPool != null)
-				{
-					return pooledPrefab._parentPool.DestroyPooledPrefab(pooledPrefab, instant);
-				}
-
-				return false;
-			}
-
-			public static bool DestroyPrefab(GameObject gameObject, bool instant = false)
-			{
-				PooledPrefab pooledPrefab = GetPooledPrefab(gameObject);
-
-				if (pooledPrefab != null && pooledPrefab._parentPool != null)
-				{
-					return pooledPrefab._parentPool.DestroyPooledPrefab(pooledPrefab, instant);
-				}
-
-				return false;
 			}
 
 			public T Instantiate<T>(Transform parent = null, bool resetTransform = true) where T : Component
@@ -136,7 +159,7 @@ namespace Framework
 
 			public GameObject Instantiate(Transform parent = null, bool resetTransform = true)
 			{
-				Init();
+				InitialisePool();
 
 				GameObject newInstance = null;
 
@@ -144,7 +167,10 @@ namespace Framework
 				{
 					if (_instances[i]._isFree)
 					{
-						newInstance = _instances[i].gameObject;
+						if (_instances[i]._prefabRoot == null)
+							InstantiatePrefab(i);
+
+						newInstance = _instances[i]._prefabRoot;
 						_instances[i]._isFree = false;
 						break;
 					}
@@ -152,20 +178,19 @@ namespace Framework
 
 				if (newInstance == null)
 				{
-					PooledPrefab[] newItems = new PooledPrefab[Math.Max(1, _growAmount)];
-					for (int i = 0; i < newItems.Length; i++)
-					{
-						newItems[i] = CreatePrefab(_instances.Length + i);
-					}
-					ArrayUtils.Concat(ref _instances, newItems);
+					int origSize = _instances.Length;
+					int growAmount = Math.Max(1, _growAmount);
 
-					for (int i = 0; i < newItems.Length; i++)
-					{
-						newItems[i].gameObject.SetActive(false);
-					}
+					ArrayUtils.Resize(ref _instances, _instances.Length + growAmount);
 
-					newInstance = newItems[0].gameObject;
-					newItems[0]._isFree = false;
+					for (int i = origSize; i < growAmount; i++)
+					{
+						InstantiatePrefab(i);
+					}
+					
+					//Return first new instance
+					newInstance = _instances[origSize]._prefabRoot;
+					_instances[origSize]._isFree = false;
 				}
 
 				if (parent == null)
@@ -199,13 +224,24 @@ namespace Framework
 				return newInstance;
 			}
 
+			private int GetPrefabInstanceIndex(GameObject prefab)
+			{
+				for (int i = 0; i < _instances.Length; i++)
+				{
+					if (_instances[i]._prefabRoot == prefab)
+						return i;
+				}
+
+				return -1;
+			}
+
 			public bool Destroy(GameObject gameObject, bool instant = true)
 			{
-				PooledPrefab pooledPrefab = GetPooledPrefab(gameObject);
+				int index = GetPrefabInstanceIndex(gameObject);
 
-				if (pooledPrefab != null)
+				if (index != -1)
 				{
-					return DestroyPooledPrefab(pooledPrefab, instant);
+					return Destroy(index, instant);
 				}
 
 				return false;
@@ -213,11 +249,11 @@ namespace Framework
 
 			public bool Destroy(Component component, bool instant = true)
 			{
-				PooledPrefab pooledPrefab = GetPooledPrefab(component);
+				int index = GetPrefabInstanceIndex(component.gameObject);
 
-				if (pooledPrefab != null)
+				if (index != -1)
 				{
-					return DestroyPooledPrefab(pooledPrefab, instant);
+					return Destroy(index, instant);
 				}
 
 				return false;
@@ -236,7 +272,9 @@ namespace Framework
 						else
 						{
 							_toDestroy.Add(i);
-							_instances[i].gameObject.SetActive(false);
+
+							if (_instances[i]._prefabRoot != null)
+								_instances[i]._prefabRoot.SetActive(false);
 						}
 					}
 				}
@@ -244,51 +282,58 @@ namespace Framework
 			#endregion
 
 			#region Private Functions
-			private void Init()
-			{
-				if (_instances == null)
-				{
-					_instances = new PooledPrefab[Math.Max(_initialPoolSize, 1)];
-
-					for (int i = 0; i < _instances.Length; i++)
-					{
-						_instances[i] = CreatePrefab(i);
-						_instances[i].gameObject.SetActive(false);
-					}
-				}
-			}
-
-			private PooledPrefab CreatePrefab(int index)
+			private void InstantiatePrefab(int index)
 			{
 #if DEBUG
 				if (_prefab == null)
 				{
 					UnityEngine.Debug.LogError("PrefabInstancePool " + GameObjectUtils.GetGameObjectPath(this.gameObject) + " is missing it's prefab!");
-					return null;
+					return;
 				}
 #endif
-				GameObject gameObject = Instantiate(_prefab, this.transform);
-				PooledPrefab prefab = gameObject.AddComponent<PooledPrefab>();
-				prefab._parentPool = this;
-				prefab._index = index;
-				prefab._isFree = true;
-				prefab.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable;
 
-				return prefab;
+				GameObject gameObject;
+
+#if UNITY_EDITOR
+				if (!Application.isPlaying)
+				{
+					gameObject = PrefabUtility.InstantiatePrefab(_prefab, this.transform) as GameObject;
+				}
+				else
+#endif
+				{
+					gameObject = Instantiate(_prefab, this.transform);
+				}
+
+				gameObject.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable;
+				gameObject.gameObject.SetActive(false);
+
+				_instances[index]._prefabRoot = gameObject;
+				_instances[index]._isFree = true;
 			}
 
-			private bool DestroyPooledPrefab(PooledPrefab pooledPrefab, bool instant)
+			private bool Destroy(int index, bool instant)
 			{
-				if (pooledPrefab != null && pooledPrefab._parentPool == this && !pooledPrefab._isFree)
+#if UNITY_EDITOR
+				// Always destroy instantly in edit mode
+				if (!Application.isPlaying)
+				{
+					instant = true;
+				}
+#endif
+
+				if (index != -1 && !_instances[index]._isFree)
 				{
 					if (instant)
 					{
-						DestroyAtIndex(pooledPrefab._index);
+						DestroyAtIndex(index);
 					}
 					else
 					{
-						_toDestroy.Add(pooledPrefab._index);
-						pooledPrefab.gameObject.SetActive(false);
+						_toDestroy.Add(index);
+
+						if (_instances[i]._prefabRoot != null)
+							_instances[index]._prefabRoot.SetActive(false);
 					}
 
 					return true;
@@ -301,24 +346,14 @@ namespace Framework
 			{
 				_instances[index]._isFree = true;
 
-				GameObject gameObject = _instances[index].gameObject;
+				GameObject gameObject = _instances[index]._prefabRoot;
 				
-				if (gameObject.transform.parent != this.transform)
+				if (gameObject != null && gameObject.transform.parent != this.transform)
 				{
 					gameObject.transform.SetParent(this.transform, false);
 				}
 
 				gameObject.SetActive(false);
-			}
-
-			private static PooledPrefab GetPooledPrefab(GameObject gameObject)
-			{
-				return gameObject.GetComponent<PooledPrefab>();
-			}
-
-			private static PooledPrefab GetPooledPrefab(Component component)
-			{
-				return component.GetComponent<PooledPrefab>();
 			}
 			#endregion
 		}
