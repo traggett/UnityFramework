@@ -240,6 +240,7 @@ namespace Framework
 					}
 				}
 
+				newInstance.hideFlags = HideFlags.None;
 				newInstance.SetActive(true);
 
 				return newInstance;
@@ -326,7 +327,7 @@ namespace Framework
 					gameObject = UnityEngine.Object.Instantiate(_prefab, this.transform);
 				}
 
-				gameObject.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector | HideFlags.NotEditable;
+				gameObject.hideFlags = HideFlags.HideInHierarchy;
 				gameObject.gameObject.SetActive(false);
 
 				_instances[index]._prefabRoot = gameObject;
@@ -354,7 +355,10 @@ namespace Framework
 						_toDestroy.Add(index);
 
 						if (_instances[index]._prefabRoot != null)
+						{
 							_instances[index]._prefabRoot.SetActive(false);
+							_instances[index]._prefabRoot.hideFlags = HideFlags.HideInHierarchy;
+						}
 					}
 
 					return true;
@@ -375,6 +379,7 @@ namespace Framework
 				}
 
 				gameObject.SetActive(false);
+				gameObject.hideFlags = HideFlags.HideInHierarchy;
 			}
 			#endregion
 		}
