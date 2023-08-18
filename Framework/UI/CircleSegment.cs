@@ -46,7 +46,6 @@ namespace Framework
 			#endregion
 
 			#region Unity Messages
-
 			protected override void OnRectTransformDimensionsChange()
             {
                 base.OnRectTransformDimensionsChange();

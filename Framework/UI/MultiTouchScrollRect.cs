@@ -1,4 +1,5 @@
-﻿using UnityEngine.EventSystems;
+﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
@@ -8,15 +9,43 @@ namespace Framework
 	{
 		public class MultiTouchScrollRect : ScrollRect
 		{
-			private DragInputHandler _dragInput = new DragInputHandler();
+			#region Serialized Data
+			[SerializeField] private bool _deactivateContentOutOfView;
+			#endregion
 
+			#region Private Data
+			private readonly DragInputHandler _dragInput = new DragInputHandler();
+			#endregion
+
+			#region Unity Messages
 			protected override void LateUpdate()
 			{
 				base.LateUpdate();
 
 				_dragInput.ValidateInput();
-			}
 
+				if (_deactivateContentOutOfView)
+				{
+					Rect viewRect = viewport.rect;
+
+					//Hide/enable children out of view
+					foreach (RectTransform child in content.transform)
+					{
+						Rect childRect = child.rect;
+
+						childRect.x += child.anchoredPosition.x;
+						childRect.y += child.anchoredPosition.y;
+
+						childRect.x += content.anchoredPosition.x;
+						childRect.y += content.anchoredPosition.y;
+
+						child.gameObject.SetActive(viewRect.Overlaps(childRect));
+					}
+				}
+			}
+			#endregion
+
+			#region ScrollRect
 			public override void OnBeginDrag(PointerEventData eventData)
 			{
 				_dragInput.OnBeginDrag((ExtendedPointerEventData)eventData);
@@ -62,8 +91,7 @@ namespace Framework
 					base.OnBeginDrag(eventData);
 				}
 			}
-
-
+			#endregion
 		}
 	}
 }
