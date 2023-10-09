@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -64,12 +63,9 @@ namespace Framework
 				#region Public Data
 				public GameObject _prefabRoot;
 				public bool _isFree;
+				public bool _markedForDestroy;
 				#endregion
 			}
-			#endregion
-
-			#region Private Data		
-			private readonly List<int> _toDestroy = new List<int>();
 			#endregion
 
 			#region Unity Messages
@@ -85,12 +81,12 @@ namespace Framework
 			{
 				if (_instances != null)
 				{
-					List<int> toDestroy = new List<int>(_toDestroy);
-					_toDestroy.Clear();
-
-					foreach (int index in toDestroy)
+					for (int i = 0; i < _instances.Length; i++)
 					{
-						DestroyAtIndex(index);
+						if (_instances[i]._markedForDestroy)
+						{
+							DestroyAtIndex(i);
+						}
 					}
 				}
 			}
@@ -293,7 +289,7 @@ namespace Framework
 						}
 						else
 						{
-							_toDestroy.Add(i);
+							_instances[i]._markedForDestroy = true;
 
 							if (_instances[i]._prefabRoot != null)
 								_instances[i]._prefabRoot.SetActive(false);
@@ -332,6 +328,7 @@ namespace Framework
 
 				_instances[index]._prefabRoot = gameObject;
 				_instances[index]._isFree = true;
+				_instances[index]._markedForDestroy = false;
 			}
 
 			private bool Destroy(int index, bool instant)
@@ -352,7 +349,7 @@ namespace Framework
 					}
 					else
 					{
-						_toDestroy.Add(index);
+						_instances[index]._markedForDestroy = true;
 
 						if (_instances[index]._prefabRoot != null)
 						{
@@ -370,6 +367,7 @@ namespace Framework
 			private void DestroyAtIndex(int index)
 			{
 				_instances[index]._isFree = true;
+				_instances[index]._markedForDestroy = false;
 
 				GameObject gameObject = _instances[index]._prefabRoot;
 				
