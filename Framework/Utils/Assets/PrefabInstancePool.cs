@@ -68,6 +68,10 @@ namespace Framework
 			}
 			#endregion
 
+			#region Private Data
+			private bool _prefabsToDestroy;
+			#endregion
+
 			#region Unity Messages
 			private void Awake()
 			{
@@ -79,7 +83,7 @@ namespace Framework
 
 			private void Update()
 			{
-				if (_instances != null)
+				if (_prefabsToDestroy)
 				{
 					for (int i = 0; i < _instances.Length; i++)
 					{
@@ -88,6 +92,8 @@ namespace Framework
 							DestroyAtIndex(i);
 						}
 					}
+
+					_prefabsToDestroy = false;
 				}
 			}
 			#endregion
@@ -117,7 +123,7 @@ namespace Framework
 #if UNITY_EDITOR
 							if (!Application.isPlaying)
 							{
-								DestroyImmediate(_instances[i]._prefabRoot);
+								UnityEngine.Object.DestroyImmediate(_instances[i]._prefabRoot);
 							}
 							else
 #endif
@@ -290,6 +296,7 @@ namespace Framework
 						else
 						{
 							_instances[i]._markedForDestroy = true;
+							_prefabsToDestroy = true;
 
 							if (_instances[i]._prefabRoot != null)
 								_instances[i]._prefabRoot.SetActive(false);
@@ -350,6 +357,7 @@ namespace Framework
 					else
 					{
 						_instances[index]._markedForDestroy = true;
+						_prefabsToDestroy = true;
 
 						if (_instances[index]._prefabRoot != null)
 						{
