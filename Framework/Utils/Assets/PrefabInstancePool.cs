@@ -57,11 +57,10 @@ namespace Framework
 			#endregion
 
 			#region Helper Struct
-			[Serializable]
-			private struct PooledPrefab
+			private class PooledPrefab : MonoBehaviour
 			{
 				#region Public Data
-				public GameObject _prefabRoot;
+				public PrefabInstancePool _pool;
 				public bool _isFree;
 				public bool _markedForDestroy;
 				#endregion
@@ -87,7 +86,7 @@ namespace Framework
 				{
 					for (int i = 0; i < _instances.Length; i++)
 					{
-						if (_instances[i]._markedForDestroy)
+						if (_instances[i] != null && _instances[i]._markedForDestroy)
 						{
 							DestroyAtIndex(i);
 						}
@@ -118,17 +117,17 @@ namespace Framework
 				{
 					for (int i = 0; i < _instances.Length; i++)
 					{
-						if (_instances[i]._prefabRoot != null)
+						if (_instances[i] != null)
 						{
 #if UNITY_EDITOR
 							if (!Application.isPlaying)
 							{
-								UnityEngine.Object.DestroyImmediate(_instances[i]._prefabRoot);
+								UnityEngine.Object.DestroyImmediate(_instances[i].gameObject);
 							}
 							else
 #endif
 							{
-								UnityEngine.Object.Destroy(_instances[i]._prefabRoot);
+								UnityEngine.Object.Destroy(_instances[i].gameObject);
 							}
 						}
 					}
@@ -188,12 +187,9 @@ namespace Framework
 
 				for (int i = 0; i < _instances.Length; i++)
 				{
-					if (_instances[i]._isFree)
+					if (_instances[i] != null && _instances[i]._isFree)
 					{
-						if (_instances[i]._prefabRoot == null)
-							InstantiatePrefab(i);
-
-						newInstance = _instances[i]._prefabRoot;
+						newInstance = _instances[i].gameObject;
 						_instances[i]._isFree = false;
 						break;
 					}
@@ -212,7 +208,7 @@ namespace Framework
 					}
 					
 					//Return first new instance
-					newInstance = _instances[origSize]._prefabRoot;
+					newInstance = _instances[origSize].gameObject;
 					_instances[origSize]._isFree = false;
 				}
 
@@ -252,11 +248,26 @@ namespace Framework
 			{
 				for (int i = 0; i < _instances.Length; i++)
 				{
-					if (_instances[i]._prefabRoot == prefab)
+					if (_instances[i] != null && _instances[i].gameObject == prefab)
+					{
 						return i;
+					}
 				}
 
 				return -1;
+			}
+
+			public static void DestroyPrefab(GameObject prefab, bool instant = true)
+			{
+				if (prefab.TryGetComponent(out PooledPrefab pooledPrefab))
+				{
+					pooledPrefab._pool.Destroy(prefab, instant);
+				}
+			}
+
+			public static void DestroyPrefab(Component component, bool instant = true)
+			{
+				DestroyPrefab(component.gameObject, instant);
 			}
 
 			public bool Destroy(GameObject gameObject, bool instant = true)
@@ -293,13 +304,11 @@ namespace Framework
 						{
 							DestroyAtIndex(i);
 						}
-						else
+						else if (_instances[i] != null)
 						{
 							_instances[i]._markedForDestroy = true;
 							_prefabsToDestroy = true;
-
-							if (_instances[i]._prefabRoot != null)
-								_instances[i]._prefabRoot.SetActive(false);
+							_instances[i].gameObject.SetActive(false);
 						}
 					}
 				}
@@ -333,7 +342,8 @@ namespace Framework
 				gameObject.hideFlags = HideFlags.HideInHierarchy;
 				gameObject.gameObject.SetActive(false);
 
-				_instances[index]._prefabRoot = gameObject;
+				_instances[index] = gameObject.AddComponent<PooledPrefab>();
+				_instances[index]._pool = this;
 				_instances[index]._isFree = true;
 				_instances[index]._markedForDestroy = false;
 			}
@@ -359,10 +369,10 @@ namespace Framework
 						_instances[index]._markedForDestroy = true;
 						_prefabsToDestroy = true;
 
-						if (_instances[index]._prefabRoot != null)
+						if (_instances[index] != null)
 						{
-							_instances[index]._prefabRoot.SetActive(false);
-							_instances[index]._prefabRoot.hideFlags = HideFlags.HideInHierarchy;
+							_instances[index].gameObject.SetActive(false);
+							_instances[index].gameObject.hideFlags = HideFlags.HideInHierarchy;
 						}
 					}
 
@@ -374,18 +384,21 @@ namespace Framework
 
 			private void DestroyAtIndex(int index)
 			{
-				_instances[index]._isFree = true;
-				_instances[index]._markedForDestroy = false;
-
-				GameObject gameObject = _instances[index]._prefabRoot;
-				
-				if (gameObject != null && gameObject.transform.parent != this.transform)
+				if (_instances[index] != null)
 				{
-					gameObject.transform.SetParent(this.transform, false);
-				}
+					_instances[index]._isFree = true;
+					_instances[index]._markedForDestroy = false;
 
-				gameObject.SetActive(false);
-				gameObject.hideFlags = HideFlags.HideInHierarchy;
+					GameObject gameObject = _instances[index].gameObject;
+
+					if (gameObject.transform.parent != this.transform)
+					{
+						gameObject.transform.SetParent(this.transform, false);
+					}
+
+					gameObject.SetActive(false);
+					gameObject.hideFlags = HideFlags.HideInHierarchy;
+				}
 			}
 			#endregion
 		}
