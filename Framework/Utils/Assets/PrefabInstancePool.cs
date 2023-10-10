@@ -343,6 +343,7 @@ namespace Framework
 				gameObject.gameObject.SetActive(false);
 
 				_instances[index] = gameObject.AddComponent<PooledPrefab>();
+				_instances[index].hideFlags = HideFlags.HideInInspector | HideFlags.HideInHierarchy;
 				_instances[index]._pool = this;
 				_instances[index]._isFree = true;
 				_instances[index]._markedForDestroy = false;
