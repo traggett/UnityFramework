@@ -479,42 +479,23 @@ namespace Framework
 						_converterMap = new Dictionary<Type, ObjectConverter>();
 						_converterTypeToTagMap = new Dictionary<string, Type>();
 						_converterTagToTypeMap = new Dictionary<Type, string>();
-						
-						Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-						
-						for (int i=0; i<assemblies.Length; i++)
+
+						Type[] types = SystemUtils.GetAllTypes();
+
+						foreach (Type type in types)
 						{
-							if (assemblies[i].ReflectionOnly)
-								continue;
+							XmlObjectConverterAttribute converterAttribute = SystemUtils.GetAttribute<XmlObjectConverterAttribute>(type);
 
-							Type[] types = null;
-
-							try
+							if (converterAttribute != null)
 							{
-								types = assemblies[i].GetTypes();
-							}
-							catch (Exception e)
-							{
-								UnityEngine.Debug.Log(e.Message);
-								continue;
-							}
 
-							//Then find all XmlObjectConverterAttribute for those types
-							foreach (Type type in types)
-							{
-								XmlObjectConverterAttribute converterAttribute = SystemUtils.GetAttribute<XmlObjectConverterAttribute>(type);
+								ObjectConverter converter = new ObjectConverter(SystemUtils.GetStaticMethodAsDelegate<OnConvertToXmlDelegate>(type, converterAttribute.OnConvertToXmlNodeMethod),
+																				SystemUtils.GetStaticMethodAsDelegate<OnConvertFromXmlDelegate>(type, converterAttribute.OnConvertFromXmlNodeMethod),
+																				SystemUtils.GetStaticMethodAsDelegate<ShouldWriteDelegate>(type, converterAttribute.ShouldWriteMethod));
 
-								if (converterAttribute != null)
-								{
-
-									ObjectConverter converter = new ObjectConverter(SystemUtils.GetStaticMethodAsDelegate<OnConvertToXmlDelegate>(type, converterAttribute.OnConvertToXmlNodeMethod),
-																					SystemUtils.GetStaticMethodAsDelegate<OnConvertFromXmlDelegate>(type, converterAttribute.OnConvertFromXmlNodeMethod),
-																					SystemUtils.GetStaticMethodAsDelegate<ShouldWriteDelegate>(type, converterAttribute.ShouldWriteMethod));
-
-									_converterMap[converterAttribute.ObjectType] = converter;
-									_converterTypeToTagMap[converterAttribute.XmlTag] = converterAttribute.ObjectType;
-									_converterTagToTypeMap[converterAttribute.ObjectType] = converterAttribute.XmlTag;
-								}
+								_converterMap[converterAttribute.ObjectType] = converter;
+								_converterTypeToTagMap[converterAttribute.XmlTag] = converterAttribute.ObjectType;
+								_converterTagToTypeMap[converterAttribute.ObjectType] = converterAttribute.XmlTag;
 							}
 						}
 					}
@@ -574,7 +555,7 @@ namespace Framework
 							if (!string.IsNullOrEmpty(assembly))
 							{
 								//Find assembly by name
-								Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+								Assembly[] assemblies = SystemUtils.GetAssemblies();
 
 								for (int i = 0; i < assemblies.Length; i++)
 								{

@@ -228,33 +228,28 @@ namespace Framework
 				{
 					_editorMap = new Dictionary<Type, SerializedObjectEditorAttribute.RenderPropertiesDelegate>();
 
-					Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+					Type[] types = SystemUtils.GetAllTypes();
 
-					foreach (Assembly assembly in assemblies)
+					foreach (Type type in types)
 					{
-						Type[] types = assembly.GetTypes();
+						SerializedObjectEditorAttribute attribute = SystemUtils.GetAttribute<SerializedObjectEditorAttribute>(type);
 
-						foreach (Type type in types)
+						if (attribute != null)
 						{
-							SerializedObjectEditorAttribute attribute = SystemUtils.GetAttribute<SerializedObjectEditorAttribute>(type);
+							SerializedObjectEditorAttribute.RenderPropertiesDelegate func = SystemUtils.GetStaticMethodAsDelegate<SerializedObjectEditorAttribute.RenderPropertiesDelegate>(type, attribute.OnRenderPropertiesMethod);
 
-							if (attribute != null)
+							_editorMap[attribute.ObjectType] = func;
+
+
+							if (attribute.UseForChildTypes)
 							{
-								SerializedObjectEditorAttribute.RenderPropertiesDelegate func = SystemUtils.GetStaticMethodAsDelegate<SerializedObjectEditorAttribute.RenderPropertiesDelegate>(type, attribute.OnRenderPropertiesMethod);
+								Type[] childTypes = SystemUtils.GetAllSubTypes(attribute.ObjectType);
 
-								_editorMap[attribute.ObjectType] = func;
-
-
-								if (attribute.UseForChildTypes)
+								foreach (Type childType in childTypes)
 								{
-									Type[] childTypes = SystemUtils.GetAllSubTypes(attribute.ObjectType);
-
-									foreach (Type childType in childTypes)
+									if (!_editorMap.ContainsKey(childType))
 									{
-										if (!_editorMap.ContainsKey(childType))
-										{
-											_editorMap[childType] = func;
-										}
+										_editorMap[childType] = func;
 									}
 								}
 							}

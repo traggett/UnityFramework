@@ -8,23 +8,49 @@ namespace Framework
 	{
 		public static class SystemUtils
 		{
+			private static Type[] _types;
+			private static Assembly[] _assemblies;
+
+			public static Assembly[] GetAssemblies()
+			{
+				if (_assemblies == null)
+				{
+					_assemblies = AppDomain.CurrentDomain.GetAssemblies();
+				}
+				
+				return _assemblies;
+			}
+
 			public static Type[] GetAllTypes()
 			{
-				List<Type> result = new List<Type>();
-				Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-				foreach (Assembly assembly in assemblies)
+				if (_types == null)
 				{
-					result.AddRange(assembly.GetTypes());
+					List<Type> result = new List<Type>();
+					Assembly[] assemblies = GetAssemblies();
+
+					foreach (Assembly assembly in assemblies)
+					{
+						Type[] types = assembly.GetTypes();
+
+						foreach (Type type in types)
+						{
+							if (type.Name.Contains("_Injected"))
+								continue;
+
+							result.Add(type);
+						}
+					}
+
+					_types = result.ToArray();
 				}
 
-				return result.ToArray();
+				return _types;
 			}
 
 			public static Type[] GetAllSubTypes(Type baseType, bool allowAbstract = false)
 			{
 				List<Type> result = new List<Type>();
-				Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+				Assembly[] assemblies = GetAssemblies();
 
 				foreach (Assembly assembly in assemblies)
 				{

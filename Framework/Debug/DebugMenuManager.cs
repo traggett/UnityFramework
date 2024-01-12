@@ -143,64 +143,44 @@ namespace Framework
 				_rootMenu = new Menu("Debug Menu");
 				_rootMenu._items.Add(new MenuItemExit());
 
-				Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+				Type[] types = SystemUtils.GetAllTypes();
 
-				for (int i = 0; i < assemblies.Length; i++)
+				foreach (Type type in types)
 				{
-					if (assemblies[i].ReflectionOnly)
-						continue;
+					//Check all methods for static paramterless functions marked with attribute
+					MethodInfo[] methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
-					Type[] types = null;
-
-					try
+					foreach (MethodInfo method in methods)
 					{
-						types = assemblies[i].GetTypes();
-					}
-					catch
-					{
-						continue;
-					}
+						DebugMenuAttribute item = SystemUtils.GetAttribute<DebugMenuAttribute>(method);
 
-					foreach (Type type in types)
-					{
-						//Check all methods for static paramterless functions marked with attribute
-						MethodInfo[] methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-
-						foreach (MethodInfo method in methods)
+						if (item != null && method.GetParameters().Length == 0)
 						{
-							if (method.GetParameters().Length == 0)
-							{
-								DebugMenuAttribute item = SystemUtils.GetAttribute<DebugMenuAttribute>(method);
-
-								if (item != null)
-								{
-									AddFunction(item, method);
-								}
-							}
+							AddFunction(item, method);
 						}
+					}
 
-						PropertyInfo[] properties = type.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+					PropertyInfo[] properties = type.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
-						foreach (PropertyInfo property in properties)
+					foreach (PropertyInfo property in properties)
+					{
+						DebugMenuAttribute item = SystemUtils.GetAttribute<DebugMenuAttribute>(property);
+
+						if (item != null)
 						{
-							DebugMenuAttribute item = SystemUtils.GetAttribute<DebugMenuAttribute>(property);
-
-							if (item != null)
-							{
-								AddProperty(item, property);
-							}
+							AddProperty(item, property);
 						}
+					}
 
-						FieldInfo[] fields = type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+					FieldInfo[] fields = type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
-						foreach (FieldInfo field in fields)
+					foreach (FieldInfo field in fields)
+					{
+						DebugMenuAttribute item = SystemUtils.GetAttribute<DebugMenuAttribute>(field);
+
+						if (item != null)
 						{
-							DebugMenuAttribute item = SystemUtils.GetAttribute<DebugMenuAttribute>(field);
-
-							if (item != null)
-							{
-								AddField(item, field);
-							}
+							AddField(item, field);
 						}
 					}
 				}
