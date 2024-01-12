@@ -50,18 +50,14 @@ namespace Framework
 			public static Type[] GetAllSubTypes(Type baseType, bool allowAbstract = false)
 			{
 				List<Type> result = new List<Type>();
-				Assembly[] assemblies = GetAssemblies();
 
-				foreach (Assembly assembly in assemblies)
+				Type[] types = GetAllTypes();
+
+				foreach (Type type in types)
 				{
-					Type[] types = assembly.GetTypes();
-
-					foreach (Type type in types)
+					if (type != baseType && (allowAbstract || (!type.IsAbstract && !type.IsInterface)) && IsTypeOf(baseType, type))
 					{
-						if (type != baseType && (allowAbstract || (!type.IsAbstract && !type.IsInterface)) && IsTypeOf(baseType, type))
-						{
-							result.Add(type);
-						}
+						result.Add(type);
 					}
 				}
 
