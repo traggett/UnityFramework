@@ -22,7 +22,7 @@ namespace Framework
 				{
 					get
 					{
-						if (_textMesh == null)
+						if (this != null && _textMesh == null)
 						{
 							_textMesh = GetComponent<TMP_Text>();
 						}
