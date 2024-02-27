@@ -151,7 +151,7 @@ namespace Framework
 
 				if (_localisationMaps.TryGetValue(LanguageCodes.GetLanguageCode(language), out LocalisationMap map))
 				{
-					return map.KeyFromGUID(key);
+					return map.GUIDFromKey(key);
 				}
 
 				return "No Localisation Map found for " + language;
