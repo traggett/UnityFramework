@@ -28,14 +28,14 @@ namespace Framework
 			private LocalisedString(string key)
 			{
 				_localisationKey = key;
-				_localisationGUID = Localisation.GUIDFromKey(key);
+				_localisationGUID = null;
 				_localVariables = null;
 			}
 
 			private LocalisedString(string key, params LocalisationLocalVariable[] variables)
 			{
 				_localisationKey = key;
-				_localisationGUID = Localisation.GUIDFromKey(key);
+				_localisationGUID = null;
 				_localVariables = variables;
 			}
 
@@ -125,6 +125,12 @@ namespace Framework
 
 			public string GetLocalisedString(SystemLanguage language)
 			{
+				// Try to cache the guid from key
+				if (string.IsNullOrEmpty(_localisationGUID) && !string.IsNullOrEmpty(_localisationKey))
+				{
+					_localisationGUID = Localisation.GUIDFromKey(_localisationKey);
+				}
+				
 #if UNITY_EDITOR
 				// When the application isn't running (ie in editor) then get text directly from source asset
 				if (!Application.isPlaying)
