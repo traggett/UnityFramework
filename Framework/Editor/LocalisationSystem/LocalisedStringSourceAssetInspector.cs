@@ -13,17 +13,53 @@ namespace Framework
 				public override void OnInspectorGUI()
 				{
 					LocalisedStringSourceAsset sourceAsset = (LocalisedStringSourceAsset)target;
-					string text = sourceAsset.GetText(Localisation.GetCurrentLanguage());
 
-					//Show preview text and edit buttonRect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth - _editbuttonWidth - _buttonSpace, height);
-					EditorGUI.BeginDisabledGroup(true);
-					EditorGUILayout.TextArea(text);
-					EditorGUI.EndDisabledGroup();
+					// Show full key
+					EditorGUILayout.LabelField(sourceAsset.Key, EditorStyles.boldLabel);
 
-					if (GUILayout.Button("Edit"))
+					EditorGUILayout.Separator();
+
+					// Show each language
 					{
-						LocalisationEditorWindow.EditString(sourceAsset);
+						DrawLanguage(sourceAsset, Application.systemLanguage);
+
+						SystemLanguage[] languages = sourceAsset.GetLanguages();
+
+						for (int i = 0; i < languages.Length; i++)
+						{
+							if (languages[i] != Application.systemLanguage)
+							{
+								DrawLanguage(sourceAsset, languages[i]);
+							}
+						}
 					}
+					
+				}
+
+				private void DrawLanguage(LocalisedStringSourceAsset sourceAsset, SystemLanguage language)
+				{
+					EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+					{
+						// Show full key
+						EditorGUILayout.BeginHorizontal();
+						{
+							EditorGUILayout.LabelField(language.ToString());
+
+							if (GUILayout.Button("Edit"))
+							{
+								LocalisationEditorWindow.EditString(sourceAsset, language);
+							}
+						}
+						EditorGUILayout.EndHorizontal();
+
+						string text = sourceAsset.GetText(language);
+
+						//Show preview text and edit buttonRect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth - _editbuttonWidth - _buttonSpace, height);
+						//EditorGUI.BeginDisabledGroup(true);
+						EditorGUILayout.HelpBox(text, MessageType.None);
+						//EditorGUI.EndDisabledGroup();
+					}
+					EditorGUILayout.EndVertical();
 				}
 			}
 		}

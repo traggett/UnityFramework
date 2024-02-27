@@ -63,23 +63,6 @@ namespace Framework
 				}
 			}
 
-			public static bool Exists(string key)
-			{
-				return Exists(key, GetCurrentLanguage());
-			}
-
-			public static bool Exists(string key, SystemLanguage language)
-			{
-				MakeSureStringsAreLoaded();
-
-				if (_localisationMaps.TryGetValue(LanguageCodes.GetLanguageCode(language), out LocalisationMap map))
-				{
-					return map.IsValidKey(key);
-				}
-
-				return false;
-			}
-
 			public static LocalisationLocalVariable Variable(string key, LocalisedString value)
 			{
 				return new LocalisationLocalVariable(key, value.GetLocalisationKey(), true);
@@ -145,7 +128,7 @@ namespace Framework
 				return GetGUID(GetCurrentLanguage(), guid, localVariables);
 			}
 
-			public static string FindKeyGUID(SystemLanguage language, string key)
+			public static string GUIDFromKey(SystemLanguage language, string key)
 			{
 				MakeSureStringsAreLoaded(language);
 
@@ -157,9 +140,9 @@ namespace Framework
 				return "No Localisation Map found for " + language;
 			}
 
-			public static string FindKeyGUID(string key)
+			public static string GUIDFromKey(string key)
 			{
-				return FindKeyGUID(GetCurrentLanguage(), key);
+				return GUIDFromKey(GetCurrentLanguage(), key);
 			}
 		
 			public static SystemLanguage GetCurrentLanguage()

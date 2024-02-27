@@ -28,14 +28,14 @@ namespace Framework
 			private LocalisedString(string key)
 			{
 				_localisationKey = key;
-				_localisationGUID = Localisation.FindKeyGUID(key);
+				_localisationGUID = Localisation.GUIDFromKey(key);
 				_localVariables = null;
 			}
 
 			private LocalisedString(string key, params LocalisationLocalVariable[] variables)
 			{
 				_localisationKey = key;
-				_localisationGUID = Localisation.FindKeyGUID(key);
+				_localisationGUID = Localisation.GUIDFromKey(key);
 				_localVariables = variables;
 			}
 

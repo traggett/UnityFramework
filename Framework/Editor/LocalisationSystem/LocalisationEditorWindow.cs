@@ -72,7 +72,6 @@ namespace Framework
 
 				private LocalisedStringTableAsset _table;
 				private LocalisedStringSourceAsset[] _items;
-				private LocalisedStringSourceAsset[] _visibleItems;
 				private bool _itemsDirty;
 
 				private static int _editorVersion = 1;
@@ -162,7 +161,7 @@ namespace Framework
 				}
 				*/
 
-				public static void EditString(LocalisedStringSourceAsset sourceAsset)
+				public static void EditString(LocalisedStringSourceAsset sourceAsset, SystemLanguage language = SystemLanguage.Unknown)
 				{
 					if (_instance == null)
 						CreateWindow();
@@ -174,8 +173,12 @@ namespace Framework
 						_instance._filter = null;
 						_instance.RefreshTable();
 						_instance.SelectGUID(sourceAsset.GUID);
+						_instance._needsRepaint = true;
 
-						_instance.OpenTextEditor(sourceAsset, Localisation.GetCurrentLanguage());
+						if (language == SystemLanguage.Unknown)
+							language = Application.systemLanguage;
+
+						_instance.OpenTextEditor(sourceAsset, language);
 					}
 				}
 
@@ -246,7 +249,7 @@ namespace Framework
 				{
 					if (_table != null)
 					{
-						_items = _table.FindStrings();
+						LocalisedStringSourceAsset[] items = _table.FindStrings();
 
 						List<LocalisedStringSourceAsset> visibleItems = new List<LocalisedStringSourceAsset>();
 
@@ -254,17 +257,17 @@ namespace Framework
 						{
 							List<LocalisedStringSourceAsset> showItems = new List<LocalisedStringSourceAsset>();
 
-							for (int i = 1; i < _items.Length; i++)
+							for (int i = 1; i < items.Length; i++)
 							{
-								if (MatchsFilter(_items[i].Key) || MatchsFilter(_items[i].GetText(Localisation.GetCurrentLanguage())))
+								if (MatchsFilter(items[i].Key) || MatchsFilter(items[i].GetText(Localisation.GetCurrentLanguage())))
 								{
-									visibleItems.Add(_items[i]);
+									visibleItems.Add(items[i]);
 								}
 							}
 						}
 						else
 						{
-							visibleItems.AddRange(_items);
+							visibleItems.AddRange(items);
 						}
 
 						switch (_sortOrder)
@@ -279,12 +282,11 @@ namespace Framework
 								break;
 						}
 
-						_visibleItems = visibleItems.ToArray();
+						_items = visibleItems.ToArray();
 					}
 					else
 					{
 						_items = new LocalisedStringSourceAsset[0];
-						_visibleItems = _items;
 					}
 
 					_itemsDirty = true;
@@ -653,9 +655,9 @@ namespace Framework
 							GUILayout.Label(GUIContent.none, GUILayout.Height(_contentStart));
 
 							//Then render viewable range
-							for (int i = _viewStartIndex; i < _viewEndIndex && i < _visibleItems.Length; i++)
+							for (int i = _viewStartIndex; i < _viewEndIndex && i < _items.Length; i++)
 							{
-								LocalisedStringSourceAsset item = _visibleItems[i];
+								LocalisedStringSourceAsset item = _items[i];
 								string itemGUID = item.GUID;
 								string itemKey = item.Key;
 								bool selected = IsSelected(item);
@@ -806,7 +808,7 @@ namespace Framework
 					//Select just this key
 					else
 					{
-						_editorPrefs._selectedItemGUIDs = new string[] { _items[index].GUID };
+						_editorPrefs._selectedItemGUIDs = new string[] {  _items[index].GUID };
 					}
 
 					_needsRepaint = true;

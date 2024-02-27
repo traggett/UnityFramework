@@ -1,7 +1,5 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
-
 using UnityEngine;
 
 namespace Framework
@@ -17,8 +15,8 @@ namespace Framework
 			#endregion
 
 			#region Private Data
-			private Dictionary<string, string> _keysToGUIDs;
-			private Dictionary<string, string> _GUIDToKeys;
+			private readonly Dictionary<string, string> _keysToGUIDs;
+			private readonly Dictionary<string, string> _GUIDToKeys;
 			#endregion
 
 			#region Public Properties
@@ -44,11 +42,9 @@ namespace Framework
 
 			public string Get(string guid, bool silent = false)
 			{
-				string text;
-				
 				if (!string.IsNullOrEmpty(guid))
 				{
-					if (_strings.TryGetValue(guid, out text))
+					if (_strings.TryGetValue(guid, out string text))
 					{
 						return text;
 					}
@@ -93,11 +89,6 @@ namespace Framework
 				}
 
 				return null;
-			}
-
-			public bool IsValidKey(string key)
-			{
-				return _strings.ContainsKey(key);
 			}
 
 			public void SetString(string guid, string key, string text)
