@@ -11,12 +11,14 @@ namespace Framework
 	{
 		public class LocalisedStringTableAsset : ScriptableObject
 		{
+			#region Private Data
 #if UNITY_EDITOR
-
 			private const string AssetsRootFolder = "Assets/";
+#endif
+			#endregion
 
 			#region Public Methods
-
+#if UNITY_EDITOR
 			public LocalisedStringSourceAsset[] FindStrings()
 			{
 				string rootFolder = AssetDatabase.GetAssetPath(this);
@@ -39,8 +41,11 @@ namespace Framework
 
 				return strings.ToArray();
 			}
+#endif
 			#endregion
 
+			#region Private Functions
+#if UNITY_EDITOR
 			private static void AddFromDirectory(List<LocalisedStringSourceAsset> strings, string folderPath)
 			{
 				string[] fileEntries = Directory.GetFiles(folderPath);
@@ -68,7 +73,8 @@ namespace Framework
 					AddFromDirectory(strings, subFolder);
 				}
 			}
-		}
 #endif
+			#endregion
+		}
 	}
 }
