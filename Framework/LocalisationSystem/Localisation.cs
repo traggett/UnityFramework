@@ -37,7 +37,7 @@ namespace Framework
 			public static void LoadStrings(SystemLanguage language)
 			{
 				string resourceName = GetLocalisationMapName(language);
-				string resourcePath = AssetUtils.GetResourcePath(LocalisationProjectSettings.Get()._localisationFolder) + resourceName;
+				string resourcePath = AssetUtils.GetResourcePath(LocalisationProjectSettings.Get()._localisationFolder) + "/" + resourceName;
 
 				var asset = Resources.Load(resourcePath);
 				TextAsset textAsset = asset as TextAsset;
