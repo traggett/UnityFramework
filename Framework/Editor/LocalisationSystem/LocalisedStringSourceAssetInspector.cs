@@ -15,7 +15,11 @@ namespace Framework
 					LocalisedStringSourceAsset sourceAsset = (LocalisedStringSourceAsset)target;
 
 					// Show full key
-					EditorGUILayout.LabelField(sourceAsset.Key, EditorStyles.boldLabel);
+					EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
+					{
+						GUILayout.Button(" " + sourceAsset.Key + " ", EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true));
+					}
+					GUILayout.EndHorizontal();
 
 					EditorGUILayout.Separator();
 
