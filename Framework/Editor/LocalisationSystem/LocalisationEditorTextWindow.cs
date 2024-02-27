@@ -14,7 +14,7 @@ namespace Framework
 				private LocalisationEditorWindow _parent;
 				private GUIStyle _keyStyle;
 				private GUIStyle _textStyle;
-				private string _key;
+				private LocalisedStringSourceAsset _item;
 				private SystemLanguage _language;
 				private bool _richText;	
 				private bool _hasChanges;
@@ -23,20 +23,20 @@ namespace Framework
 				[SerializeField]
 				private string _text;
 
-				public static void ShowEditKey(LocalisationEditorWindow parent, string key, SystemLanguage language, Rect position)
+				public static void ShowEditKey(LocalisationEditorWindow parent, LocalisedStringSourceAsset item, SystemLanguage language, Rect position)
 				{
 					LocalisationEditorTextWindow textEditor = (LocalisationEditorTextWindow)GetWindow(typeof(LocalisationEditorTextWindow), false, kWindowWindowName);
-					textEditor.Show(parent, key, language, position);
+					textEditor.Show(parent, item, language, position);
 				}
 
-				private void Show(LocalisationEditorWindow parent, string key, SystemLanguage language, Rect position)
+				private void Show(LocalisationEditorWindow parent, LocalisedStringSourceAsset item, SystemLanguage language, Rect position)
 				{
 					ShowPopup();
 
 					this.position = position;
 
 					_parent = parent;
-					_key = key;
+					_item = item;
 					_language = language;
 
 					_keyStyle = new GUIStyle(EditorStyles.toolbarTextField)
@@ -52,7 +52,7 @@ namespace Framework
 						padding = new RectOffset(8, 8, 6, 6),
 					};
 
-					_text = Localisation.GetRawString(_key, _language);
+					_text = _item.GetText(_language);
 					_hasChanges = false;
 				}
 
@@ -64,7 +64,7 @@ namespace Framework
 						//Tool bar
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							GUILayout.Button(" " + _key + " ", _keyStyle);
+							GUILayout.Button(" " + _item.Key + " ", _keyStyle);
 
 							EditorGUILayout.Separator();
 
@@ -76,13 +76,12 @@ namespace Framework
 								{
 									if (EditorUtility.DisplayDialog("Localisation String Has Been Modified", "Do you want to save the changes you made to the string?\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
 									{
-										Localisation.Set(_key, _language, _text);
+										_item.SetText(language, _text);
 									}
 								}
 
 								_language = language;
-								Localisation.LoadStrings(language);
-								_text = Localisation.GetRawString(_key, _language);
+								_text = _item.GetText(language);
 								_hasChanges = false;
 							}
 
@@ -143,7 +142,7 @@ namespace Framework
 
 							if (GUILayout.Button("Save", EditorStyles.miniButton))
 							{
-								Localisation.Set(_key, _language, _text);
+								_item.SetText(_language, _text);
 								_hasChanges = false;
 								Close();
 							}
@@ -167,7 +166,7 @@ namespace Framework
 					{
 						if (EditorUtility.DisplayDialog("Localisation Table Has Been Modified", "Do you want to save the changes you made to the string?\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
 						{
-							Localisation.Set(_key, _language, _text);
+							_item.SetText(_language, _text);
 						}
 					}
 				}

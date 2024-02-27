@@ -4,7 +4,6 @@ using UnityEngine;
 namespace Framework
 {
 	using Serialization;
-	using Utils.Editor;
 
 	namespace LocalisationSystem
 	{
@@ -18,6 +17,7 @@ namespace Framework
 				{
 					LocalisedString localisedString = (LocalisedString)obj;
 
+					/*
 					//Draw list of possible keys
 					int currentKeyIndex = 0;
 					{
@@ -71,7 +71,7 @@ namespace Framework
 							}
 						}
 					}
-
+					*/
 					return localisedString;
 				}
 				#endregion

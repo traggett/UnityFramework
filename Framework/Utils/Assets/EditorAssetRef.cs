@@ -11,7 +11,7 @@ namespace Framework
 	namespace Utils
 	{
 		[Serializable]
-		public struct EditorAssetRef<T> : ISerializationCallbackReceiver where T : UnityEngine.Object
+		public struct EditorAssetRef<T> where T : UnityEngine.Object
 		{
 			#region Public Data
 			[SerializeField]
@@ -109,18 +109,6 @@ namespace Framework
 			public string GetFileGUID()
 			{
 				return _fileGUID;
-			}
-			#endregion
-
-			#region ISerializationCallbackReceiver
-			public void OnBeforeSerialize()
-			{
-
-			}
-
-			public void OnAfterDeserialize()
-			{
-				_editorAsset = GetAsset();
 			}
 			#endregion
 		}

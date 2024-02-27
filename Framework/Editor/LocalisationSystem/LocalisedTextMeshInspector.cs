@@ -67,7 +67,7 @@ namespace Framework
 						serializedObject.ApplyModifiedProperties();
 
 						LocalisedTextMesh localisedTextMesh = (LocalisedTextMesh)target;
-						localisedTextMesh.UpdateText();
+						localisedTextMesh.RefreshText();
 					}
 				}
 			}

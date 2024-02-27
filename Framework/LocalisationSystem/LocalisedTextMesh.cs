@@ -56,6 +56,7 @@ namespace Framework
 
 			private SystemLanguage _cachedLanguage;
 			private LocalisationGlobalVariable[] _cachedGlobalVariables;
+
 #if UNITY_EDITOR
 			private int _cachedEditorVersion;
 #endif
@@ -76,14 +77,19 @@ namespace Framework
 			#region Public Methods
 			public void RefreshText(SystemLanguage language = SystemLanguage.Unknown)
 			{
+#if UNITY_EDITOR
+				if (!Application.isPlaying)
+				{
+					UpdateTextEditor(language);
+					return;
+				}
+#endif
+
+
 				if (language == SystemLanguage.Unknown)
 					language = Localisation.GetCurrentLanguage();
 
-				if (_cachedLanguage != language || Localisation.AreGlobalVariablesOutOfDate(_cachedGlobalVariables)
-#if UNITY_EDITOR
-					|| Localisation.HaveStringsUpdated(_cachedEditorVersion)
-#endif
-					)
+				if (_cachedLanguage != language || Localisation.AreGlobalVariablesOutOfDate(_cachedGlobalVariables))
 				{
 					UpdateText(language);
 				}
@@ -101,24 +107,17 @@ namespace Framework
 					UpdateText(Localisation.GetCurrentLanguage());
 				}
 			}
-
-#if UNITY_EDITOR
-			public void UpdateText()
-			{
-				UpdateText(Localisation.GetCurrentLanguage());
-			}
-#endif
 			#endregion
 
 			#region Protected Methods
 			protected abstract void SetText(string text);
 
+
+			// When not playing (in editor mode) update text directly table asset not Localisation
+
 			protected void UpdateText(SystemLanguage language)
 			{
 				_cachedLanguage = language;
-#if UNITY_EDITOR
-				_cachedEditorVersion = Localisation.GetEditorVersion();
-#endif
 
 				//List of strings
 				if (_textListMode)
@@ -149,6 +148,39 @@ namespace Framework
 					SetText(_text.GetLocalisedString(language));
 				}
 			}
+#if UNITY_EDITOR
+			protected void UpdateTextEditor(SystemLanguage language)
+			{
+				if (language == SystemLanguage.Unknown)
+					language = SystemLanguage.English;
+
+				//List of strings
+				if (_textListMode)
+				{
+					//Build text from list
+					string text = _listStartString;
+
+					for (int i = 0; i < _textList.Length; i++)
+					{
+						text += _textList[i].GetLocalisedString(language);
+
+						if (i < _textList.Length - 1)
+						{
+							text += _listSeperatorString;
+						}
+					}
+
+					text += _listEndString;
+
+					SetText(text);
+				}
+				//Simple string
+				else
+				{
+					SetText(_text.GetLocalisedString(language));
+				}
+			}
+#endif
 			#endregion
 		}
 	}

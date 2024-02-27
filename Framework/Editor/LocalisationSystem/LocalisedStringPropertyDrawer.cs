@@ -16,62 +16,36 @@ namespace Framework
 				private static readonly float _editbuttonWidth = 50.0f;
 				private static readonly float _buttonSpace = 2.0f;
 				private static readonly GUIContent _editLabel = new GUIContent("Edit");
-
+				
 				public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 				{
 					EditorGUI.BeginProperty(position, label, property);
 
 					bool hasChanges = false;
 
-					SerializedProperty localisationkeyProperty = property.FindPropertyRelative("_localisationKey");
-					string localisationkey = localisationkeyProperty.stringValue;
+					SerializedProperty localisationGUIDProperty = property.FindPropertyRelative("_localisationGUID");
+					string guid = localisationGUIDProperty.stringValue;
+					LocalisedStringSourceAsset sourceAsset;
 
 					float yPos = position.y;
 
-					//Draw list of possible keys
-					int currentKey = 0;
+					//Draw source asset field
 					{
-						string[] keys = Localisation.GetStringKeys();
-						GUIContent[] keyLabels = new GUIContent[keys.Length];
-
-						for (int i = 0; i < keys.Length; i++)
-						{
-							keyLabels[i] = new GUIContent(keys[i]);
-
-							if (keys[i] == localisationkey)
-							{
-								currentKey = i;
-							}
-						}
-
 						Rect typePosition = new Rect(position.x, yPos, position.width, EditorGUIUtility.singleLineHeight);
 						yPos += EditorGUIUtility.singleLineHeight;
 
-						EditorUtils.SetBoldDefaultFont(localisationkeyProperty.prefabOverride);
+						var path = AssetDatabase.GUIDToAssetPath(guid);
+						sourceAsset = AssetDatabase.LoadAssetAtPath(path, typeof(LocalisedStringSourceAsset)) as LocalisedStringSourceAsset;
 
-						EditorGUI.BeginChangeCheck();
-						currentKey = EditorGUI.Popup(typePosition, label, currentKey, keyLabels);
-						if (EditorGUI.EndChangeCheck())
-						{
-							if (currentKey == 0)
-							{
-								localisationkey = UpdateNewLocalisedStringRef(property, null);
-								hasChanges = true;
-							}
-							else
-							{
-								localisationkey = UpdateNewLocalisedStringRef(property, keys[currentKey]);
-								hasChanges = true;
-							}
-						}
+						sourceAsset = EditorGUI.ObjectField(typePosition, label.text, sourceAsset, typeof(LocalisedStringSourceAsset), false) as LocalisedStringSourceAsset;
 
-						EditorUtils.SetBoldDefaultFont(false);
+						localisationGUIDProperty.stringValue = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(sourceAsset));
 					}
 
 					//Draw text preview (can be edited to update localization file)
-					if (!string.IsNullOrEmpty(localisationkey) && Localisation.Exists(localisationkey) && !localisationkeyProperty.hasMultipleDifferentValues)
+					if (sourceAsset != null && !localisationGUIDProperty.hasMultipleDifferentValues)
 					{
-						string text = StringUtils.GetFirstLine(Localisation.GetRawString(localisationkey, Localisation.GetCurrentLanguage()));
+						string text = StringUtils.GetFirstLine(sourceAsset.GetText(Localisation.GetCurrentLanguage()));
 						float height = EditorGUIUtility.singleLineHeight;
 						float labelWidth = EditorUtils.GetLabelWidth();
 
@@ -81,7 +55,7 @@ namespace Framework
 
 						if (GUI.Button(editTextPosition, _editLabel))
 						{
-							LocalisationEditorWindow.EditString(localisationkey);
+							LocalisationEditorWindow.EditString(sourceAsset);
 						}
 					}
 
@@ -96,9 +70,9 @@ namespace Framework
 
 				public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
 				{
-					SerializedProperty localisationkeyProperty = property.FindPropertyRelative("_localisationKey");
+					SerializedProperty localisationGUIDProperty = property.FindPropertyRelative("_localisationGUID");
 
-					if (string.IsNullOrEmpty(localisationkeyProperty.stringValue))
+					if (string.IsNullOrEmpty(localisationGUIDProperty.stringValue))
 					{
 						return EditorGUIUtility.singleLineHeight;
 					}
@@ -106,13 +80,6 @@ namespace Framework
 					{
 						return EditorGUIUtility.singleLineHeight * 2;
 					}
-				}
-
-				private string UpdateNewLocalisedStringRef(SerializedProperty property, string key)
-				{
-					LocalisedString localisedString = key;
-					SerializedPropertyUtils.SetSerializedPropertyValue(property, localisedString);
-					return key;
 				}
 			}
 		}

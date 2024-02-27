@@ -1,6 +1,10 @@
 using System;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace Framework
 {
 	namespace LocalisationSystem
@@ -13,8 +17,8 @@ namespace Framework
 			#endregion
 
 			#region Serialized Data
-			[SerializeField]
-			private string _localisationKey;
+			[SerializeField] private string _localisationKey;
+			[SerializeField] private string _localisationGUID;
 			#endregion
 
 			#region Private Data
@@ -24,12 +28,14 @@ namespace Framework
 			private LocalisedString(string key)
 			{
 				_localisationKey = key;
+				_localisationGUID = Localisation.FindKeyGUID(key);
 				_localVariables = null;
 			}
 
 			private LocalisedString(string key, params LocalisationLocalVariable[] variables)
 			{
 				_localisationKey = key;
+				_localisationGUID = Localisation.FindKeyGUID(key);
 				_localVariables = variables;
 			}
 
@@ -119,6 +125,27 @@ namespace Framework
 
 			public string GetLocalisedString(SystemLanguage language)
 			{
+#if UNITY_EDITOR
+				// When the application isn't running (ie in editor) then get text directly from source asset
+				if (!Application.isPlaying)
+				{
+					var path = AssetDatabase.GUIDToAssetPath(_localisationGUID);
+					LocalisedStringSourceAsset sourceAsset = AssetDatabase.LoadAssetAtPath(path, typeof(LocalisedStringSourceAsset)) as LocalisedStringSourceAsset;
+
+					if (sourceAsset != null)
+					{
+						return sourceAsset.GetText(language);
+					}
+					else
+					{
+						return string.Empty;
+					}
+				}
+#endif
+
+				if (!string.IsNullOrEmpty(_localisationGUID))
+					return Localisation.GetGUID(_localisationGUID);
+
 				if (!string.IsNullOrEmpty(_localisationKey))
 					return Localisation.Get(language, _localisationKey, _localVariables);
 
@@ -127,10 +154,15 @@ namespace Framework
 
 			public bool IsValid()
 			{
-				return !string.IsNullOrEmpty(_localisationKey);
+				return !string.IsNullOrEmpty(_localisationGUID) || !string.IsNullOrEmpty(_localisationKey);
 			}
 
-            public string GetLocalisationKey()
+			public string GetLocalisationGUID()
+			{
+				return _localisationGUID;
+			}
+
+			public string GetLocalisationKey()
             {
                 return _localisationKey;
             }

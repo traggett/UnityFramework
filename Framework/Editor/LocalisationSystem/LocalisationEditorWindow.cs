@@ -7,6 +7,7 @@ using System.Collections.Generic;
 namespace Framework
 {
 	using Serialization;
+	using System.IO;
 	using Utils;
 	using Utils.Editor;
 
@@ -52,8 +53,6 @@ namespace Framework
 				private float _resizingOffset;
 				private Vector2 _scrollPosition;
 				private bool _needsRepaint;
-				private string _addNewKey = string.Empty;
-				private string _editingKeyName;
 				private string _filter;
 
 				private GUIStyle _tableStyle;
@@ -68,20 +67,22 @@ namespace Framework
 				private float _contentHeight;
 				private float _contentStart;
 
-				private bool _keysDirty;
-
-
 				private double lastClickTime = 0d;
 				private int _lastClickKeyIndex;
 
-				private string[] _keys;
+				private LocalisedStringTableAsset _table;
+				private LocalisedStringSourceAsset[] _items;
+				private LocalisedStringSourceAsset[] _visibleItems;
+				private bool _itemsDirty;
 
-				private enum eKeySortOrder
+				private static int _editorVersion = 1;
+
+				private enum KeySortOrder
 				{
 					Asc,
 					Desc
 				}
-				private eKeySortOrder _sortOrder;
+				private KeySortOrder _sortOrder;
 
 				#region Menu Stuff
 				[MenuItem("Window/Localisation Editor")]
@@ -100,13 +101,12 @@ namespace Framework
 					InitGUIStyles();
 
 					_needsRepaint = false;
-					_keysDirty = false;
+					_itemsDirty = false;
 
 					EditorGUILayout.BeginVertical();
 					{
 						RenderTitleBar();
 						RenderTable();
-						RenderBottomBar();
 					}
 					EditorGUILayout.EndVertical();
 
@@ -118,30 +118,73 @@ namespace Framework
 
 				void OnDestroy()
 				{
-					if (Localisation.HasUnsavedChanges())
-					{
-						if (EditorUtility.DisplayDialog("Localisation Table Has Been Modified", "Do you want to save the changes you made to the table?\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
-						{
-							Localisation.SaveStrings();
-						}
-						else
-						{
-							Localisation.ReloadStrings();
-						}
-					}
+					
 				}
 				#endregion
 
-				public static void EditString(string key)
+				//Load from table asset instead of path
+				//get keys+guids from child items
+				//have save which saves to folder (xml)
+				/*
+				public void ConvertToSO()
+				{
+					//Create folder item then sub fodlers and items for all keys
+
+					string folder = "/LocalisationTable/";
+					
+					Directory.CreateDirectory(Application.dataPath + folder);
+
+					LocalisedStringTableRoot localisedStringTableRoot = ScriptableObject.CreateInstance<LocalisedStringTableRoot>();
+					AssetDatabase.CreateAsset(localisedStringTableRoot, "Assets/" + folder + "Table.asset");
+					
+					foreach (string key in _keys)
+					{
+						string keyPath = folder;
+						string keyName = key;
+
+						int lastDash = key.LastIndexOf('/');
+
+						if (lastDash != -1)
+						{
+							keyPath = folder + key.Substring(0, lastDash + 1);
+							keyName= key.Substring(lastDash + 1);
+						}
+
+						Directory.CreateDirectory(Application.dataPath + keyPath);
+
+						LocalisedStringTableItem item = ScriptableObject.CreateInstance<LocalisedStringTableItem>();
+						item.SetText(SystemLanguage.English, Localisation.GetRawString(key, SystemLanguage.English));
+
+						AssetDatabase.CreateAsset(item, "Assets/" + keyPath + keyName + ".asset");
+					}
+
+					AssetDatabase.SaveAssets();
+				}
+				*/
+
+				public static void EditString(LocalisedStringSourceAsset sourceAsset)
 				{
 					if (_instance == null)
 						CreateWindow();
 
-					_instance._filter = null;
-					_instance.UpdateKeys();
-					_instance.SelectKey(key);
+					if (sourceAsset != null)
+					{
+						_instance.LoadAsset(sourceAsset.ParentAsset);
 
-					_instance.OpenTextEditor(key, Localisation.GetCurrentLanguage());
+						_instance._filter = null;
+						_instance.RefreshTable();
+						_instance.SelectGUID(sourceAsset.GUID);
+
+						_instance.OpenTextEditor(sourceAsset, Localisation.GetCurrentLanguage());
+					}
+				}
+
+				public static void Load(LocalisedStringTableAsset sourceAsset)
+				{
+					if (_instance == null)
+						CreateWindow();
+
+					_instance.LoadAsset(sourceAsset);
 				}
 
 				public LocalisationEditorPrefs GetEditorPrefs()
@@ -155,6 +198,15 @@ namespace Framework
 					ProjectEditorPrefs.SetString(kEditorPrefKey, prefsXml);
 				}
 
+				public static int GetEditorVersion()
+				{
+					return _editorVersion;
+				}
+
+				public static bool HaveStringsUpdated(int versionNumber)
+				{
+					return versionNumber < _editorVersion;
+				}
 
 				private void CreateEditor()
 				{
@@ -177,19 +229,70 @@ namespace Framework
 						_editorPrefs = null;
 					}
 
+					_controlID = GUIUtility.GetControlID(FocusType.Passive);
+
 					if (_editorPrefs == null)
 					{
 						_editorPrefs = new LocalisationEditorPrefs();
+						RefreshTable();
 					}
-
-					_controlID = GUIUtility.GetControlID(FocusType.Passive);
-					UpdateKeys();
+					else
+					{
+						Load(_editorPrefs._table.GetAsset());
+					}
 				}
 
-				private void UpdateKeys()
+				private void RefreshTable()
 				{
-					_keys = GetKeys();
-					_keysDirty = true;
+					if (_table != null)
+					{
+						_items = _table.FindStrings();
+
+						List<LocalisedStringSourceAsset> visibleItems = new List<LocalisedStringSourceAsset>();
+
+						if (!string.IsNullOrEmpty(_filter))
+						{
+							List<LocalisedStringSourceAsset> showItems = new List<LocalisedStringSourceAsset>();
+
+							for (int i = 1; i < _items.Length; i++)
+							{
+								if (MatchsFilter(_items[i].Key) || MatchsFilter(_items[i].GetText(Localisation.GetCurrentLanguage())))
+								{
+									visibleItems.Add(_items[i]);
+								}
+							}
+						}
+						else
+						{
+							visibleItems.AddRange(_items);
+						}
+
+						switch (_sortOrder)
+						{
+							case KeySortOrder.Desc:
+								visibleItems.Sort(SortItemsByKey);
+								visibleItems.Reverse();
+								break;
+							default:
+							case KeySortOrder.Asc:
+								visibleItems.Sort(SortItemsByKey);
+								break;
+						}
+
+						_visibleItems = visibleItems.ToArray();
+					}
+					else
+					{
+						_items = new LocalisedStringSourceAsset[0];
+						_visibleItems = _items;
+					}
+
+					_itemsDirty = true;
+				}
+
+				private static int SortItemsByKey(LocalisedStringSourceAsset itemA, LocalisedStringSourceAsset itemB)
+				{
+					return itemA.Key.CompareTo(itemB.Key);
 				}
 
 				private void InitGUIStyles()
@@ -277,15 +380,41 @@ namespace Framework
 						//Load save
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							if (GUILayout.Button("Save", EditorStyles.toolbarButton))
+							if (GUILayout.Button("New", EditorStyles.toolbarButton))
 							{
-								Localisation.SaveStrings();
+								string fileName = EditorUtility.SaveFilePanel("Open File", Application.dataPath, "LocalisationTable", "asset");
+								if (fileName != null && fileName != string.Empty)
+								{
+									//Create new table source asset and load it
+								}
 							}
 
-							if (GUILayout.Button("Reload", EditorStyles.toolbarButton))
+							if (GUILayout.Button("Load", EditorStyles.toolbarButton))
 							{
-								Localisation.ReloadStrings();
-								UpdateKeys();
+								string fileName = EditorUtility.OpenFilePanel("Open File", Application.dataPath, "asset");
+								if (fileName != null && fileName != string.Empty)
+								{
+									Load(fileName);
+								}
+							}
+
+							if (GUILayout.Button("Refresh", EditorStyles.toolbarButton))
+							{
+								RefreshTable();
+							}
+
+							if (GUILayout.Button("Import", EditorStyles.toolbarButton))
+							{
+								string fileName = EditorUtility.OpenFilePanel("Open File", Application.dataPath, "xml");
+								if (fileName != null && fileName != string.Empty)
+								{
+									//Convert from xml to assets!
+								}
+							}
+
+							if (GUILayout.Button("Export", EditorStyles.toolbarButton))
+							{
+								ExportStrings();
 							}
 
 							EditorGUILayout.Separator();
@@ -340,14 +469,14 @@ namespace Framework
 							if (EditorGUI.EndChangeCheck())
 							{
 								_needsRepaint = true;
-								UpdateKeys();
+								RefreshTable();
 							}
 
 							if (GUILayout.Button("Clear", EditorStyles.toolbarButton))
 							{
 								_filter = "";
-								UpdateKeys();
-								SelectKey(_editorPrefs._selectedKeys);
+								RefreshTable();
+								SelectGUID(_editorPrefs._selectedItemGUIDs);
 							}
 
 							if (GUILayout.Button("Choose Localisation Folder", EditorStyles.toolbarButton))
@@ -358,8 +487,8 @@ namespace Framework
 								if (!string.IsNullOrEmpty(folder))
 								{
 									LocalisationProjectSettings.Get()._localisationFolder = AssetUtils.GetAssetPath(folder);
+									ExportStrings();
 									AssetDatabase.SaveAssets();
-									Localisation.ReloadStrings(true);
 									_needsRepaint = true;
 								}
 							}
@@ -380,8 +509,8 @@ namespace Framework
 							//Key
 							if (GUILayout.Button("Key", EditorStyles.toolbarButton, GUILayout.Width(Mathf.Max(keyWidth, 0f))))
 							{
-								_sortOrder = _sortOrder == eKeySortOrder.Desc ? eKeySortOrder.Asc : eKeySortOrder.Desc;
-								UpdateKeys();
+								_sortOrder = _sortOrder == KeySortOrder.Desc ? KeySortOrder.Asc : KeySortOrder.Desc;
+								RefreshTable();
 							}
 
 							//Keys Resizer
@@ -409,19 +538,7 @@ namespace Framework
 							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_editorPrefs._secondLanguage, EditorStyles.toolbarPopup, GUILayout.Width(secondLangWidth));
 							if (EditorGUI.EndChangeCheck())
 							{
-								//Unload the strings if second language is not current
-								if (_editorPrefs._secondLanguage != Localisation.GetCurrentLanguage())
-								{
-									Localisation.UnloadStrings(_editorPrefs._secondLanguage);
-								}
-
 								_editorPrefs._secondLanguage = language;
-
-								//If new language isn't current load strings
-								if (language != Localisation.GetCurrentLanguage())
-								{
-									Localisation.LoadStrings(language);
-								}
 							}
 						}
 						EditorGUILayout.EndHorizontal();
@@ -436,11 +553,75 @@ namespace Framework
 					EditorGUIUtility.AddCursorRect(rect, MouseCursor.SplitResizeLeftRight);
 				}
 
-				private bool IsSelected(string key)
+				private void Load(string path)
 				{
-					for (int i = 0; i < _editorPrefs._selectedKeys.Length; i++)
+					int index = path.IndexOf("Assets");
+
+					if (index > 0)
 					{
-						if (_editorPrefs._selectedKeys[i] == key)
+						path = path.Substring(index);
+					}
+
+					_table = AssetDatabase.LoadAssetAtPath(path, typeof(LocalisedStringTableAsset)) as LocalisedStringTableAsset;
+
+					LoadAsset(_table);
+				}
+
+				private void LoadAsset(LocalisedStringTableAsset table)
+				{
+					_table = table;
+					_editorPrefs._table = table;
+					SaveEditorPrefs();
+
+					RefreshTable();
+				}
+
+				private void ExportStrings()
+				{
+					Dictionary<SystemLanguage, LocalisationMap > localisationMaps = new Dictionary<SystemLanguage, LocalisationMap>();
+
+					foreach (var item in _items)
+					{
+						SystemLanguage[] languages = item.GetLanguages();
+
+						for (int i = 0; i < languages.Length; i++)
+						{
+							if (!localisationMaps.TryGetValue(languages[i], out LocalisationMap map))
+							{
+								map = new LocalisationMap(languages[i]);
+								localisationMaps.Add(languages[i], map);
+							}
+
+							map.SetString(item.GUID, item.Key, item.GetText(languages[i]));
+						}
+					}
+
+					foreach (KeyValuePair<SystemLanguage, LocalisationMap> languagePair in localisationMaps)
+					{
+						string resourceName = Localisation.GetLocalisationMapName(languagePair.Key);
+						string assetsPath = LocalisationProjectSettings.Get()._localisationFolder;
+						string resourcePath = AssetUtils.GetResourcePath(assetsPath) + "/" + resourceName;
+						string filePath = AssetUtils.GetAppllicationPath();
+
+						TextAsset asset = Resources.Load(resourcePath) as TextAsset;
+						if (asset != null)
+						{
+							filePath += AssetDatabase.GetAssetPath(asset);
+						}
+						else
+						{
+							filePath += assetsPath + "/" + resourceName + ".xml";
+						}
+
+						Serializer.ToFile(languagePair.Value, filePath);
+					}
+				}
+
+				private bool IsSelected(LocalisedStringSourceAsset item)
+				{
+					for (int i = 0; i < _editorPrefs._selectedItemGUIDs.Length; i++)
+					{
+						if (_editorPrefs._selectedItemGUIDs[i] == item.GUID)
 							return true;
 					}
 
@@ -461,7 +642,7 @@ namespace Framework
 						float secondLangWidth = position.width - _editorPrefs._keyWidth - _editorPrefs._firstLanguageWidth;
 
 						//On layout, check what part of table is currently being viewed
-						if (Event.current.type == EventType.Layout || _keysDirty)
+						if (Event.current.type == EventType.Layout || _itemsDirty)
 						{
 							GetViewableRange(_scrollPosition.y, GetTableAreaHeight(), defaultItemHeight, out _viewStartIndex, out _viewEndIndex, out _contentStart, out _contentHeight);
 						}
@@ -472,10 +653,12 @@ namespace Framework
 							GUILayout.Label(GUIContent.none, GUILayout.Height(_contentStart));
 
 							//Then render viewable range
-							for (int i = _viewStartIndex; i < _viewEndIndex && i < _keys.Length; i++)
+							for (int i = _viewStartIndex; i < _viewEndIndex && i < _visibleItems.Length; i++)
 							{
-								string key = _keys[i];
-								bool selected = IsSelected(key);
+								LocalisedStringSourceAsset item = _visibleItems[i];
+								string itemGUID = item.GUID;
+								string itemKey = item.Key;
+								bool selected = IsSelected(item);
 
 								Color origBackgroundColor = GUI.backgroundColor;
 								Color origContentColor = GUI.contentColor;
@@ -486,10 +669,10 @@ namespace Framework
 									if (selected)
 									{
 										//Work out highest text size
-										string textA = Localisation.GetRawString(key, Localisation.GetCurrentLanguage());
+										string textA = item.GetText(Localisation.GetCurrentLanguage());
 										float textAHeight = _selectedTextStyle.CalcHeight(new GUIContent(textA), _editorPrefs._firstLanguageWidth);
 
-										string textB = Localisation.GetRawString(key, _editorPrefs._secondLanguage);
+										string textB = item.GetText(_editorPrefs._secondLanguage);
 										float textBHeight = _selectedTextStyle.CalcHeight(new GUIContent(textB), secondLangWidth);
 
 										float textHeight = Mathf.Max(textAHeight, textBHeight);
@@ -512,23 +695,9 @@ namespace Framework
 									//Render Key
 									EditorGUILayout.BeginVertical();
 									{
-										if (_editingKeyName == _keys[i])
+										if (GUILayout.Button(itemKey, selected ? _selectedKeyStyle : _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight)))
 										{
-											EditorGUI.BeginChangeCheck();
-											string newKey = EditorGUILayout.DelayedTextField(key, _editKeyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight));
-											if (EditorGUI.EndChangeCheck())
-											{
-												_editingKeyName = null;
-												Localisation.ChangeKey(key, newKey);
-												UpdateKeys();
-											}
-										}
-										else
-										{
-											if (GUILayout.Button(key, selected ? _selectedKeyStyle : _keyStyle, GUILayout.Width(_editorPrefs._keyWidth), GUILayout.Height(itemHeight)))
-											{
-												OnClickItem(i, SystemLanguage.Unknown);
-											}
+											OnClickItem(i, currentLanguage);
 										}
 									}
 									EditorGUILayout.EndVertical();
@@ -538,7 +707,7 @@ namespace Framework
 										GUI.backgroundColor = i % 2 == 0 ? kTextBackgroundColorA : kTextBackgroundColorB;
 
 										//Render First Language
-										string text = Localisation.GetRawString(key, currentLanguage);
+										string text = item.GetText(SystemLanguage.English);
 
 										if (GUILayout.Button(selected ? text : StringUtils.GetFirstLine(text), selected ? _selectedTextStyle : _textStyle, GUILayout.Width(_editorPrefs._firstLanguageWidth), GUILayout.Height(itemHeight)))
 										{
@@ -548,7 +717,7 @@ namespace Framework
 										//Render Second Language
 										EditorGUILayout.BeginVertical(GUILayout.Width(secondLangWidth));
 										{
-											string stext = Localisation.GetRawString(key, _editorPrefs._secondLanguage);
+											string stext = item.GetText(_editorPrefs._secondLanguage);
 
 											if (GUILayout.Button(selected ? stext : StringUtils.GetFirstLine(stext), selected ? _selectedTextStyle : _textStyle, GUILayout.Width(secondLangWidth), GUILayout.Height(itemHeight)))
 											{
@@ -574,7 +743,7 @@ namespace Framework
 					//Add key to selection
 					if (Event.current.control)
 					{
-						ArrayUtility.Add(ref _editorPrefs._selectedKeys, _keys[index]);
+						ArrayUtility.Add(ref _editorPrefs._selectedItemGUIDs, _items[index].GUID);
 					}
 					//Add keys to selection
 					else if (Event.current.shift)
@@ -582,9 +751,9 @@ namespace Framework
 						//Select from this key to next selected key _keys
 
 						int nearestSelectedKeyUp = -1;
-						for (int i = index; i < _keys.Length; i++)
+						for (int i = index; i < _items.Length; i++)
 						{
-							if (IsSelected(_keys[i]))
+							if (IsSelected(_items[i]))
 							{
 								nearestSelectedKeyUp = i;
 								break;
@@ -594,7 +763,7 @@ namespace Framework
 						int nearestSelectedKeyDown = -1;
 						for (int i = index - 1; i >= 0; i--)
 						{
-							if (IsSelected(_keys[i]))
+							if (IsSelected(_items[i]))
 							{
 								nearestSelectedKeyDown = i;
 								break;
@@ -604,7 +773,7 @@ namespace Framework
 						//No other keys selected
 						if (nearestSelectedKeyUp == -1 && nearestSelectedKeyDown == -1)
 						{
-							_editorPrefs._selectedKeys = new string[] { _keys[index] };
+							_editorPrefs._selectedItemGUIDs = new string[] { _items[index].GUID };
 						}
 						else
 						{
@@ -616,7 +785,7 @@ namespace Framework
 								//Add index to up to selection
 								for (int i = index; i < nearestSelectedKeyUp; i++)
 								{
-									ArrayUtility.Add(ref _editorPrefs._selectedKeys, _keys[i]);
+									ArrayUtility.Add(ref _editorPrefs._selectedItemGUIDs, _items[i].GUID);
 								}
 							}
 							else
@@ -624,7 +793,7 @@ namespace Framework
 								//Add index to down to selection
 								for (int i = index; i >= nearestSelectedKeyDown; i--)
 								{
-									ArrayUtility.Add(ref _editorPrefs._selectedKeys, _keys[i]);
+									ArrayUtility.Add(ref _editorPrefs._selectedItemGUIDs, _items[i].GUID);
 								}
 							}
 						}
@@ -632,15 +801,14 @@ namespace Framework
 						//Search up from this key
 
 
-						ArrayUtility.Add(ref _editorPrefs._selectedKeys, _keys[index]);
+						ArrayUtility.Add(ref _editorPrefs._selectedItemGUIDs, _items[index].GUID);
 					}
 					//Select just this key
 					else
 					{
-						_editorPrefs._selectedKeys = new string[] { _keys[index] };
+						_editorPrefs._selectedItemGUIDs = new string[] { _items[index].GUID };
 					}
 
-					_editingKeyName = null;
 					_needsRepaint = true;
 
 					//If double click open up edit text window
@@ -650,19 +818,19 @@ namespace Framework
 					{
 						if (language != SystemLanguage.Unknown)
 						{
-							OpenTextEditor(_keys[index], language);
+							OpenTextEditor(_items[index], language);
 						}
-						else
-						{
-							_editingKeyName = _keys[index];
-						}
+					}
+					else
+					{
+						AssetDatabase.OpenAsset(_items[index]);
 					}
 
 					lastClickTime = time;
 					_lastClickKeyIndex = index;
 				}
 
-				private void OpenTextEditor(string key, SystemLanguage language)
+				private void OpenTextEditor(LocalisedStringSourceAsset item, SystemLanguage language)
 				{
 					Rect position = new Rect();
 					position.width = this.position.width * 0.75f;
@@ -670,51 +838,7 @@ namespace Framework
 					position.x = this.position.x + this.position.width * 0.125f;
 					position.y = this.position.y + this.position.height * 0.33f;
 
-					LocalisationEditorTextWindow.ShowEditKey(this, key, language, position);
-				}
-
-				private void RenderBottomBar()
-				{
-					EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
-					{
-						GUILayout.Label("Add New Key:", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false));
-
-						string[] folders = Localisation.GetStringFolders();
-						Localisation.GetFolderIndex(_addNewKey, out int currentFolderIndex, out string keyWithoutFolder);
-
-						EditorGUI.BeginChangeCheck();
-						int newFolderIndex = EditorGUILayout.Popup(currentFolderIndex, folders, EditorStyles.toolbarDropDown);
-						string currentFolder = newFolderIndex == 0 ? "" : folders[newFolderIndex];
-						if (EditorGUI.EndChangeCheck())
-						{
-							if (newFolderIndex != 0)
-								_addNewKey = currentFolder + "/" + keyWithoutFolder;
-						}
-
-						EditorGUILayout.LabelField("/", GUILayout.Width(8));
-
-						if (newFolderIndex != 0)
-						{
-							keyWithoutFolder = EditorGUILayout.TextField(keyWithoutFolder, GUILayout.ExpandWidth(true));
-							_addNewKey = currentFolder + "/" + keyWithoutFolder;
-						}
-						else
-						{
-							_addNewKey = EditorGUILayout.TextField(_addNewKey, GUILayout.ExpandWidth(true));
-						}
-
-						if (GUILayout.Button(" Ok ", EditorStyles.toolbarButton, GUILayout.ExpandWidth(false)))
-						{
-							if (!Localisation.Exists(_addNewKey) && !string.IsNullOrEmpty(_addNewKey))
-							{
-								Localisation.Set(_addNewKey, Localisation.GetCurrentLanguage(), string.Empty);
-								UpdateKeys();
-								SelectKey(_addNewKey);
-								_addNewKey = "";
-							}
-						}
-					}
-					EditorGUILayout.EndHorizontal();
+					LocalisationEditorTextWindow.ShowEditKey(this, item, language, position);
 				}
 
 				private void HandleInput()
@@ -819,50 +943,69 @@ namespace Framework
 
 				private void SelectAll()
 				{
-					_editorPrefs._selectedKeys = _keys;
+					// TO DO!
+					_editorPrefs._selectedItemGUIDs = null;
 					_needsRepaint = true;
+				}
+
+				private LocalisedStringSourceAsset GetItem(string guid)
+				{
+					foreach (var item in _items)
+					{
+						if (item.GUID == guid)
+							return item;
+					}
+
+					return null;
 				}
 
 				private void DeleteSelected()
 				{
-					for (int i = 0; i < _editorPrefs._selectedKeys.Length; i++)
+					string[] paths = new string[_editorPrefs._selectedItemGUIDs.Length];
+					List<string> failedPaths = new List<string>();
+
+					for (int i = 0; i < _editorPrefs._selectedItemGUIDs.Length; i++)
 					{
-						Localisation.Remove(_editorPrefs._selectedKeys[i]);
+						LocalisedStringSourceAsset item = GetItem(_editorPrefs._selectedItemGUIDs[i]);
+
+						if (item != null)
+						{
+							paths[i] = AssetDatabase.GetAssetPath(item);
+						}
 					}
 
-					UpdateKeys();
-					_editorPrefs._selectedKeys = new string[0];
+					AssetDatabase.DeleteAssets(paths, failedPaths);
+
+					RefreshTable();
+					_editorPrefs._selectedItemGUIDs = new string[0];
 					SaveEditorPrefs();
 					_needsRepaint = true;
 				}
 
 				private void DuplicateSelected()
 				{
-					List<string> newKeys = new List<string>();
+					List<string> newGUIDS = new List<string>();
 
-					for (int i = 0; i < _editorPrefs._selectedKeys.Length; i++)
+					for (int i = 0; i < _editorPrefs._selectedItemGUIDs.Length; i++)
 					{
-						string newKey = _editorPrefs._selectedKeys[i] + " (Copy)";
+						LocalisedStringSourceAsset item = GetItem(_editorPrefs._selectedItemGUIDs[i]);
 
-						//To do! Set text for all loaded languages?
-						Localisation.Set(newKey, Localisation.GetCurrentLanguage(), Localisation.GetRawString(_editorPrefs._selectedKeys[i], Localisation.GetCurrentLanguage()));
-
-						newKeys.Add(newKey);
+						// TO Do!
 					}
 
-					UpdateKeys();
-					SelectKey(newKeys.ToArray());
+					RefreshTable();
+					SelectGUID(newGUIDS.ToArray());
 					_needsRepaint = true;
 				}
 
 				private void GetViewableRange(float viewStart, float viewHeight, float itemHeight, out int startIndex, out int endIndex, out float contentStart, out float contentHeight)
 				{
-					startIndex = _keys.Length;
-					endIndex = _keys.Length;
+					startIndex = _items.Length;
+					endIndex = _items.Length;
 					contentStart = 0.0f;
 					contentHeight = 0.0f;
 
-					for (int i = 0; i < _keys.Length; i++)
+					for (int i = 0; i < _items.Length; i++)
 					{
 						if (viewStart >= contentHeight && viewStart <= contentHeight + itemHeight)
 						{
@@ -879,11 +1022,11 @@ namespace Framework
 					}
 				}
 
-				private void SelectKey(params string[] keys)
+				private void SelectGUID(params string[] guids)
 				{
 					InitGUIStyles();
 
-					_editorPrefs._selectedKeys = keys;
+					_editorPrefs._selectedItemGUIDs = guids;
 					SaveEditorPrefs();
 
 					_needsRepaint = true;
@@ -892,11 +1035,11 @@ namespace Framework
 					float itemHeight = GetItemHeight();
 					bool foundKey = false;
 
-					if (_editorPrefs._selectedKeys != null && _editorPrefs._selectedKeys.Length > 0)
+					if (_editorPrefs._selectedItemGUIDs != null && _editorPrefs._selectedItemGUIDs.Length > 0)
 					{
-						for (int i = 0; i < _keys.Length; i++)
+						for (int i = 0; i < _items.Length; i++)
 						{
-							foundKey = _keys[i] == _editorPrefs._selectedKeys[0];
+							foundKey = _items[i].GUID == _editorPrefs._selectedItemGUIDs[0];
 
 							if (foundKey)
 								break;
@@ -919,34 +1062,6 @@ namespace Framework
 				private float GetTableAreaHeight()
 				{
 					return this.position.height - (EditorStyles.toolbar.fixedHeight * 4f);
-				}
-
-				private string[] GetKeys()
-				{
-					string[] allKeys = Localisation.GetStringKeys();
-					List<string> keys = new List<string>();
-
-					for (int i = 1; i < allKeys.Length; i++)
-					{
-						if (MatchsFilter(allKeys[i]) || MatchsFilter(Localisation.GetRawString(allKeys[i], Localisation.GetCurrentLanguage())))
-						{
-							keys.Add(allKeys[i]);
-						}
-					}
-
-					switch (_sortOrder)
-					{
-						case eKeySortOrder.Desc:
-							keys.Sort(StringComparer.InvariantCulture);
-							keys.Reverse();
-							break;
-						default:
-						case eKeySortOrder.Asc:
-							keys.Sort(StringComparer.InvariantCulture);
-							break;
-					}
-
-					return keys.ToArray();
 				}
 
 				private bool MatchsFilter(string text)
