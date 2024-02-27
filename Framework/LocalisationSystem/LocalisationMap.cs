@@ -99,10 +99,7 @@ namespace Framework
 			{
 				return _strings.ContainsKey(key);
 			}
-			#endregion
 
-			#region Public Editor Functions
-#if UNITY_EDITOR
 			public void SetString(string guid, string key, string text)
 			{
 				if (!string.IsNullOrEmpty(key) && !string.IsNullOrEmpty(key))
@@ -120,12 +117,11 @@ namespace Framework
 					_keysToGUIDs[key] = guid;
 				}
 			}
-			
-			public string[] GetStringGUIDs()
+
+			public Dictionary<string, string>.KeyCollection GetStringGUIDs()
 			{
-				return _strings.Keys.ToArray();
+				return _strings.Keys;
 			}
-#endif
 			#endregion
 		}
 	}

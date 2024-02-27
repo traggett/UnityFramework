@@ -23,19 +23,19 @@ namespace Framework
 						LocalisationMap localisationMap = (LocalisationMap)obj;
 
 						//Find GUIDs
-						string[] guids = localisationMap.GetStringGUIDs();
+						var guids = localisationMap.GetStringGUIDs();
 						
 						//Create all child nodes
 						List<XmlNode> childNodes = new List<XmlNode>();
 						
-						for (int i = 0; i < guids.Length; i++) 
+						foreach (var guid in guids)
 						{
-							string text = localisationMap.Get(guids[i], true);
-							string key = localisationMap.KeyFromGUID(guids[i]);
+							string text = localisationMap.Get(guid, true);
+							string key = localisationMap.KeyFromGUID(guid);
 
 							XmlNode arrayItemXmlNode = XmlConverter.ToXmlNode(text, node.OwnerDocument);
 							XmlUtils.AddAttribute(node.OwnerDocument, arrayItemXmlNode, "key", key);
-							XmlUtils.AddAttribute(node.OwnerDocument, arrayItemXmlNode, "guid", guids[i]);
+							XmlUtils.AddAttribute(node.OwnerDocument, arrayItemXmlNode, "guid", guid);
 							childNodes.Add(arrayItemXmlNode);
 						}
 
