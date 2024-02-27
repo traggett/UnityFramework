@@ -12,7 +12,7 @@ namespace Framework
 			[Serializable]
 			public sealed class LocalisationEditorPrefs
 			{
-				public EditorAssetRef<LocalisedStringTableAsset> _table;
+				public EditorAssetRef<LocalisedStringSourceAssetCollection> _table;
 				public float _keyWidth = LocalisationEditorWindow.kDefaultKeysWidth;
 				public float _firstLanguageWidth = LocalisationEditorWindow.kDefaultFirstLangagueWidth;
 				public SystemLanguage _secondLanguage = SystemLanguage.Unknown;

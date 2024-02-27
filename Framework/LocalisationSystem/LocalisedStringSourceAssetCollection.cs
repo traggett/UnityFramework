@@ -9,7 +9,7 @@ namespace Framework
 {
 	namespace LocalisationSystem
 	{
-		public class LocalisedStringTableAsset : ScriptableObject
+		public class LocalisedStringSourceAssetCollection : ScriptableObject
 		{
 			#region Private Data
 #if UNITY_EDITOR
