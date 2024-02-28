@@ -168,6 +168,7 @@ namespace Framework
 
 					if (sourceAsset != null)
 					{
+						_instance.RefreshTable();
 						_instance.LoadAsset(sourceAsset.ParentAsset);
 
 						_instance._filter = null;
