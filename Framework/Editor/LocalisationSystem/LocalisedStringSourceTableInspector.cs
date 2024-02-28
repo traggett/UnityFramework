@@ -43,7 +43,7 @@ namespace Framework
 						}
 
 						_cachedInfo = string.Format("{0} entries", items.Length);
-						_cachedInfo += string.Format("\n{0} languages\n",itemsMap.Keys.Count);
+						_cachedInfo += string.Format("\n\n{0} languages:", itemsMap.Keys.Count);
 
 						foreach (var key in  itemsMap.Keys )
 						{

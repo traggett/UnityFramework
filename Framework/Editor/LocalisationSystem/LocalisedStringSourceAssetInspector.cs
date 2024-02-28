@@ -10,6 +10,8 @@ namespace Framework
 			[CustomEditor(typeof(LocalisedStringSourceAsset), true)]
 			public class LocalisedStringSourceAssetInspector : UnityEditor.Editor
 			{
+				private GUIStyle _textAreaStyle;
+
 				public override void OnInspectorGUI()
 				{
 					LocalisedStringSourceAsset sourceAsset = (LocalisedStringSourceAsset)target;
@@ -47,6 +49,15 @@ namespace Framework
 
 				private void DrawLanguage(LocalisedStringSourceAsset sourceAsset, SystemLanguage language)
 				{
+					if (_textAreaStyle == null)
+					{
+						_textAreaStyle = new GUIStyle(EditorStyles.toolbarTextField);
+						_textAreaStyle.stretchWidth = true;
+						_textAreaStyle.stretchHeight = true;
+						_textAreaStyle.fixedHeight = 0;
+					}
+
+
 					EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 					{
 						// Show full key
@@ -65,7 +76,7 @@ namespace Framework
 
 						//Show preview text and edit buttonRect textPosition = new Rect(position.x + labelWidth, yPos, position.width - labelWidth - _editbuttonWidth - _buttonSpace, height);
 						//EditorGUI.BeginDisabledGroup(true);
-						EditorGUILayout.HelpBox(text, MessageType.None);
+						EditorGUILayout.TextArea(text, _textAreaStyle);
 						//EditorGUI.EndDisabledGroup();
 					}
 					EditorGUILayout.EndVertical();
