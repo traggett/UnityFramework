@@ -150,7 +150,7 @@ namespace Framework
 #endif
 
 				if (!string.IsNullOrEmpty(_localisationGUID))
-					return Localisation.GetGUID(_localisationGUID);
+					return Localisation.GetGUID(_localisationGUID, _localVariables);
 
 				if (!string.IsNullOrEmpty(_localisationKey))
 					return Localisation.Get(language, _localisationKey, _localVariables);
@@ -158,17 +158,17 @@ namespace Framework
 				return string.Empty;
 			}
 
-			public bool IsValid()
+			public readonly bool IsValid()
 			{
 				return !string.IsNullOrEmpty(_localisationGUID) || !string.IsNullOrEmpty(_localisationKey);
 			}
 
-			public string GetLocalisationGUID()
+			public readonly string GetLocalisationGUID()
 			{
 				return _localisationGUID;
 			}
 
-			public string GetLocalisationKey()
+			public readonly string GetLocalisationKey()
             {
                 return _localisationKey;
             }
