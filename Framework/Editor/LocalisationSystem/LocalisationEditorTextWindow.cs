@@ -17,12 +17,8 @@ namespace Framework
 				private LocalisedStringSourceAsset _item;
 				private SystemLanguage _language;
 				private bool _richText;	
-				private bool _hasChanges;
 				private Vector2 _scrollPosition;
-
-				[SerializeField]
-				private string _text;
-
+				
 				public static void ShowEditKey(LocalisationEditorWindow parent, LocalisedStringSourceAsset item, SystemLanguage language, Rect position)
 				{
 					LocalisationEditorTextWindow textEditor = (LocalisationEditorTextWindow)GetWindow(typeof(LocalisationEditorTextWindow), false, kWindowWindowName);
@@ -51,9 +47,6 @@ namespace Framework
 						richText = _richText,
 						padding = new RectOffset(8, 8, 6, 6),
 					};
-
-					_text = _item.GetText(_language);
-					_hasChanges = false;
 				}
 
 				#region EditorWindow
@@ -64,7 +57,12 @@ namespace Framework
 						//Tool bar
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
-							GUILayout.Button(" " + _item.Key + " ", _keyStyle);
+							GUILayout.Button(" " + _item.Key + " ", EditorStyles.toolbarTextField);
+
+							if (GUILayout.Button(EditorGUIUtility.IconContent("Clipboard"), GUILayout.Width(26f)))
+							{
+								GUIUtility.systemCopyBuffer = _item.Key;
+							}
 
 							EditorGUILayout.Separator();
 
@@ -72,17 +70,7 @@ namespace Framework
 							SystemLanguage language = (SystemLanguage)EditorGUILayout.EnumPopup(_language, EditorStyles.toolbarPopup);
 							if (EditorGUI.EndChangeCheck())
 							{
-								if (_hasChanges)
-								{
-									if (EditorUtility.DisplayDialog("Localisation String Has Been Modified", "Do you want to save the changes you made to the string?\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
-									{
-										_item.SetText(language, _text);
-									}
-								}
-
 								_language = language;
-								_text = _item.GetText(language);
-								_hasChanges = false;
 							}
 
 							EditorGUI.BeginChangeCheck();
@@ -122,15 +110,15 @@ namespace Framework
 						//Text
 						_scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, false);
 						{
-							float textHeight = _textStyle.CalcHeight(new GUIContent(_text), this.position.width);
+							string text = _item.GetText(_language);
+							float textHeight = _textStyle.CalcHeight(new GUIContent(text), this.position.width);
 
 							EditorGUI.BeginChangeCheck();
-							string text = EditorGUILayout.TextArea(_text, _textStyle, GUILayout.Height(textHeight));
+							text = EditorGUILayout.TextArea(text, _textStyle, GUILayout.Height(textHeight));
 							if (EditorGUI.EndChangeCheck())
 							{
-								Undo.RecordObject(this, "Changed Text");
-								_text = text;
-								_hasChanges = true;
+								Undo.RecordObject(_item, "Edit Text");
+								_item.SetText(_language, text);
 							}
 						}
 						EditorGUILayout.EndScrollView();
@@ -140,16 +128,8 @@ namespace Framework
 						{
 							GUILayout.FlexibleSpace();
 
-							if (GUILayout.Button("Save", EditorStyles.miniButton))
+							if (GUILayout.Button("Ok", EditorStyles.miniButton))
 							{
-								_item.SetText(_language, _text);
-								_hasChanges = false;
-								Close();
-							}
-
-							if (GUILayout.Button("Cancel", EditorStyles.miniButton))
-							{
-								_hasChanges = false;
 								Close();
 							}
 
@@ -158,17 +138,6 @@ namespace Framework
 						EditorGUILayout.EndHorizontal();
 					}
 					EditorGUILayout.EndVertical();
-				}
-
-				void OnDestroy()
-				{
-					if (_hasChanges)
-					{
-						if (EditorUtility.DisplayDialog("Localisation Table Has Been Modified", "Do you want to save the changes you made to the string?\nYour changes will be lost if you don't save them.", "Save", "Don't Save"))
-						{
-							_item.SetText(_language, _text);
-						}
-					}
 				}
 				#endregion
 			}

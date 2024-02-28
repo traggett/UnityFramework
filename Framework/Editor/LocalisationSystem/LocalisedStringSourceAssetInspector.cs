@@ -18,6 +18,11 @@ namespace Framework
 					EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 					{
 						GUILayout.Button(" " + sourceAsset.Key + " ", EditorStyles.toolbarTextField, GUILayout.ExpandWidth(true));
+
+						if (GUILayout.Button(EditorGUIUtility.IconContent("Clipboard"), GUILayout.Width(26f)))
+						{
+							GUIUtility.systemCopyBuffer = sourceAsset.Key;
+						}
 					}
 					GUILayout.EndHorizontal();
 
