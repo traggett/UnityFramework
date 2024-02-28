@@ -20,7 +20,7 @@ namespace Framework
 			}
 
 			[SerializeField] private LanguageText[] _text;
-			[SerializeField] private LocalisedStringSourceAssetCollection _parent;
+			[SerializeField] private LocalisedStringSourceTable _parent;
 			#endregion
 
 			#region Private Data 
@@ -48,7 +48,7 @@ namespace Framework
 				}
 			}
 
-			public LocalisedStringSourceAssetCollection ParentAsset
+			public LocalisedStringSourceTable ParentAsset
 			{
 				get
 				{
@@ -102,7 +102,7 @@ namespace Framework
 				}
 			}
 
-			public void CachedEditorData(LocalisedStringSourceAssetCollection root, string rootFolder)
+			public void CachedEditorData(LocalisedStringSourceTable root, string rootFolder)
 			{
 				_parent = root;
 

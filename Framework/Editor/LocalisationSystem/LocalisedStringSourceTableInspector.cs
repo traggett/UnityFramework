@@ -7,14 +7,14 @@ namespace Framework
 	{
 		namespace Editor
 		{
-			[CustomEditor(typeof(LocalisedStringSourceAssetCollection), true)]
-			public class LocalisedStringTableAssetInspector : UnityEditor.Editor
+			[CustomEditor(typeof(LocalisedStringSourceTable), true)]
+			public class LocalisedStringSourceTableInspector : UnityEditor.Editor
 			{
 				public override void OnInspectorGUI()
 				{
 					if (GUILayout.Button("Edit"))
 					{
-						LocalisedStringSourceAssetCollection sourceAsset = (LocalisedStringSourceAssetCollection)target;
+						LocalisedStringSourceTable sourceAsset = (LocalisedStringSourceTable)target;
 						LocalisationEditorWindow.Load(sourceAsset);
 					}
 

@@ -70,7 +70,7 @@ namespace Framework
 				private double lastClickTime = 0d;
 				private int _lastClickKeyIndex;
 
-				private LocalisedStringSourceAssetCollection _table;
+				private LocalisedStringSourceTable _table;
 				private LocalisedStringSourceAsset[] _items;
 				private bool _itemsDirty;
 
@@ -182,7 +182,7 @@ namespace Framework
 					}
 				}
 
-				public static void Load(LocalisedStringSourceAssetCollection sourceAsset)
+				public static void Load(LocalisedStringSourceTable sourceAsset)
 				{
 					if (_instance == null)
 						CreateWindow();
@@ -564,12 +564,12 @@ namespace Framework
 						path = path.Substring(index);
 					}
 
-					_table = AssetDatabase.LoadAssetAtPath(path, typeof(LocalisedStringSourceAssetCollection)) as LocalisedStringSourceAssetCollection;
+					_table = AssetDatabase.LoadAssetAtPath(path, typeof(LocalisedStringSourceTable)) as LocalisedStringSourceTable;
 
 					LoadAsset(_table);
 				}
 
-				private void LoadAsset(LocalisedStringSourceAssetCollection table)
+				private void LoadAsset(LocalisedStringSourceTable table)
 				{
 					_table = table;
 					_editorPrefs._table = table;

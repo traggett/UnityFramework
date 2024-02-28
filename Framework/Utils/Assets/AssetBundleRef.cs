@@ -44,21 +44,21 @@ namespace Framework
 
 #if _ANDROID_BUNDLES
 
-				// Loads the AssetBundle from disk, downloading the asset pack containing it if necessary.
-				PlayAssetBundleRequest bundleRequest = PlayAssetDelivery.RetrieveAssetBundleAsync(_fileName);
+					// Loads the AssetBundle from disk, downloading the asset pack containing it if necessary.
+					PlayAssetBundleRequest bundleRequest = PlayAssetDelivery.RetrieveAssetBundleAsync(_fileName);
 
-				if (bundleRequest == null)
-				{
-					throw new Exception("Can't load Asset Bundle " + _fileName);
-				}
+					if (bundleRequest == null)
+					{
+						throw new Exception("Can't load Asset Bundle " + _fileName);
+					}
 			
-				while (!bundleRequest.IsDone)
-				{
-					onProgress?.Invoke(bundleRequest.DownloadProgress * loadProgess);
-					yield return new WaitForEndOfFrame();
-				}
+					while (!bundleRequest.IsDone)
+					{
+						onProgress?.Invoke(bundleRequest.DownloadProgress * loadProgess);
+						yield return new WaitForEndOfFrame();
+					}
 
-				_assetBundle = bundleRequest.AssetBundle;
+					_assetBundle = bundleRequest.AssetBundle;
 #else
 
 					string path = Path.Combine(Application.streamingAssetsPath, _fileName);
