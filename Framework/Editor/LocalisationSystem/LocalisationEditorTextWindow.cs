@@ -9,7 +9,7 @@ namespace Framework
 		{
 			public sealed class LocalisationEditorTextWindow : EditorWindow
 			{
-				private static readonly string kWindowWindowName = "Edit Localisation String";
+				private static readonly string kWindowWindowName = "Edit Localised String Source";
 
 				private LocalisationEditorWindow _parent;
 				private GUIStyle _textStyle;
@@ -113,6 +113,7 @@ namespace Framework
 							{
 								Undo.RecordObject(_item, "Edit Text");
 								_item.SetText(_language, text);
+								EditorUtility.SetDirty(_item);
 							}
 						}
 						EditorGUILayout.EndScrollView();

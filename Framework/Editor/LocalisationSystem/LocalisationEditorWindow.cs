@@ -583,7 +583,9 @@ namespace Framework
 				{
 					Dictionary<SystemLanguage, LocalisationMap > localisationMaps = new Dictionary<SystemLanguage, LocalisationMap>();
 
-					foreach (var item in _items)
+					var items = _table.FindStrings();
+
+					foreach (var item in items)
 					{
 						SystemLanguage[] languages = item.GetLanguages();
 
