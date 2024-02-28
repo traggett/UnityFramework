@@ -12,7 +12,6 @@ namespace Framework
 				private static readonly string kWindowWindowName = "Edit Localisation String";
 
 				private LocalisationEditorWindow _parent;
-				private GUIStyle _keyStyle;
 				private GUIStyle _textStyle;
 				private LocalisedStringSourceAsset _item;
 				private SystemLanguage _language;
@@ -34,11 +33,6 @@ namespace Framework
 					_parent = parent;
 					_item = item;
 					_language = language;
-
-					_keyStyle = new GUIStyle(EditorStyles.toolbarTextField)
-					{
-						fontStyle = FontStyle.Bold
-					};
 
 					_textStyle = new GUIStyle(EditorStyles.textArea)
 					{
@@ -128,7 +122,7 @@ namespace Framework
 						{
 							GUILayout.FlexibleSpace();
 
-							if (GUILayout.Button("Ok", EditorStyles.miniButton))
+							if (GUILayout.Button("Close", EditorStyles.miniButton))
 							{
 								Close();
 							}
