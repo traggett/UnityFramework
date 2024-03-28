@@ -17,8 +17,8 @@ namespace Framework
 				public bool _abort;
 			}
 
-			// Multiple processes can be running as one coroutine can be aborting whilst we start next
-			private const int Max_Processes = 4;
+			// Multiple processes can be running as one coroutine can be aborting whilst we start the next
+			private const int Max_Processes = 8;
 			private readonly ProcessData[] _processes = new ProcessData[Max_Processes];
 
 			private int _currentIndex = 0;
@@ -44,7 +44,6 @@ namespace Framework
 					if (_process != null)
 					{
 						_processes[_currentIndex]._abort = true;
-						StopCoroutine(_process);
 					}
 
 					_currentIndex = (_currentIndex + 1) % _processes.Length;
