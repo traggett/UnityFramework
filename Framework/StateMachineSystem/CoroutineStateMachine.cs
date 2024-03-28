@@ -154,13 +154,10 @@ namespace Framework
 
 							OnEnterState(_processes[index]._current);
 						}
-						else
-						{
-							_processes[index]._current = null;
-							break;
-						}
 					}
 				}
+
+				_processes[index]._current = null;
 
 				if (!_processes[index]._abort)
 				{
