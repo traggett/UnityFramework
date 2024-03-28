@@ -16,7 +16,11 @@ namespace Framework
 				public IEnumerator _next;
 				public bool _abort;
 			}
-			private readonly ProcessData[] _processes = new ProcessData[4];
+
+			// Multiple processes can be running as one coroutine can be aborting whilst we start next
+			private const int Max_Processes = 4;
+			private readonly ProcessData[] _processes = new ProcessData[Max_Processes];
+
 			private int _currentIndex = 0;
 			#endregion
 
@@ -133,18 +137,15 @@ namespace Framework
 			{
 				while (!_processes[index]._abort)
 				{
+					// Run throught the current states iterator
 					while (!_processes[index]._abort 
 						&& _processes[index]._current != null
 						&& _processes[index]._current.MoveNext())
 					{
-						if (_processes[index]._abort)
-						{
-							break;
-						}
-
 						yield return _processes[index]._current.Current;
 					}
 
+					// Check should move on to next state if any
 					if (!_processes[index]._abort)
 					{
 						if (_processes[index]._next != null)
