@@ -154,6 +154,10 @@ namespace Framework
 
 							OnEnterState(_processes[index]._current);
 						}
+						else
+						{
+							break;
+						}
 					}
 				}
 
