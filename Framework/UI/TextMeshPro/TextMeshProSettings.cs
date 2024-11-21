@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.TextCore;
 using TMPro;
 
 namespace Framework
@@ -32,7 +34,7 @@ namespace Framework
 				public float _lineSpacing;
 				public float _paragraphSpacing;
 				public TextAlignmentOptions _alignment;
-				public bool _enableWordWrapping;
+				public TextWrappingModes _textWrappingMode;
 				public TextOverflowModes _overflowMode;
 				public TextureMappingOptions _horizontalMapping;
 				public TextureMappingOptions _verticalMapping;
@@ -47,7 +49,7 @@ namespace Framework
 				public bool _useMaxVisibleDescender;
 				public TMP_SpriteAsset _spriteAsset;
 				public TMP_StyleSheet _styleSheet;
-				public bool _enableKerning;
+				public List<OTL_FeatureTag> _fontFeatures;
 				public bool _extraPadding;
 
 				public void Apply(TMP_Text textMesh)
@@ -69,7 +71,7 @@ namespace Framework
 					textMesh.lineSpacing = _lineSpacing;
 					textMesh.paragraphSpacing = _paragraphSpacing;
 					textMesh.alignment = _alignment;
-					textMesh.enableWordWrapping = _enableWordWrapping;
+					textMesh.textWrappingMode = _textWrappingMode;
 					textMesh.overflowMode = _overflowMode;
 					textMesh.horizontalMapping = _horizontalMapping;
 					textMesh.verticalMapping = _verticalMapping;
@@ -83,7 +85,7 @@ namespace Framework
 					textMesh.useMaxVisibleDescender = _useMaxVisibleDescender;
 					textMesh.spriteAsset = _spriteAsset;
 					textMesh.styleSheet = _styleSheet;
-					textMesh.enableKerning = _enableKerning;
+					textMesh.fontFeatures = _fontFeatures;
 					textMesh.extraPadding = _extraPadding;
 				}
 
@@ -108,7 +110,7 @@ namespace Framework
 						_lineSpacing = textMesh.lineSpacing,
 						_paragraphSpacing = textMesh.paragraphSpacing,
 						_alignment = textMesh.alignment,
-						_enableWordWrapping = textMesh.enableWordWrapping,
+						_textWrappingMode = textMesh.textWrappingMode,
 						_overflowMode = textMesh.overflowMode,
 						_horizontalMapping = textMesh.horizontalMapping,
 						_verticalMapping = textMesh.verticalMapping,
@@ -122,7 +124,7 @@ namespace Framework
 						_useMaxVisibleDescender = textMesh.useMaxVisibleDescender,
 						_spriteAsset = textMesh.spriteAsset,
 						_styleSheet = textMesh.styleSheet,
-						_enableKerning = textMesh.enableKerning,
+						_fontFeatures = textMesh.fontFeatures,
 						_extraPadding = textMesh.extraPadding
 					};
 				}
