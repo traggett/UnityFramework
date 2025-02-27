@@ -100,7 +100,7 @@ namespace Framework
 			#region Public Interface
 			public void InitialisePool()
 			{
-				if (_prefab != null && _instances == null)
+				if (_prefab != null && (_instances == null || _instances.Length == 0))
 				{
 					_instances = new PooledPrefab[Math.Max(_initialPoolSize, 1)];
 
