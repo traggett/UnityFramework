@@ -155,6 +155,8 @@ namespace Framework
 					_oldArray = (PathNodeData[])path._nodes.Clone();
 
 					OnAddedNode(nodeData._node);
+
+					EditorUtility.SetDirty(path);
 				}
 
 				private void onRemoveNode(ReorderableList list)
@@ -167,6 +169,8 @@ namespace Framework
 					EditorUtility.SetDirty(target);
 
 					OnRemovedNode(list.index);
+
+					EditorUtility.SetDirty(path);
 				}
 
 				private void OnListReordered(ReorderableList list)
@@ -198,6 +202,8 @@ namespace Framework
 							siblingIndex++;
 						}						
 					}
+
+					EditorUtility.SetDirty(path);
 				}
 
 				private void OnDrawListItem(Rect rect, int index, bool isActive, bool isFocused)
@@ -227,6 +233,8 @@ namespace Framework
 							path.RefreshNodes(path._nodes);
 							_oldArray = (PathNodeData[])path._nodes.Clone();
 						}
+
+						EditorUtility.SetDirty(path);
 					}
 				}
 
