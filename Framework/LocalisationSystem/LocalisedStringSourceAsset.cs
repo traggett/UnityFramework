@@ -35,11 +35,10 @@ namespace Framework
 
 			public static LocalisedStringSourceAsset CreateEmpty(LocalisedStringSourceTable parent)
 			{
-				LocalisedStringSourceAsset localisedStringSourceAsset = new LocalisedStringSourceAsset()
-				{
-					_parent = parent,
-					_text = new LanguageText[0],
-				};
+				LocalisedStringSourceAsset localisedStringSourceAsset = LocalisedStringSourceAsset.CreateInstance<LocalisedStringSourceAsset>();
+
+				localisedStringSourceAsset._parent = parent;
+				localisedStringSourceAsset._text = new LanguageText[0];
 
 				return localisedStringSourceAsset;
 			}
