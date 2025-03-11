@@ -386,9 +386,13 @@ namespace Framework
 							if (GUILayout.Button("New", EditorStyles.toolbarButton))
 							{
 								string fileName = EditorUtility.SaveFilePanel("Open File", Application.dataPath, "LocalisationTable", "asset");
+								
 								if (fileName != null && fileName != string.Empty)
 								{
-									//Create new table source asset and load it
+									LocalisedStringSourceTable localisedStringSourceTable = new LocalisedStringSourceTable();
+									string assetPath = AssetUtils.GetAssetPath(fileName);
+									AssetDatabase.CreateAsset(localisedStringSourceTable, assetPath);
+									Load(fileName);
 								}
 							}
 
@@ -411,7 +415,7 @@ namespace Framework
 								string fileName = EditorUtility.OpenFilePanel("Open File", Application.dataPath, "xml");
 								if (fileName != null && fileName != string.Empty)
 								{
-									//Convert from xml to assets!
+									//TO DO - Convert from xml to assets!
 								}
 							}
 
@@ -465,6 +469,20 @@ namespace Framework
 						//Filters
 						EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 						{
+							if (GUILayout.Button("Add Key", EditorStyles.toolbarButton))
+							{
+								string tablePath = AssetDatabase.GetAssetPath(_table);
+								string fileName = EditorUtility.SaveFilePanel("Add Key", tablePath, "New Key", "asset");
+
+								if (fileName != null && fileName != string.Empty)
+								{
+									LocalisedStringSourceAsset localisedStringSourceAsset = LocalisedStringSourceAsset.CreateEmpty(_table);
+									string assetPath = AssetUtils.GetAssetPath(fileName);
+									AssetDatabase.CreateAsset(localisedStringSourceAsset, assetPath);
+									RefreshTable();
+								}
+							}
+
 							GUILayout.Label("Filter", EditorStyles.toolbarButton);
 
 							EditorGUI.BeginChangeCheck();

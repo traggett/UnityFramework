@@ -32,6 +32,18 @@ namespace Framework
 
 			#region Public Methods
 #if UNITY_EDITOR
+
+			public static LocalisedStringSourceAsset CreateEmpty(LocalisedStringSourceTable parent)
+			{
+				LocalisedStringSourceAsset localisedStringSourceAsset = new LocalisedStringSourceAsset()
+				{
+					_parent = parent,
+					_text = new LanguageText[0],
+				};
+
+				return localisedStringSourceAsset;
+			}
+
 			public string GUID
 			{
 				get 
