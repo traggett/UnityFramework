@@ -150,7 +150,7 @@ namespace Framework
 #endif
 
 				if (!string.IsNullOrEmpty(_localisationGUID))
-					return Localisation.GetGUID(_localisationGUID, _localVariables);
+					return Localisation.GetGUID(language, _localisationGUID, _localVariables);
 
 				if (!string.IsNullOrEmpty(_localisationKey))
 					return Localisation.Get(language, _localisationKey, _localVariables);
