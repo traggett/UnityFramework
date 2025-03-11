@@ -389,7 +389,7 @@ namespace Framework
 								
 								if (fileName != null && fileName != string.Empty)
 								{
-									LocalisedStringSourceTable localisedStringSourceTable = new LocalisedStringSourceTable();
+									LocalisedStringSourceTable localisedStringSourceTable = LocalisedStringSourceTable.CreateInstance<LocalisedStringSourceTable>();
 									string assetPath = AssetUtils.GetAssetPath(fileName);
 									AssetDatabase.CreateAsset(localisedStringSourceTable, assetPath);
 									Load(fileName);
