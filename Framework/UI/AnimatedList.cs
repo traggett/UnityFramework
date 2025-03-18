@@ -76,26 +76,14 @@ namespace Framework
 		public abstract class AnimatedList<T> : MonoBehaviour, IAnimatedList, IEnumerable<IAnimatedListItem<T>> where T : IComparable
 		{
 			#region Serialised Data
-			[SerializeField]
-			private PrefabInstancePool _itemPool;
-
-			[SerializeField]
-			private RectOffset _borders;
-
-			[SerializeField]
-			private int _numColumns = 1;
-
-			[SerializeField]
-			private Vector2 _itemSpacing = Vector2.zero;
-
-			[SerializeField]
-			private InterpolationType _itemMovementInterpolation;
-
-			[SerializeField]
-			private float _itemMovementTime = 2f;
-
-			[SerializeField]
-			private float _itemFadeTime = 2f;
+			[SerializeField] private PrefabInstancePool _itemPool;
+			[SerializeField] private RectOffset _borders;
+			[SerializeField] private int _numColumns = 1;
+			[SerializeField] private Vector2 _itemSpacing = Vector2.zero;
+			[SerializeField] private InterpolationType _itemMovementInterpolation;
+			[SerializeField] private float _itemMovementTime = 2f;
+			[SerializeField] private float _itemFadeTime = 2f;
+			[SerializeField] private bool _reverseDrawOrder = false;
 			#endregion
 
 			#region Private Data
@@ -480,12 +468,21 @@ namespace Framework
 			{
 				if (_items != null)
 				{
-					for (int i = 0; i < _items.Count; i++)
+					if (_reverseDrawOrder)
 					{
-						_items[i]._item.RectTransform.SetSiblingIndex(_items.Count - i - 1);
+						for (int i = 0; i < _items.Count; i++)
+						{
+							_items[i]._item.RectTransform.SetSiblingIndex(i);
+						}
+					}
+					else
+					{
+						for (int i = 0; i < _items.Count; i++)
+						{
+							_items[i]._item.RectTransform.SetSiblingIndex(_items.Count - i - 1);
+						}
 					}
 				}
-
 			}
 
 			private void UpdateItemLayout()
