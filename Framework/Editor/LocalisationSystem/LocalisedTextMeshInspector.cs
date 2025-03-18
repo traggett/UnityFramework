@@ -15,12 +15,15 @@ namespace Framework
 				private SerializedProperty _listStartStringProp;
 				private SerializedProperty _listSeperatorStringProp;
 				private SerializedProperty _listEndStringProp;
+				private SerializedProperty _forceLanguageProp;
+				private SerializedProperty _forcedLanguageProp;
 
 				private static readonly GUIContent _listModeLabel = new GUIContent("List Mode");
 				private static readonly GUIContent _listSymbolsLabel = new GUIContent("List Symbols");
 				private static readonly GUIContent _listPrefixLabel = new GUIContent("Prefix");
 				private static readonly GUIContent _listSeperatorLabel = new GUIContent("Seperator");
 				private static readonly GUIContent _listPostfixLabel = new GUIContent("Postfix");
+
 
 				protected virtual void OnEnable()
 				{
@@ -31,6 +34,9 @@ namespace Framework
 					_listStartStringProp = serializedObject.FindProperty("_listStartString");
 					_listSeperatorStringProp = serializedObject.FindProperty("_listSeperatorString");
 					_listEndStringProp = serializedObject.FindProperty("_listEndString");
+
+					_forceLanguageProp = serializedObject.FindProperty("_forceLanguage");
+					_forcedLanguageProp = serializedObject.FindProperty("_forcedLanguage");
 				}
 
 				public override void OnInspectorGUI()
@@ -60,6 +66,13 @@ namespace Framework
 					else
 					{
 						EditorGUILayout.PropertyField(_textProp);
+					}
+
+					EditorGUILayout.PropertyField(_forceLanguageProp);
+
+					if (_forceLanguageProp.boolValue)
+					{
+						EditorGUILayout.PropertyField(_forcedLanguageProp);
 					}
 
 					if (EditorGUI.EndChangeCheck())

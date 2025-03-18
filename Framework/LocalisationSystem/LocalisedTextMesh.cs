@@ -43,9 +43,8 @@ namespace Framework
 
 			#endregion
 
-			#region Private Data 
-			[SerializeField]
-			private LocalisedString _text;
+			#region Serialized Data 
+			[SerializeField] private LocalisedString _text;
 
 			[SerializeField]
 			[Tooltip("List Mode Allows multiple localised strings to be concated whilst staying localised.")]
@@ -54,6 +53,11 @@ namespace Framework
 			[SerializeField]
 			private LocalisedString[] _textList;
 
+			[SerializeField] private bool _forceLanguage;
+			[SerializeField] private SystemLanguage _forcedLanguage;
+			#endregion
+
+			#region Private Data 
 			private SystemLanguage _cachedLanguage;
 			private LocalisationGlobalVariable[] _cachedGlobalVariables;
 
@@ -85,10 +89,18 @@ namespace Framework
 				}
 #endif
 
-
 				if (language == SystemLanguage.Unknown)
-					language = Localisation.GetCurrentLanguage();
-
+				{
+					if (_forceLanguage)
+					{
+						language = _forcedLanguage;
+					}
+					else
+					{
+						language = Localisation.GetCurrentLanguage();
+					}
+				}
+				
 				if (_cachedLanguage != language || Localisation.AreGlobalVariablesOutOfDate(_cachedGlobalVariables))
 				{
 					UpdateText(language);
