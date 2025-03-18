@@ -164,7 +164,16 @@ namespace Framework
 			protected void UpdateTextEditor(SystemLanguage language)
 			{
 				if (language == SystemLanguage.Unknown)
-					language = SystemLanguage.English;
+				{
+					if (_forceLanguage)
+					{
+						language = _forcedLanguage;
+					}
+					else
+					{
+						language = Localisation.GetCurrentLanguage();
+					}
+				}
 
 				//List of strings
 				if (_textListMode)
