@@ -7,6 +7,7 @@ using UnityEditor;
 namespace Framework
 {
 	using Maths;
+	using Utils;
 
 	namespace Paths
 	{
@@ -76,6 +77,19 @@ namespace Framework
 				float pathWidth = Mathf.Lerp(_nodes[startNode]._width, _nodes[endNode]._width, lineLerp);
 
 				return new PathPosition(this, pathT, pathPosition, pathForward, pathUp, pathWidth);
+			}
+
+			protected override void ValidateNodes()
+			{
+				base.ValidateNodes();
+
+				if (_controlPoints.Length != _nodes.Length)
+					throw new System.Exception();
+			}
+
+			protected override void OnNodeRemoved(int index)
+			{
+				ArrayUtils.RemoveAt(ref _controlPoints, index);
 			}
 
 			public override PathPosition TravelPath(float fromT, float toT, float distance)

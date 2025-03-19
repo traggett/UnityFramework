@@ -36,7 +36,9 @@ namespace Framework
 					ArrayUtils.Add(ref path._controlPoints, controlPoint);
 
 					if (path._controlPoints.Length != path._nodes.Length)
-						throw new System.Exception();
+					{
+						path._controlPoints = new BezierPath.NodeControlPoints[path._nodes.Length];
+					}
 				}
 
 				protected override void OnRemovedNode(int index)
@@ -46,7 +48,9 @@ namespace Framework
 					ArrayUtils.RemoveAt(ref path._controlPoints, index);
 
 					if (path._controlPoints.Length != path._nodes.Length)
-						throw new System.Exception();
+					{
+						path._controlPoints = new BezierPath.NodeControlPoints[path._nodes.Length];
+					}
 				}
 
 				protected override void OnNodeChangedPosition(int oldIndex, int newIndex)
@@ -58,7 +62,9 @@ namespace Framework
 					path._controlPoints[newIndex] = origControlPoint;
 
 					if (path._controlPoints.Length != path._nodes.Length)
-						throw new System.Exception();
+					{
+						path._controlPoints = new BezierPath.NodeControlPoints[path._nodes.Length];
+					}
 				}
 			}
 		}

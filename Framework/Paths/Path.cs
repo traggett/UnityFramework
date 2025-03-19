@@ -1,13 +1,17 @@
 using UnityEngine;
 using System;
+
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
-using Framework.Maths;
 
 namespace Framework
 {
+	using Maths;
+	using Utils;
+
 	namespace Paths
 	{
 		[Serializable]
@@ -32,17 +36,46 @@ namespace Framework
 				RefreshNodes(_nodes);
 			}
 
+			protected virtual void ValidateNodes()
+			{
+				if (_nodes != null)
+				{
+					for (int i = 0; i < _nodes.Length; )
+					{
+						if (_nodes[i]._node == null)
+						{
+							OnNodeRemoved(i);
+							ArrayUtils.RemoveAt(ref _nodes, i);
+						}
+						else
+						{
+							i++;
+						}
+					}
+				}
+			}
+
+			protected void OnValidate()
+			{
+				ValidateNodes();
+			}
+
+
 #if UNITY_EDITOR
 			private void Update()
 			{
 				if (_nodes == null)
+				{
+					ValidateNodes();
 					RefreshNodes(_nodes);
+				}
 			}
 
 			private void OnDrawGizmos()
 			{
 				if (enabled)
 				{
+					ValidateNodes();
 					DebugDraw();
 				}
 			}
@@ -227,6 +260,11 @@ namespace Framework
 
 			}
 #endif
+
+			protected virtual void OnNodeRemoved(int index)
+			{
+
+			}
 
 			protected void ClampPathT(ref float pathT)
 			{
