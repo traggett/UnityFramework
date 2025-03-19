@@ -84,7 +84,9 @@ namespace Framework
 				base.ValidateNodes();
 
 				if (_controlPoints.Length != _nodes.Length)
-					throw new System.Exception();
+				{
+					ArrayUtils.Resize(ref _controlPoints, _nodes.Length);
+				}
 			}
 
 			protected override void OnNodeRemoved(int index)
