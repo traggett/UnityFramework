@@ -141,6 +141,11 @@ namespace Framework
 				return _value;
 			}
 
+			public void LerpTo(T value, float time, Action onFullyShowing = null)
+			{
+				InterpolateTo(value, InterpolationType.Linear, time, onFullyShowing);
+			}
+
 			public void InterpolateTo(T value, InterpolationType interpolationType, float time, Action onFullyShowing = null)
 			{
 				if (time <= 0f)

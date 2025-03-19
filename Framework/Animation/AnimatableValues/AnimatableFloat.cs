@@ -39,6 +39,36 @@ namespace Framework
 			}
 			#endregion
 
+			#region SinWaveLayer
+			private class SinWaveLayer : AnimationLayer
+			{
+				#region Private Data
+				protected float _waveSpeed;
+				protected float _animationTimer;
+				protected float _currentValue;
+				#endregion
+
+				#region Public Interface
+				public void StartLayer(float waveSpeed, InterpolationType easeInInterpolation, float easeInTime)
+				{
+					OnStartLayer(easeInInterpolation, easeInTime);
+					_waveSpeed = waveSpeed;
+					_animationTimer = 0f;
+				}
+				#endregion
+
+				#region AnimationLayer
+				public override float Value { get { return _currentValue; } }
+
+				public override void Update(float deltaTime)
+				{
+					_animationTimer += deltaTime * _waveSpeed;
+					_currentValue = Mathf.Sin(_animationTimer);
+				}
+				#endregion
+			}
+			#endregion
+
 			#region Public Interface
 			public static implicit operator AnimatableFloat(float value)
 			{
