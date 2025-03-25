@@ -1,4 +1,3 @@
-using Framework.Utils;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -90,29 +89,29 @@ namespace Framework
 				return false;
 			}
 
-			public static float GetExtrapolatedTrackTime(TimelineClip clip, double directorTime, float animationLength)
+			public static double GetExtrapolatedTrackTime(TimelineClip clip, double directorTime, double animationLength)
 			{
 				TimelineClip.ClipExtrapolation extrapolation = directorTime < clip.start ? clip.preExtrapolationMode : clip.postExtrapolationMode;
-				float time = (float)(directorTime - clip.start);
+				double time = directorTime - clip.start;
 
 				if (clip.start <= directorTime && directorTime < clip.end)
 					return time;
 
-				if (animationLength <= 0.0f)
-					return 0.0f;
+				if (animationLength <= 0d)
+					return 0d;
 
 				switch (extrapolation)
 				{
 					case TimelineClip.ClipExtrapolation.Continue:
 					case TimelineClip.ClipExtrapolation.Hold:
-						return time < 0.0f ? 0.0f : (float)clip.end;
+						return time < 0d ? 0d : clip.end;
 					case TimelineClip.ClipExtrapolation.Loop:
 						{
-							if (time < 0.0f)
+							if (time < 0d)
 							{
-								float t = -time / animationLength;
-								int n = Mathf.FloorToInt(t);
-								float fraction = animationLength - (t - n);
+								double t = -time / animationLength;
+								int n = (int)Math.Floor(t);
+								double fraction = animationLength - (t - n);
 
 								time = (animationLength * n) + fraction;
 							}
@@ -121,9 +120,9 @@ namespace Framework
 						}
 					case TimelineClip.ClipExtrapolation.PingPong:
 						{
-							float t = Mathf.Abs(time) / animationLength;
-							int n = Mathf.FloorToInt(t);
-							float fraction = t - n;
+							double t = Math.Abs(time) / animationLength;
+							int n = (int)Math.Floor(t);
+							double fraction = t - n;
 
 							if (n % 2 == 1)
 								fraction = animationLength - fraction;
@@ -132,7 +131,7 @@ namespace Framework
 						}
 					case TimelineClip.ClipExtrapolation.None:
 					default:
-						return 0.0f;
+						return 0d;
 				}
 			}
 

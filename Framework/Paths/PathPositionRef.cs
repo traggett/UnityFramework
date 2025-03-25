@@ -23,12 +23,12 @@ namespace Framework
 
 #if UNITY_EDITOR
 			private bool _editorFoldout = true;
-			private enum eEditorType
+			private enum EditorType
 			{
 				Node,
 				PathT,
 			}
-			private eEditorType _editorType;
+			private EditorType _editorType;
 #endif
 
 			public static implicit operator string(PathPositionRef property)
@@ -66,7 +66,7 @@ namespace Framework
 					}
 				}
 
-				return null;
+				return default;
 			}
 
 			#region ISerializationCallbackReceiver
@@ -78,7 +78,7 @@ namespace Framework
 			public void OnAfterDeserialize()
 			{
 #if UNITY_EDITOR
-				_editorType = _pathNode.GetComponent() != null ? eEditorType.Node : eEditorType.PathT;
+				_editorType = _pathNode.GetComponent() != null ? EditorType.Node : EditorType.PathT;
 #endif
 			}
 			#endregion
@@ -101,7 +101,7 @@ namespace Framework
 					int origIndent = EditorGUI.indentLevel;
 					EditorGUI.indentLevel++;
 					
-					eEditorType editorType = (eEditorType)EditorGUILayout.EnumPopup("Position Type", _editorType);
+					EditorType editorType = (EditorType)EditorGUILayout.EnumPopup("Position Type", _editorType);
 
 					if (_editorType != editorType)
 					{
@@ -114,12 +114,12 @@ namespace Framework
 
 					switch (_editorType)
 					{
-						case eEditorType.Node:
+						case EditorType.Node:
 							{
 								_pathNode = SerializationEditorGUILayout.ObjectField(_pathNode, new GUIContent("Path Node"), ref dataChanged);
 							}
 							break;
-						case eEditorType.PathT:
+						case EditorType.PathT:
 							{
 								_path = SerializationEditorGUILayout.ObjectField(_path, new GUIContent("Path"), ref dataChanged);
 

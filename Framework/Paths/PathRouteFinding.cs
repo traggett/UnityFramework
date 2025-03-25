@@ -58,7 +58,7 @@ namespace Framework
 
 			public static PathPosition GetClosestPoint(Path startPath, Vector3 position)
 			{
-				PathPosition closestPoint = null;
+				PathPosition closestPoint = default;
 
 				if (startPath != null)
 				{
@@ -75,7 +75,7 @@ namespace Framework
 						float distanceSqr;
 						PathPosition pathClosestPoint = path.GetClosestPoint(position, out distanceSqr);
 
-						if (closestPoint == null || distanceSqr < bestDist)
+						if (!closestPoint.IsValid() || distanceSqr < bestDist)
 						{
 							closestPoint = pathClosestPoint;
 							bestDist = distanceSqr;
@@ -88,7 +88,7 @@ namespace Framework
 
 			public static PathPosition GetClosestPoint(Path startPath, Ray ray)
 			{
-				PathPosition closestPoint = null;
+				PathPosition closestPoint = default;
 
 				if (startPath != null)
 				{
@@ -105,7 +105,7 @@ namespace Framework
 						float distanceSqr;
 						PathPosition pathClosestPoint = path.GetClosestPoint(ray, out distanceSqr);
 
-						if (closestPoint == null || distanceSqr < bestDist)
+						if (!closestPoint.IsValid() || distanceSqr < bestDist)
 						{
 							closestPoint = pathClosestPoint;
 							bestDist = distanceSqr;
@@ -118,7 +118,7 @@ namespace Framework
 
 			public static PathRoute FindRoute(PathPosition startPos, PathPosition endPos)
 			{
-				if (startPos == null || endPos == null || startPos._path == null || endPos._path == null)
+				if (!startPos.IsValid() || !endPos.IsValid())
 					return null;
 
 				PathRoute bestRoute = null;

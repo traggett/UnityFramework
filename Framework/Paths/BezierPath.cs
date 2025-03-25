@@ -144,7 +144,7 @@ namespace Framework
 
 			public override PathPosition GetClosestPoint(Vector3 position, out float sqrMagnitude)
 			{
-				PathPosition closestPosition = null;
+				PathPosition closestPosition = default;
 
 				float sampleT = 1.0f / (float)kNumSamples;
 				float pathT = 0.0f;
@@ -156,7 +156,7 @@ namespace Framework
 					Vector3 toSamplePos = samplePos._pathPosition - position;
 					float posDistance = toSamplePos.sqrMagnitude;
 
-					if (closestPosition == null || posDistance < sqrMagnitude)
+					if (!closestPosition.IsValid() || posDistance < sqrMagnitude)
 					{
 						closestPosition = samplePos;
 						sqrMagnitude = posDistance;

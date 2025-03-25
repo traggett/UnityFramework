@@ -1,6 +1,3 @@
-using UnityEngine;
-using Framework.Maths;
-
 namespace Framework
 {
 	namespace Paths

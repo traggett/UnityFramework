@@ -82,12 +82,12 @@ namespace Framework
 								int ch = GetChannelIndex(inputBehaviour._clipAsset.GetChannel());
 
 								bool isPrimaryClip = TimelineUtils.IsPrimaryClip(clip, _director);
-								float trackTime = TimelineUtils.GetExtrapolatedTrackTime(clip, _director.time, inputBehaviour._animation.length);
+								double trackTime = TimelineUtils.GetExtrapolatedTrackTime(clip, _director.time, inputBehaviour._animation.length);
 
 								if (isPrimaryClip)
 								{
 									_channelData[ch]._primaryAnimation._animation = inputBehaviour._animation;
-									_channelData[ch]._primaryAnimation._time = trackTime;
+									_channelData[ch]._primaryAnimation._time = (float)trackTime;
 									_channelData[ch]._primaryAnimation._weight = inputWeight;
 									_channelData[ch]._primaryAnimation._speed = 0f;
 								}
@@ -96,7 +96,7 @@ namespace Framework
 									LegacyAnimator.AnimationParams backroundAnimation = new LegacyAnimator.AnimationParams
 									{
 										_animation = inputBehaviour._animation,
-										_time = trackTime,
+										_time = (float)trackTime,
 										_weight = 1.0f,
 										_speed = 0f,
 									};
