@@ -208,7 +208,7 @@ namespace Framework
 
 			public override PathPosition GetClosestPoint(Vector3 position, out float distanceSqr)
 			{
-				PathPosition closestPosition = null;
+				PathPosition closestPosition = default;
 
 				int numLines = _isLooping ? _nodes.Length : _nodes.Length - 1;
 				float linePathT = 1.0f / (float)(numLines);
@@ -226,16 +226,11 @@ namespace Framework
 					Vector3 up, forward;
 					Vector3 closestPoint = GetClosestPointToLine(i, toNode, position, out dist, out lineLerp, out forward, out up, out width);
 					
-					if (closestPosition == null || dist < distanceSqr)
+					if (!closestPosition.IsValid() || dist < distanceSqr)
 					{
 						closestPosition = new PathPosition(this, ((float)i + lineLerp) * linePathT, closestPoint, forward, up, width);
 						distanceSqr = dist;
 					}
-				}
-
-				if (closestPosition == null)
-				{
-					closestPosition = null;
 				}
 
 				return closestPosition;
@@ -243,7 +238,7 @@ namespace Framework
 
 			public override PathPosition GetClosestPoint(Ray ray, out float distanceSqr)
 			{
-				PathPosition closestPosition = null;
+				PathPosition closestPosition = default;
 
 				int numLines = _isLooping ? _nodes.Length : _nodes.Length - 1;
 				float linePathT = 1.0f / (float)(numLines);
@@ -278,7 +273,7 @@ namespace Framework
 						dist = (closestPoint - ray.origin).sqrMagnitude;
 					}
 
-					if (closestPosition == null || dist < distanceSqr)
+					if (!closestPosition.IsValid() || dist < distanceSqr)
 					{
 						Vector3 startNodeUp = GetNodeUp(i, pathLineDir);
 						Vector3 endNodeUp = GetNodeUp(toNode, pathLineDir);

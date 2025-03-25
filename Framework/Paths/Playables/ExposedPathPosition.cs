@@ -31,7 +31,7 @@ namespace Framework
 
 			public static void DrawPathPosGizmo(PathPosition position, Color color)
 			{
-				if (position != null)
+				if (position.IsValid())
 				{
 					Color origColor = UnityEditor.Handles.color;
 					UnityEditor.Handles.color = color;

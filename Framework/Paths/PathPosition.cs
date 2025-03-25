@@ -5,7 +5,7 @@ namespace Framework
 	namespace Paths
 	{
 		[System.Serializable]
-		public class PathPosition
+		public struct PathPosition
 		{
 			public Path _path;
 			public float _pathT;
@@ -37,6 +37,11 @@ namespace Framework
 				_pathWidth = other._pathWidth;
 			}
 
+			public bool IsValid()
+			{
+				return _path != null;
+			}
+
 #if UNITY_EDITOR
 			public static void DrawPathPosGizmo(PathPosition position)
 			{
@@ -45,7 +50,7 @@ namespace Framework
 
 			public static void DrawPathPosGizmo(PathPosition position, Color color)
 			{
-				if (position != null)
+				if (position.IsValid())
 				{
 					Color origColor = UnityEditor.Handles.color;
 					UnityEditor.Handles.color = color;
