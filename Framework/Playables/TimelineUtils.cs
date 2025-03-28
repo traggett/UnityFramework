@@ -95,7 +95,7 @@ namespace Framework
 				double time = directorTime - clip.start;
 
 				if (clip.start <= directorTime && directorTime < clip.end)
-					return time;
+					return clip.clipIn + time;
 
 				if (animationLength <= 0d)
 					return 0d;
@@ -104,7 +104,7 @@ namespace Framework
 				{
 					case TimelineClip.ClipExtrapolation.Continue:
 					case TimelineClip.ClipExtrapolation.Hold:
-						return time < 0d ? 0d : clip.end;
+						return time < 0d ? clip.clipIn : clip.end;
 					case TimelineClip.ClipExtrapolation.Loop:
 						{
 							if (time < 0d)
@@ -116,7 +116,7 @@ namespace Framework
 								time = (animationLength * n) + fraction;
 							}
 
-							return time;
+							return clip.clipIn + time;
 						}
 					case TimelineClip.ClipExtrapolation.PingPong:
 						{
@@ -127,11 +127,11 @@ namespace Framework
 							if (n % 2 == 1)
 								fraction = animationLength - fraction;
 
-							return (animationLength * n) + fraction;
+							return clip.clipIn + (animationLength * n) + fraction;
 						}
 					case TimelineClip.ClipExtrapolation.None:
 					default:
-						return 0d;
+						return clip.clipIn;
 				}
 			}
 
