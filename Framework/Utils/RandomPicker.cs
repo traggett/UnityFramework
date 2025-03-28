@@ -7,6 +7,7 @@ namespace Framework
 {
 	namespace Utils
 	{
+		[Serializable]
 		public class RandomPicker<T>
 		{
 			#region Public Data
@@ -44,6 +45,13 @@ namespace Framework
 			}
 			#endregion
 
+			#region Serialised Data
+			[SerializeField] private float _bias;
+			[SerializeField] private bool _dontRepeat;
+			[SerializeField] private List<T> _items = new List<T>();
+			#endregion
+
+
 			#region Private Data		
 			private class ItemData
 			{
@@ -52,15 +60,13 @@ namespace Framework
 				public float _weight;
 				public float _chance;
 			}
-			private Dictionary<T, ItemData> _items = new Dictionary<T, ItemData>();
-			private float _bias = 0f;
-			private bool _dontRepeat = false;
+			private Dictionary<T, ItemData> _itemData = new Dictionary<T, ItemData>();
 			#endregion
 
 			#region Public Interface
 			public RandomPicker(params T[] items)
 			{
-				_items = new Dictionary<T, ItemData>(items.Length);
+				_itemData = new Dictionary<T, ItemData>(items.Length);
 
 				for (int i=0; i< items.Length; i++)
 				{
@@ -70,7 +76,7 @@ namespace Framework
 			
 			public RandomPicker(IEnumerable<T> items)
 			{
-				_items = new Dictionary<T, ItemData>();
+				_itemData = new Dictionary<T, ItemData>();
 
 				foreach (T item in items)
 				{
@@ -82,7 +88,7 @@ namespace Framework
 			{
 				if (!Contains(item))
 				{
-					_items[item] = new ItemData()
+					_itemData[item] = new ItemData()
 					{
 						_item = item,
 						_pickCount = 0,
@@ -93,17 +99,17 @@ namespace Framework
 
 			public bool Contains(T item)
 			{
-				return _items.ContainsKey(item);
+				return _itemData.ContainsKey(item);
 			}
 
 			public void Remove(T item)
 			{
-				_items.Remove(item);
+				_itemData.Remove(item);
 			}
 
 			public void Reset()
 			{
-				foreach (var keyPair in _items)
+				foreach (var keyPair in _itemData)
 				{
 					keyPair.Value._pickCount = 0;
 				}
@@ -126,7 +132,7 @@ namespace Framework
 					if (enumerator.MoveNext())
 					{
 						T item = enumerator.Current;
-						ItemData itemData = _items[item];
+						ItemData itemData = _itemData[item];
 						itemData._pickCount++;
 						return item;
 					}
@@ -145,12 +151,12 @@ namespace Framework
 
 			public T PickRandom()
 			{
-				return PickRandomFrom(_items.Keys);
+				return PickRandomFrom(_itemData.Keys);
 			}
 
 			public bool SetWeight(T item, float weight)
 			{
-				if (_items.TryGetValue(item, out ItemData itemData))
+				if (_itemData.TryGetValue(item, out ItemData itemData))
 				{
 					itemData._weight = weight;
 					return true;
@@ -169,7 +175,7 @@ namespace Framework
 
 				foreach (T item in items)
 				{
-					ItemData itemData = _items[item];
+					ItemData itemData = _itemData[item];
 
 					if (_dontRepeat && itemData._pickCount > lowestPickCount)
 					{
@@ -201,7 +207,7 @@ namespace Framework
 
 				foreach (T item in items)
 				{
-					ItemData itemData = _items[item];
+					ItemData itemData = _itemData[item];
 
 					totalPicks += itemData._pickCount;
 					totalWeight += itemData._weight;
@@ -216,7 +222,7 @@ namespace Framework
 
 				foreach (T item in items)
 				{
-					ItemData itemData = _items[item];
+					ItemData itemData = _itemData[item];
 
 					if (itemData._chance > 0f)
 					{
@@ -231,7 +237,7 @@ namespace Framework
 
 					foreach (T item in items)
 					{
-						ItemData itemData = _items[item];
+						ItemData itemData = _itemData[item];
 
 						if (itemData._chance > 0f)
 						{
