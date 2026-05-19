@@ -8,7 +8,7 @@ namespace Framework
 	namespace Utils
 	{
 		[Serializable]
-		public class RandomPicker<T>
+		public class RandomPicker<T> : ISerializationCallbackReceiver
 		{
 			#region Public Data
 			/// <summary>
@@ -46,11 +46,10 @@ namespace Framework
 			#endregion
 
 			#region Serialised Data
-			[SerializeField] private float _bias;
+			[SerializeField][Range(0f, 1)] private float _bias;
 			[SerializeField] private bool _dontRepeat;
 			[SerializeField] private List<T> _items = new List<T>();
 			#endregion
-
 
 			#region Private Data		
 			private class ItemData
@@ -163,6 +162,24 @@ namespace Framework
 				}
 
 				return false;
+			}
+			#endregion
+
+			#region ISerializationCallbackReceiver
+			public void OnBeforeSerialize()
+			{
+
+
+			}
+
+			public void OnAfterDeserialize()
+			{
+				_itemData = new Dictionary<T, ItemData>(_items.Count);
+
+				foreach (T item in _items)
+				{
+					Add(item);
+				}
 			}
 			#endregion
 

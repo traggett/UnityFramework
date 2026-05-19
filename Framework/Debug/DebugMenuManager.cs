@@ -257,7 +257,7 @@ namespace Framework
 
 				int itemIndex = 0;
 
-				for (int i = _currentMenu._items.Count - 1; i >= 0; i--)
+				for (int i = 0; i < _currentMenu._items.Count; i++)
 				{
 					_visuals._items[itemIndex].text = i == _currentItemIndex ? "> " + _currentMenu._items[i].GetDisplayedText() : _currentMenu._items[i].GetDisplayedText();
 					_visuals._items[itemIndex].color = i == _currentItemIndex ? _visuals._highlightedColor : _visuals._title.color;
@@ -348,10 +348,10 @@ namespace Framework
 			{
 				if (_visuals != null && _visuals.gameObject.activeSelf)
 				{
-					_currentItemIndex++;
+					_currentItemIndex--;
 
-					if (_currentItemIndex >= _currentMenu._items.Count)
-						_currentItemIndex = 0;
+					if (_currentItemIndex < 0)
+						_currentItemIndex = _currentMenu._items.Count - 1;
 
 					RefreshMenu();
 				}
@@ -361,10 +361,10 @@ namespace Framework
 			{
 				if (_visuals != null && _visuals.gameObject.activeSelf)
 				{
-					_currentItemIndex--;
+					_currentItemIndex++;
 
-					if (_currentItemIndex < 0)
-						_currentItemIndex = _currentMenu._items.Count - 1;
+					if (_currentItemIndex >= _currentMenu._items.Count)
+						_currentItemIndex = 0;
 
 					RefreshMenu();
 				}
@@ -378,6 +378,9 @@ namespace Framework
 
 					if (item is MenuItemField field)
 					{
+						// Have increment value in item, can be set in attribute
+
+
 						if (field._field.FieldType == typeof(bool))
 						{
 							field._field.SetValue(null, !(bool)field._field.GetValue(null));

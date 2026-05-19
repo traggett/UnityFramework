@@ -15,8 +15,8 @@ namespace Framework
 			{
 				#region Private Data
 				protected float _weight;
-				private float _lerp;
-				private float _lerpSpeed;
+				private float _easeInT;
+				private float _easeInSpeed;
 				private InterpolationType _interpolationType;
 				private AnimationCurve _animationCurve;
 				#endregion
@@ -26,21 +26,26 @@ namespace Framework
 
 				public bool FadeInWeight(float deltaTime)
 				{
-					_lerp += deltaTime * _lerpSpeed;
-					bool done = _lerp >= 1f;
-
-					_lerp = Mathf.Clamp01(_lerp);
-
-					if (_animationCurve == null)
+					if (_easeInT < 1f)
 					{
-						_weight = Interpolation.Interpolate(_interpolationType, 0f, 1f, _lerp);
-					}
-					else
-					{
-						_weight = _animationCurve.Evaluate(_lerp);
+						_easeInT += deltaTime * _easeInSpeed;
+						bool done = _easeInT >= 1f;
+
+						_easeInT = Mathf.Clamp01(_easeInT);
+
+						if (_animationCurve == null)
+						{
+							_weight = Interpolation.Interpolate(_interpolationType, 0f, 1f, _easeInT);
+						}
+						else
+						{
+							_weight = _animationCurve.Evaluate(_easeInT);
+						}
+
+						return done;
 					}
 
-					return done;
+					return true;
 				}
 				#endregion
 
@@ -50,8 +55,8 @@ namespace Framework
 					if (easeInTime > 0f)
 					{
 						_weight = 0f;
-						_lerp = 0f;
-						_lerpSpeed = 1f / easeInTime;
+						_easeInT = 0f;
+						_easeInSpeed = 1f / easeInTime;
 						_interpolationType = easeInInterpolation;
 						_animationCurve = null;
 					}
@@ -67,15 +72,15 @@ namespace Framework
 					if (easeInTime > 0f)
 					{
 						_weight = 0f;
-						_lerp = 0f;
-						_lerpSpeed = 1f / easeInTime;
+						_easeInT = 0f;
+						_easeInSpeed = 1f / easeInTime;
 						_animationCurve = easeInCurve;
 					}
 					else
 					{
 						_weight = 1f;
-						_lerp = 1f;
-						_lerpSpeed = 0f;
+						_easeInT = 1f;
+						_easeInSpeed = 0f;
 						_animationCurve = easeInCurve;
 					}
 				}
@@ -83,6 +88,7 @@ namespace Framework
 
 				#region Virtual Interface
 				public abstract T Value { get; }
+				public virtual bool IsFinished { get { return _easeInT >= 1f; } }
 				public virtual void Update(float deltaTime) { }
 				#endregion
 			}
@@ -111,6 +117,7 @@ namespace Framework
 
 				#region AnimationLayer
 				public override T Value { get { return _value; } }
+
 				#endregion
 			}
 			#endregion
@@ -184,33 +191,39 @@ namespace Framework
 					_currentLayers[i].Update(deltaTime);
 				}
 
-				// If we have a layer fade in progress (ie multiple layers)
-				if (_currentLayers.Length > 1)
+				// Fade in layer weights
+				for (int i = _currentLayers.Length -1; i >= 0; i--)
 				{
-					AnimationLayer topLayer = _currentLayers[^1];
-
-					// Fade in top layer (returns true if fully faded in)
-					if (topLayer.FadeInWeight(deltaTime))
+					// Fade in layer, if full weight then remove all layers beneath
+					if (_currentLayers[i].FadeInWeight(deltaTime))
 					{
-						_value = topLayer.Value;
-						_currentLayers = new AnimationLayer[] { topLayer };
-						_onDone?.Invoke();
-						_onDone = null;
-					}
-					// Otherwise work out current value based on layer weights
-					else
-					{
-						_value = _currentLayers[0].Value;
-
-						for (int i = 1; i < _currentLayers.Length; i++)
+						//Remove all other layers
+						AnimationLayer[] animationLayers = new AnimationLayer[_currentLayers.Length - i];
+						
+						for (int j = 0; j < animationLayers.Length; j++)
 						{
-							_value = Lerp(_value, _currentLayers[i].Value, _currentLayers[i].Weight);
+							animationLayers[j] = _currentLayers[i + j];
 						}
+
+						break;
 					}
 				}
-				else
+
+				// Work out value
+				_value = _currentLayers[0].Value;
+
+				for (int i = 1; i < _currentLayers.Length; i++)
 				{
-					_value = _currentLayers[0].Value;
+					_value = Lerp(_value, _currentLayers[i].Value, _currentLayers[i].Weight);
+				}
+
+				// Check top layer is done and trigger callback
+				AnimationLayer topLayer = _currentLayers[^1];
+
+				if (_onDone != null && topLayer.IsFinished)
+				{
+					_onDone?.Invoke();
+					_onDone = null;
 				}
 			}
 			#endregion
