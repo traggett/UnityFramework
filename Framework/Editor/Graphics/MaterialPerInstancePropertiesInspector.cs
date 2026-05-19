@@ -174,9 +174,9 @@ namespace Framework
 			{
 				MaterialPerInstanceProperties.IProperty perInstanceProperty = null;
 
-				switch (property.propertyType)
+				switch (property.type)
 				{
-					case UnityEngine.Rendering.ShaderPropertyType.Color:
+					case MaterialProperty.PropType.Color:
 						{
 							perInstanceProperty = new MaterialPerInstanceProperties.ColorProperty()
 							{
@@ -187,7 +187,7 @@ namespace Framework
 							};
 						}
 						break;
-					case UnityEngine.Rendering.ShaderPropertyType.Vector:
+					case MaterialProperty.PropType.Vector:
 						{
 							perInstanceProperty = new MaterialPerInstanceProperties.Vector4Property()
 							{
@@ -205,7 +205,7 @@ namespace Framework
 							};
 						}
 						break;
-					case UnityEngine.Rendering.ShaderPropertyType.Float:
+					case MaterialProperty.PropType.Float:
 						{
 							perInstanceProperty = new MaterialPerInstanceProperties.FloatProperty()
 							{
@@ -217,7 +217,7 @@ namespace Framework
 							};
 						}
 						break;
-					case UnityEngine.Rendering.ShaderPropertyType.Texture:
+					case MaterialProperty.PropType.Texture:
 						{
 							perInstanceProperty = new MaterialPerInstanceProperties.TextureProperty()
 							{
