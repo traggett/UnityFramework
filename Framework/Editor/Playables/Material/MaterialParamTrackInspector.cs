@@ -91,12 +91,12 @@ namespace Framework
 				{
 					if (track is MaterialColorParamTrack)
 					{
-						return property.type == MaterialProperty.PropType.Color || property.type == MaterialProperty.PropType.Vector;
+						return property.propertyType == UnityEngine.Rendering.ShaderPropertyType.Color || property.propertyType == UnityEngine.Rendering.ShaderPropertyType.Vector;
 					}
 
 					if (track is MaterialFloatParamTrack)
 					{
-						return property.type == MaterialProperty.PropType.Float || property.type == MaterialProperty.PropType.Range;
+						return property.propertyType == UnityEngine.Rendering.ShaderPropertyType.Float || property.propertyType == UnityEngine.Rendering.ShaderPropertyType.Range;
 					}
 
 					return false;

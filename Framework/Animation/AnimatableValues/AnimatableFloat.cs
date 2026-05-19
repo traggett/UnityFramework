@@ -30,6 +30,20 @@ namespace Framework
 				#region AnimationLayer
 				public override float Value { get { return _currentValue; } }
 
+				public override bool IsFinished 
+				{ 
+					get 
+					{
+						// Layer is finished when animation curve is complete
+						if (_animationCurve != null && _animationCurve.keys.Length > 0)
+						{
+							return _animationTimer >= _animationCurve.keys[^1].time;
+						}
+
+						return true;
+					} 
+				}
+
 				public override void Update(float deltaTime) 
 				{ 
 					_animationTimer += deltaTime;

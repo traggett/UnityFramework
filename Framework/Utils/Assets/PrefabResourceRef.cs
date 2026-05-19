@@ -2,8 +2,6 @@ using System;
 using UnityEngine;
 using System.Collections;
 
-//Disable private SerializedField warnings
-#pragma warning disable 0649
 
 namespace Framework
 {
@@ -12,13 +10,12 @@ namespace Framework
 		[Serializable]
 		public struct PrefabResourceRef
 		{
-			#region Private Data
-			[SerializeField]
-			private string _filePath;
-			[SerializeField]
-			private string _fileGUID;
+			#region Serialised Data
+			[SerializeField] private string _filePath;
+			[SerializeField] private string _fileGUID;
 			#endregion
 
+			#region Public Interface
 			public GameObject LoadAndInstantiatePrefab(Transform parent = null)
 			{
 				GameObject prefab = null;
@@ -66,6 +63,7 @@ namespace Framework
 			{
 				return _fileGUID;
 			}
+			#endregion
 		}
 	}
 }
