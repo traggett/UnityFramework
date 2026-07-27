@@ -37,30 +37,42 @@ namespace Framework
 				GoToState(state);
 			}
 
-			public void GoToState(IEnumerator state)
+			// If interrupt is set the current coroutine state will end immediately otherwise the current IEnumerator will finish before going to the next state
+			// eg if currently waiting for x seconds it will finish the wait
+			public void GoToState(IEnumerator state, bool interrupt = false)
 			{
-				if (state != null)
+				if (interrupt)
 				{
-					if (_process != null)
-					{
-						_processes[_currentIndex]._abort = true;
-					}
-
-					_currentIndex = (_currentIndex + 1) % _processes.Length;
-
-					_processes[_currentIndex]._current = state;
-					_processes[_currentIndex]._next = null;
-					_processes[_currentIndex]._abort = false;
-
-					OnEnterState(state);
-
-					_isRunning = true;
-					
-					_process = StartCoroutine(Run(_currentIndex));
+					StopAllCoroutines();
+					_process = null;
+					_isRunning = false;
+					GoToState(state);
 				}
 				else
 				{
-					Stop();
+					if (state != null)
+					{
+						if (_process != null)
+						{
+							_processes[_currentIndex]._abort = true;
+						}
+
+						_currentIndex = (_currentIndex + 1) % _processes.Length;
+
+						_processes[_currentIndex]._current = state;
+						_processes[_currentIndex]._next = null;
+						_processes[_currentIndex]._abort = false;
+
+						OnEnterState(state);
+
+						_isRunning = true;
+
+						_process = StartCoroutine(Run(_currentIndex));
+					}
+					else
+					{
+						Stop();
+					}
 				}
 			}
 

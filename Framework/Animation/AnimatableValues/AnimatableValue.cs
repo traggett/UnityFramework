@@ -1,132 +1,65 @@
-using UnityEngine;
-
 namespace Framework
 {
-	using Framework.Utils;
 	using Maths;
 	using System;
+	using UnityEngine;
 
 	namespace Animations
 	{
 		public abstract class AnimatableValue<T>
 		{
 			#region AnimationLayer
-			protected abstract class AnimationLayer
+			protected interface IAnimationLayer
 			{
-				#region Private Data
-				protected float _weight;
-				private float _easeInT;
-				private float _easeInSpeed;
-				private InterpolationType _interpolationType;
-				private AnimationCurve _animationCurve;
-				#endregion
-
-				#region Public Interface
-				public float Weight	{ get { return _weight; } }
-
-				public bool FadeInWeight(float deltaTime)
-				{
-					if (_easeInT < 1f)
-					{
-						_easeInT += deltaTime * _easeInSpeed;
-						bool done = _easeInT >= 1f;
-
-						_easeInT = Mathf.Clamp01(_easeInT);
-
-						if (_animationCurve == null)
-						{
-							_weight = Interpolation.Interpolate(_interpolationType, 0f, 1f, _easeInT);
-						}
-						else
-						{
-							_weight = _animationCurve.Evaluate(_easeInT);
-						}
-
-						return done;
-					}
-
-					return true;
-				}
-				#endregion
-
-				#region Protected Functions
-				protected void OnStartLayer(InterpolationType easeInInterpolation, float easeInTime)
-				{
-					if (easeInTime > 0f)
-					{
-						_weight = 0f;
-						_easeInT = 0f;
-						_easeInSpeed = 1f / easeInTime;
-						_interpolationType = easeInInterpolation;
-						_animationCurve = null;
-					}
-					else
-					{
-						_weight = 1f;
-						_animationCurve = null;
-					}
-				}
-
-				protected void OnStartLayer(AnimationCurve easeInCurve, float easeInTime)
-				{
-					if (easeInTime > 0f)
-					{
-						_weight = 0f;
-						_easeInT = 0f;
-						_easeInSpeed = 1f / easeInTime;
-						_animationCurve = easeInCurve;
-					}
-					else
-					{
-						_weight = 1f;
-						_easeInT = 1f;
-						_easeInSpeed = 0f;
-						_animationCurve = easeInCurve;
-					}
-				}
-				#endregion
-
-				#region Virtual Interface
-				public abstract T Value { get; }
-				public virtual bool IsFinished { get { return _easeInT >= 1f; } }
-				public virtual void Update(float deltaTime) { }
-				#endregion
+				public T Value { get; }
+				public bool IsFinished { get; }
+				public void Update(float deltaTime);
 			}
 			#endregion
 
 			#region ConstantValueLayer
-			protected class ConstantValueLayer : AnimationLayer
+			protected class ConstantValueLayer : IAnimationLayer
 			{
 				#region Private Data
 				protected T _value;
 				#endregion
 
 				#region Public Interface
-				public void StartLayer(T value, InterpolationType easeInInterpolation, float easeInTime)
+				public ConstantValueLayer(T value)
 				{
-					OnStartLayer(easeInInterpolation, easeInTime);
-					_value = value;
-				}
-
-				public void StartLayer(T value, AnimationCurve easeInCurve, float easeInTime)
-				{
-					OnStartLayer(easeInCurve, easeInTime);
 					_value = value;
 				}
 				#endregion
 
-				#region AnimationLayer
-				public override T Value { get { return _value; } }
-
+				#region IAnimationLayer
+				public T Value { get { return _value; } }
+				public bool IsFinished { get { return true; } }
+				public void Update(float deltaTime)
+				{
+					
+				}
 				#endregion
 			}
 			#endregion
 
 			#region Private Data
+
+			// Make this setable in code??
+			private const uint MAX_LAYERS = 8;
+
+			private struct LayerData
+			{
+				public IAnimationLayer _layer;
+				public float _weight;
+				public float _blendProgress;
+				public float _blendSpeed;
+				public InterpolationType _blendInterpolation;
+			}
+
 			private T _value;
-			private readonly ConstantValueLayer _baseConstantValueLayer = new ConstantValueLayer();
-			private AnimationLayer[] _currentLayers;
+			private readonly LayerData[] _animationLayers;
 			private Action _onDone;
+
 			#endregion
 
 			#region Public Interface
@@ -135,10 +68,25 @@ namespace Framework
 				return property.Get();
 			}
 
+			protected AnimatableValue()
+			{
+				_animationLayers = new LayerData[MAX_LAYERS];
+				_value = default;
+			}
+
 			public void Set(T value)
 			{
-				_baseConstantValueLayer.StartLayer(value, InterpolationType.Linear, -1f);
-				_currentLayers = new AnimationLayer[] { _baseConstantValueLayer };
+				ConstantValueLayer constantValueLayer = new ConstantValueLayer(value);
+
+				for (int i = 0; i < _animationLayers.Length; i++)
+				{
+					ClearLayer(i);
+				}
+
+				_animationLayers[0]._layer = constantValueLayer;
+				_animationLayers[0]._blendProgress = 1f;
+				_animationLayers[0]._weight = 1f;
+
 				_value = value;
 				_onDone = null;
 			}
@@ -162,68 +110,70 @@ namespace Framework
 				else
 				{
 					// TO DO - have pool of theses layers??
-					ConstantValueLayer constantValueLayer = new ConstantValueLayer();
-					constantValueLayer.StartLayer(value, interpolationType, time);
-					AddAnimationLayer(constantValueLayer, onFullyShowing);
-				}
-			}
-
-			public void InterpolateTo(T value, AnimationCurve interpolationCurve, float time, Action onFullyShowing = null)
-			{
-				if (interpolationCurve == null || time <= 0f)
-				{
-					Set(value);
-				}
-				else
-				{
-					// TO DO - have pool of theses layers??
-					ConstantValueLayer constantValueLayer = new ConstantValueLayer();
-					constantValueLayer.StartLayer(value, interpolationCurve, time);
-					AddAnimationLayer(constantValueLayer, onFullyShowing);
+					ConstantValueLayer constantValueLayer = new ConstantValueLayer(value);
+					AddAnimationLayer(constantValueLayer, time, interpolationType, onFullyShowing);
 				}
 			}
 
 			public void Update(float deltaTime)
 			{
-				// Update all layers
-				for (int i = 0; i < _currentLayers.Length; i++)
+				// Update all layers in top down order
+				for (int i = _animationLayers.Length -1; i >= 0; i--)
 				{
-					_currentLayers[i].Update(deltaTime);
+					if (_animationLayers[i]._layer != null)
+					{
+						_animationLayers[i]._layer.Update(deltaTime);
+
+						// If layer isn't fully blended in then update the blend
+						if (_animationLayers[i]._blendProgress < 1f)
+						{
+							_animationLayers[i]._blendProgress += deltaTime * _animationLayers[i]._blendSpeed;
+							bool done = _animationLayers[i]._blendProgress >= 1f;
+
+							_animationLayers[i]._blendProgress = Mathf.Clamp01(_animationLayers[i]._blendProgress);
+							_animationLayers[i]._weight = Interpolation.Interpolate(_animationLayers[i]._blendInterpolation, 0f, 1f, _animationLayers[i]._blendProgress);
+
+							// If layer is no fully blended then remove all layers beneath it
+							if (done)
+							{
+								ShiftLayersDown(i);
+								break;
+							}
+						}
+					}
 				}
 
-				// Fade in layer weights
-				for (int i = _currentLayers.Length -1; i >= 0; i--)
+				// Work out current value
+				_value = default;
+
+				for (int i = 0; i < _animationLayers.Length; i++)
 				{
-					// Fade in layer, if full weight then remove all layers beneath
-					if (_currentLayers[i].FadeInWeight(deltaTime))
+					if (_animationLayers[i]._layer != null)
 					{
-						//Remove all other layers
-						AnimationLayer[] animationLayers = new AnimationLayer[_currentLayers.Length - i];
-						
-						for (int j = 0; j < animationLayers.Length; j++)
+						if (_animationLayers[i]._blendProgress >= 1f)
 						{
-							animationLayers[j] = _currentLayers[i + j];
+							_value = _animationLayers[i]._layer.Value;
+						}
+						else
+						{
+							_value = Lerp(_value, _animationLayers[i]._layer.Value, _animationLayers[i]._weight);
+						}	
+					}
+				}
+
+				// Check top layer is done and trigger callback
+				for (int i = _animationLayers.Length - 1; i >= 0; i--)
+				{
+					if (_animationLayers[i]._layer != null)
+					{
+						if (_onDone != null && _animationLayers[i]._blendProgress >= 1f && _animationLayers[i]._layer.IsFinished)
+						{
+							_onDone?.Invoke();
+							_onDone = null;
 						}
 
 						break;
 					}
-				}
-
-				// Work out value
-				_value = _currentLayers[0].Value;
-
-				for (int i = 1; i < _currentLayers.Length; i++)
-				{
-					_value = Lerp(_value, _currentLayers[i].Value, _currentLayers[i].Weight);
-				}
-
-				// Check top layer is done and trigger callback
-				AnimationLayer topLayer = _currentLayers[^1];
-
-				if (_onDone != null && topLayer.IsFinished)
-				{
-					_onDone?.Invoke();
-					_onDone = null;
 				}
 			}
 			#endregion
@@ -233,10 +183,61 @@ namespace Framework
 			#endregion
 
 			#region Protected Functions
-			protected void AddAnimationLayer(AnimationLayer layer, Action onDone = null)
+			protected void AddAnimationLayer(IAnimationLayer layer, float blendTime, InterpolationType blendInterpolation, Action onDone = null)
 			{
-				ArrayUtils.Add(ref _currentLayers, layer);
+				int layerIndex = -1;
+
+				// Find first free layer
+				for (int i = 0; i < _animationLayers.Length; i++)
+				{
+					if (_animationLayers[i]._layer == null)
+					{
+						layerIndex = i;
+						break;
+					}
+				}
+
+				// If no free layer found then remove oldest and set top to be this one
+				if (layerIndex == -1)
+				{
+					//Shift all layers down by one
+					ShiftLayersDown(1);
+
+					layerIndex = _animationLayers.Length - 1;
+				}
+
+				_animationLayers[layerIndex]._layer = layer;
+				_animationLayers[layerIndex]._weight = blendTime > 0f ? 0f : 1f;
+				_animationLayers[layerIndex]._blendProgress = blendTime > 0f ? 0f : 1f;
+				_animationLayers[layerIndex]._blendSpeed = blendTime > 0f ? 1f / blendTime : 0f;
+				_animationLayers[layerIndex]._blendInterpolation = blendInterpolation;
+
 				_onDone = onDone;
+			}
+			#endregion
+
+			#region Private Functions
+			private void ShiftLayersDown(int shiftAmount)
+			{
+				for (int i = 0; i < _animationLayers.Length; i++)
+				{
+					if (i + shiftAmount < _animationLayers.Length)
+					{
+						ClearLayer(i);
+						_animationLayers[i] = _animationLayers[i + shiftAmount];
+					}
+					else
+					{
+						ClearLayer(i);
+					}
+				}
+			}
+
+			private void ClearLayer(int layerIndex)
+			{
+				//TO DO - use pooled struct system??
+
+				_animationLayers[layerIndex]._layer = null;
 			}
 			#endregion
 		}

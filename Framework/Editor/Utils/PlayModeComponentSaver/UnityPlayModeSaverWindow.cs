@@ -199,9 +199,9 @@ namespace Framework
 						_saveSnapshotContent = new GUIContent(kSaveSnapshot, EditorGUIUtility.IconContent("SaveAs").image);
 					}
 
-					if (_clearButtonContent == null)
+					//if (_clearButtonContent == null)
 					{
-						_clearButtonContent = EditorGUIUtility.IconContent("d_winbtn_win_close");
+						_clearButtonContent = EditorGUIUtility.IconContent("CrossIcon");
 					}
 
 					if (_clearAllButtonContent == null)

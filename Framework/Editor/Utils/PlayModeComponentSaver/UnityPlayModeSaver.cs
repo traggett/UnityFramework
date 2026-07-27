@@ -46,7 +46,7 @@ namespace Framework
 				private const string kEditorPrefsObjectScene = ".Scene";
 				private const string kEditorPrefsObjectSceneId = ".SceneId";
 				private const string kEditorPrefsSceneObjectChildren = ".Children";
-				private const string kEditorPrefsScenePrefabInstanceId = ".PrefabInstId";
+				private const string kEditorPrefsScenePrefabentityId = ".PrefabInstId";
 				private const string kEditorPrefsScenePrefabInstanceChildPath = ".PrefabInstPath";
 				private const string kEditorPrefsRuntimeObjectId = ".RuntimeId";
 				private const string kEditorPrefsRuntimeObjectType = ".RuntimeType";
@@ -574,7 +574,7 @@ namespace Framework
 
 						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
 						EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath, prefabObjPath);
-						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, prefabSceneId);
+						EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabentityId, prefabSceneId);
 
 						return editorPrefKey;
 					}
@@ -667,7 +667,7 @@ namespace Framework
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
 					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsObjectSceneId, identifier);
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath, prefabObjPath);
-					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, prefabSceneId);
+					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabentityId, prefabSceneId);
 
 					return editorPrefKey;
 				}
@@ -683,7 +683,7 @@ namespace Framework
 						string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
 						int identifier = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsObjectSceneId, -1);
 						string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
-						int prefabObjId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
+						int prefabObjId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabentityId, -1);
 
 						if (sceneStr == scenePath && localIdentifier == identifier && prefabObjPathStr == prefabPath && prefabId == prefabObjId)
 						{
@@ -696,9 +696,9 @@ namespace Framework
 				#endregion
 
 				#region Runtime Objects
-				private static string RegisterRuntimeObject(string scenePath, int instanceId)
+				private static string RegisterRuntimeObject(string scenePath, EntityId entityId)
 				{
-					int saveObjIndex = GetSavedRuntimeObjectIndex(instanceId, scenePath);
+					int saveObjIndex = GetSavedRuntimeObjectIndex(entityId, scenePath);
 
 					if (saveObjIndex == -1)
 					{
@@ -708,12 +708,12 @@ namespace Framework
 					string editorPrefKey = kEditorPrefsKey + Convert.ToString(saveObjIndex);
 
 					EditorPrefs.SetString(editorPrefKey + kEditorPrefsObjectScene, scenePath);
-					EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, instanceId);
+					EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectId, EntityIdToString(entityId));
 
 					return editorPrefKey;
 				}
 
-				private static int GetSavedRuntimeObjectIndex(int instanceId, string scenePath)
+				private static int GetSavedRuntimeObjectIndex(EntityId entityId, string scenePath)
 				{
 					int numSavedObjects = EditorPrefs.GetInt(kEditorPrefsObjectCountKey, 0);
 
@@ -722,9 +722,10 @@ namespace Framework
 						string editorPrefKey = kEditorPrefsKey + Convert.ToString(i);
 
 						string sceneStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsObjectScene);
-						int instance = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, -1);
+						string idStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectId);
+						EntityId id = EntityIdFromString(idStr);
 
-						if (sceneStr == scenePath && instanceId == instance)
+						if (sceneStr == scenePath && entityId == id)
 						{
 							return i;
 						}
@@ -787,8 +788,8 @@ namespace Framework
 						//Object is still valid
 						if (obj._object != null)
 						{
-							int instanceId = GetInstanceId(obj._object);
-							editorPrefKey = RegisterRuntimeObject(obj._scenePath, instanceId);
+							EntityId entityId = GetEntityId(obj._object);
+							editorPrefKey = RegisterRuntimeObject(obj._scenePath, entityId);
 
 							GameObject sceneParent;
 							GameObject topOfHieracy;
@@ -816,7 +817,7 @@ namespace Framework
 
 								if (topOfHieracy != gameObject)
 								{
-									EditorPrefs.SetInt(editorPrefKey + kEditorPrefsRuntimeObjectId, GetInstanceId(topOfHieracy));
+									EditorPrefs.SetString(editorPrefKey + kEditorPrefsRuntimeObjectId, EntityIdToString(GetEntityId(topOfHieracy)));
 								}
 
 								SaveRuntimeGameObject(editorPrefKey, topOfHieracy, topOfHieracy, sceneParent, null);
@@ -986,9 +987,9 @@ namespace Framework
 						//Runtime component
 						else
 						{
-							int instanceId = GetInstanceId(components[i]);
+							EntityId entityId = GetEntityId(components[i]);
 							string scenePath = gameObject.scene.path;
-							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
+							string editorPrefKey = RegisterRuntimeObject(scenePath, entityId);
 							SaveRuntimeComponent(editorPrefKey, components[i], gameObject, gameObject);
 						}
 					}
@@ -1008,9 +1009,9 @@ namespace Framework
 						//Runtime gameobject
 						else
 						{
-							int instanceId = GetInstanceId(child.gameObject);
+							EntityId entityId = GetEntityId(child.gameObject);
 							string scenePath = gameObject.scene.path;
-							string editorPrefKey = RegisterRuntimeObject(scenePath, instanceId);
+							string editorPrefKey = RegisterRuntimeObject(scenePath, entityId);
 							SaveRuntimeGameObject(editorPrefKey, child.gameObject, child.gameObject, gameObject, null);
 						}
 					}
@@ -1018,11 +1019,11 @@ namespace Framework
 				#endregion
 
 				#region Scene Prefab Objects
-				private static Object FindScenePrefabObject(string scenePath, int instanceId, string prefabObjPath, bool loadSceneIfNeeded = false)
+				private static Object FindScenePrefabObject(string scenePath, int entityId, string prefabObjPath, bool loadSceneIfNeeded = false)
 				{
 					if (GetActiveScene(scenePath, out Scene scene, loadSceneIfNeeded))
 					{
-						GameObject prefabInstance = UnityPlayModeSaverSceneUtils.GetScenePrefabInstance(scene, instanceId);
+						GameObject prefabInstance = UnityPlayModeSaverSceneUtils.GetScenePrefabInstance(scene, entityId);
 
 						if (prefabInstance != null)
 						{
@@ -1035,13 +1036,13 @@ namespace Framework
 				#endregion
 
 				#region Runtime Objects
-				private static Object FindRuntimeObject(string scenePath, int instanceId)
+				private static Object FindRuntimeObject(string scenePath, EntityId entityId)
 				{
 					if (GetActiveScene(scenePath, out Scene scene))
 					{
 						foreach (GameObject rootObject in scene.GetRootGameObjects())
 						{
-							Object obj = FindRuntimeObject(rootObject, instanceId);
+							Object obj = FindRuntimeObject(rootObject, entityId);
 
 							if (obj != null)
 							{
@@ -1053,10 +1054,10 @@ namespace Framework
 					return null;
 				}
 
-				private static Object FindRuntimeObject(GameObject gameObject, int instanceId)
+				private static Object FindRuntimeObject(GameObject gameObject, EntityId entityId)
 				{
 					//Check game object
-					if (GetInstanceId(gameObject) == instanceId)
+					if (GetEntityId(gameObject) == entityId)
 						return gameObject;
 
 					//Check components
@@ -1064,14 +1065,14 @@ namespace Framework
 
 					foreach (Component component in components)
 					{
-						if (GetInstanceId(component) == instanceId)
+						if (GetEntityId(component) == entityId)
 							return component;
 					}
 
 					//Check children
 					foreach (Transform child in gameObject.transform)
 					{
-						Object obj = FindRuntimeObject(child.gameObject, instanceId);
+						Object obj = FindRuntimeObject(child.gameObject, entityId);
 
 						if (obj != null)
 							return obj;
@@ -1149,7 +1150,7 @@ namespace Framework
 							{
 								string prefabPath = GetScenePrefabChildObjectPath(prefabInstance, parentSceneObject);
 
-								EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, prefabSceneId);
+								EditorPrefs.SetInt(editorPrefKey + kEditorPrefsScenePrefabentityId, prefabSceneId);
 								EditorPrefs.SetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath, prefabPath);
 							}
 
@@ -1183,10 +1184,10 @@ namespace Framework
 				private static GameObject GetRuntimeObjectParent(string editorPrefKey, string sceneStr, bool loadSceneIfNeeded = false)
 				{
 					//Parent is Scene Prefab Instance
-					if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabInstanceId))
+					if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabentityId))
 					{
 						//Get prefab from scene
-						int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
+						int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabentityId, -1);
 						string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
 
 						Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr, loadSceneIfNeeded);
@@ -1239,10 +1240,10 @@ namespace Framework
 							else
 							{
 								//Scene Prefab object
-								if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabInstanceId))
+								if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabentityId))
 								{
 									//Get prefab from scene
-									int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
+									int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabentityId, -1);
 									string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
 
 									Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr, true);
@@ -1286,7 +1287,7 @@ namespace Framework
 							string typeStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsRuntimeObjectType);
 
 							Type objType = GetType(typeStr);
-							GameObject parentObj = GetRuntimeObjectParent(editorPrefKey, sceneStr, true) as GameObject;
+							GameObject parentObj = GetRuntimeObjectParent(editorPrefKey, sceneStr, true);
 
 							//New runtime gameobject hierachy
 							if (objType == typeof(GameObject))
@@ -1448,10 +1449,10 @@ namespace Framework
 						string editorPrefKey = parentEditorPrefKey + '.' + Convert.ToString(i);
 
 						//Scene Prefab object
-						if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabInstanceId))
+						if (EditorPrefs.HasKey(editorPrefKey + kEditorPrefsScenePrefabentityId))
 						{
 							//Get prefab from scene
-							int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabInstanceId, -1);
+							int prefabId = EditorPrefs.GetInt(editorPrefKey + kEditorPrefsScenePrefabentityId, -1);
 							string prefabObjPathStr = EditorPrefs.GetString(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
 
 							Object obj = FindScenePrefabObject(sceneStr, prefabId, prefabObjPathStr, true);
@@ -1798,7 +1799,7 @@ namespace Framework
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectScene);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectSceneId);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsObjectDeleted);
-					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsScenePrefabInstanceId);
+					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsScenePrefabentityId);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsScenePrefabInstanceChildPath);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectId);
 					SafeDeleteEditorPref(editorPrefKey + kEditorPrefsRuntimeObjectParentId);
@@ -1850,6 +1851,17 @@ namespace Framework
 				#endregion
 
 				#region Helper Functions
+				private static string EntityIdToString(EntityId entityId)
+				{
+					return EntityId.ToULong(entityId).ToString();
+				}
+
+				private static EntityId EntityIdFromString(string str)
+				{
+					ulong idStr = ulong.Parse(str);
+					return EntityId.FromULong(idStr);
+				}
+
 				private static int GetSceneIdentifier(Object obj)
 				{
 					if (obj != null)
@@ -1868,12 +1880,12 @@ namespace Framework
 					return -1;
 				}
 
-				private static int GetInstanceId(Object obj)
+				private static EntityId GetEntityId(Object obj)
 				{
 					if (obj != null)
-						return obj.GetInstanceID();
+						return obj.GetEntityId();
 
-					return 0;
+					return EntityId.None;
 				}
 
 				private static bool GetActiveScene(string scenePath, out Scene scene, bool loadScene = false)

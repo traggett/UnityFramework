@@ -10,7 +10,7 @@ namespace Framework
 		public sealed class AnimatableFloat : AnimatableValue<float>
 		{
 			#region AnimationCurveLayer
-			private class AnimationCurveLayer : AnimationLayer
+			private class AnimationCurveLayer : IAnimationLayer
 			{
 				#region Private Data
 				protected AnimationCurve _animationCurve;
@@ -19,18 +19,18 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public void StartLayer(AnimationCurve animationCurve, InterpolationType easeInInterpolation, float easeInTime)
+				public AnimationCurveLayer(AnimationCurve animationCurve)
 				{
-					OnStartLayer(easeInInterpolation, easeInTime);
 					_animationCurve = animationCurve;
 					_animationTimer = 0f;
+					_currentValue = default;
 				}
 				#endregion
 
-				#region AnimationLayer
-				public override float Value { get { return _currentValue; } }
+				#region IAnimationLayer
+				public float Value { get { return _currentValue; } }
 
-				public override bool IsFinished 
+				public bool IsFinished 
 				{ 
 					get 
 					{
@@ -44,7 +44,7 @@ namespace Framework
 					} 
 				}
 
-				public override void Update(float deltaTime) 
+				public void Update(float deltaTime) 
 				{ 
 					_animationTimer += deltaTime;
 					_currentValue = _animationCurve.Evaluate(_animationTimer);
@@ -54,7 +54,7 @@ namespace Framework
 			#endregion
 
 			#region SinWaveLayer
-			private class SinWaveLayer : AnimationLayer
+			private class SinWaveLayer : IAnimationLayer
 			{
 				#region Private Data
 				protected float _waveSpeed;
@@ -63,18 +63,19 @@ namespace Framework
 				#endregion
 
 				#region Public Interface
-				public void StartLayer(float waveSpeed, InterpolationType easeInInterpolation, float easeInTime)
+				public SinWaveLayer(float waveSpeed)
 				{
-					OnStartLayer(easeInInterpolation, easeInTime);
 					_waveSpeed = waveSpeed;
 					_animationTimer = 0f;
 				}
 				#endregion
 
 				#region AnimationLayer
-				public override float Value { get { return _currentValue; } }
+				public float Value { get { return _currentValue; } }
 
-				public override void Update(float deltaTime)
+				public bool IsFinished { get { return true; } }
+
+				public void Update(float deltaTime)
 				{
 					_animationTimer += deltaTime * _waveSpeed;
 					_currentValue = Mathf.Sin(_animationTimer);
@@ -97,9 +98,8 @@ namespace Framework
 				if (animationCurve != null)
 				{
 					// TO DO - have pool of theses layers??
-					AnimationCurveLayer animationLayer = new AnimationCurveLayer();
-					animationLayer.StartLayer(animationCurve, easeInInterpolation, easeInTime);
-					AddAnimationLayer(animationLayer, onFullyShowing);
+					AnimationCurveLayer animationLayer = new AnimationCurveLayer(animationCurve);
+					AddAnimationLayer(animationLayer, easeInTime, easeInInterpolation, onFullyShowing);
 				}
 			}
 			#endregion
